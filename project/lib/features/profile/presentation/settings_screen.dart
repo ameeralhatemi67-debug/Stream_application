@@ -242,6 +242,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ])),
           const SizedBox(height: AppTheme.spaceLg),
         ];
+        // Every signed-in account can sign out (the Account tab on wide
+        // screens, near the end of the page on phones).
+        final signOut = <Widget>[
+          if (appProvider.isLoggedInStreamer) ...[
+            _buildSignOutActions(context, appProvider),
+            const SizedBox(height: AppTheme.spaceLg),
+          ],
+        ];
         // Taysir, the mosque lessons programme: a person's own pages.
         final lessons = <Widget>[
           const TaysirSettingsCard(),
@@ -280,20 +288,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final about = <Widget>[
           // Section 7: About
 
+          // The association's logo is in the About card, beside the app's.
           const AboutSettingsSection(),
           _buildIntroAction(context),
-          if (MediaQuery.sizeOf(context).width < 900)
-            Center(
-              child: Semantics(
-                label: 'common.hadayah_charity'.tr(),
-                child: Image.asset(
-                  'assets/images/hadayah_charity_parent.png',
-                  width: 220,
-                  height: 220,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
         ];
         final accountData = <Widget>[
           // Section 6.5: Account & Data (Delete Account) -- baseline for
@@ -307,10 +304,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: AppTheme.primary,
             ),
             const SizedBox(height: AppTheme.spaceSm),
-            if (appProvider.isLoggedInStreamer &&
-                appProvider.isStreamerModeEnabled &&
-                appProvider.isApprovedStreamer)
-              _buildSignOutActions(context, appProvider),
             const PrivacySettingsSection(dangerOnly: true),
             const SizedBox(height: AppTheme.spaceLg),
           ],
@@ -323,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             (
               label: 'settings.desktop_account'.tr(),
               icon: CaGlyph.user,
-              children: personal.skip(2).toList()
+              children: [...personal.skip(2), ...signOut]
             ),
             (
               label: 'nav.notifications'.tr(),
@@ -410,6 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ...privacy,
                       ...governance,
                       ...about,
+                      ...signOut,
                       ...accountData
                     ])));
       }),
@@ -680,6 +674,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSignOutActions(BuildContext context, AppProvider provider) =>
       CaCard(
+          key: const ValueKey('settings-sign-out'),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         SizedBox(
@@ -691,7 +686,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             icon: const Icon(Icons.logout_rounded, size: 16),
-            label: Text('settings.logout_to_viewer'.tr()),
+            label: Text('settings.sign_out'.tr()),
             onPressed: () async {
               await provider.signOut();
               if (context.mounted) {

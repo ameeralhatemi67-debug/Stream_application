@@ -8,6 +8,18 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Polish: map preview on Discover, wider cards, verified on avatars, sign out, association logo, 2026-10-22
+
+Owner requests after testing the merge:
+
+- **Map preview on Discover.** The Lessons page's map card (a live tri-city map with mosque coins, title, counts, "Open the map") is now one shared `MapPreviewCard` (`taysir_in_hadayah.dart`). Discover uses it with the channels' venues as well (website: replaces the drawn coastline band, which is deleted; phones: at the end of the feed). The Lessons page uses it with mosques only. `TaysirMap` takes extra `markers` for the venues.
+- **Wider channel cards on the website:** three per row instead of four (about 387 px each in the 1200 px column, was about 285).
+- **Verified on the avatar, not the name.** One `CaVerifiedBadge` (the map channel card's gold check on a white disc) is drawn by `CaAvatar(verified:)` everywhere and by the map card; the marks beside names are removed from the website Discover card and the website channel page. The phone Discover card, phone channel page and the Settings profile card already passed `verified` to the avatar and now show the same badge.
+- **Sign out for every signed-in account** in Settings: the Account tab on wide screens, near the end of the page on phones ("Sign out", plus "Sign out other devices"). It used to appear only for approved broadcasters in broadcaster mode, inside the danger zone. `settings.logout_to_viewer` became `settings.sign_out`.
+- **Association logo in About**, beside the app logo: `assets/images/hadayah_association_logo.png`, a trimmed 318x384 copy (83 KB) of the bundled logo, which replaces the 844 KB `hadayah_charity_parent.png` (its only use, the large phone-only image under About, is removed as a duplicate).
+
+Verification: analyzer 0 issues; new tests in `hidayah_web_layout_test.dart` (three channel cards per row wider than 360 px, the verified badge on the avatar and not the name, the map preview; the channel page's badge) and `settings_screen_test.dart` (sign out in the wide Account tab and on phones for a signed-in viewer; the association logo beside the app logo, named for screen readers). Full suite 1,641 passed, 10 skipped, 0 failed.
+
 ## Taysir merged into Hadayah Live: a Lessons tab, one map, no app switch, 2026-10-22
 
 The owner pushed the first Taysir build (Vercel production at `ddfb577`) and found no streamers in Discover or on the map. Nothing had been deleted (hosted still served all 5 verified streamers to guests through `streamer_public_profiles`, and the commits removed only the four palette theme files). The cause: the Settings logo switched the whole app to a separate Taysir shell, `/feed` redirected to `/taysir`, and Taysir's own Discover and Map tabs (lessons and mosques, empty on hosted with 0 organizations) replaced Hadayah's. A guest left in Taysir could not get back, because Settings needs sign-in. The owner's intent was a merge (ADR-014, amended):

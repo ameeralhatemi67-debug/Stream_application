@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/ds/ca_cards.dart';
 import 'package:streamer_app/core/widgets/ds/ca_discovery.dart';
+import 'package:streamer_app/core/widgets/ds/ca_icon.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/discovery/presentation/web/discovery_web_view.dart';
 import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
@@ -125,6 +127,64 @@ void main() {
       });
     }
   }
+
+  testWidgets(
+      'website discovery: three wider channel cards per row, verified on the '
+      'avatar, and the map preview', (tester) async {
+    await _pump(tester, const DiscoveryFeedScreen(),
+        size: const Size(1440, 900));
+    final scroll = find
+        .descendant(
+            of: find.byType(DiscoveryWebView), matching: find.byType(Scrollable))
+        .first;
+    final ids = [for (final s in mockStreamers.take(4)) s.streamerId];
+    Finder card(String id) => find.byKey(ValueKey('channel-card-$id'));
+    await tester.scrollUntilVisible(card(ids[0]), 300, scrollable: scroll);
+    final rects = [for (final id in ids.take(3)) tester.getRect(card(id))];
+    // One row of three, each wider than the old four-up cards (about 285 px).
+    expect(rects.map((r) => r.top).toSet(), hasLength(1));
+    for (final r in rects) {
+      expect(r.width, greaterThan(360));
+    }
+    await tester.scrollUntilVisible(card(ids[3]), 300, scrollable: scroll);
+    expect(tester.getRect(card(ids[3])).top,
+        greaterThan(tester.getRect(card(ids[0])).top));
+
+    // The verified mark is on the picture, not beside the name.
+    final first = card(ids[0]);
+    expect(mockStreamers.first.isVerified, isTrue);
+    expect(find.descendant(of: first, matching: find.byType(CaVerifiedBadge)),
+        findsOneWidget);
+    expect(
+        find.descendant(
+            of: first,
+            matching: find.byWidgetPredicate(
+                (w) => w is CaIcon && w.glyph == CaGlyph.verified)),
+        findsNothing);
+
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('map-preview')), 400,
+        scrollable: scroll);
+    expect(find.text('web.map_title'.tr()), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('website channel page: verified on the avatar, not the name',
+      (tester) async {
+    await _pump(
+        tester,
+        BroadcasterProfileScreen(streamerId: mockStreamers.first.streamerId),
+        size: const Size(1440, 900));
+    final hero = find.byType(ProfileWebHero);
+    expect(find.descendant(of: hero, matching: find.byType(CaVerifiedBadge)),
+        findsOneWidget);
+    expect(
+        find.descendant(
+            of: hero,
+            matching: find.byWidgetPredicate(
+                (w) => w is CaIcon && w.glyph == CaGlyph.verified)),
+        findsNothing);
+  });
 
   testWidgets('gold palette keeps the app layout on a phone', (tester) async {
     await _pump(tester, const DiscoveryFeedScreen(),

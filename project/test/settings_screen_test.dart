@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/app_logo.dart';
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
+import 'package:streamer_app/features/profile/presentation/settings/about_settings_section.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/broadcaster_application_sheet.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/legal_document_reader_screen.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/viewer_profile_editor_dialog.dart';
@@ -381,6 +383,64 @@ void main() {
         await tester.pumpAndSettle();
       }
       expect(find.text('Delete My Account'), findsWidgets);
+    });
+  });
+
+  group('SettingsScreen: sign out and About (2026-10-22)', () {
+    testWidgets('wide: the Account tab offers sign out to a signed-in viewer',
+        (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final provider = AppProvider()
+        ..debugSetSignedInForTests(email: 'viewer@test.com', isStreamer: false);
+      await tester.pumpWidget(
+          createTestWidget(child: const SettingsScreen(), provider: provider));
+      await tester.pumpAndSettle();
+
+      // The Account tab is the first one and opens selected.
+      expect(find.byKey(const ValueKey('settings-desktop-workspace')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('settings-sign-out')), findsOneWidget);
+      expect(find.text('Sign out'), findsOneWidget);
+      expect(find.text('Sign out other devices'), findsOneWidget);
+    });
+
+    testWidgets('phone: sign out is near the end of the page for any account',
+        (tester) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final provider = AppProvider()
+        ..debugSetSignedInForTests(email: 'viewer@test.com', isStreamer: false);
+      await tester.pumpWidget(
+          createTestWidget(child: const SettingsScreen(), provider: provider));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('settings-sign-out')), 400,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.text('Sign out'), findsOneWidget);
+    });
+
+    testWidgets('About shows the association logo beside the app logo',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(createTestWidget(
+          child: const Scaffold(body: AboutSettingsSection()),
+          provider: AppProvider()));
+      await tester.pumpAndSettle();
+      final logo = find.byKey(const ValueKey('settings-association-logo'));
+      expect(logo, findsOneWidget);
+      expect(find.byType(AppLogo), findsOneWidget);
+      // Side by side.
+      expect((tester.getCenter(logo).dy - tester.getCenter(find.byType(AppLogo)).dy).abs(),
+          lessThan(12));
+      // Screen readers name the association (the card merges its labels).
+      expect(find.bySemanticsLabel(RegExp('Hadayah Charity Association')),
+          findsWidgets);
+      semantics.dispose();
     });
   });
 }

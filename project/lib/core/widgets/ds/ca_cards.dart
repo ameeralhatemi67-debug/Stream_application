@@ -223,12 +223,26 @@ class _CaAvatarState extends State<CaAvatar>
             PositionedDirectional(
                 top: 0,
                 end: 0,
-                child: Semantics(
-                    label: 'ds.status_verified'.tr(),
-                    child: const CaIcon(CaGlyph.verified,
-                        size: CanopySize.verifiedIcon + CanopySize.ring * 2))),
+                child: CaVerifiedBadge(
+                    size: (widget.radius * .75).clamp(14.0, 30.0))),
         ]));
   }
+}
+
+/// The verified mark, worn on the top corner of an avatar rather than beside
+/// a name: a gold seal with a check on a white disc (the map's channel card
+/// style, used everywhere since 2026-10-22).
+class CaVerifiedBadge extends StatelessWidget {
+  const CaVerifiedBadge({super.key, this.size = 20});
+  final double size;
+  @override
+  Widget build(BuildContext context) => Semantics(
+      label: 'ds.status_verified'.tr(),
+      child: DecoratedBox(
+          decoration: const BoxDecoration(
+              color: AppTheme.surface, shape: BoxShape.circle),
+          child: Icon(Icons.verified_rounded,
+              color: AppTheme.primary, size: size)));
 }
 
 /// A sweep gradient turning inside a fixed circle or rounded square, so the

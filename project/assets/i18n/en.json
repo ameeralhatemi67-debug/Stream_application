@@ -763,7 +763,7 @@
     "app_architecture_title": "Streamer App Architecture",
     "version_value": "v2.0 (Upgraded 2026)",
     "app_version_val": "v2.0 (Upgraded 2026)",
-    "logout_to_viewer": "Log Out / Switch to Viewer Mode",
+    "sign_out": "Sign out",
     "logged_out_toast": "Switched to Viewer Mode ✓",
     "signin_as_streamer": "Sign in as Broadcaster (Google Account)",
     "signed_in_toast": "Signed in as Broadcaster with Google ✓",

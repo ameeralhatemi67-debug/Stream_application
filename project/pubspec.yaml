@@ -107,7 +107,7 @@ flutter:
     # Canopy design-system icons and lattice texture (streaming screens).
     - assets/canopy/icons/
     - assets/canopy/textures/
-    - assets/images/hadayah_charity_parent.png
+    - assets/images/hadayah_association_logo.png
 
   fonts:
     # Variable fonts are listed once: the engine downloads and registers every

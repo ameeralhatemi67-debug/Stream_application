@@ -22,12 +22,15 @@ class TaysirPin {
 /// Mosques on the bundled tri-city basemap (the same offline pack as the
 /// Spatial Map). Pins outside the pack's area are listed by the caller only.
 class TaysirMap extends StatefulWidget {
-  const TaysirMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5});
+  const TaysirMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5, this.markers = const []});
   final List<TaysirPin> pins;
   final String? selected;
   final ValueChanged<String>? onPin;
   final bool interactive;
   final double focusZoom;
+
+  /// Other pins drawn above the mosques (broadcasters' venues on Discover).
+  final List<Marker> markers;
 
   /// Widget tests replace the vector map with a plain surface.
   @visibleForTesting
@@ -61,7 +64,7 @@ class _TaysirMapState extends State<TaysirMap> {
   @override
   Widget build(BuildContext context) {
     if (TaysirMap.debugPlaceholder) {
-      return Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text('${widget.pins.length}'));
+      return Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text('${widget.pins.length + widget.markers.length}'));
     }
     final sel = widget.pins.where((p) => p.id == widget.selected).firstOrNull;
     return ClipRect(
@@ -89,6 +92,7 @@ class _TaysirMapState extends State<TaysirMap> {
                 child: TaysirMosqueCoin(pin: p, selected: p.id == widget.selected, onTap: widget.onPin == null ? null : () => widget.onPin!(p.id)),
               ),
           ]),
+          if (widget.markers.isNotEmpty) MarkerLayer(markers: widget.markers),
         ],
       ),
     );

@@ -515,6 +515,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                                               i + 1))))),
                       ]);
                 }),
+              // The shared map: these channels' venues and this week's
+              // mosque lessons.
+              const SizedBox(height: AppTheme.spaceLg),
+              MapPreviewCard(
+                  title: 'web.map_title'.tr(),
+                  body: 'web.map_body'.tr(),
+                  streamers: displayed),
             ])));
   }
 }

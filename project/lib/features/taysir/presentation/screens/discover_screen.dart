@@ -10,7 +10,7 @@ import '../../domain/taysir_dates.dart';
 import '../../domain/taysir_vocab.dart';
 import '../../state/taysir_controller.dart';
 import '../taysir_kit.dart';
-import '../taysir_map.dart';
+import '../taysir_in_hadayah.dart';
 import '../taysir_shell.dart';
 import '../taysir_widgets.dart';
 
@@ -190,7 +190,7 @@ class TaysirDiscoverScreen extends StatelessWidget {
             TSectionHead('taysir.discover.preachers_title'.tr(), count: c.listedPreachers.length),
             TGrid(minWidth: 220, children: [for (final p in preachers) PreacherCard(p)]),
           ]),
-        _MapTeaser(mosques: mosquesWeek),
+        MapPreviewCard(title: 'taysir.discover.map_title'.tr(), body: 'taysir.discover.map_body'.tr()),
       ],
     );
   }
@@ -304,46 +304,6 @@ class _LiveChannelCard extends StatelessWidget {
             child: Text(s.getLocalizedTitle(lang), maxLines: 2, overflow: TextOverflow.ellipsis, style: tStrong(15)),
           ),
         ]),
-      ),
-    );
-  }
-}
-
-class _MapTeaser extends StatelessWidget {
-  const _MapTeaser({required this.mosques});
-  final int mosques;
-  @override
-  Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
-    final week = c.upcoming.where((l) => !l.date.isAfter(addDays(c.today, 6)));
-    final counts = <String, int>{};
-    for (final l in week) {
-      counts[l.mosqueId] = (counts[l.mosqueId] ?? 0) + 1;
-    }
-    final pins = [
-      for (final e in counts.entries)
-        if (c.mosque(e.key)?.hasPin ?? false)
-          TaysirPin(id: e.key, lat: c.mosque(e.key)!.latitude!, lng: c.mosque(e.key)!.longitude!, label: c.mosque(e.key)!.name(context.lang), count: e.value)
-    ];
-    final text = Padding(
-      padding: const EdgeInsets.all(22),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        Text('taysir.discover.map_title'.tr(), style: tDisplay(22)),
-        const SizedBox(height: 8),
-        Text('${tPlural('mosques', mosques)} · ${'taysir.discover.map_body'.tr()}', style: tBody(14, color: TC.muted)),
-        const SizedBox(height: 14),
-        TButton('taysir.discover.open_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map')),
-      ]),
-    );
-    final map = SizedBox(height: 240, child: IgnorePointer(child: TaysirMap(pins: pins, interactive: false)));
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(TC.rLg),
-      child: TCard(
-        padding: EdgeInsets.zero,
-        onTap: () => context.go('/map'),
-        child: context.wide
-            ? Row(children: [Expanded(flex: 3, child: map), Expanded(flex: 2, child: text)])
-            : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [map, text]),
       ),
     );
   }

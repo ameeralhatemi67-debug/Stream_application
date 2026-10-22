@@ -126,17 +126,10 @@ class ProfileWebHero extends StatelessWidget {
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Row(children: [
-                        Flexible(
-                            child: Text(s.getLocalizedName(lang),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: HidayahText.display(32))),
-                        if (s.isVerified) ...[
-                          const SizedBox(width: 10),
-                          const CaIcon(CaGlyph.verified, size: 22),
-                        ],
-                      ]),
+                      Text(s.getLocalizedName(lang),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: HidayahText.display(32)),
                       const SizedBox(height: 4),
                       Text(s.getLocalizedTitle(lang),
                           style: HidayahText.body(15, height: 1.4)),
@@ -224,6 +217,7 @@ class ProfileWebHero extends StatelessWidget {
                     name: s.getLocalizedName(lang),
                     url: s.avatarUrl,
                     live: live,
+                    verified: s.isVerified,
                     org: s.isOrganization,
                     ring: CaAvatarRing.brand,
                     radius: _avatar))),

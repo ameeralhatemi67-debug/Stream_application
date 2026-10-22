@@ -100,7 +100,8 @@ class DiscoveryWebView extends StatelessWidget {
                                           variant: CaButtonVariant.text,
                                           onPressed: onClearSearch)))
                             else
-                              _Grid(columns: 4, children: [
+                              // Three per row: wider channel cards on laptops.
+                              _Grid(columns: 3, children: [
                                 for (final s in displayed)
                                   _ScholarCard(
                                       streamer: s, categories: categories)
@@ -108,7 +109,10 @@ class DiscoveryWebView extends StatelessWidget {
                             // Mosque lessons this week (Taysir), when any.
                             const TaysirLessonsRail(web: true),
                             const SizedBox(height: 44),
-                            const _MapBand(),
+                            MapPreviewCard(
+                                title: 'web.map_title'.tr(),
+                                body: 'web.map_body'.tr(),
+                                streamers: displayed),
                           ])))),
           const SliverToBoxAdapter(child: HidayahWebFooter()),
         ]));
@@ -666,6 +670,7 @@ class _ScholarCard extends StatelessWidget {
     final tags =
         s.tags.where((t) => t.trim().isNotEmpty).toSet().take(2).toList();
     return HidayahCard(
+        key: ValueKey('channel-card-${s.streamerId}'),
         onTap: () => _openChannel(context, s, live),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -702,6 +707,7 @@ class _ScholarCard extends StatelessWidget {
                                     name: s.getLocalizedName(lang),
                                     url: s.avatarUrl,
                                     live: live,
+                                    verified: s.isVerified,
                                     org: s.isOrganization,
                                     ring: CaAvatarRing.brand,
                                     radius: 28)))),
@@ -711,20 +717,13 @@ class _ScholarCard extends StatelessWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [
-                          Flexible(
-                              child: Text(s.getLocalizedName(lang),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: HidayahText.body(15.5,
-                                      color: HidayahGold.s900,
-                                      weight: FontWeight.w700,
-                                      height: 1.35))),
-                          if (s.isVerified) ...[
-                            const SizedBox(width: 5),
-                            const CaIcon(CaGlyph.verified, size: 16),
-                          ],
-                        ]),
+                        Text(s.getLocalizedName(lang),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HidayahText.body(15.5,
+                                color: HidayahGold.s900,
+                                weight: FontWeight.w700,
+                                height: 1.35)),
                         const SizedBox(height: 4),
                         Text(s.getLocalizedTitle(lang),
                             maxLines: 2,
@@ -776,122 +775,4 @@ class _ScholarCard extends StatelessWidget {
                   ])),
             ]));
   }
-}
-
-/// A teaser for the map page with a drawn coastline of the three cities.
-class _MapBand extends StatelessWidget {
-  const _MapBand();
-  @override
-  Widget build(BuildContext context) => HidayahCard(
-      child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 240),
-          child: IntrinsicHeight(
-              child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-            Expanded(
-                flex: 5,
-                child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 36, vertical: 32),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('web.map_title'.tr(),
-                              style: HidayahText.display(26)),
-                          const SizedBox(height: 10),
-                          Text('web.map_body'.tr(),
-                              style: HidayahText.body(15)),
-                          const SizedBox(height: 18),
-                          HidayahButton(
-                              label: 'web.hero_map'.tr(),
-                              icon: CaGlyph.map,
-                              kind: HidayahButtonKind.ghost,
-                              onPressed: () => context.go('/map')),
-                        ]))),
-            Expanded(
-                flex: 6,
-                child: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: CustomPaint(
-                        painter: _TricityPainter(
-                            dammam: 'web.city_dammam'.tr(),
-                            khobar: 'web.city_khobar'.tr(),
-                            dhahran: 'web.city_dhahran'.tr())))),
-          ]))));
-}
-
-/// Stylised Gulf coast: land, sea, the main road and three city pins. Map
-/// geography never mirrors with the reading direction.
-class _TricityPainter extends CustomPainter {
-  _TricityPainter(
-      {required this.dammam, required this.khobar, required this.dhahran});
-  final String dammam, khobar, dhahran;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width, h = size.height;
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFEFE6D2));
-    final coast = Path()
-      ..moveTo(w * .72, 0)
-      ..cubicTo(w * .66, h * .25, w * .76, h * .38, w * .7, h * .55)
-      ..cubicTo(w * .66, h * .72, w * .78, h * .85, w * .74, h)
-      ..lineTo(w, h)
-      ..lineTo(w, 0)
-      ..close();
-    canvas.drawPath(coast, Paint()..color = const Color(0xFFD9E3E6));
-    final grid = Paint()
-      ..color = const Color(0xFFE2D5B7)
-      ..strokeWidth = 1.2;
-    for (var x = w * .12; x < w * .7; x += w * .14) {
-      canvas.drawLine(Offset(x, 0), Offset(x, h), grid);
-    }
-    for (var y = h * .22; y < h; y += h * .26) {
-      canvas.drawLine(Offset(0, y), Offset(w * .7, y), grid);
-    }
-    canvas.drawPath(
-        Path()
-          ..moveTo(0, h * .95)
-          ..cubicTo(w * .3, h * .8, w * .5, h * .62, w * .7, h * .48),
-        Paint()
-          ..color = const Color(0xFFD2BF94)
-          ..strokeWidth = 5
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round);
-    void pin(Offset at, String label, {bool labelStart = false}) {
-      canvas.drawCircle(
-          at, 18, Paint()..color = HidayahGold.g500.withValues(alpha: .18));
-      final body = Path()
-        ..moveTo(at.dx, at.dy + 4)
-        ..cubicTo(at.dx - 6, at.dy - 3, at.dx - 11, at.dy - 7, at.dx - 11,
-            at.dy - 13)
-        ..arcToPoint(Offset(at.dx + 11, at.dy - 13),
-            radius: const Radius.circular(11))
-        ..cubicTo(at.dx + 11, at.dy - 7, at.dx + 6, at.dy - 3, at.dx, at.dy + 4)
-        ..close();
-      canvas.drawPath(body, Paint()..color = HidayahGold.s900);
-      canvas.drawCircle(
-          at.translate(0, -13), 4.5, Paint()..color = HidayahGold.g300);
-      final text = TextPainter(
-          text: TextSpan(
-              text: label,
-              style: HidayahText.body(13,
-                  color: HidayahGold.s700, weight: FontWeight.w700)),
-          textDirection: TextDirection.ltr)
-        ..layout();
-      text.paint(
-          canvas,
-          Offset(labelStart ? at.dx - 18 - text.width : at.dx + 18,
-              at.dy + 2));
-      text.dispose();
-    }
-
-    pin(Offset(w * .6, h * .26), dammam);
-    pin(Offset(w * .66, h * .66), khobar);
-    pin(Offset(w * .46, h * .72), dhahran, labelStart: true);
-  }
-
-  @override
-  bool shouldRepaint(_TricityPainter old) =>
-      old.dammam != dammam || old.khobar != khobar || old.dhahran != dhahran;
 }

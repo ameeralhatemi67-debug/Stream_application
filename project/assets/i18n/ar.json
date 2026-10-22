@@ -763,7 +763,7 @@
     "app_architecture_title": "معمارية منصة البث التعليمي",
     "version_value": "الإصدار 2.0 (محدث 2026)",
     "app_version_val": "الإصدار 2.0 (محدث 2026)",
-    "logout_to_viewer": "تسجيل الخروج / التبديل إلى وضع المستمع",
+    "sign_out": "تسجيل الخروج",
     "logged_out_toast": "تم التبديل إلى وضع المستمع بنجاح ✓",
     "signin_as_streamer": "تسجيل الدخول كمحاضر (حساب Google)",
     "signed_in_toast": "تم تسجيل الدخول كمحاضر عبر Google بنجاح ✓",

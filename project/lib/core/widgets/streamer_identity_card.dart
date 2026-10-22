@@ -142,13 +142,7 @@ class StreamerIdentityCard extends StatelessWidget {
                                 const PositionedDirectional(
                                   top: 0,
                                   end: 0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                        color: AppTheme.surface,
-                                        shape: BoxShape.circle),
-                                    child: Icon(Icons.verified_rounded,
-                                        color: AppTheme.primary, size: 20),
-                                  ),
+                                  child: CaVerifiedBadge(),
                                 ),
                             ],
                           ),

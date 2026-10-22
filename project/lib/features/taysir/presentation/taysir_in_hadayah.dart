@@ -12,6 +12,8 @@ import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_fields.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_rows.dart';
+import '../../map/presentation/map_visible_catalog.dart';
+import '../../profile/models/streamer_models.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import '../domain/taysir_dates.dart';
 import '../state/taysir_controller.dart';
@@ -132,6 +134,70 @@ class MapMosqueCard extends StatelessWidget {
           if (m.directions != null) TButton('taysir.lesson.directions'.tr(), small: true, icon: TGlyph.nav, onPressed: () => openExternal(m.directions!)),
         ]),
       ]),
+    );
+  }
+}
+
+/// A preview of the shared map beside a title and "Open the map": mosques
+/// with lessons this week and, when [streamers] are given, the broadcasters'
+/// venues. Discover shows both; the Lessons tab shows the mosques.
+class MapPreviewCard extends StatelessWidget {
+  const MapPreviewCard({super.key, required this.title, required this.body, this.streamers = const []});
+  final String title, body;
+  final List<StreamerModel> streamers;
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.lang;
+    final mosques = context.select<TaysirController?, List<MapMosque>>(
+        (c) => c == null ? const [] : mapMosques(c, lang));
+    final venues = visibleMapStreamers(streamers);
+    final counts = [
+      if (streamers.isNotEmpty) 'web.map_count'.plural(venues.length),
+      if (mosques.isNotEmpty || streamers.isEmpty)
+        '${tPlural('mosques', mosques.length)} ${'taysir.map.with_lessons'.tr()}',
+    ].join(' · ');
+    final pins = [
+      for (final m in mosques)
+        TaysirPin(id: m.id, lat: m.point.latitude, lng: m.point.longitude, label: m.label, count: m.count, live: m.live),
+    ];
+    final markers = [
+      for (final s in venues)
+        Marker(
+          point: LatLng(s.latitude, s.longitude),
+          width: 34,
+          height: 34,
+          child: CaAvatar(
+              name: s.getLocalizedName(lang),
+              url: s.avatarUrl,
+              org: s.isOrganization,
+              ring: CaAvatarRing.brand,
+              radius: 15),
+        ),
+    ];
+    void open() => context.go('/map');
+    final text = Padding(
+      padding: const EdgeInsets.all(22),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Text(title, style: tDisplay(22)),
+        const SizedBox(height: 8),
+        Text(body, style: tBody(14, color: TC.muted)),
+        const SizedBox(height: 6),
+        Text(counts, style: tBody(13, color: TC.ink2, weight: FontWeight.w600)),
+        const SizedBox(height: 14),
+        TButton('web.hero_map'.tr(), icon: TGlyph.map, onPressed: open),
+      ]),
+    );
+    final map = SizedBox(height: 240, child: IgnorePointer(child: TaysirMap(pins: pins, markers: markers, interactive: false)));
+    return ClipRRect(
+      key: const ValueKey('map-preview'),
+      borderRadius: BorderRadius.circular(TC.rLg),
+      child: TCard(
+        padding: EdgeInsets.zero,
+        onTap: open,
+        child: context.wide
+            ? Row(children: [Expanded(flex: 3, child: map), Expanded(flex: 2, child: text)])
+            : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [map, text]),
+      ),
     );
   }
 }
