@@ -8,14 +8,14 @@ import 'package:streamer_app/features/profile/presentation/settings/about_settin
 
 import 'support/localized_app.dart';
 
-/// The palette toggle (ADR-013) and the Hadayah Live / Taysir app switch
-/// are gone: gold is the only design and Taysir is part of the app
+/// The palette toggle (ADR-013) and the Hadayah Live / Lessons app switch
+/// are gone: gold is the only design and Lessons is part of the app
 /// (ADR-014). Devices that used either lose the old setting on start.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
 
-  test('a device that had chosen Taysir or a palette forgets it', () async {
+  test('a device that had chosen Lessons or a palette forgets it', () async {
     SharedPreferences.setMockInitialValues({
       'app_experience': 'taysir',
       'hidayah_palette_enabled': true,
@@ -59,7 +59,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('settings-experience-toggle')),
         findsNothing);
-    expect(find.textContaining('Taysir'), findsNothing);
+    expect(find.textContaining('Lessons'), findsNothing);
     expect(find.text('Hadayah Live'), findsOneWidget);
   });
 }

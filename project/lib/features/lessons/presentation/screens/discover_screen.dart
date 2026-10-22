@@ -6,24 +6,24 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../domain/prayer_times.dart';
-import '../../domain/taysir_dates.dart';
-import '../../domain/taysir_vocab.dart';
-import '../../state/taysir_controller.dart';
-import '../taysir_kit.dart';
-import '../taysir_in_hadayah.dart';
-import '../taysir_shell.dart';
-import '../taysir_widgets.dart';
+import '../../domain/lessons_dates.dart';
+import '../../domain/lessons_vocab.dart';
+import '../../state/lessons_controller.dart';
+import '../lessons_kit.dart';
+import '../lessons_in_app.dart';
+import '../lessons_shell.dart';
+import '../lessons_widgets.dart';
 
-class TaysirDiscoverScreen extends StatelessWidget {
-  const TaysirDiscoverScreen({super.key});
+class LessonsDiscoverScreen extends StatelessWidget {
+  const LessonsDiscoverScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang, wide = context.wide;
     final upcoming = c.upcoming;
     final week = upcoming.where((l) => !l.date.isAfter(addDays(c.today, 6))).toList();
-    final nowH = taysirNowHours();
+    final nowH = lessonsNowHours();
     final tonight = upcoming.where((l) => sameDay(l.date, c.today) && c.startHours(l) > nowH - 1).take(4).toList();
     final hero = tonight.isNotEmpty ? tonight : upcoming.where((l) => sameDay(l.date, addDays(c.today, 1))).take(4).toList();
     final kpt = PrayerTimes.on(c.today, 26.28, 50.21);
@@ -31,7 +31,7 @@ class TaysirDiscoverScreen extends StatelessWidget {
     final series = c.approvedSeries;
     final preachers = c.listedPreachers.take(wide ? 8 : 6).toList();
     final langCounts = [
-      for (final x in TaysirVocab.languages.where((x) => x != 'ar'))
+      for (final x in LessonsVocab.languages.where((x) => x != 'ar'))
         (x, upcoming.where((l) => l.language == x || l.interpretation == x).length)
     ].where((e) => e.$2 > 0).toList();
     final live = context.select<AppProvider, List<StreamerModel>>((a) => a.streamers.where((s) => s.isCurrentlyLive).take(3).toList());
@@ -69,14 +69,14 @@ class TaysirDiscoverScreen extends StatelessWidget {
       decoration: BoxDecoration(color: const Color(0x0AFFFFFF), borderRadius: BorderRadius.circular(TC.rXl), border: Border.all(color: TC.nightLine)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.end, spacing: 8, children: [
-          Text(tonight.isNotEmpty ? 'taysir.discover.tonight_in'.tr() : 'taysir.discover.tomorrow_in'.tr(), style: tDisplay(19, color: TC.onNight)),
+          Text(tonight.isNotEmpty ? 'lessons.discover.tonight_in'.tr() : 'lessons.discover.tomorrow_in'.tr(), style: tDisplay(19, color: TC.onNight)),
           Text('${prayerLabel('maghrib')} ${clockLabel(kpt.maghrib, lang)} · ${prayerLabel('isha')} ${clockLabel(kpt.isha, lang)}',
               style: tBody(12.5, color: TC.onNightGold)),
         ]),
         const Divider(color: TC.nightLine, height: 18),
-        if (heroItems.isEmpty) Text('taysir.discover.no_lessons'.tr(), style: tBody(13, color: TC.onNight2)) else ...heroItems,
+        if (heroItems.isEmpty) Text('lessons.discover.no_lessons'.tr(), style: tBody(13, color: TC.onNight2)) else ...heroItems,
         const SizedBox(height: 6),
-        TButton('taysir.discover.all_week'.tr(), kind: TBtn.night, iconEnd: TGlyph.arrowEnd, onPressed: () => context.go('/taysir/lessons')),
+        TButton('lessons.discover.all_week'.tr(), kind: TBtn.night, iconEnd: TGlyph.arrowEnd, onPressed: () => context.go('/lessons/calendar')),
       ]),
     );
 
@@ -99,33 +99,33 @@ class TaysirDiscoverScreen extends StatelessWidget {
     final roleBand = c.canSubmitOwn
         ? _RoleBand(
             glyph: TGlyph.book,
-            title: 'taysir.discover.welcome'.tr(args: [c.preacher(c.ownPreacherId ?? '')?.name(lang) ?? '']),
-            body: 'taysir.discover.preacher_band'.tr(),
+            title: 'lessons.discover.welcome'.tr(args: [c.preacher(c.ownPreacherId ?? '')?.name(lang) ?? '']),
+            body: 'lessons.discover.preacher_band'.tr(),
             actions: [
-              TButton('taysir.discover.submit'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.plus, onPressed: () => context.push('/taysir/submit')),
-              TButton('taysir.nav.my_lessons'.tr(), small: true, onPressed: () => context.push('/taysir/me/lessons')),
+              TButton('lessons.discover.submit'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.plus, onPressed: () => context.push('/lessons/submit')),
+              TButton('lessons.nav.my_lessons'.tr(), small: true, onPressed: () => context.push('/lessons/me/lessons')),
             ])
         : c.canCoordinate
             ? _RoleBand(
                 glyph: TGlyph.inbox,
-                title: 'taysir.nav.console'.tr(),
-                body: '${tPlural('requests', c.pendingRequests.length)} ${'taysir.discover.waiting'.tr()}',
+                title: 'lessons.nav.console'.tr(),
+                body: '${tPlural('requests', c.pendingRequests.length)} ${'lessons.discover.waiting'.tr()}',
                 actions: [
-                  TButton('taysir.discover.open_review'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/taysir/console/review')),
+                  TButton('lessons.discover.open_review'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/lessons/console/review')),
                 ])
             : null;
 
     final topics = Wrap(spacing: 8, runSpacing: 8, children: [
-      TChip('taysir.discover.all_subjects'.tr(), selected: true, small: true, onTap: () => context.go('/taysir/lessons')),
-      for (final t in TaysirVocab.topics) TChip(topicLabel(t), small: true, onTap: () => context.go('/taysir/lessons?topic=$t')),
+      TChip('lessons.discover.all_subjects'.tr(), selected: true, small: true, onTap: () => context.go('/lessons/calendar')),
+      for (final t in LessonsVocab.topics) TChip(topicLabel(t), small: true, onTap: () => context.go('/lessons/calendar?topic=$t')),
     ]);
 
-    return TaysirTabBody(
+    return LessonsTabBody(
       header: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (!wide)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: TSearchBox(hint: 'taysir.discover.search_hint'.tr(), readOnly: true, onTap: () => context.go('/taysir/lessons')),
+            child: TSearchBox(hint: 'lessons.discover.search_hint'.tr(), readOnly: true, onTap: () => context.go('/lessons/calendar')),
           ),
         heroBand,
         if (wide)
@@ -138,7 +138,7 @@ class TaysirDiscoverScreen extends StatelessWidget {
                 child: Row(children: [
                   Expanded(child: topics),
                   const SizedBox(width: 16),
-                  SizedBox(width: 320, child: TSearchBox(hint: 'taysir.discover.search_hint'.tr(), readOnly: true, onTap: () => context.go('/taysir/lessons'))),
+                  SizedBox(width: 320, child: TSearchBox(hint: 'lessons.discover.search_hint'.tr(), readOnly: true, onTap: () => context.go('/lessons/calendar'))),
                 ]),
               ),
             ),
@@ -150,15 +150,15 @@ class TaysirDiscoverScreen extends StatelessWidget {
         const PrayerStrip(),
         if (live.isNotEmpty)
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            TSectionHead('taysir.discover.live_now'.tr(), count: live.length),
+            TSectionHead('lessons.discover.live_now'.tr(), count: live.length),
             TGrid(minWidth: 280, children: [for (final s in live) _LiveChannelCard(s)]),
           ]),
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          TSectionHead('taysir.discover.upcoming'.tr(),
+          TSectionHead('lessons.discover.upcoming'.tr(),
               count: upcoming.length,
-              action: TButton('taysir.see_all'.tr(), kind: TBtn.ghost, iconEnd: TGlyph.arrowEnd, onPressed: () => context.go('/taysir/lessons'))),
+              action: TButton('lessons.see_all'.tr(), kind: TBtn.ghost, iconEnd: TGlyph.arrowEnd, onPressed: () => context.go('/lessons/calendar'))),
           if (upcoming.isEmpty)
-            TEmpty(icon: TGlyph.book, title: 'taysir.discover.empty'.tr(), body: 'taysir.discover.empty_body'.tr())
+            TEmpty(icon: TGlyph.book, title: 'lessons.discover.empty'.tr(), body: 'lessons.discover.empty_body'.tr())
           else if (wide)
             TGrid(minWidth: 340, children: [for (final l in upcoming.take(6)) LessonCard(l)])
           else
@@ -167,19 +167,19 @@ class TaysirDiscoverScreen extends StatelessWidget {
         if (wide) const _HowItWorks(),
         if (series.isNotEmpty)
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            TSectionHead('taysir.discover.series_title'.tr(), count: series.length),
+            TSectionHead('lessons.discover.series_title'.tr(), count: series.length),
             TGrid(minWidth: 260, children: [for (final s in series) SeriesCard(s)]),
           ]),
         if (langCounts.isNotEmpty)
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            TSectionHead('taysir.discover.langs_title'.tr(), sub: 'taysir.discover.langs_sub'.tr()),
+            TSectionHead('lessons.discover.langs_title'.tr(), sub: 'lessons.discover.langs_sub'.tr()),
             Wrap(spacing: 10, runSpacing: 10, children: [
               for (final (x, n) in langCounts)
                 TCard(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  onTap: () => context.go('/taysir/lessons?lang=$x'),
+                  onTap: () => context.go('/lessons/calendar?lang=$x'),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    Text(TaysirVocab.languageNative[x]!, style: tDisplay(18)),
+                    Text(LessonsVocab.languageNative[x]!, style: tDisplay(18)),
                     Text('${languageLabel(x)} · ${tPlural('lessons', n)}', style: tBody(12.5, color: TC.muted, height: 1.4)),
                   ]),
                 ),
@@ -187,10 +187,10 @@ class TaysirDiscoverScreen extends StatelessWidget {
           ]),
         if (preachers.isNotEmpty)
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            TSectionHead('taysir.discover.preachers_title'.tr(), count: c.listedPreachers.length),
+            TSectionHead('lessons.discover.preachers_title'.tr(), count: c.listedPreachers.length),
             TGrid(minWidth: 220, children: [for (final p in preachers) PreacherCard(p)]),
           ]),
-        MapPreviewCard(title: 'taysir.discover.map_title'.tr(), body: 'taysir.discover.map_body'.tr()),
+        MapPreviewCard(title: 'lessons.discover.map_title'.tr(), body: 'lessons.discover.map_body'.tr()),
       ],
     );
   }
@@ -208,26 +208,26 @@ class _HeroCopy extends StatelessWidget {
           ]),
         );
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      TEyebrow('taysir.discover.hero_eyebrow'.tr(), onNight: true),
+      TEyebrow('lessons.discover.hero_eyebrow'.tr(), onNight: true),
       const SizedBox(height: 14),
-      Text('taysir.discover.hero_title'.tr(), style: tDisplay(42, color: TC.onNight).copyWith(height: 1.25)),
+      Text('lessons.discover.hero_title'.tr(), style: tDisplay(42, color: TC.onNight).copyWith(height: 1.25)),
       const SizedBox(height: 14),
       ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
-          child: Text('taysir.discover.hero_body'.tr(), style: tBody(16, color: TC.onNight2, height: 1.9))),
+          child: Text('lessons.discover.hero_body'.tr(), style: tBody(16, color: TC.onNight2, height: 1.9))),
       const SizedBox(height: 22),
       Wrap(spacing: 10, runSpacing: 10, children: [
-        TButton('taysir.discover.this_week'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.calendar, onPressed: () => context.go('/taysir/lessons')),
-        TButton('taysir.discover.open_map'.tr(), kind: TBtn.night, large: true, icon: TGlyph.map, onPressed: () => context.go('/map')),
+        TButton('lessons.discover.this_week'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.calendar, onPressed: () => context.go('/lessons/calendar')),
+        TButton('lessons.discover.open_map'.tr(), kind: TBtn.night, large: true, icon: TGlyph.map, onPressed: () => context.go('/map')),
       ]),
       const SizedBox(height: 28),
       const Divider(color: TC.nightLine, height: 1),
       const SizedBox(height: 16),
       Row(children: [
-        stat(week, 'taysir.discover.stat_week'.tr()),
-        stat(mosques, 'taysir.discover.stat_mosques'.tr()),
-        stat(preachers, 'taysir.discover.stat_preachers'.tr()),
-        stat(series, 'taysir.discover.stat_series'.tr()),
+        stat(week, 'lessons.discover.stat_week'.tr()),
+        stat(mosques, 'lessons.discover.stat_mosques'.tr()),
+        stat(preachers, 'lessons.discover.stat_preachers'.tr()),
+        stat(series, 'lessons.discover.stat_series'.tr()),
       ]),
     ]);
   }
@@ -260,7 +260,7 @@ class _HowItWorks extends StatelessWidget {
   const _HowItWorks();
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        TSectionHead('taysir.discover.how_title'.tr(), eyebrow: 'taysir.discover.how_eyebrow'.tr()),
+        TSectionHead('lessons.discover.how_title'.tr(), eyebrow: 'lessons.discover.how_eyebrow'.tr()),
         TGrid(minWidth: 300, children: [
           for (var i = 1; i <= 3; i++)
             TCard(
@@ -275,9 +275,9 @@ class _HowItWorks extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('taysir.discover.how_${i}_t'.tr(), style: tStrong(15)),
+                    Text('lessons.discover.how_${i}_t'.tr(), style: tStrong(15)),
                     const SizedBox(height: 4),
-                    Text('taysir.discover.how_${i}_b'.tr(), style: tBody(14, color: TC.muted)),
+                    Text('lessons.discover.how_${i}_b'.tr(), style: tBody(14, color: TC.muted)),
                   ]),
                 ),
               ]),

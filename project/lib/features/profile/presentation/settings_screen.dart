@@ -15,7 +15,7 @@ import 'settings/application_settings_section.dart';
 import 'settings/broadcasting_settings_section.dart';
 import 'settings/privacy_settings_section.dart';
 import 'settings/about_settings_section.dart';
-import '../../taysir/presentation/taysir_in_hadayah.dart';
+import '../../lessons/presentation/lessons_in_app.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -250,9 +250,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: AppTheme.spaceLg),
           ],
         ];
-        // Taysir, the mosque lessons programme: a person's own pages.
+        // Lessons, the mosque lessons programme: a person's own pages.
         final lessons = <Widget>[
-          const TaysirSettingsCard(),
+          const LessonsSettingsCard(),
           const SizedBox(height: AppTheme.spaceLg),
         ];
         final privacy = <Widget>[

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
+import 'legacy_links.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/ds/ca_focus_ring.dart';
 import '../widgets/ds/ca_icon.dart';
@@ -38,15 +39,15 @@ import '../../features/auth/presentation/screens/account_banned_screen.dart';
 import '../../features/web/presentation/hidayah_web_header.dart';
 import '../../features/web/presentation/hidayah_web_kit.dart';
 import '../widgets/hadayah_loading_indicator.dart';
-import '../../features/taysir/domain/taysir_rules.dart';
-import '../../features/taysir/presentation/screens/account_screens.dart';
-import '../../features/taysir/presentation/screens/console_screen.dart';
-import '../../features/taysir/presentation/screens/detail_screens.dart';
-import '../../features/taysir/presentation/screens/discover_screen.dart';
-import '../../features/taysir/presentation/screens/lessons_screen.dart';
-import '../../features/taysir/presentation/screens/preacher_screens.dart';
-import '../../features/taysir/presentation/taysir_shell.dart';
-import '../../features/taysir/state/taysir_controller.dart';
+import '../../features/lessons/domain/lessons_rules.dart';
+import '../../features/lessons/presentation/screens/account_screens.dart';
+import '../../features/lessons/presentation/screens/console_screen.dart';
+import '../../features/lessons/presentation/screens/detail_screens.dart';
+import '../../features/lessons/presentation/screens/discover_screen.dart';
+import '../../features/lessons/presentation/screens/lessons_screen.dart';
+import '../../features/lessons/presentation/screens/preacher_screens.dart';
+import '../../features/lessons/presentation/lessons_shell.dart';
+import '../../features/lessons/state/lessons_controller.dart';
 
 class AppRouter {
   /// Opens a page from the card that was tapped (its rectangle arrives as
@@ -140,6 +141,10 @@ class AppRouter {
           if (path == '/splash' && state.uri.queryParameters['from'] != null) {
             return state.uri.queryParameters['from'];
           }
+
+          // Links from before the lessons were renamed (2026-10-22).
+          final legacy = legacyLessonsLocation(state.uri);
+          if (legacy != null) return legacy;
 
           // Cluster 4 Task 16: a platform-banned account is locked out of the
           // entire app (not just guarded paths) until they sign out -- checked
@@ -305,28 +310,28 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Taysir, the mosque lessons programme, is a tab of Hadayah
-              // Live (ADR-014). Public pages need no sign-in; screens that
-              // act check roles themselves and the server enforces every
-              // write. Lesson pages and the console open above the tabs.
+              // Mosque lessons are a tab of Hadayah Live (ADR-014). Public
+              // pages need no sign-in; screens that act check roles
+              // themselves and the server enforces every write. Lesson pages
+              // and the console open above the tabs.
               StatefulShellBranch(
                 navigatorKey: _lessonsNavigatorKey,
                 routes: [
                   GoRoute(
-                    path: '/taysir',
+                    path: '/lessons',
                     name: 'lessons',
                     builder: (context, state) =>
-                        const TaysirTab(child: TaysirDiscoverScreen()),
+                        const LessonsTab(child: LessonsDiscoverScreen()),
                     routes: [
                       GoRoute(
-                          path: 'lessons',
+                          path: 'calendar',
                           builder: (context, state) {
                             final q = state.uri.queryParameters;
-                            return TaysirTab(
-                                titleKey: 'taysir.nav.lessons',
-                                child: TaysirLessonsScreen(
+                            return LessonsTab(
+                                titleKey: 'lessons.nav.lessons',
+                                child: LessonsScreen(
                                     key: ValueKey(state.uri.query),
-                                    initial: TaysirFilter(
+                                    initial: LessonFilter(
                                         language: q['lang'],
                                         topic: q['topic'],
                                         mosqueId: q['mosque'],
@@ -339,9 +344,32 @@ class AppRouter {
               ),
             ],
           ),
+          // Old /taysir links (up to three segments deep) open their new
+          // address.
+          GoRoute(
+              path: '/taysir',
+              redirect: (context, state) => legacyLessonsLocation(state.uri),
+              routes: [
+                GoRoute(
+                    path: ':a',
+                    redirect: (context, state) =>
+                        legacyLessonsLocation(state.uri),
+                    routes: [
+                      GoRoute(
+                          path: ':b',
+                          redirect: (context, state) =>
+                              legacyLessonsLocation(state.uri),
+                          routes: [
+                            GoRoute(
+                                path: ':c',
+                                redirect: (context, state) =>
+                                    legacyLessonsLocation(state.uri)),
+                          ]),
+                    ]),
+              ]),
           // Mosques and their lessons are on the one map now.
           GoRoute(
-              path: '/taysir/map',
+              path: '/lessons/map',
               redirect: (context, state) => Uri(
                       path: '/map',
                       queryParameters: state.uri.queryParameters.isEmpty
@@ -351,72 +379,72 @@ class AppRouter {
           // A person's programme pages, opened from Settings.
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/me',
-              builder: (context, state) => const TaysirMeScreen()),
+              path: '/lessons/me',
+              builder: (context, state) => const LessonsMeScreen()),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/lessons/:id',
-              builder: (context, state) => TaysirLessonScreen(id: state.pathParameters['id']!)),
+              path: '/lessons/lesson/:id',
+              builder: (context, state) => LessonScreen(id: state.pathParameters['id']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/requests/:id',
+              path: '/lessons/requests/:id',
               redirect: (context, state) {
-                final c = context.read<TaysirController>();
+                final c = context.read<LessonsController>();
                 final id = state.pathParameters['id'];
                 final hit = c.catalog.lessons.values.where((l) => l.requestId == id).toList()..sort(compareLessons);
-                return hit.isEmpty ? '/taysir/lessons' : '/taysir/lessons/${hit.first.id}';
+                return hit.isEmpty ? '/lessons/calendar' : '/lessons/lesson/${hit.first.id}';
               }),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/series/:id',
-              builder: (context, state) => TaysirSeriesScreen(id: state.pathParameters['id']!)),
+              path: '/lessons/series/:id',
+              builder: (context, state) => LessonSeriesScreen(id: state.pathParameters['id']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/preachers/:id',
-              builder: (context, state) => TaysirPreacherScreen(id: state.pathParameters['id']!)),
+              path: '/lessons/preachers/:id',
+              builder: (context, state) => PreacherScreen(id: state.pathParameters['id']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/mosques/:id',
-              builder: (context, state) => TaysirMosqueScreen(id: state.pathParameters['id']!)),
+              path: '/lessons/mosques/:id',
+              builder: (context, state) => MosqueScreen(id: state.pathParameters['id']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/me/notifications',
-              builder: (context, state) => const TaysirNotificationsScreen()),
+              path: '/lessons/me/notifications',
+              builder: (context, state) => const LessonsNotificationsScreen()),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/me/saved',
-              builder: (context, state) => TaysirSavedScreen(tab: state.uri.queryParameters['tab'])),
+              path: '/lessons/me/saved',
+              builder: (context, state) => LessonsSavedScreen(tab: state.uri.queryParameters['tab'])),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/me/lessons',
-              builder: (context, state) => TaysirMyLessonsScreen(tab: state.uri.queryParameters['tab'])),
+              path: '/lessons/me/lessons',
+              builder: (context, state) => LessonsMyLessonsScreen(tab: state.uri.queryParameters['tab'])),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/submit',
-              builder: (context, state) => TaysirSubmitScreen(
+              path: '/lessons/submit',
+              builder: (context, state) => LessonsSubmitScreen(
                   key: ValueKey(state.uri.query),
                   fromLessonId: state.uri.queryParameters['from'],
                   replaces: state.uri.queryParameters['replaces'])),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/report/:id',
-              builder: (context, state) => TaysirReportScreen(lessonId: state.pathParameters['id']!)),
+              path: '/lessons/report/:id',
+              builder: (context, state) => LessonsReportScreen(lessonId: state.pathParameters['id']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/claim/:token',
-              builder: (context, state) => TaysirClaimScreen(token: state.pathParameters['token']!)),
+              path: '/lessons/claim/:token',
+              builder: (context, state) => LessonsClaimScreen(token: state.pathParameters['token']!)),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/permissions',
-              builder: (context, state) => const TaysirPermissionsScreen()),
+              path: '/lessons/permissions',
+              builder: (context, state) => const LessonsPermissionsScreen()),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/console',
-              builder: (context, state) => TaysirConsoleScreen(filter: state.uri.queryParameters['filter'])),
+              path: '/lessons/console',
+              builder: (context, state) => LessonsConsoleScreen(filter: state.uri.queryParameters['filter'])),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/taysir/console/:tab',
-              builder: (context, state) => TaysirConsoleScreen(
+              path: '/lessons/console/:tab',
+              builder: (context, state) => LessonsConsoleScreen(
                   key: ValueKey(state.uri.toString()),
                   tab: state.pathParameters['tab']!,
                   filter: state.uri.queryParameters['filter'])),

@@ -5,13 +5,13 @@ import 'package:flutter/services.dart';
 import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
-import '../data/taysir_repository.dart';
-import 'taysir_icons.dart';
+import '../data/lessons_repository.dart';
+import 'lessons_icons.dart';
 
-export 'taysir_icons.dart';
+export 'lessons_icons.dart';
 export '../../../core/theme/hidayah_gold.dart';
 
-/// Taysir's tokens: Hidayah Gold roles as the reviewed prototype names them.
+/// Lessons's tokens: Hidayah Gold roles as the reviewed prototype names them.
 abstract final class TC {
   static const page = HidayahGold.g50, tint = HidayahGold.g100, card = HidayahGold.card;
   static const hair = HidayahGold.hairline, hair2 = Color(0xFFE0D0B0);
@@ -46,7 +46,7 @@ enum TTone { gold, slate, success, warning, danger, info, live, liveSoft }
       TTone.liveSoft => (TC.dangerBg, TC.dangerFg),
     };
 
-extension TaysirContext on BuildContext {
+extension LessonsContext on BuildContext {
   String get lang => locale.languageCode;
   bool get ar => locale.languageCode == 'ar';
 
@@ -60,8 +60,8 @@ TextStyle tBody(double size, {Color color = TC.ink2, FontWeight weight = FontWei
 TextStyle tStrong(double size, {Color color = TC.ink}) => tBody(size, color: color, weight: FontWeight.w700, height: 1.4);
 
 /// Localized message for a failed write.
-String taysirError(Object e) =>
-    'taysir.error.${e is TaysirException ? e.failure.name : 'unknown'}'.tr();
+String lessonsError(Object e) =>
+    'lessons.error.${e is LessonsException ? e.failure.name : 'unknown'}'.tr();
 
 void tToast(BuildContext context, String message, {bool warn = false, String? actionLabel, VoidCallback? onAction}) {
   final m = ScaffoldMessenger.maybeOf(context);
@@ -89,14 +89,14 @@ Future<T?> tRun<T>(BuildContext context, Future<T> Function() call, {String? suc
     if (success != null && context.mounted) tToast(context, success);
     return r;
   } catch (e) {
-    if (context.mounted) tToast(context, taysirError(e), warn: true);
+    if (context.mounted) tToast(context, lessonsError(e), warn: true);
     return null;
   }
 }
 
 Future<void> copyToClipboard(BuildContext context, String text) async {
   await Clipboard.setData(ClipboardData(text: text));
-  if (context.mounted) tToast(context, 'taysir.copied'.tr());
+  if (context.mounted) tToast(context, 'lessons.copied'.tr());
 }
 
 // ------------------------------------------------------------------ buttons
@@ -221,7 +221,7 @@ class TTag extends StatelessWidget {
 class TLiveTag extends StatelessWidget {
   const TLiveTag({super.key});
   @override
-  Widget build(BuildContext context) => TTag('taysir.lesson.live'.tr(), tone: TTone.live, icon: TGlyph.radio);
+  Widget build(BuildContext context) => TTag('lessons.lesson.live'.tr(), tone: TTone.live, icon: TGlyph.radio);
 }
 
 class TChip extends StatelessWidget {
@@ -863,7 +863,7 @@ Future<T?> showTModal<T>(BuildContext context,
                   if (subtitle != null) Padding(padding: const EdgeInsets.only(top: 3), child: Text(subtitle, style: tBody(13, color: TC.muted, height: 1.4))),
                 ]),
               ),
-              TIconButton(TGlyph.x, tooltip: 'taysir.close'.tr(), onPressed: () => Navigator.of(ctx).pop()),
+              TIconButton(TGlyph.x, tooltip: 'lessons.close'.tr(), onPressed: () => Navigator.of(ctx).pop()),
             ]),
           ),
           Flexible(child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(20, 4, 20, 16), child: body(ctx))),
@@ -905,11 +905,11 @@ Future<T?> showTModal<T>(BuildContext context,
 /// Asks a guest to sign in, explaining why.
 Future<void> showTSignIn(BuildContext context, String why) => showTModal<void>(
       context,
-      title: 'taysir.sign_in_title'.tr(),
+      title: 'lessons.sign_in_title'.tr(),
       subtitle: why,
-      body: (ctx) => Text('taysir.sign_in_note'.tr(), style: tBody(14, color: TC.muted)),
+      body: (ctx) => Text('lessons.sign_in_note'.tr(), style: tBody(14, color: TC.muted)),
       footer: (ctx) => [
-        TButton('taysir.sign_in'.tr(), kind: TBtn.minted, icon: TGlyph.user, onPressed: () {
+        TButton('lessons.sign_in'.tr(), kind: TBtn.minted, icon: TGlyph.user, onPressed: () {
           Navigator.of(ctx).pop();
           openSignIn(context);
         }),
@@ -955,4 +955,4 @@ class TGrid extends StatelessWidget {
       });
 }
 
-String tPlural(String key, int n) => 'taysir.n.$key'.plural(n);
+String tPlural(String key, int n) => 'lessons.n.$key'.plural(n);

@@ -2,43 +2,43 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../data/demo_taysir_repository.dart';
-import '../data/taysir_repository.dart';
-import '../domain/taysir_dates.dart';
-import '../domain/taysir_models.dart';
-import '../domain/taysir_rules.dart';
+import '../data/demo_lessons_repository.dart';
+import '../data/lessons_repository.dart';
+import '../domain/lessons_dates.dart';
+import '../domain/lessons_models.dart';
+import '../domain/lessons_rules.dart';
 
-/// Taysir's client state: the public catalogue, the signed-in account's own
+/// Lessons's client state: the public catalogue, the signed-in account's own
 /// data and roles, and (for coordinators) one organization's staff view.
 ///
 /// A standalone controller, not part of AppProvider (see CLAUDE.md: feature
 /// state lives with its feature). Every write goes to the repository and is
 /// followed by a reload, so the screens always show what the server holds.
-class TaysirController extends ChangeNotifier {
-  TaysirController(this.repository);
+class LessonsController extends ChangeNotifier {
+  LessonsController(this.repository);
 
-  final TaysirRepository repository;
+  final LessonsRepository repository;
 
-  TaysirCatalog catalog = const TaysirCatalog();
-  TaysirMine mine = const TaysirMine();
-  TaysirRoles roles = TaysirRoles.guest;
-  TaysirStaffData staff = const TaysirStaffData();
+  LessonsCatalog catalog = const LessonsCatalog();
+  LessonsMine mine = const LessonsMine();
+  LessonsRoles roles = LessonsRoles.guest;
+  LessonsStaffData staff = const LessonsStaffData();
 
-  /// Admins: every organization (Taysir on or off) and every coordinator.
-  List<TaysirOrganization> adminOrganizations = const [];
-  List<TaysirCoordinator> coordinators = const [];
+  /// Admins: every organization (Lessons on or off) and every coordinator.
+  List<LessonsOrganization> adminOrganizations = const [];
+  List<LessonsCoordinator> coordinators = const [];
   String? staffOrganizationId;
 
   bool loading = false;
   bool loaded = false;
-  TaysirFailure? failure;
+  LessonsFailure? failure;
   String? _userId;
   bool _disposed = false;
   Future<void>? _inFlight;
 
   bool get isDemo => repository.isDemo;
   bool get signedIn => repository.currentUserId != null;
-  DateTime get today => taysirToday();
+  DateTime get today => lessonsToday();
 
   // ------------------------------------------------------------- loading
   /// Loads once; later calls reuse the result until [refresh].
@@ -53,16 +53,16 @@ class TaysirController extends ChangeNotifier {
     scheduleMicrotask(_notify);
     try {
       final r = await Future.wait<Object>([repository.loadCatalog(), repository.loadRoles(), repository.loadMine()]);
-      catalog = r[0] as TaysirCatalog;
-      roles = r[1] as TaysirRoles;
-      mine = r[2] as TaysirMine;
+      catalog = r[0] as LessonsCatalog;
+      roles = r[1] as LessonsRoles;
+      mine = r[2] as LessonsMine;
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
       if (roles.admin) {
         final r = await Future.wait<Object>([repository.loadAdminOrganizations(), repository.loadCoordinators()]);
-        adminOrganizations = r[0] as List<TaysirOrganization>;
-        coordinators = r[1] as List<TaysirCoordinator>;
+        adminOrganizations = r[0] as List<LessonsOrganization>;
+        coordinators = r[1] as List<LessonsCoordinator>;
       } else {
         adminOrganizations = const [];
         coordinators = const [];
@@ -73,7 +73,7 @@ class TaysirController extends ChangeNotifier {
       if (staffOrganizationId != null && roles.coordinates(staffOrganizationId!)) {
         staff = await repository.loadStaff(staffOrganizationId!);
       }
-    } on TaysirException catch (e) {
+    } on LessonsException catch (e) {
       failure = e.failure;
     } finally {
       loading = false;
@@ -84,7 +84,7 @@ class TaysirController extends ChangeNotifier {
   /// Sign-in, sign-out and account switches change what the server shows.
   void onAccountChanged(String? userId) {
     if (!loaded || userId == _userId) return;
-    staff = const TaysirStaffData();
+    staff = const LessonsStaffData();
     staffOrganizationId = null;
     unawaited(refresh());
   }
@@ -97,24 +97,24 @@ class TaysirController extends ChangeNotifier {
     staffOrganizationId = org;
     try {
       staff = await repository.loadStaff(org);
-    } on TaysirException catch (e) {
+    } on LessonsException catch (e) {
       failure = e.failure;
     }
     _notify();
   }
 
   /// Sample data only: view the programme as another role.
-  void setDemoPersona(TaysirDemoPersona persona) {
+  void setDemoPersona(LessonsDemoPersona persona) {
     final repo = repository;
-    if (repo is! DemoTaysirRepository) return;
+    if (repo is! DemoLessonsRepository) return;
     repo.persona = persona;
-    staff = const TaysirStaffData();
+    staff = const LessonsStaffData();
     staffOrganizationId = null;
     unawaited(refresh());
   }
 
-  TaysirDemoPersona? get demoPersona =>
-      repository is DemoTaysirRepository ? (repository as DemoTaysirRepository).persona : null;
+  LessonsDemoPersona? get demoPersona =>
+      repository is DemoLessonsRepository ? (repository as DemoLessonsRepository).persona : null;
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -126,7 +126,7 @@ class TaysirController extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Runs a write, then reloads. Errors reach the caller as [TaysirException].
+  /// Runs a write, then reloads. Errors reach the caller as [LessonsException].
   Future<T> _write<T>(Future<T> Function() call) async {
     final result = await call();
     await refresh();
@@ -134,50 +134,50 @@ class TaysirController extends ChangeNotifier {
   }
 
   // ----------------------------------------------------------- selectors
-  TaysirMosque? mosque(String id) => catalog.mosques[id];
-  TaysirPreacher? preacher(String id) => catalog.preachers[id];
-  TaysirDistrict? district(String? id) => catalog.districts[id];
-  TaysirSeries? seriesOf(String? id) => id == null ? null : catalog.series[id];
-  TaysirLesson? lesson(String id) => catalog.lessons[id];
+  Mosque? mosque(String id) => catalog.mosques[id];
+  Preacher? preacher(String id) => catalog.preachers[id];
+  District? district(String? id) => catalog.districts[id];
+  LessonSeries? seriesOf(String? id) => id == null ? null : catalog.series[id];
+  Lesson? lesson(String id) => catalog.lessons[id];
   String cityOfMosque(String mosqueId) => cityOf(catalog.mosques[mosqueId], catalog.districts);
 
   /// What the public calendar shows: approved sessions, and cancelled ones
   /// (kept visible, marked cancelled).
-  Iterable<TaysirLesson> get publicLessons =>
+  Iterable<Lesson> get publicLessons =>
       catalog.lessons.values.where((l) => (l.isPublic || l.isCancelled) && _ready(l));
 
-  bool _ready(TaysirLesson l) =>
+  bool _ready(Lesson l) =>
       catalog.mosques.containsKey(l.mosqueId) && catalog.preachers.containsKey(l.preacherId);
 
-  List<TaysirLesson> get upcoming =>
+  List<Lesson> get upcoming =>
       publicLessons.where((l) => l.isPublic && !l.date.isBefore(today)).toList()..sort(compareLessons);
 
-  List<TaysirLesson> upcomingWhere(bool Function(TaysirLesson) test) => upcoming.where(test).toList();
+  List<Lesson> upcomingWhere(bool Function(Lesson) test) => upcoming.where(test).toList();
 
-  List<TaysirLesson> pastWhere(bool Function(TaysirLesson) test) =>
+  List<Lesson> pastWhere(bool Function(Lesson) test) =>
       publicLessons.where((l) => l.isPublic && l.date.isBefore(today) && test(l)).toList()
         ..sort((a, b) => compareLessons(b, a));
 
-  List<TaysirLesson> sessionsOf(String seriesId) =>
+  List<Lesson> sessionsOf(String seriesId) =>
       publicLessons.where((l) => l.seriesId == seriesId).toList()..sort(compareLessons);
 
-  List<TaysirSeries> get approvedSeries => catalog.series.values.where((s) => s.status == 'approved').toList();
+  List<LessonSeries> get approvedSeries => catalog.series.values.where((s) => s.status == 'approved').toList();
 
-  List<TaysirPreacher> get listedPreachers =>
+  List<Preacher> get listedPreachers =>
       catalog.preachers.values.where((p) => p.listed).toList()..sort((a, b) => a.nameAr.compareTo(b.nameAr));
 
-  List<TaysirMosque> get verifiedMosques => catalog.mosques.values.where((m) => m.verified).toList();
+  List<Mosque> get verifiedMosques => catalog.mosques.values.where((m) => m.verified).toList();
 
-  double startHours(TaysirLesson l) => lessonStartHours(l, catalog);
-  bool isLiveNow(TaysirLesson l) {
+  double startHours(Lesson l) => lessonStartHours(l, catalog);
+  bool isLiveNow(Lesson l) {
     if (!l.streamed || !l.isPublic || !sameDay(l.date, today)) return false;
-    final start = startHours(l), now = taysirNowHours();
+    final start = startHours(l), now = lessonsNowHours();
     return now >= start && now <= start + 1.25;
   }
 
   // Roles
   /// Organizations the console can open. Admins see all of them, including
-  /// ones without Taysir yet (that is where a master admin switches it on).
+  /// ones without Lessons yet (that is where a master admin switches it on).
   List<String> get consoleOrganizations {
     if (roles.admin) {
       return adminOrganizations.isNotEmpty
@@ -187,7 +187,7 @@ class TaysirController extends ChangeNotifier {
     return roles.coordinate.toList();
   }
 
-  TaysirOrganization? organization(String id) =>
+  LessonsOrganization? organization(String id) =>
       catalog.organizations[id] ?? adminOrganizations.where((o) => o.id == id).firstOrNull;
 
   String? get ownPreacherId => roles.ownPreacherId;
@@ -196,18 +196,18 @@ class TaysirController extends ChangeNotifier {
   bool coordinates(String organizationId) => roles.coordinates(organizationId);
 
   /// Pending requests the caller may review.
-  List<TaysirRequest> get pendingRequests =>
+  List<LessonRequest> get pendingRequests =>
       requestsOf(catalog.lessons.values.where((l) => roles.coordinates(l.organizationId)));
 
   /// The caller's own preacher requests (pending, rejected and withdrawn).
-  List<TaysirRequest> myRequests() {
+  List<LessonRequest> myRequests() {
     final pid = ownPreacherId;
     if (pid == null) return const [];
     return requestsOf(catalog.lessons.values.where((l) => l.preacherId == pid),
         statuses: const {'pending', 'rejected', 'withdrawn'});
   }
 
-  List<TaysirLesson> myLessons({required bool upcomingOnly}) {
+  List<Lesson> myLessons({required bool upcomingOnly}) {
     final pid = ownPreacherId;
     if (pid == null) return const [];
     final list = catalog.lessons.values
@@ -218,7 +218,7 @@ class TaysirController extends ChangeNotifier {
     return list;
   }
 
-  List<TaysirLesson> clashes(TaysirLesson l) => clashesOfLesson(l, catalog.lessons.values);
+  List<Lesson> clashes(Lesson l) => clashesOfLesson(l, catalog.lessons.values);
 
   // --------------------------------------------------------- viewer data
   bool hasReminder(String lessonId) => mine.reminders.containsKey(lessonId);
@@ -226,7 +226,7 @@ class TaysirController extends ChangeNotifier {
   bool isFollowing(String kind, String id) => mine.isFollowing(kind, id);
   bool attended(String lessonId) => mine.attended.contains(lessonId);
 
-  Future<void> setReminder(TaysirLesson l, String? lead) => _write(() => lead == null
+  Future<void> setReminder(Lesson l, String? lead) => _write(() => lead == null
       ? repository.removeReminder(l.id)
       : repository.setReminder(l.id, lead, reminderInstant(l, lead, catalog)));
 
@@ -236,7 +236,7 @@ class TaysirController extends ChangeNotifier {
   Future<void> toggleAttended(String lessonId) =>
       _write(() => repository.setAttended(lessonId, !attended(lessonId)));
 
-  Future<void> savePreferences(TaysirPreferences p) => _write(() => repository.savePreferences(p));
+  Future<void> savePreferences(LessonsPreferences p) => _write(() => repository.savePreferences(p));
 
   Future<void> markRead([List<String>? ids]) => _write(() => repository.markNotificationsRead(ids));
 
@@ -244,7 +244,7 @@ class TaysirController extends ChangeNotifier {
       _write(() => repository.flag(lessonId, kind, message));
 
   // ---------------------------------------------------- preacher / staff
-  Future<String> submit(TaysirDraft d) => _write(() => repository.submit(d));
+  Future<String> submit(LessonDraft d) => _write(() => repository.submit(d));
   Future<int> review(List<String> ids, String decision, {String? reason}) =>
       _write(() => repository.review(ids, decision, reason: reason));
   Future<int> undoReview(List<String> ids) => _write(() => repository.undoReview(ids));
@@ -261,14 +261,14 @@ class TaysirController extends ChangeNotifier {
   Future<void> setSubmit(String preacherId, bool on) => _write(() => repository.setSubmit(preacherId, on));
   Future<void> unlinkPreacher(String preacherId) => _write(() => repository.unlinkPreacher(preacherId));
   Future<String> createInvite(String preacherId) => _write(() => repository.createInvite(preacherId));
-  Future<TaysirInviteInfo?> inviteInfo(String token) => repository.inviteInfo(token);
+  Future<LessonsInviteInfo?> inviteInfo(String token) => repository.inviteInfo(token);
   Future<String> claimInvite(String token, List<String> languages) =>
       _write(() => repository.claimInvite(token, languages));
   Future<void> setCoordinator(String org, String profileId, bool on) =>
       _write(() => repository.setCoordinator(org, profileId, on));
   Future<void> setOrganizationEnabled(String org, bool on) =>
       _write(() => repository.setOrganizationEnabled(org, on));
-  Future<List<TaysirAccount>> searchAccounts(String query) => repository.searchAccounts(query);
+  Future<List<LessonsAccount>> searchAccounts(String query) => repository.searchAccounts(query);
   Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) =>
       _write(() => repository.setCoordinatorOrganizations(profileId, organizationIds));
   Future<String> upsertMosque(Map<String, dynamic> m) => _write(() => repository.upsertMosque(m));

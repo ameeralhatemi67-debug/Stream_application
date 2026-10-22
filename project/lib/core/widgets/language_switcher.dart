@@ -43,7 +43,7 @@ class LanguageSwitcher extends StatelessWidget {
 
   /// Labels read with tr() without a context do not depend on the locale, so
   /// const widgets and pages that never read it kept the old language (the
-  /// Taysir tabs and header did). Rebuild every element once, as a hot
+  /// Lessons tabs and header did). Rebuild every element once, as a hot
   /// reload does.
   static void _rebuildAll() {
     void mark(Element element) {

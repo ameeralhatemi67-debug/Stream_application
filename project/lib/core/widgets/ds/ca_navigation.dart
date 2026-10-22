@@ -53,7 +53,7 @@ class CaAppBar extends AppBar {
 }
 
 /// The tab shell's destinations in branch order: Discovery, Map, and the
-/// mosque lessons programme (Taysir, ADR-014).
+/// mosque lessons programme (Lessons, ADR-014).
 const List<(CaGlyph, String)> caTabDestinations = [
   (CaGlyph.list, 'nav.feed'),
   (CaGlyph.map, 'nav.map'),

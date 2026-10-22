@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:streamer_app/features/taysir/data/demo_taysir_repository.dart';
-import 'package:streamer_app/features/taysir/data/taysir_repository.dart';
-import 'package:streamer_app/features/taysir/domain/prayer_times.dart';
-import 'package:streamer_app/features/taysir/domain/taysir_dates.dart';
-import 'package:streamer_app/features/taysir/domain/taysir_models.dart';
-import 'package:streamer_app/features/taysir/domain/taysir_rules.dart';
-import 'package:streamer_app/features/taysir/state/taysir_controller.dart';
+import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart';
+import 'package:streamer_app/features/lessons/data/lessons_repository.dart';
+import 'package:streamer_app/features/lessons/domain/prayer_times.dart';
+import 'package:streamer_app/features/lessons/domain/lessons_dates.dart';
+import 'package:streamer_app/features/lessons/domain/lessons_models.dart';
+import 'package:streamer_app/features/lessons/domain/lessons_rules.dart';
+import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
 
 void main() {
   group('prayer times (Umm al-Qura)', () {
@@ -40,7 +40,7 @@ void main() {
 
     test('Riyadh today is UTC+3', () {
       final lateUtc = DateTime.utc(2026, 10, 21, 22, 30); // 01:30 on the 22nd in Riyadh
-      expect(isoDate(taysirToday(lateUtc)), '2026-10-22');
+      expect(isoDate(lessonsToday(lateUtc)), '2026-10-22');
     });
 
     test('clock labels', () {
@@ -59,8 +59,8 @@ void main() {
 
     test('a clash is the same mosque and slot, or the preacher booked twice', () {
       final day = DateTime(2026, 10, 25, 12);
-      TaysirLesson l(String id, String req, String mosque, String preacher, {String slot = 'isha', String status = 'approved'}) =>
-          TaysirLesson(id: id, organizationId: 'o', requestId: req, type: 'talk', topic: 'fiqh', titleAr: 'درس',
+      Lesson l(String id, String req, String mosque, String preacher, {String slot = 'isha', String status = 'approved'}) =>
+          Lesson(id: id, organizationId: 'o', requestId: req, type: 'talk', topic: 'fiqh', titleAr: 'درس',
               preacherId: preacher, mosqueId: mosque, date: day, slot: slot, status: status);
       final existing = [l('a', 'r1', 'm1', 'p1'), l('b', 'r2', 'm2', 'p2', slot: 'asr'), l('c', 'r3', 'm9', 'p9', status: 'rejected')];
       expect(clashesOfLesson(l('x', 'rx', 'm1', 'p5'), existing).map((c) => c.id), ['a']);
@@ -79,29 +79,29 @@ void main() {
 
   group('controller on sample data', () {
     test('a preacher submits, a coordinator approves, a guest sees it', () async {
-      final repo = DemoTaysirRepository(persona: TaysirDemoPersona.preacher);
-      final c = TaysirController(repo);
+      final repo = DemoLessonsRepository(persona: LessonsDemoPersona.preacher);
+      final c = LessonsController(repo);
       await c.ensureLoaded();
       expect(c.canSubmitOwn, isTrue);
       final before = c.publicLessons.length;
-      final req = await c.submit(TaysirDraft(
-          preacherId: DemoTaysirRepository.ownPreacher, type: 'lecture', topic: 'raqaiq', titleAr: 'محاضرة اختبار',
+      final req = await c.submit(LessonDraft(
+          preacherId: DemoLessonsRepository.ownPreacher, type: 'lecture', topic: 'raqaiq', titleAr: 'محاضرة اختبار',
           slot: 'isha', dates: [addDays(c.today, 9)], mosqueId: 'm1'));
       expect(c.myRequests().map((r) => r.id), contains(req));
 
-      c.setDemoPersona(TaysirDemoPersona.coordinator);
+      c.setDemoPersona(LessonsDemoPersona.coordinator);
       await c.refresh();
       expect(c.pendingRequests.map((r) => r.id), contains(req));
       expect(await c.review([req], 'approve'), 1);
 
-      c.setDemoPersona(TaysirDemoPersona.guest);
+      c.setDemoPersona(LessonsDemoPersona.guest);
       await c.refresh();
       expect(c.publicLessons.length, before + 1);
-      expect(() => c.review([req], 'approve'), throwsA(isA<TaysirException>()));
+      expect(() => c.review([req], 'approve'), throwsA(isA<LessonsException>()));
     });
 
     test('a viewer reminder is timed to the adhan', () async {
-      final c = TaysirController(DemoTaysirRepository(persona: TaysirDemoPersona.viewer));
+      final c = LessonsController(DemoLessonsRepository(persona: LessonsDemoPersona.viewer));
       await c.ensureLoaded();
       final l = c.upcoming.firstWhere((l) => !c.hasReminder(l.id));
       await c.setReminder(l, 'adhan');
@@ -111,11 +111,11 @@ void main() {
     });
 
     test('rejecting needs a reason, and only staff see pending requests', () async {
-      final c = TaysirController(DemoTaysirRepository(persona: TaysirDemoPersona.coordinator));
+      final c = LessonsController(DemoLessonsRepository(persona: LessonsDemoPersona.coordinator));
       await c.ensureLoaded();
       final req = c.pendingRequests.first.id;
-      expect(() => c.review([req], 'reject', reason: ''), throwsA(isA<TaysirException>()));
-      c.setDemoPersona(TaysirDemoPersona.viewer);
+      expect(() => c.review([req], 'reject', reason: ''), throwsA(isA<LessonsException>()));
+      c.setDemoPersona(LessonsDemoPersona.viewer);
       await c.refresh();
       expect(c.pendingRequests, isEmpty);
       expect(c.catalog.lessons.values.where((l) => l.status == 'pending'), isEmpty);

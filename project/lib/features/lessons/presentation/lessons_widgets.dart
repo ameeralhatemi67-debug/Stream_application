@@ -4,27 +4,27 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/prayer_times.dart';
-import '../domain/taysir_dates.dart';
-import '../domain/taysir_models.dart';
-import '../domain/taysir_rules.dart';
-import '../domain/taysir_vocab.dart';
-import '../state/taysir_controller.dart';
-import 'taysir_kit.dart';
-import 'taysir_modals.dart';
+import '../domain/lessons_dates.dart';
+import '../domain/lessons_models.dart';
+import '../domain/lessons_rules.dart';
+import '../domain/lessons_vocab.dart';
+import '../state/lessons_controller.dart';
+import 'lessons_kit.dart';
+import 'lessons_modals.dart';
 
 // ------------------------------------------------------------- text helpers
-String slotLabel(String slot) => 'taysir.slot.$slot'.tr();
-String prayerLabel(String slot) => 'taysir.prayer.$slot'.tr();
-String typeLabel(String t) => 'taysir.type.$t'.tr();
-String topicLabel(String t) => 'taysir.topic.$t'.tr();
-String audienceLabel(String a) => 'taysir.audience.$a'.tr();
-String languageLabel(String l) => 'taysir.language.$l'.tr();
-String cityLabel(String c) => 'taysir.city.$c'.tr();
-String facilityLabel(String f) => 'taysir.facility.$f'.tr();
-String statusLabel(String s) => 'taysir.status.$s'.tr();
+String slotLabel(String slot) => 'lessons.slot.$slot'.tr();
+String prayerLabel(String slot) => 'lessons.prayer.$slot'.tr();
+String typeLabel(String t) => 'lessons.type.$t'.tr();
+String topicLabel(String t) => 'lessons.topic.$t'.tr();
+String audienceLabel(String a) => 'lessons.audience.$a'.tr();
+String languageLabel(String l) => 'lessons.language.$l'.tr();
+String cityLabel(String c) => 'lessons.city.$c'.tr();
+String facilityLabel(String f) => 'lessons.facility.$f'.tr();
+String statusLabel(String s) => 'lessons.status.$s'.tr();
 
 /// "Al-Huda Grand Mosque · Al-Aqrabiyah".
-String placeOf(TaysirController c, TaysirLesson l, String lang) {
+String placeOf(LessonsController c, Lesson l, String lang) {
   final m = c.mosque(l.mosqueId);
   if (m == null) return '';
   final d = c.district(m.districtId);
@@ -32,19 +32,19 @@ String placeOf(TaysirController c, TaysirLesson l, String lang) {
 }
 
 /// "After Isha · ≈ 7:40 PM" or "at 8:00 PM", optionally with the date.
-String whenOf(TaysirController c, TaysirLesson l, String lang, {bool withDate = true}) {
+String whenOf(LessonsController c, Lesson l, String lang, {bool withDate = true}) {
   final t = clockLabel(c.startHours(l), lang);
-  final s = l.exactTime != null ? 'taysir.time.at'.tr(args: [t]) : '${slotLabel(l.slot)} · ${'taysir.time.approx'.tr(args: [t])}';
+  final s = l.exactTime != null ? 'lessons.time.at'.tr(args: [t]) : '${slotLabel(l.slot)} · ${'lessons.time.approx'.tr(args: [t])}';
   if (!withDate) return s;
   return '${weekdayName(l.date, lang, short: true)} ${gregorianLabel(l.date, lang, short: true)} · $s';
 }
 
 String agoText(DateTime at, {DateTime? now}) {
   final m = ((now ?? DateTime.now()).difference(at).inMinutes).clamp(1, 1 << 30);
-  if (m < 60) return 'taysir.ago.min'.tr(args: ['$m']);
+  if (m < 60) return 'lessons.ago.min'.tr(args: ['$m']);
   final h = (m / 60).round();
-  if (h < 24) return 'taysir.ago.hour'.tr(args: ['$h']);
-  return 'taysir.ago.day'.plural((h / 24).round());
+  if (h < 24) return 'lessons.ago.hour'.tr(args: ['$h']);
+  return 'lessons.ago.day'.plural((h / 24).round());
 }
 
 TTone typeTone(String t) => t == 'lecture' ? TTone.gold : t == 'talk' ? TTone.info : TTone.slate;
@@ -77,40 +77,40 @@ class StatusTag extends StatelessWidget {
 
 class LessonBadges extends StatelessWidget {
   const LessonBadges(this.lesson, {super.key, this.max = 4});
-  final TaysirLesson lesson;
+  final Lesson lesson;
   final int max;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final l = lesson;
     final out = <Widget>[];
     if (c.isLiveNow(l)) {
       out.add(const TLiveTag());
     } else if (l.streamed) {
-      out.add(TTag('taysir.lesson.streamed'.tr(), tone: TTone.liveSoft, icon: TGlyph.radio));
+      out.add(TTag('lessons.lesson.streamed'.tr(), tone: TTone.liveSoft, icon: TGlyph.radio));
     }
     final s = c.seriesOf(l.seriesId);
-    if (s != null && l.seq != null) out.add(TTag('taysir.lesson.of'.tr(args: ['${l.seq}', '${s.total}']), tone: TTone.slate, icon: TGlyph.repeat));
+    if (s != null && l.seq != null) out.add(TTag('lessons.lesson.of'.tr(args: ['${l.seq}', '${s.total}']), tone: TTone.slate, icon: TGlyph.repeat));
     if (l.language != 'ar') out.add(TTag(languageLabel(l.language), tone: TTone.info, icon: TGlyph.globe));
     if (l.interpretation != null) {
-      out.add(TTag('taysir.lesson.interp_tag'.tr(args: [languageLabel(l.interpretation!)]), tone: TTone.info, icon: TGlyph.languages));
+      out.add(TTag('lessons.lesson.interp_tag'.tr(args: [languageLabel(l.interpretation!)]), tone: TTone.info, icon: TGlyph.languages));
     }
     if (l.audience != 'all') out.add(TTag(audienceLabel(l.audience), tone: TTone.slate, icon: TGlyph.users));
-    if (l.womenSection && l.audience != 'women') out.add(TTag('taysir.lesson.women_tag'.tr(), tone: TTone.slate, icon: TGlyph.users));
+    if (l.womenSection && l.audience != 'women') out.add(TTag('lessons.lesson.women_tag'.tr(), tone: TTone.slate, icon: TGlyph.users));
     if (out.isEmpty) return const SizedBox.shrink();
     return Wrap(spacing: 6, runSpacing: 6, children: out.take(max).toList());
   }
 }
 
-void openLesson(BuildContext context, String id) => context.push('/taysir/lessons/$id');
+void openLesson(BuildContext context, String id) => context.push('/lessons/lesson/$id');
 
 class LessonCard extends StatelessWidget {
   const LessonCard(this.lesson, {super.key, this.preview = false});
-  final TaysirLesson lesson;
+  final Lesson lesson;
   final bool preview;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final l = lesson, lang = context.lang;
     final p = c.preacher(l.preacherId);
     return ClipRRect(
@@ -168,12 +168,12 @@ class _Meta extends StatelessWidget {
 
 class LessonRow extends StatelessWidget {
   const LessonRow(this.lesson, {super.key, this.showDate = false, this.extra});
-  final TaysirLesson lesson;
+  final Lesson lesson;
   final bool showDate;
   final Widget? extra;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final l = lesson, lang = context.lang;
     final p = c.preacher(l.preacherId);
     final t = clockLabel(c.startHours(l), lang);
@@ -201,7 +201,7 @@ class LessonRow extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Wrap(spacing: 6, runSpacing: 6, children: [
                 TypeTag(l.type),
-                if (cancelled) TTag('taysir.status.cancelled'.tr(), tone: TTone.danger, icon: TGlyph.x),
+                if (cancelled) TTag('lessons.status.cancelled'.tr(), tone: TTone.danger, icon: TGlyph.x),
               ]),
               const SizedBox(height: 6),
               Text(l.title(lang), maxLines: 2, overflow: TextOverflow.ellipsis,
@@ -227,12 +227,12 @@ class LessonRow extends StatelessWidget {
 /// Lessons grouped under day headings with Gregorian and Hijri dates.
 class LessonDayList extends StatelessWidget {
   const LessonDayList(this.lessons, {super.key, this.extra});
-  final List<TaysirLesson> lessons;
-  final Widget? Function(TaysirLesson)? extra;
+  final List<Lesson> lessons;
+  final Widget? Function(Lesson)? extra;
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
-    final groups = <List<TaysirLesson>>[];
+    final groups = <List<Lesson>>[];
     for (final l in lessons) {
       if (groups.isNotEmpty && sameDay(groups.last.first.date, l.date)) {
         groups.last.add(l);
@@ -259,15 +259,15 @@ class LessonDayList extends StatelessWidget {
 
 class RemindButton extends StatelessWidget {
   const RemindButton(this.lesson, {super.key, this.compact = false});
-  final TaysirLesson lesson;
+  final Lesson lesson;
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     if (!lesson.isPublic || lesson.date.isBefore(c.today)) return const SizedBox.shrink();
     final on = c.hasReminder(lesson.id);
-    void tap() => c.signedIn ? showRemindSheet(context, lesson) : showTSignIn(context, 'taysir.sign_in_remind'.tr());
-    final label = on ? 'taysir.lesson.reminder_on'.tr() : 'taysir.lesson.remind'.tr();
+    void tap() => c.signedIn ? showRemindSheet(context, lesson) : showTSignIn(context, 'lessons.sign_in_remind'.tr());
+    final label = on ? 'lessons.lesson.reminder_on'.tr() : 'lessons.lesson.remind'.tr();
     if (compact) {
       return Semantics(
         button: true,
@@ -296,49 +296,49 @@ class FollowButton extends StatelessWidget {
   final bool small, expand;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final on = c.isFollowing(kind, id);
-    return TButton(on ? 'taysir.follow.following'.tr() : 'taysir.follow.follow'.tr(),
+    return TButton(on ? 'lessons.follow.following'.tr() : 'lessons.follow.follow'.tr(),
         kind: on ? TBtn.ink : TBtn.outline,
         icon: on ? TGlyph.check : TGlyph.plus,
         small: small,
         expand: expand, onPressed: () {
       if (!c.signedIn) {
-        showTSignIn(context, 'taysir.sign_in_follow'.tr());
+        showTSignIn(context, 'lessons.sign_in_follow'.tr());
         return;
       }
-      tRun(context, () => c.toggleFollow(kind, id), success: on ? 'taysir.follow.off'.tr() : 'taysir.follow.on'.tr());
+      tRun(context, () => c.toggleFollow(kind, id), success: on ? 'lessons.follow.off'.tr() : 'lessons.follow.on'.tr());
     });
   }
 }
 
 class AttendToggle extends StatelessWidget {
   const AttendToggle(this.lesson, {super.key});
-  final TaysirLesson lesson;
+  final Lesson lesson;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     if (!c.signedIn) return const SizedBox.shrink();
     final on = c.attended(lesson.id);
-    return TChip(on ? 'taysir.lessons.attended'.tr() : 'taysir.lessons.did_attend'.tr(),
+    return TChip(on ? 'lessons.calendar.attended'.tr() : 'lessons.calendar.did_attend'.tr(),
         small: true,
         selected: on,
         icon: TGlyph.check,
         onTap: () => tRun(context, () => c.toggleAttended(lesson.id),
-            success: on ? 'taysir.lessons.removed_log'.tr() : 'taysir.lessons.added_log'.tr()));
+            success: on ? 'lessons.calendar.removed_log'.tr() : 'lessons.calendar.added_log'.tr()));
   }
 }
 
 class PreacherCard extends StatelessWidget {
   const PreacherCard(this.preacher, {super.key});
-  final TaysirPreacher preacher;
+  final Preacher preacher;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final p = preacher, lang = context.lang;
     final upcoming = c.upcoming.where((l) => l.preacherId == p.id).length;
     return TCard(
-      onTap: () => context.push('/taysir/preachers/${p.id}'),
+      onTap: () => context.push('/lessons/preachers/${p.id}'),
       child: Column(children: [
         TAvatar(name: p.name(lang), size: 64),
         const SizedBox(height: 10),
@@ -346,12 +346,12 @@ class PreacherCard extends StatelessWidget {
         if (p.title(lang).isNotEmpty)
           Text(p.title(lang), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: tBody(13, color: TC.muted, height: 1.4)),
         const SizedBox(height: 6),
-        Text('${cityLabel(p.city)} · ${p.languages.map((x) => TaysirVocab.languageNative[x] ?? x).join(' · ')}',
+        Text('${cityLabel(p.city)} · ${p.languages.map((x) => LessonsVocab.languageNative[x] ?? x).join(' · ')}',
             textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(12.5, color: TC.muted, height: 1.4)),
         const SizedBox(height: 8),
         Wrap(spacing: 6, runSpacing: 6, alignment: WrapAlignment.center, children: [
           TTag(tPlural('ahead', upcoming), tone: TTone.slate),
-          if (p.affiliation == 'ministry') TTag('taysir.affiliation.ministry'.tr(), tone: TTone.info),
+          if (p.affiliation == 'ministry') TTag('lessons.affiliation.ministry'.tr(), tone: TTone.info),
         ]),
         const SizedBox(height: 12),
         FollowButton(kind: 'preacher', id: p.id, small: true, expand: true),
@@ -362,22 +362,22 @@ class PreacherCard extends StatelessWidget {
 
 class SeriesCard extends StatelessWidget {
   const SeriesCard(this.series, {super.key});
-  final TaysirSeries series;
+  final LessonSeries series;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final s = series, lang = context.lang;
     final sessions = c.sessionsOf(s.id);
     final done = sessions.where((l) => l.date.isBefore(c.today)).length;
     final weekday = sessions.isEmpty ? '' : weekdayName(sessions.first.date, lang);
     return TCard(
-      onTap: () => context.push('/taysir/series/${s.id}'),
+      onTap: () => context.push('/lessons/series/${s.id}'),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const TIcon(TGlyph.repeat, size: 16, color: TC.goldIcon),
           const SizedBox(width: 6),
           Expanded(
-              child: Text('${'taysir.time.every'.tr(args: [weekday])} · ${slotLabel(s.slot)}', maxLines: 1, overflow: TextOverflow.ellipsis,
+              child: Text('${'lessons.time.every'.tr(args: [weekday])} · ${slotLabel(s.slot)}', maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: tBody(12.5, color: TC.bronze, weight: FontWeight.w600, height: 1.3))),
         ]),
         const SizedBox(height: 8),
@@ -388,7 +388,7 @@ class SeriesCard extends StatelessWidget {
         const SizedBox(height: 10),
         TMeter(value: done, max: s.total),
         const SizedBox(height: 4),
-        Text('taysir.discover.done_of'.tr(args: ['$done', '${s.total}']), style: tBody(12.5, color: TC.muted, height: 1.4)),
+        Text('lessons.discover.done_of'.tr(args: ['$done', '${s.total}']), style: tBody(12.5, color: TC.muted, height: 1.4)),
       ]),
     );
   }
@@ -405,20 +405,20 @@ class _PrayerStripState extends State<PrayerStrip> {
   String city = 'khobar';
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
-    final centre = TaysirVocab.cityCentre[city]!;
+    final centre = LessonsVocab.cityCentre[city]!;
     final pt = PrayerTimes.on(c.today, centre.$1, centre.$2);
-    final now = taysirNowHours();
-    final nextIdx = TaysirVocab.slots.indexWhere((s) => pt.of(s) > now);
+    final now = lessonsNowHours();
+    final nextIdx = LessonsVocab.slots.indexWhere((s) => pt.of(s) > now);
     final today = c.upcoming.where((l) => sameDay(l.date, c.today) && c.cityOfMosque(l.mosqueId) == city).toList();
     final columns = [
       for (var i = 0; i < 5; i++)
         _PrayerColumn(
-          slot: TaysirVocab.slots[i],
-          time: clockLabel(pt.of(TaysirVocab.slots[i]), lang),
+          slot: LessonsVocab.slots[i],
+          time: clockLabel(pt.of(LessonsVocab.slots[i]), lang),
           state: nextIdx == -1 || i < nextIdx ? 0 : i == nextIdx ? 1 : 2,
-          lessons: today.where((l) => l.slot == TaysirVocab.slots[i]).toList(),
+          lessons: today.where((l) => l.slot == LessonsVocab.slots[i]).toList(),
         )
     ];
     return TCard(
@@ -426,15 +426,15 @@ class _PrayerStripState extends State<PrayerStrip> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.end, spacing: 12, runSpacing: 10, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            TEyebrow('${'taysir.time.today'.tr()} · ${hijriLabel(c.today, lang)}'),
+            TEyebrow('${'lessons.time.today'.tr()} · ${hijriLabel(c.today, lang)}'),
             const SizedBox(height: 4),
-            Text('taysir.discover.strip_title'.tr(), style: tDisplay(context.wide ? 22 : 18)),
+            Text('lessons.discover.strip_title'.tr(), style: tDisplay(context.wide ? 22 : 18)),
           ]),
           TSeg<String>(
             small: true,
             value: city,
             onChanged: (v) => setState(() => city = v),
-            options: [for (final x in TaysirVocab.mapCities) TSegOption(x, cityLabel(x))],
+            options: [for (final x in LessonsVocab.mapCities) TSegOption(x, cityLabel(x))],
           ),
         ]),
         const SizedBox(height: 14),
@@ -462,10 +462,10 @@ class _PrayerColumn extends StatelessWidget {
   const _PrayerColumn({required this.slot, required this.time, required this.state, required this.lessons});
   final String slot, time;
   final int state; // 0 past, 1 next, 2 later
-  final List<TaysirLesson> lessons;
+  final List<Lesson> lessons;
   @override
   Widget build(BuildContext context) {
-    final c = context.read<TaysirController>();
+    final c = context.read<LessonsController>();
     final lang = context.lang;
     final next = state == 1;
     return Opacity(
@@ -485,10 +485,10 @@ class _PrayerColumn extends StatelessWidget {
             Expanded(child: Text(prayerLabel(slot), style: tStrong(14, color: next ? TC.onNight : TC.ink))),
             Text(time, style: tBody(12.5, color: next ? TC.onNightGold : TC.muted, height: 1.2)),
           ]),
-          if (next) Padding(padding: const EdgeInsets.only(top: 4), child: Text('taysir.discover.next_prayer'.tr(), style: tBody(11.5, color: TC.onNightGold, weight: FontWeight.w700))),
+          if (next) Padding(padding: const EdgeInsets.only(top: 4), child: Text('lessons.discover.next_prayer'.tr(), style: tBody(11.5, color: TC.onNightGold, weight: FontWeight.w700))),
           const SizedBox(height: 8),
           if (lessons.isEmpty)
-            Text('taysir.discover.no_lessons'.tr(), style: tBody(12.5, color: next ? TC.onNight2 : TC.faint))
+            Text('lessons.discover.no_lessons'.tr(), style: tBody(12.5, color: next ? TC.onNight2 : TC.faint))
           else
             for (final l in lessons)
               InkWell(
@@ -512,7 +512,7 @@ class _PrayerColumn extends StatelessWidget {
 /// A mosque row with its lesson count coin.
 class MosqueRow extends StatelessWidget {
   const MosqueRow({super.key, required this.mosque, required this.count, this.subtitle, this.selected = false, this.onTap, this.live = false});
-  final TaysirMosque mosque;
+  final Mosque mosque;
   final int count;
   final String? subtitle;
   final bool selected, live;
@@ -578,10 +578,10 @@ class FacilityList extends StatelessWidget {
 }
 
 /// The approved lessons at a mosque between [from] and [to].
-List<TaysirLesson> lessonsAt(TaysirController c, String mosqueId, {DateTime? from, DateTime? to}) =>
+List<Lesson> lessonsAt(LessonsController c, String mosqueId, {DateTime? from, DateTime? to}) =>
     c.upcoming.where((l) => l.mosqueId == mosqueId && (from == null || !l.date.isBefore(from)) && (to == null || !l.date.isAfter(to))).toList();
 
 /// Clashes for a candidate lesson, against everything the caller can see.
-List<TaysirLesson> candidateClashes(TaysirController c,
+List<Lesson> candidateClashes(LessonsController c,
         {required String requestId, required DateTime date, required String slot, required String mosqueId, required String preacherId}) =>
     clashesFor((id: null, requestId: requestId, date: date, slot: slot, mosqueId: mosqueId, preacherId: preacherId), c.catalog.lessons.values);

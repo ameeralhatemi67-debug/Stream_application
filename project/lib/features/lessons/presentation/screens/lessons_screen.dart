@@ -3,38 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../domain/taysir_dates.dart';
-import '../../domain/taysir_models.dart';
-import '../../domain/taysir_rules.dart';
-import '../../domain/taysir_vocab.dart';
-import '../../state/taysir_controller.dart';
-import '../taysir_kit.dart';
-import '../taysir_shell.dart';
-import '../taysir_widgets.dart';
+import '../../domain/lessons_dates.dart';
+import '../../domain/lessons_models.dart';
+import '../../domain/lessons_rules.dart';
+import '../../domain/lessons_vocab.dart';
+import '../../state/lessons_controller.dart';
+import '../lessons_kit.dart';
+import '../lessons_shell.dart';
+import '../lessons_widgets.dart';
 
-/// The public calendar (Taysir's activities page, upgraded).
-class TaysirLessonsScreen extends StatefulWidget {
-  const TaysirLessonsScreen({super.key, this.initial = TaysirFilter.none});
-  final TaysirFilter initial;
+/// The public calendar (Lessons's activities page, upgraded).
+class LessonsScreen extends StatefulWidget {
+  const LessonsScreen({super.key, this.initial = LessonFilter.none});
+  final LessonFilter initial;
   @override
-  State<TaysirLessonsScreen> createState() => _TaysirLessonsScreenState();
+  State<LessonsScreen> createState() => _LessonsScreenState();
 }
 
-class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
-  late TaysirFilter f = widget.initial;
+class _LessonsScreenState extends State<LessonsScreen> {
+  late LessonFilter f = widget.initial;
   bool past = false, weekGrid = false;
   DateTime? day;
   final search = TextEditingController();
 
   @override
-  void didUpdateWidget(TaysirLessonsScreen old) {
+  void didUpdateWidget(LessonsScreen old) {
     super.didUpdateWidget(old);
     if (old.initial != widget.initial) setState(() => f = widget.initial);
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang, wide = context.wide;
     final base = past ? c.pastWhere((_) => true) : (c.publicLessons.where((l) => !l.date.isBefore(c.today)).toList()..sort(compareLessons));
     final matched = base.where((l) => f.matches(l, c.catalog)).toList();
@@ -46,12 +46,12 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
         : SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(children: [
-              _DayChip(top: 'taysir.all'.tr(), big: '∞', bottom: 'taysir.lessons.two_weeks'.tr(), selected: day == null, onTap: () => setState(() => day = null)),
+              _DayChip(top: 'lessons.all'.tr(), big: '∞', bottom: 'lessons.calendar.two_weeks'.tr(), selected: day == null, onTap: () => setState(() => day = null)),
               for (final d in days)
                 _DayChip(
-                  top: sameDay(d, c.today) ? 'taysir.time.today'.tr() : weekdayName(d, lang, short: true),
+                  top: sameDay(d, c.today) ? 'lessons.time.today'.tr() : weekdayName(d, lang, short: true),
                   big: '${d.day}',
-                  bottom: '${hijriOf(d).day} ${'taysir.time.hijri_short'.tr()}',
+                  bottom: '${hijriOf(d).day} ${'lessons.time.hijri_short'.tr()}',
                   count: matched.where((l) => sameDay(l.date, d)).length,
                   selected: day != null && sameDay(day!, d),
                   onTap: () => setState(() => day = day != null && sameDay(day!, d) ? null : d),
@@ -62,10 +62,10 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
     final list = shown.isEmpty
         ? TEmpty(
             icon: TGlyph.search,
-            title: 'taysir.lessons.empty_title'.tr(),
-            body: 'taysir.lessons.empty_body'.tr(),
-            action: TButton('taysir.lessons.clear'.tr(), onPressed: () => setState(() {
-              f = TaysirFilter.none;
+            title: 'lessons.calendar.empty_title'.tr(),
+            body: 'lessons.calendar.empty_body'.tr(),
+            action: TButton('lessons.calendar.clear'.tr(), onPressed: () => setState(() {
+              f = LessonFilter.none;
               search.clear();
               day = null;
             })))
@@ -78,17 +78,17 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
         day = null;
       }),
       options: [
-        TSegOption(false, 'taysir.lessons.upcoming'.tr(), count: c.upcoming.length),
-        TSegOption(true, 'taysir.lessons.past'.tr()),
+        TSegOption(false, 'lessons.calendar.upcoming'.tr(), count: c.upcoming.length),
+        TSegOption(true, 'lessons.calendar.past'.tr()),
       ],
     );
 
     if (!wide) {
-      return TaysirTabBody(children: [
+      return LessonsTabBody(children: [
         Row(children: [
           Expanded(
             child: TSearchBox(
-              hint: 'taysir.lessons.search_hint'.tr(),
+              hint: 'lessons.calendar.search_hint'.tr(),
               controller: search,
               onChanged: (v) => setState(() => f = f.copyWith(query: v)),
               trailing: _FilterButton(count: f.activeCount, onTap: () => _openFilters(context)),
@@ -102,21 +102,21 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
       ]);
     }
 
-    return TaysirTabBody(children: [
+    return LessonsTabBody(children: [
       TPageHead(
-        eyebrow: 'taysir.lessons.eyebrow'.tr(),
-        title: 'taysir.lessons.title'.tr(),
-        subtitle: 'taysir.lessons.subtitle'.tr(),
+        eyebrow: 'lessons.calendar.eyebrow'.tr(),
+        title: 'lessons.calendar.title'.tr(),
+        subtitle: 'lessons.calendar.subtitle'.tr(),
         actions: [
           TSeg<bool>(
             value: weekGrid,
             onChanged: (v) => setState(() => weekGrid = v),
             options: [
-              TSegOption(false, 'taysir.lessons.list'.tr(), icon: TGlyph.list),
-              TSegOption(true, 'taysir.lessons.week'.tr(), icon: TGlyph.grid),
+              TSegOption(false, 'lessons.calendar.list'.tr(), icon: TGlyph.list),
+              TSegOption(true, 'lessons.calendar.week'.tr(), icon: TGlyph.grid),
             ],
           ),
-          TButton('taysir.lessons.on_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map')),
+          TButton('lessons.calendar.on_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map')),
         ],
       ),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -146,10 +146,10 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
   Future<void> _openFilters(BuildContext context) async {
     var draft = f;
     await showTModal<void>(context,
-        title: 'taysir.lessons.filter_title'.tr(),
+        title: 'lessons.calendar.filter_title'.tr(),
         body: (ctx) => StatefulBuilder(builder: (ctx, set) => _FilterPanel(f: draft, onChanged: (v) => set(() => draft = v), showSearch: false)),
         footer: (ctx) => [
-              TButton('taysir.lessons.show_results'.tr(), kind: TBtn.minted, expand: true, onPressed: () {
+              TButton('lessons.calendar.show_results'.tr(), kind: TBtn.minted, expand: true, onPressed: () {
                 setState(() => f = draft);
                 Navigator.of(ctx).pop();
               }),
@@ -163,7 +163,7 @@ class _FilterButton extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Stack(clipBehavior: Clip.none, children: [
-        TIconButton(TGlyph.filter, tooltip: 'taysir.lessons.filter'.tr(), onPressed: onTap),
+        TIconButton(TGlyph.filter, tooltip: 'lessons.calendar.filter'.tr(), onPressed: onTap),
         if (count > 0)
           PositionedDirectional(
             top: 4,
@@ -229,13 +229,13 @@ class _DayChip extends StatelessWidget {
 
 class _FilterPanel extends StatelessWidget {
   const _FilterPanel({required this.f, required this.onChanged, this.search, this.showSearch = true});
-  final TaysirFilter f;
-  final ValueChanged<TaysirFilter> onChanged;
+  final LessonFilter f;
+  final ValueChanged<LessonFilter> onChanged;
   final TextEditingController? search;
   final bool showSearch;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final districts = c.catalog.districts.values.where((d) => f.city == null || d.city == f.city).toList()..sort((a, b) => a.sort.compareTo(b.sort));
     final mosques = c.verifiedMosques
@@ -257,51 +257,51 @@ class _FilterPanel extends StatelessWidget {
               initialValue: value,
               isExpanded: true,
               decoration: tInput(),
-              items: [DropdownMenuItem<String?>(value: null, child: Text('taysir.all'.tr())), ...items],
+              items: [DropdownMenuItem<String?>(value: null, child: Text('lessons.all'.tr())), ...items],
               onChanged: on,
             ),
           ),
         );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (showSearch && search != null) ...[
-        TSearchBox(hint: 'taysir.lessons.search_hint'.tr(), controller: search, onChanged: (v) => onChanged(f.copyWith(query: v))),
+        TSearchBox(hint: 'lessons.calendar.search_hint'.tr(), controller: search, onChanged: (v) => onChanged(f.copyWith(query: v))),
         const SizedBox(height: 14),
       ],
-      group('taysir.lessons.city'.tr(), [
-        for (final x in TaysirVocab.cities.where((x) => x != 'other'))
+      group('lessons.calendar.city'.tr(), [
+        for (final x in LessonsVocab.cities.where((x) => x != 'other'))
           TChip(cityLabel(x), small: true, selected: f.city == x,
               onTap: () => onChanged(f.copyWith(city: f.city == x ? null : x, districtId: null, mosqueId: null))),
       ]),
-      drop('taysir.lessons.district'.tr(), f.districtId, [for (final d in districts) DropdownMenuItem(value: d.id, child: Text(d.name(lang)))],
+      drop('lessons.calendar.district'.tr(), f.districtId, [for (final d in districts) DropdownMenuItem(value: d.id, child: Text(d.name(lang)))],
           (v) => onChanged(f.copyWith(districtId: v, mosqueId: null))),
-      drop('taysir.lessons.mosque'.tr(), f.mosqueId, [for (final m in mosques) DropdownMenuItem(value: m.id, child: Text(m.name(lang), overflow: TextOverflow.ellipsis))],
+      drop('lessons.calendar.mosque'.tr(), f.mosqueId, [for (final m in mosques) DropdownMenuItem(value: m.id, child: Text(m.name(lang), overflow: TextOverflow.ellipsis))],
           (v) => onChanged(f.copyWith(mosqueId: v))),
-      drop('taysir.lessons.preacher'.tr(), f.preacherId,
+      drop('lessons.calendar.preacher'.tr(), f.preacherId,
           [for (final p in c.listedPreachers) DropdownMenuItem(value: p.id, child: Text(p.name(lang), overflow: TextOverflow.ellipsis))],
           (v) => onChanged(f.copyWith(preacherId: v))),
-      group('taysir.lessons.type'.tr(), [
-        for (final t in TaysirVocab.types)
+      group('lessons.calendar.type'.tr(), [
+        for (final t in LessonsVocab.types)
           TChip(typeLabel(t), small: true, icon: typeGlyph(t), selected: f.type == t, onTap: () => onChanged(f.copyWith(type: f.type == t ? null : t))),
       ]),
-      group('taysir.lessons.language'.tr(), [
-        for (final x in TaysirVocab.languages)
-          TChip(TaysirVocab.languageNative[x]!, small: true, selected: f.language == x, onTap: () => onChanged(f.copyWith(language: f.language == x ? null : x))),
+      group('lessons.calendar.language'.tr(), [
+        for (final x in LessonsVocab.languages)
+          TChip(LessonsVocab.languageNative[x]!, small: true, selected: f.language == x, onTap: () => onChanged(f.copyWith(language: f.language == x ? null : x))),
       ]),
-      group('taysir.lessons.audience'.tr(), [
-        for (final a in TaysirVocab.audiences)
+      group('lessons.calendar.audience'.tr(), [
+        for (final a in LessonsVocab.audiences)
           TChip(audienceLabel(a), small: true, selected: f.audience == a, onTap: () => onChanged(f.copyWith(audience: f.audience == a ? null : a))),
       ]),
-      group('taysir.lessons.subject'.tr(), [
-        for (final t in TaysirVocab.topics)
+      group('lessons.calendar.subject'.tr(), [
+        for (final t in LessonsVocab.topics)
           TChip(topicLabel(t), small: true, selected: f.topic == t, onTap: () => onChanged(f.copyWith(topic: f.topic == t ? null : t))),
       ]),
-      TToggleRow(label: 'taysir.lessons.women'.tr(), icon: TGlyph.users, value: f.womenOnly, onChanged: (v) => onChanged(f.copyWith(womenOnly: v))),
-      TToggleRow(label: 'taysir.lessons.live'.tr(), icon: TGlyph.radio, value: f.streamedOnly, onChanged: (v) => onChanged(f.copyWith(streamedOnly: v))),
-      TToggleRow(label: 'taysir.lessons.series_only'.tr(), icon: TGlyph.repeat, value: f.seriesOnly, onChanged: (v) => onChanged(f.copyWith(seriesOnly: v))),
+      TToggleRow(label: 'lessons.calendar.women'.tr(), icon: TGlyph.users, value: f.womenOnly, onChanged: (v) => onChanged(f.copyWith(womenOnly: v))),
+      TToggleRow(label: 'lessons.calendar.live'.tr(), icon: TGlyph.radio, value: f.streamedOnly, onChanged: (v) => onChanged(f.copyWith(streamedOnly: v))),
+      TToggleRow(label: 'lessons.calendar.series_only'.tr(), icon: TGlyph.repeat, value: f.seriesOnly, onChanged: (v) => onChanged(f.copyWith(seriesOnly: v))),
       if (f.activeCount > 0)
         Align(
           alignment: AlignmentDirectional.centerStart,
-          child: TButton('taysir.lessons.clear_n'.tr(args: ['${f.activeCount}']), kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => onChanged(f.cleared())),
+          child: TButton('lessons.calendar.clear_n'.tr(args: ['${f.activeCount}']), kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => onChanged(f.cleared())),
         ),
     ]);
   }
@@ -310,12 +310,12 @@ class _FilterPanel extends StatelessWidget {
 /// Seven days by five prayers.
 class _WeekGrid extends StatelessWidget {
   const _WeekGrid({required this.lessons, required this.from});
-  final List<TaysirLesson> lessons;
+  final List<Lesson> lessons;
   final DateTime from;
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final days = [for (var i = 0; i < 7; i++) addDays(from, i)];
     Color typeColor(String t) => t == 'lecture' ? TC.gold : t == 'talk' ? TC.infoFg : TC.slateFg;
     return SingleChildScrollView(
@@ -331,13 +331,13 @@ class _WeekGrid extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(children: [
-                  Text(sameDay(d, c.today) ? 'taysir.time.today'.tr() : weekdayName(d, lang, short: true), style: tStrong(13)),
+                  Text(sameDay(d, c.today) ? 'lessons.time.today'.tr() : weekdayName(d, lang, short: true), style: tStrong(13)),
                   Text(gregorianLabel(d, lang, short: true), style: tBody(12, color: TC.ink2, height: 1.3)),
                   Text(hijriLabel(d, lang, year: false), style: tBody(11, color: TC.bronze, height: 1.3)),
                 ]),
               ),
           ]),
-          for (final s in TaysirVocab.slots)
+          for (final s in LessonsVocab.slots)
             TableRow(children: [
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -353,7 +353,7 @@ class _WeekGrid extends StatelessWidget {
                   child: Column(children: [
                     for (final l in lessons.where((l) => sameDay(l.date, d) && l.slot == s))
                       InkWell(
-                        onTap: () => context.push('/taysir/lessons/${l.id}'),
+                        onTap: () => context.push('/lessons/lesson/${l.id}'),
                         child: Container(
                           width: double.infinity,
                           margin: const EdgeInsets.only(bottom: 4),

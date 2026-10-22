@@ -1,4 +1,4 @@
-import 'taysir_dates.dart';
+import 'lessons_dates.dart';
 
 /// Picks the Arabic or English text, falling back to whichever exists.
 String pick(String lang, String ar, String en) =>
@@ -10,14 +10,14 @@ List<String> _list(Object? v) =>
 DateTime? _time(Object? v) => v == null ? null : DateTime.parse(v.toString()).toLocal();
 double? _num(Object? v) => v == null ? null : (v as num).toDouble();
 
-class TaysirDistrict {
-  const TaysirDistrict(
+class District {
+  const District(
       {required this.id, required this.city, required this.nameAr, required this.nameEn, this.sort = 0});
   final String id, city, nameAr, nameEn;
   final int sort;
   String name(String lang) => pick(lang, nameAr, nameEn);
 
-  factory TaysirDistrict.fromJson(Map<String, dynamic> j) => TaysirDistrict(
+  factory District.fromJson(Map<String, dynamic> j) => District(
       id: _s(j['id']),
       city: _s(j['city']),
       nameAr: _s(j['name_ar']),
@@ -25,15 +25,15 @@ class TaysirDistrict {
       sort: (j['sort'] as num?)?.toInt() ?? 0);
 }
 
-class TaysirOrganization {
-  const TaysirOrganization(
+class LessonsOrganization {
+  const LessonsOrganization(
       {required this.id, required this.nameAr, required this.nameEn, this.enabled = true, this.verified = false, this.avatarUrl});
   final String id, nameAr, nameEn;
   final bool enabled, verified;
   final String? avatarUrl;
   String name(String lang) => pick(lang, nameAr, nameEn);
 
-  factory TaysirOrganization.fromJson(Map<String, dynamic> j) => TaysirOrganization(
+  factory LessonsOrganization.fromJson(Map<String, dynamic> j) => LessonsOrganization(
       id: _s(j['organization_id'] ?? j['id']),
       nameAr: _s(j['name_ar']),
       nameEn: _s(j['name_en']),
@@ -41,12 +41,12 @@ class TaysirOrganization {
       verified: j['is_verified'] as bool? ?? false,
       avatarUrl: j['avatar_url'] as String?);
 
-  TaysirOrganization copyWith({bool? enabled}) => TaysirOrganization(
+  LessonsOrganization copyWith({bool? enabled}) => LessonsOrganization(
       id: id, nameAr: nameAr, nameEn: nameEn, enabled: enabled ?? this.enabled, verified: verified, avatarUrl: avatarUrl);
 }
 
-class TaysirMosque {
-  const TaysirMosque({
+class Mosque {
+  const Mosque({
     required this.id,
     required this.nameAr,
     this.nameEn = '',
@@ -73,7 +73,7 @@ class TaysirMosque {
           ? Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude')
           : null;
 
-  factory TaysirMosque.fromJson(Map<String, dynamic> j) => TaysirMosque(
+  factory Mosque.fromJson(Map<String, dynamic> j) => Mosque(
       id: _s(j['id']),
       nameAr: _s(j['name_ar']),
       nameEn: _s(j['name_en']),
@@ -85,9 +85,9 @@ class TaysirMosque {
       verified: j['verified'] as bool? ?? false,
       suggestedBy: j['suggested_by'] as String?);
 
-  TaysirMosque copyWith({bool? verified, String? nameAr, String? nameEn, String? districtId,
+  Mosque copyWith({bool? verified, String? nameAr, String? nameEn, String? districtId,
           double? latitude, double? longitude, List<String>? facilities}) =>
-      TaysirMosque(
+      Mosque(
           id: id,
           nameAr: nameAr ?? this.nameAr,
           nameEn: nameEn ?? this.nameEn,
@@ -100,8 +100,8 @@ class TaysirMosque {
           suggestedBy: suggestedBy);
 }
 
-class TaysirPreacher {
-  const TaysirPreacher({
+class Preacher {
+  const Preacher({
     required this.id,
     required this.organizationId,
     this.linkedProfileId,
@@ -124,7 +124,7 @@ class TaysirPreacher {
   String title(String lang) => pick(lang, titleAr, titleEn);
   String bio(String lang) => pick(lang, bioAr, bioEn);
 
-  factory TaysirPreacher.fromJson(Map<String, dynamic> j) => TaysirPreacher(
+  factory Preacher.fromJson(Map<String, dynamic> j) => Preacher(
       id: _s(j['id']),
       organizationId: _s(j['organization_id']),
       linkedProfileId: j['linked_profile_id'] as String?,
@@ -139,10 +139,10 @@ class TaysirPreacher {
       languages: _list(j['languages']),
       listed: j['listed'] as bool? ?? true);
 
-  TaysirPreacher copyWith({String? linkedProfileId, bool clearLink = false, List<String>? languages,
+  Preacher copyWith({String? linkedProfileId, bool clearLink = false, List<String>? languages,
           String? nameAr, String? nameEn, String? titleAr, String? titleEn, String? city,
           String? affiliation, bool? listed}) =>
-      TaysirPreacher(
+      Preacher(
           id: id,
           organizationId: organizationId,
           linkedProfileId: clearLink ? null : (linkedProfileId ?? this.linkedProfileId),
@@ -158,8 +158,8 @@ class TaysirPreacher {
           listed: listed ?? this.listed);
 }
 
-class TaysirSeries {
-  const TaysirSeries({
+class LessonSeries {
+  const LessonSeries({
     required this.id,
     required this.organizationId,
     required this.requestId,
@@ -179,7 +179,7 @@ class TaysirSeries {
   final int total;
   String title(String lang) => pick(lang, titleAr, titleEn);
 
-  factory TaysirSeries.fromJson(Map<String, dynamic> j) => TaysirSeries(
+  factory LessonSeries.fromJson(Map<String, dynamic> j) => LessonSeries(
       id: _s(j['id']),
       organizationId: _s(j['organization_id']),
       requestId: _s(j['request_id']),
@@ -195,14 +195,14 @@ class TaysirSeries {
       total: (j['total'] as num).toInt(),
       status: _s(j['status']));
 
-  TaysirSeries copyWith({String? status, String? mosqueId}) => TaysirSeries(
+  LessonSeries copyWith({String? status, String? mosqueId}) => LessonSeries(
       id: id, organizationId: organizationId, requestId: requestId, preacherId: preacherId,
       mosqueId: mosqueId ?? this.mosqueId, titleAr: titleAr, titleEn: titleEn, type: type, topic: topic,
       language: language, audience: audience, slot: slot, total: total, status: status ?? this.status);
 }
 
-class TaysirLesson {
-  const TaysirLesson({
+class Lesson {
+  const Lesson({
     required this.id,
     required this.organizationId,
     required this.requestId,
@@ -246,7 +246,7 @@ class TaysirLesson {
   bool get isPublic => status == 'approved';
   bool get isCancelled => status == 'cancelled';
 
-  factory TaysirLesson.fromJson(Map<String, dynamic> j) => TaysirLesson(
+  factory Lesson.fromJson(Map<String, dynamic> j) => Lesson(
       id: _s(j['id']),
       organizationId: _s(j['organization_id']),
       requestId: _s(j['request_id']),
@@ -277,7 +277,7 @@ class TaysirLesson {
       reviewedBy: j['reviewed_by'] as String?,
       reviewedAt: _time(j['reviewed_at']));
 
-  TaysirLesson copyWith({
+  Lesson copyWith({
     String? status,
     String? rejectionReason,
     bool clearRejection = false,
@@ -293,7 +293,7 @@ class TaysirLesson {
     String? exactTime,
     bool clearExact = false,
   }) =>
-      TaysirLesson(
+      Lesson(
           id: id,
           organizationId: organizationId,
           requestId: requestId,
@@ -325,13 +325,13 @@ class TaysirLesson {
           reviewedAt: clearReview ? null : (reviewedAt ?? this.reviewedAt));
 }
 
-class TaysirReport {
-  const TaysirReport(
+class LessonsReport {
+  const LessonsReport(
       {required this.lessonId, required this.attendance, this.women = 0, this.issue = 'none', this.notes = ''});
   final String lessonId, issue, notes;
   final int attendance, women;
 
-  factory TaysirReport.fromJson(Map<String, dynamic> j) => TaysirReport(
+  factory LessonsReport.fromJson(Map<String, dynamic> j) => LessonsReport(
       lessonId: _s(j['lesson_id']),
       attendance: (j['attendance'] as num).toInt(),
       women: (j['women'] as num?)?.toInt() ?? 0,
@@ -339,8 +339,8 @@ class TaysirReport {
       notes: _s(j['notes']));
 }
 
-class TaysirFlag {
-  const TaysirFlag({
+class LessonsFlag {
+  const LessonsFlag({
     required this.id,
     required this.lessonId,
     required this.organizationId,
@@ -354,7 +354,7 @@ class TaysirFlag {
   final String? reporterId;
   final DateTime createdAt;
 
-  factory TaysirFlag.fromJson(Map<String, dynamic> j) => TaysirFlag(
+  factory LessonsFlag.fromJson(Map<String, dynamic> j) => LessonsFlag(
       id: _s(j['id']),
       lessonId: _s(j['lesson_id']),
       organizationId: _s(j['organization_id']),
@@ -365,8 +365,8 @@ class TaysirFlag {
       createdAt: _time(j['created_at']) ?? DateTime.now());
 }
 
-class TaysirAuditEntry {
-  const TaysirAuditEntry({
+class LessonsAuditEntry {
+  const LessonsAuditEntry({
     required this.id,
     this.organizationId,
     this.actorId,
@@ -381,7 +381,7 @@ class TaysirAuditEntry {
   final DateTime createdAt;
   String target(String lang) => pick(lang, targetAr, targetEn);
 
-  factory TaysirAuditEntry.fromJson(Map<String, dynamic> j) => TaysirAuditEntry(
+  factory LessonsAuditEntry.fromJson(Map<String, dynamic> j) => LessonsAuditEntry(
       id: _s(j['id']),
       organizationId: j['organization_id'] as String?,
       actorId: j['actor_id'] as String?,
@@ -391,15 +391,15 @@ class TaysirAuditEntry {
       createdAt: _time(j['created_at']) ?? DateTime.now());
 }
 
-class TaysirNotification {
-  const TaysirNotification({
+class LessonsNotification {
+  const LessonsNotification({
     required this.id,
     this.icon = 'bell',
     required this.titleAr,
     required this.titleEn,
     this.bodyAr = '',
     this.bodyEn = '',
-    this.route = '/taysir',
+    this.route = '/lessons',
     required this.createdAt,
     this.readAt,
   });
@@ -410,66 +410,66 @@ class TaysirNotification {
   String title(String lang) => pick(lang, titleAr, titleEn);
   String body(String lang) => pick(lang, bodyAr, bodyEn);
 
-  factory TaysirNotification.fromJson(Map<String, dynamic> j) => TaysirNotification(
+  factory LessonsNotification.fromJson(Map<String, dynamic> j) => LessonsNotification(
       id: _s(j['id']),
       icon: j['icon'] as String? ?? 'bell',
       titleAr: _s(j['title_ar']),
       titleEn: _s(j['title_en']),
       bodyAr: _s(j['body_ar']),
       bodyEn: _s(j['body_en']),
-      route: j['route'] as String? ?? '/taysir',
+      route: j['route'] as String? ?? '/lessons',
       createdAt: _time(j['created_at']) ?? DateTime.now(),
       readAt: _time(j['read_at']));
 
-  TaysirNotification markRead() => TaysirNotification(
+  LessonsNotification markRead() => LessonsNotification(
       id: id, icon: icon, titleAr: titleAr, titleEn: titleEn, bodyAr: bodyAr, bodyEn: bodyEn,
       route: route, createdAt: createdAt, readAt: DateTime.now());
 }
 
 /// A viewer's reminder: which lesson, how early.
-class TaysirReminder {
-  const TaysirReminder({required this.lessonId, required this.lead, required this.remindAt});
+class LessonsReminder {
+  const LessonsReminder({required this.lessonId, required this.lead, required this.remindAt});
   final String lessonId, lead;
   final DateTime remindAt;
 
-  factory TaysirReminder.fromJson(Map<String, dynamic> j) => TaysirReminder(
+  factory LessonsReminder.fromJson(Map<String, dynamic> j) => LessonsReminder(
       lessonId: _s(j['lesson_id']), lead: _s(j['lead']), remindAt: _time(j['remind_at'])!);
 }
 
-class TaysirPreferences {
-  const TaysirPreferences({this.defaultLead = 'adhan', this.eveningDigest = true});
+class LessonsPreferences {
+  const LessonsPreferences({this.defaultLead = 'adhan', this.eveningDigest = true});
   final String defaultLead;
   final bool eveningDigest;
 }
 
 /// The signed-in viewer's own data.
-class TaysirMine {
-  const TaysirMine({
+class LessonsMine {
+  const LessonsMine({
     this.reminders = const {},
     this.follows = const {},
     this.attended = const {},
-    this.preferences = const TaysirPreferences(),
+    this.preferences = const LessonsPreferences(),
     this.notifications = const [],
   });
-  final Map<String, TaysirReminder> reminders;
+  final Map<String, LessonsReminder> reminders;
 
   /// Keys are `kind:id` (preacher, series, mosque).
   final Set<String> follows;
   final Set<String> attended;
-  final TaysirPreferences preferences;
-  final List<TaysirNotification> notifications;
+  final LessonsPreferences preferences;
+  final List<LessonsNotification> notifications;
 
   bool isFollowing(String kind, String id) => follows.contains('$kind:$id');
   int get unread => notifications.where((n) => n.unread).length;
 
-  TaysirMine copyWith({
-    Map<String, TaysirReminder>? reminders,
+  LessonsMine copyWith({
+    Map<String, LessonsReminder>? reminders,
     Set<String>? follows,
     Set<String>? attended,
-    TaysirPreferences? preferences,
-    List<TaysirNotification>? notifications,
+    LessonsPreferences? preferences,
+    List<LessonsNotification>? notifications,
   }) =>
-      TaysirMine(
+      LessonsMine(
           reminders: reminders ?? this.reminders,
           follows: follows ?? this.follows,
           attended: attended ?? this.attended,
@@ -478,8 +478,8 @@ class TaysirMine {
 }
 
 /// What the caller may do, from `taysir_my_roles()`.
-class TaysirRoles {
-  const TaysirRoles({
+class LessonsRoles {
+  const LessonsRoles({
     this.signedIn = false,
     this.admin = false,
     this.master = false,
@@ -503,11 +503,11 @@ class TaysirRoles {
   String? get ownPreacherId =>
       preacherCards.where((c) => c.canSubmit).map((c) => c.preacherId).firstOrNull;
 
-  static const guest = TaysirRoles();
+  static const guest = LessonsRoles();
 
-  factory TaysirRoles.fromJson(Map<String, dynamic>? j) {
-    if (j == null) return const TaysirRoles(signedIn: true);
-    return TaysirRoles(
+  factory LessonsRoles.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return const LessonsRoles(signedIn: true);
+    return LessonsRoles(
       signedIn: true,
       admin: j['admin'] as bool? ?? false,
       master: j['master'] as bool? ?? false,
@@ -525,15 +525,15 @@ class TaysirRoles {
   }
 }
 
-class TaysirRosterEntry {
-  const TaysirRosterEntry({
+class LessonsRosterEntry {
+  const LessonsRosterEntry({
     required this.preacher,
     this.phoneMask,
     this.account = 'none',
     this.canSubmit = false,
     this.lessons30d = 0,
   });
-  final TaysirPreacher preacher;
+  final Preacher preacher;
   final String? phoneMask;
 
   /// linked, invited or none.
@@ -541,16 +541,16 @@ class TaysirRosterEntry {
   final bool canSubmit;
   final int lessons30d;
 
-  factory TaysirRosterEntry.fromJson(Map<String, dynamic> j) => TaysirRosterEntry(
-      preacher: TaysirPreacher.fromJson(j),
+  factory LessonsRosterEntry.fromJson(Map<String, dynamic> j) => LessonsRosterEntry(
+      preacher: Preacher.fromJson(j),
       phoneMask: j['phone_mask'] as String?,
       account: j['account'] as String? ?? 'none',
       canSubmit: j['can_submit'] as bool? ?? false,
       lessons30d: (j['lessons_30d'] as num?)?.toInt() ?? 0);
 }
 
-class TaysirTeamMember {
-  const TaysirTeamMember({
+class LessonsTeamMember {
+  const LessonsTeamMember({
     required this.profileId,
     required this.role,
     required this.nameAr,
@@ -566,7 +566,7 @@ class TaysirTeamMember {
   final String? grantedByAr, grantedByEn;
   String name(String lang) => pick(lang, nameAr, nameEn);
 
-  factory TaysirTeamMember.fromJson(Map<String, dynamic> j) => TaysirTeamMember(
+  factory LessonsTeamMember.fromJson(Map<String, dynamic> j) => LessonsTeamMember(
       profileId: _s(j['profile_id']),
       role: _s(j['role']),
       nameAr: _s(j['name_ar']),
@@ -578,8 +578,8 @@ class TaysirTeamMember {
 }
 
 /// Someone who holds activities.coordinate, and where (the admins' view).
-class TaysirCoordinator {
-  const TaysirCoordinator(
+class LessonsCoordinator {
+  const LessonsCoordinator(
       {required this.profileId, required this.nameAr, required this.nameEn, this.email = '', this.organizationIds = const []});
   final String profileId, nameAr, nameEn, email;
   final List<String> organizationIds;
@@ -588,7 +588,7 @@ class TaysirCoordinator {
     return n.isEmpty ? email : n;
   }
 
-  factory TaysirCoordinator.fromJson(Map<String, dynamic> j) => TaysirCoordinator(
+  factory LessonsCoordinator.fromJson(Map<String, dynamic> j) => LessonsCoordinator(
       profileId: _s(j['profile_id']),
       nameAr: _s(j['name_ar']),
       nameEn: _s(j['name_en']),
@@ -597,20 +597,20 @@ class TaysirCoordinator {
 }
 
 /// An account found by an admin's search (the admin user directory).
-class TaysirAccount {
-  const TaysirAccount({required this.id, required this.nameAr, required this.nameEn, this.email = ''});
+class LessonsAccount {
+  const LessonsAccount({required this.id, required this.nameAr, required this.nameEn, this.email = ''});
   final String id, nameAr, nameEn, email;
   String name(String lang) {
     final n = pick(lang, nameAr, nameEn);
     return n.isEmpty ? email : n;
   }
 
-  factory TaysirAccount.fromJson(Map<String, dynamic> j) => TaysirAccount(
+  factory LessonsAccount.fromJson(Map<String, dynamic> j) => LessonsAccount(
       id: _s(j['id']), nameAr: _s(j['display_name_ar']), nameEn: _s(j['display_name_en']), email: _s(j['email']));
 }
 
-class TaysirInviteInfo {
-  const TaysirInviteInfo({
+class LessonsInviteInfo {
+  const LessonsInviteInfo({
     required this.preacherId,
     required this.nameAr,
     required this.nameEn,
@@ -625,7 +625,7 @@ class TaysirInviteInfo {
   String name(String lang) => pick(lang, nameAr, nameEn);
   String organization(String lang) => pick(lang, organizationAr, organizationEn);
 
-  factory TaysirInviteInfo.fromJson(Map<String, dynamic> j) => TaysirInviteInfo(
+  factory LessonsInviteInfo.fromJson(Map<String, dynamic> j) => LessonsInviteInfo(
       preacherId: _s(j['preacher_id']),
       nameAr: _s(j['name_ar']),
       nameEn: _s(j['name_en']),
@@ -637,8 +637,8 @@ class TaysirInviteInfo {
 }
 
 /// A new mosque a preacher suggests inside a request.
-class TaysirNewMosque {
-  const TaysirNewMosque(
+class LessonsNewMosque {
+  const LessonsNewMosque(
       {required this.nameAr, this.nameEn = '', required this.districtId, this.latitude, this.longitude, this.facilities = const []});
   final String nameAr, nameEn, districtId;
   final double? latitude, longitude;
@@ -655,8 +655,8 @@ class TaysirNewMosque {
 }
 
 /// The submit wizard's result, sent to `taysir_submit`.
-class TaysirDraft {
-  const TaysirDraft({
+class LessonDraft {
+  const LessonDraft({
     required this.preacherId,
     required this.type,
     required this.topic,
@@ -681,7 +681,7 @@ class TaysirDraft {
   final String? interpretation, exactTime, mosqueId, replaces;
   final bool womenSection, streamed, notifyFollowers, direct;
   final List<DateTime> dates;
-  final TaysirNewMosque? newMosque;
+  final LessonsNewMosque? newMosque;
 
   Map<String, dynamic> toJson() => {
         'preacher_id': preacherId,
@@ -707,8 +707,8 @@ class TaysirDraft {
 }
 
 /// Everything public (and, for staff, their organizations' requests).
-class TaysirCatalog {
-  const TaysirCatalog({
+class LessonsCatalog {
+  const LessonsCatalog({
     this.districts = const {},
     this.organizations = const {},
     this.mosques = const {},
@@ -716,22 +716,22 @@ class TaysirCatalog {
     this.series = const {},
     this.lessons = const {},
   });
-  final Map<String, TaysirDistrict> districts;
-  final Map<String, TaysirOrganization> organizations;
-  final Map<String, TaysirMosque> mosques;
-  final Map<String, TaysirPreacher> preachers;
-  final Map<String, TaysirSeries> series;
-  final Map<String, TaysirLesson> lessons;
+  final Map<String, District> districts;
+  final Map<String, LessonsOrganization> organizations;
+  final Map<String, Mosque> mosques;
+  final Map<String, Preacher> preachers;
+  final Map<String, LessonSeries> series;
+  final Map<String, Lesson> lessons;
 
-  TaysirCatalog copyWith({
-    Map<String, TaysirDistrict>? districts,
-    Map<String, TaysirOrganization>? organizations,
-    Map<String, TaysirMosque>? mosques,
-    Map<String, TaysirPreacher>? preachers,
-    Map<String, TaysirSeries>? series,
-    Map<String, TaysirLesson>? lessons,
+  LessonsCatalog copyWith({
+    Map<String, District>? districts,
+    Map<String, LessonsOrganization>? organizations,
+    Map<String, Mosque>? mosques,
+    Map<String, Preacher>? preachers,
+    Map<String, LessonSeries>? series,
+    Map<String, Lesson>? lessons,
   }) =>
-      TaysirCatalog(
+      LessonsCatalog(
           districts: districts ?? this.districts,
           organizations: organizations ?? this.organizations,
           mosques: mosques ?? this.mosques,
@@ -741,17 +741,17 @@ class TaysirCatalog {
 }
 
 /// A coordinator's view of one organization.
-class TaysirStaffData {
-  const TaysirStaffData({
+class LessonsStaffData {
+  const LessonsStaffData({
     this.roster = const [],
     this.team = const [],
     this.flags = const [],
     this.audit = const [],
     this.reports = const {},
   });
-  final List<TaysirRosterEntry> roster;
-  final List<TaysirTeamMember> team;
-  final List<TaysirFlag> flags;
-  final List<TaysirAuditEntry> audit;
-  final Map<String, TaysirReport> reports;
+  final List<LessonsRosterEntry> roster;
+  final List<LessonsTeamMember> team;
+  final List<LessonsFlag> flags;
+  final List<LessonsAuditEntry> audit;
+  final Map<String, LessonsReport> reports;
 }

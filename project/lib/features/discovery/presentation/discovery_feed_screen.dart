@@ -26,7 +26,7 @@ import 'widgets/tags_filter_bottom_sheet.dart';
 import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
 import 'bookmarks_sheet.dart';
 import 'web/discovery_web_view.dart';
-import '../../taysir/presentation/taysir_in_hadayah.dart';
+import '../../lessons/presentation/lessons_in_app.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
@@ -449,8 +449,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                             ])),
                 ],
               ],
-              // Mosque lessons this week (Taysir), hidden when there are none.
-              const TaysirLessonsRail(),
+              // Mosque lessons this week (Lessons), hidden when there are none.
+              const LessonsRail(),
               if (loadingCards)
                 Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),

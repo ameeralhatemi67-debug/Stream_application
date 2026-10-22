@@ -2,9 +2,9 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../domain/taysir_models.dart';
-import '../../state/taysir_controller.dart';
-import '../taysir_kit.dart';
+import '../../domain/lessons_models.dart';
+import '../../state/lessons_controller.dart';
+import '../lessons_kit.dart';
 
 /// Admins add a coordinator, change the organizations they coordinate, or
 /// remove them, across every organization (taysir_set_coordinator_orgs on
@@ -13,7 +13,7 @@ class AdminCoordinatorsCard extends StatelessWidget {
   const AdminCoordinatorsCard({super.key});
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final orgs = c.adminOrganizations;
     return TCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -21,18 +21,18 @@ class AdminCoordinatorsCard extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('taysir.coord.title'.tr(), style: tStrong(17)),
-              Text('taysir.coord.sub'.tr(), style: tBody(13, color: TC.muted)),
+              Text('lessons.coord.title'.tr(), style: tStrong(17)),
+              Text('lessons.coord.sub'.tr(), style: tBody(13, color: TC.muted)),
             ]),
           ),
-          TButton('taysir.coord.add'.tr(),
+          TButton('lessons.coord.add'.tr(),
               kind: TBtn.minted, small: true, icon: TGlyph.plus, onPressed: orgs.isEmpty ? null : () => showCoordinatorEditor(context)),
         ]),
         const SizedBox(height: 12),
         if (orgs.isEmpty)
-          TCallout(tone: TTone.info, icon: TGlyph.info, child: Text('taysir.coord.no_orgs'.tr()))
+          TCallout(tone: TTone.info, icon: TGlyph.info, child: Text('lessons.coord.no_orgs'.tr()))
         else if (c.coordinators.isEmpty)
-          Text('taysir.coord.none'.tr(), style: tBody(13.5, color: TC.muted))
+          Text('lessons.coord.none'.tr(), style: tBody(13.5, color: TC.muted))
         else
           for (final k in c.coordinators) _CoordinatorRow(k),
       ]),
@@ -42,10 +42,10 @@ class AdminCoordinatorsCard extends StatelessWidget {
 
 class _CoordinatorRow extends StatelessWidget {
   const _CoordinatorRow(this.k);
-  final TaysirCoordinator k;
+  final LessonsCoordinator k;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -70,9 +70,9 @@ class _CoordinatorRow extends StatelessWidget {
         ]),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          TButton('taysir.coord.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit,
+          TButton('lessons.coord.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit,
               onPressed: () => showCoordinatorEditor(context, existing: k)),
-          TButton('taysir.coord.remove'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x,
+          TButton('lessons.coord.remove'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x,
               onPressed: () => confirmRemoveCoordinator(context, k)),
         ]),
       ]),
@@ -82,30 +82,30 @@ class _CoordinatorRow extends StatelessWidget {
 
 /// Add a coordinator (search an account, choose organizations) or change an
 /// existing coordinator's organizations.
-Future<void> showCoordinatorEditor(BuildContext context, {TaysirCoordinator? existing}) => showTModal<void>(
+Future<void> showCoordinatorEditor(BuildContext context, {LessonsCoordinator? existing}) => showTModal<void>(
       context,
-      title: existing == null ? 'taysir.coord.add_title'.tr() : 'taysir.coord.edit_title'.tr(),
+      title: existing == null ? 'lessons.coord.add_title'.tr() : 'lessons.coord.edit_title'.tr(),
       subtitle: existing?.name(context.lang),
       body: (ctx) => _CoordinatorEditor(existing: existing, page: context),
     );
 
-Future<void> confirmRemoveCoordinator(BuildContext context, TaysirCoordinator k) {
-  final c = context.read<TaysirController>();
+Future<void> confirmRemoveCoordinator(BuildContext context, LessonsCoordinator k) {
+  final c = context.read<LessonsController>();
   return showTModal<void>(context,
-      title: 'taysir.coord.remove_title'.tr(args: [k.name(context.lang)]),
-      body: (ctx) => Text('taysir.coord.remove_body'.tr(), style: tBody(14, color: TC.muted)),
+      title: 'lessons.coord.remove_title'.tr(args: [k.name(context.lang)]),
+      body: (ctx) => Text('lessons.coord.remove_body'.tr(), style: tBody(14, color: TC.muted)),
       footer: (ctx) => [
-            TButton('taysir.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
-            TButton('taysir.coord.remove'.tr(), kind: TBtn.danger, icon: TGlyph.x, onPressed: () async {
+            TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
+            TButton('lessons.coord.remove'.tr(), kind: TBtn.danger, icon: TGlyph.x, onPressed: () async {
               Navigator.of(ctx).pop();
-              await tRun(context, () => c.setCoordinatorOrganizations(k.profileId, const []), success: 'taysir.coord.removed'.tr());
+              await tRun(context, () => c.setCoordinatorOrganizations(k.profileId, const []), success: 'lessons.coord.removed'.tr());
             }),
           ]);
 }
 
 class _CoordinatorEditor extends StatefulWidget {
   const _CoordinatorEditor({required this.existing, required this.page});
-  final TaysirCoordinator? existing;
+  final LessonsCoordinator? existing;
 
   /// The console page: toasts and the write outlive the sheet.
   final BuildContext page;
@@ -115,16 +115,16 @@ class _CoordinatorEditor extends StatefulWidget {
 
 class _CoordinatorEditorState extends State<_CoordinatorEditor> {
   final query = TextEditingController();
-  TaysirAccount? account;
+  LessonsAccount? account;
   late final Set<String> picked = {...?widget.existing?.organizationIds};
-  List<TaysirAccount>? results;
+  List<LessonsAccount>? results;
   bool searching = false, tried = false;
 
   @override
   void initState() {
     super.initState();
     final k = widget.existing;
-    if (k != null) account = TaysirAccount(id: k.profileId, nameAr: k.nameAr, nameEn: k.nameEn, email: k.email);
+    if (k != null) account = LessonsAccount(id: k.profileId, nameAr: k.nameAr, nameEn: k.nameEn, email: k.email);
   }
 
   @override
@@ -135,7 +135,7 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
 
   Future<void> _search() async {
     setState(() => searching = true);
-    final found = await tRun(context, () => context.read<TaysirController>().searchAccounts(query.text));
+    final found = await tRun(context, () => context.read<LessonsController>().searchAccounts(query.text));
     if (!mounted) return;
     setState(() {
       searching = false;
@@ -143,8 +143,8 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
     });
   }
 
-  void _choose(TaysirAccount a) {
-    final c = context.read<TaysirController>();
+  void _choose(LessonsAccount a) {
+    final c = context.read<LessonsController>();
     // Choosing someone who already coordinates edits their organizations.
     final current = c.coordinators.where((k) => k.profileId == a.id).firstOrNull;
     setState(() {
@@ -159,35 +159,35 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
     setState(() => tried = true);
     final a = account;
     if (a == null || picked.isEmpty) return;
-    final c = context.read<TaysirController>();
+    final c = context.read<LessonsController>();
     final page = widget.page;
     Navigator.of(context).pop();
-    await tRun(page, () => c.setCoordinatorOrganizations(a.id, picked.toList()), success: 'taysir.coord.saved'.tr());
+    await tRun(page, () => c.setCoordinatorOrganizations(a.id, picked.toList()), success: 'lessons.coord.saved'.tr());
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final a = account;
     final children = <Widget>[];
     if (a == null) {
       children.addAll([
         TField(
-          label: 'taysir.coord.account'.tr(),
+          label: 'lessons.coord.account'.tr(),
           child: Row(children: [
-            Expanded(child: TSearchBox(hint: 'taysir.coord.search_hint'.tr(), controller: query, onSubmitted: (_) => _search())),
+            Expanded(child: TSearchBox(hint: 'lessons.coord.search_hint'.tr(), controller: query, onSubmitted: (_) => _search())),
             const SizedBox(width: 8),
-            TButton('taysir.coord.search'.tr(), small: true, icon: TGlyph.search, onPressed: searching ? null : _search),
+            TButton('lessons.coord.search'.tr(), small: true, icon: TGlyph.search, onPressed: searching ? null : _search),
           ]),
         ),
         const SizedBox(height: 10),
         if (searching)
           const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(color: TC.gold)))
         else if (results != null && results!.isEmpty)
-          Text('taysir.coord.no_results'.tr(), style: tBody(13.5, color: TC.muted))
+          Text('lessons.coord.no_results'.tr(), style: tBody(13.5, color: TC.muted))
         else
-          for (final r in results ?? const <TaysirAccount>[])
+          for (final r in results ?? const <LessonsAccount>[])
             TOptionRow(title: r.name(lang), subtitle: r.email, leading: TGlyph.user, selected: false, onTap: () => _choose(r)),
       ]);
     } else {
@@ -206,15 +206,15 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
               ]),
             ),
             if (widget.existing == null)
-              TButton('taysir.coord.change'.tr(), small: true, kind: TBtn.ghost, onPressed: () => setState(() => account = null)),
+              TButton('lessons.coord.change'.tr(), small: true, kind: TBtn.ghost, onPressed: () => setState(() => account = null)),
           ]),
         ),
         const SizedBox(height: 14),
-        Text('taysir.coord.orgs'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
+        Text('lessons.coord.orgs'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
         for (final o in c.adminOrganizations)
           TToggleRow(
             label: o.name(lang),
-            desc: o.enabled ? null : 'taysir.coord.taysir_off'.tr(),
+            desc: o.enabled ? null : 'lessons.coord.lessons_off'.tr(),
             icon: TGlyph.users,
             value: picked.contains(o.id),
             onChanged: (v) => setState(() => v ? picked.add(o.id) : picked.remove(o.id)),
@@ -222,7 +222,7 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
         if (tried && picked.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text('taysir.coord.pick_org'.tr(), style: tBody(13, color: TC.dangerFg)),
+            child: Text('lessons.coord.pick_org'.tr(), style: tBody(13, color: TC.dangerFg)),
           ),
         const SizedBox(height: 14),
         OverflowBar(
@@ -231,8 +231,8 @@ class _CoordinatorEditorState extends State<_CoordinatorEditor> {
           spacing: 8,
           overflowSpacing: 8,
           children: [
-            TButton('taysir.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(context).pop()),
-            TButton('taysir.save'.tr(), kind: TBtn.minted, icon: TGlyph.check, onPressed: _save),
+            TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(context).pop()),
+            TButton('lessons.save'.tr(), kind: TBtn.minted, icon: TGlyph.check, onPressed: _save),
           ],
         ),
       ]);

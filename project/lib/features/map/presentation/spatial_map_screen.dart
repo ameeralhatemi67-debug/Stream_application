@@ -12,8 +12,8 @@ import '../../discovery/models/academic_category_model.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
-import '../../taysir/presentation/taysir_in_hadayah.dart';
-import '../../taysir/state/taysir_controller.dart';
+import '../../lessons/presentation/lessons_in_app.dart';
+import '../../lessons/state/lessons_controller.dart';
 import '../models/map_models.dart';
 import '../models/map_tricity_domain.dart';
 import '../services/map_offline_store.dart';
@@ -39,7 +39,7 @@ import 'widgets/tricity_basemap_layer.dart';
 /// ([MapPackController]); backend connectivity only decides whether venue
 /// pins are current or saved, never whether the map itself can be drawn.
 /// Every camera move goes through one [MapViewportPolicy]. Mosques with
-/// Taysir lessons in the coming week share the map with broadcasters.
+/// Lessons lessons in the coming week share the map with broadcasters.
 class SpatialMapScreen extends StatefulWidget {
   const SpatialMapScreen({super.key, this.packController, this.initialMosque});
 
@@ -114,7 +114,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     _pack = widget.packController ?? MapPackController.shared;
     unawaited(_pack.ensureOpened());
     _pendingMosqueId = widget.initialMosque;
-    unawaited(context.read<TaysirController?>()?.ensureLoaded());
+    unawaited(context.read<LessonsController?>()?.ensureLoaded());
     if (_pack.supportsWebOffline) unawaited(_loadWebHintState());
     _mapController = MapController();
     _zoomNotifier = ValueNotifier<double>(0);
@@ -653,12 +653,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
     final venuesUpdatedAt =
         context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
-    // Taysir's mosques; none in builds and tests without the programme.
-    final mosques = context.select<TaysirController?, List<MapMosque>>(
+    // Lessons's mosques; none in builds and tests without the programme.
+    final mosques = context.select<LessonsController?, List<MapMosque>>(
         (c) => c == null ? const [] : mapMosques(c, locale.languageCode));
     _mosques = mosques;
     _lessonsLoaded =
-        context.select<TaysirController?, bool>((c) => c?.loaded ?? true);
+        context.select<LessonsController?, bool>((c) => c?.loaded ?? true);
     final showStreamers = _layers != MapLayers.lessons;
     final shownMosques =
         _layers == MapLayers.streamers ? const <MapMosque>[] : mosques;

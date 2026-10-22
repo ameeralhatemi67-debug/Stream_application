@@ -36,7 +36,7 @@ class HidayahWebHeader extends StatelessWidget {
       case HidayahWebSection.map:
         onBranch != null ? onBranch!(1) : context.go('/map');
       case HidayahWebSection.lessons:
-        onBranch != null ? onBranch!(2) : context.go('/taysir');
+        onBranch != null ? onBranch!(2) : context.go('/lessons');
       case HidayahWebSection.organizations:
         context.push('/organizations');
       case HidayahWebSection.channel:
@@ -285,7 +285,7 @@ class HidayahWebFooter extends StatelessWidget {
                         child: column('web.footer_platform'.tr(), [
                       ('web.nav_discover'.tr(), () => context.go('/feed')),
                       ('web.nav_map'.tr(), () => context.go('/map')),
-                      ('web.nav_lessons'.tr(), () => context.go('/taysir')),
+                      ('web.nav_lessons'.tr(), () => context.go('/lessons')),
                       ('web.nav_orgs'.tr(),
                           () => context.push('/organizations')),
                       ('web.footer_become'.tr(),

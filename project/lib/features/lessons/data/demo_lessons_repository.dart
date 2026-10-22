@@ -1,23 +1,23 @@
 import 'dart:math' as math;
 
-import '../domain/taysir_dates.dart';
-import '../domain/taysir_models.dart';
-import '../domain/taysir_rules.dart';
-import 'taysir_repository.dart';
+import '../domain/lessons_dates.dart';
+import '../domain/lessons_models.dart';
+import '../domain/lessons_rules.dart';
+import 'lessons_repository.dart';
 
 /// Who the sample data is being viewed as.
-enum TaysirDemoPersona { guest, viewer, preacher, coordinator, owner, admin }
+enum LessonsDemoPersona { guest, viewer, preacher, coordinator, owner, admin }
 
 /// Sample data for builds without a backend and for widget tests. Names of
 /// people are invented; neighbourhoods are real. The permission rules mirror
 /// the server functions so the screens behave the same way.
-class DemoTaysirRepository implements TaysirRepository {
-  DemoTaysirRepository({this.persona = TaysirDemoPersona.guest, DateTime? today})
-      : _today = today ?? taysirToday() {
+class DemoLessonsRepository implements LessonsRepository {
+  DemoLessonsRepository({this.persona = LessonsDemoPersona.guest, DateTime? today})
+      : _today = today ?? lessonsToday() {
     _seed();
   }
 
-  TaysirDemoPersona persona;
+  LessonsDemoPersona persona;
   final DateTime _today;
   int _seq = 1000;
   String _id(String p) => '$p-${++_seq}';
@@ -31,31 +31,31 @@ class DemoTaysirRepository implements TaysirRepository {
 
   @override
   String? get currentUserId =>
-      persona == TaysirDemoPersona.guest ? null : 'demo-${persona.name}';
+      persona == LessonsDemoPersona.guest ? null : 'demo-${persona.name}';
 
   bool get _coord => switch (persona) {
-        TaysirDemoPersona.owner || TaysirDemoPersona.admin => true,
-        TaysirDemoPersona.coordinator => (coordinatorGrants['demo-coordinator'] ?? const {}).isNotEmpty,
+        LessonsDemoPersona.owner || LessonsDemoPersona.admin => true,
+        LessonsDemoPersona.coordinator => (coordinatorGrants['demo-coordinator'] ?? const {}).isNotEmpty,
         _ => false,
       };
-  bool get _leader => persona == TaysirDemoPersona.owner || persona == TaysirDemoPersona.admin;
+  bool get _leader => persona == LessonsDemoPersona.owner || persona == LessonsDemoPersona.admin;
 
   void _need(bool ok) {
-    if (!ok) throw const TaysirException(TaysirFailure.forbidden);
+    if (!ok) throw const LessonsException(LessonsFailure.forbidden);
   }
 
   void _signedIn() => _need(currentUserId != null);
 
   // ---------------------------------------------------------------- state
-  final districts = <String, TaysirDistrict>{};
-  final organizations = <String, TaysirOrganization>{};
-  final mosques = <String, TaysirMosque>{};
-  final preachers = <String, TaysirPreacher>{};
-  final series = <String, TaysirSeries>{};
-  final lessons = <String, TaysirLesson>{};
-  final reports = <String, TaysirReport>{};
-  final flags = <TaysirFlag>[];
-  final audit = <TaysirAuditEntry>[];
+  final districts = <String, District>{};
+  final organizations = <String, LessonsOrganization>{};
+  final mosques = <String, Mosque>{};
+  final preachers = <String, Preacher>{};
+  final series = <String, LessonSeries>{};
+  final lessons = <String, Lesson>{};
+  final reports = <String, LessonsReport>{};
+  final flags = <LessonsFlag>[];
+  final audit = <LessonsAuditEntry>[];
   final phones = <String, String>{};
   final invites = <String, String>{}; // token -> preacher
   final submitPermission = <String>{}; // preacher ids whose linked account may submit
@@ -63,27 +63,27 @@ class DemoTaysirRepository implements TaysirRepository {
   final coordinatorGrants = <String, Set<String>>{
     'demo-coordinator': {org}
   };
-  final team = <TaysirTeamMember>[];
+  final team = <LessonsTeamMember>[];
 
   /// Accounts an admin can find (invented people, example.invalid emails).
   static const accounts = [
-    TaysirAccount(id: 'demo-owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani', email: 'saad@example.invalid'),
-    TaysirAccount(id: 'demo-coordinator', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari', email: 'khalid@example.invalid'),
-    TaysirAccount(id: 'demo-member-u3', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari', email: 'badr@example.invalid'),
-    TaysirAccount(id: 'demo-member-u4', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi', email: 'majed@example.invalid'),
-    TaysirAccount(id: 'demo-viewer', nameAr: 'عبدالله السالم', nameEn: 'Abdullah Al-Salem', email: 'abdullah@example.invalid'),
-    TaysirAccount(id: 'demo-account-reem', nameAr: 'ريم العنزي', nameEn: 'Reem Al-Anazi', email: 'reem@example.invalid'),
+    LessonsAccount(id: 'demo-owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani', email: 'saad@example.invalid'),
+    LessonsAccount(id: 'demo-coordinator', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari', email: 'khalid@example.invalid'),
+    LessonsAccount(id: 'demo-member-u3', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari', email: 'badr@example.invalid'),
+    LessonsAccount(id: 'demo-member-u4', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi', email: 'majed@example.invalid'),
+    LessonsAccount(id: 'demo-viewer', nameAr: 'عبدالله السالم', nameEn: 'Abdullah Al-Salem', email: 'abdullah@example.invalid'),
+    LessonsAccount(id: 'demo-account-reem', nameAr: 'ريم العنزي', nameEn: 'Reem Al-Anazi', email: 'reem@example.invalid'),
   ];
-  final _mine = <String, TaysirMine>{};
+  final _mine = <String, LessonsMine>{};
 
-  TaysirMine _me() => _mine[currentUserId] ?? const TaysirMine();
-  void _setMe(TaysirMine m) => _mine[currentUserId!] = m;
+  LessonsMine _me() => _mine[currentUserId] ?? const LessonsMine();
+  void _setMe(LessonsMine m) => _mine[currentUserId!] = m;
 
   void _notify(String? profile, String icon, String titleAr, String titleEn, String bodyAr, String bodyEn, String route) {
     if (profile == null || profile == currentUserId) return;
-    final m = _mine[profile] ?? const TaysirMine();
+    final m = _mine[profile] ?? const LessonsMine();
     _mine[profile] = m.copyWith(notifications: [
-      TaysirNotification(
+      LessonsNotification(
           id: _id('n'), icon: icon, titleAr: titleAr, titleEn: titleEn, bodyAr: bodyAr, bodyEn: bodyEn,
           route: route, createdAt: DateTime.now()),
       ...m.notifications
@@ -98,23 +98,23 @@ class DemoTaysirRepository implements TaysirRepository {
 
   void _log(String action, String ar, String en, {String? organizationId = org}) => audit.insert(
       0,
-      TaysirAuditEntry(
+      LessonsAuditEntry(
           id: _id('a'), organizationId: organizationId, actorId: currentUserId,
           actorName: _personaName(persona), action: action, targetAr: ar, targetEn: en, createdAt: DateTime.now()));
 
-  static String _personaName(TaysirDemoPersona p) => switch (p) {
-        TaysirDemoPersona.coordinator => 'Khalid Al-Dosari',
-        TaysirDemoPersona.owner => 'Eng. Saad Al-Qahtani',
-        TaysirDemoPersona.admin => 'Master admin',
-        TaysirDemoPersona.preacher => 'Sheikh Fahd Al-Otaibi',
-        TaysirDemoPersona.viewer => 'Abdullah Al-Salem',
-        TaysirDemoPersona.guest => '',
+  static String _personaName(LessonsDemoPersona p) => switch (p) {
+        LessonsDemoPersona.coordinator => 'Khalid Al-Dosari',
+        LessonsDemoPersona.owner => 'Eng. Saad Al-Qahtani',
+        LessonsDemoPersona.admin => 'Master admin',
+        LessonsDemoPersona.preacher => 'Sheikh Fahd Al-Otaibi',
+        LessonsDemoPersona.viewer => 'Abdullah Al-Salem',
+        LessonsDemoPersona.guest => '',
       };
 
   // ----------------------------------------------------------------- seed
   void _seed() {
     void district(String id, String city, String ar, String en, int sort) =>
-        districts[id] = TaysirDistrict(id: id, city: city, nameAr: ar, nameEn: en, sort: sort);
+        districts[id] = District(id: id, city: city, nameAr: ar, nameEn: en, sort: sort);
     district('aqrabiyah', 'khobar', 'العقربية', 'Al-Aqrabiyah', 10);
     district('thuqbah', 'khobar', 'الثقبة', 'Al-Thuqbah', 20);
     district('khobar_north', 'khobar', 'الخبر الشمالية', 'North Khobar', 30);
@@ -129,13 +129,13 @@ class DemoTaysirRepository implements TaysirRepository {
     district('rayyan', 'dammam', 'الريان', 'Al-Rayyan', 40);
     district('qatif_central', 'qatif', 'وسط القطيف', 'Central Qatif', 10);
 
-    organizations[org] = const TaysirOrganization(
+    organizations[org] = const LessonsOrganization(
         id: org, nameAr: 'جمعية هداية للدعوة والإرشاد وتوعية الجاليات', nameEn: 'Hidayah Society', verified: true);
-    organizations[org2] = const TaysirOrganization(
+    organizations[org2] = const LessonsOrganization(
         id: org2, nameAr: 'مركز الدعوة بالدمام (مثال)', nameEn: 'Dammam Dawah Centre (sample)', enabled: false);
 
     void mosque(String id, String ar, String en, String d, double lat, double lng, List<String> fac, {bool verified = true}) =>
-        mosques[id] = TaysirMosque(
+        mosques[id] = Mosque(
             id: id, nameAr: ar, nameEn: en, districtId: d, latitude: lat, longitude: lng, facilities: fac, verified: verified,
             suggestedBy: verified ? null : 'demo-preacher-p8');
     mosque('m1', 'جامع الهدى', 'Al-Huda Grand Mosque', 'aqrabiyah', 26.292, 50.198, ['women', 'parking', 'access', 'kids']);
@@ -154,7 +154,7 @@ class DemoTaysirRepository implements TaysirRepository {
 
     void preacher(String id, String ar, String en, String tAr, String tEn, String city, String aff, List<String> langs,
         {String account = 'linked', String bioAr = '', String bioEn = ''}) {
-      preachers[id] = TaysirPreacher(
+      preachers[id] = Preacher(
           id: id, organizationId: org, nameAr: ar, nameEn: en, titleAr: tAr, titleEn: tEn, city: city,
           affiliation: aff, languages: langs, bioAr: bioAr, bioEn: bioEn,
           linkedProfileId: account == 'linked' ? (id == ownPreacher ? 'demo-preacher' : 'demo-preacher-$id') : null);
@@ -185,7 +185,7 @@ class DemoTaysirRepository implements TaysirRepository {
       'talk': ('كلمة قصيرة بعد الصلاة لا تتجاوز خمس عشرة دقيقة.', 'A short talk after the prayer, no longer than fifteen minutes.'),
     };
 
-    TaysirLesson lesson({
+    Lesson lesson({
       required String type,
       required String topic,
       required String ar,
@@ -206,7 +206,7 @@ class DemoTaysirRepository implements TaysirRepository {
       Duration submittedAgo = const Duration(days: 7),
     }) {
       final id = _id('l');
-      final l = TaysirLesson(
+      final l = Lesson(
           id: id, organizationId: org, requestId: requestId ?? 'r-$id', seriesId: seriesId, seq: seq,
           type: type, topic: topic, titleAr: ar, titleEn: en,
           descriptionAr: desc[type]!.$1, descriptionEn: desc[type]!.$2, preacherId: preacher, mosqueId: mosque,
@@ -231,7 +231,7 @@ class DemoTaysirRepository implements TaysirRepository {
     ];
     for (final s in seriesSeed) {
       final reqId = 'rs-${s.$1}';
-      series[s.$1] = TaysirSeries(
+      series[s.$1] = LessonSeries(
           id: s.$1, organizationId: org, requestId: reqId, preacherId: s.$4, mosqueId: s.$5, titleAr: s.$2, titleEn: s.$3,
           type: 'lesson', topic: s.$10, language: s.$11, audience: s.$12, slot: s.$7, total: s.$8, status: 'approved');
       var first = _today;
@@ -246,7 +246,7 @@ class DemoTaysirRepository implements TaysirRepository {
             slot: s.$7, seriesId: s.$1, seq: seq, requestId: reqId, language: s.$11, audience: s.$12, interp: s.$13,
             streamed: s.$14);
         if (l.date.isBefore(_today) && !(s.$4 == 'p1' && w >= -2)) {
-          reports[l.id] = TaysirReport(lessonId: l.id, attendance: 40 + (seq * 37 + s.$8) % 90, women: (seq * 7) % 25);
+          reports[l.id] = LessonsReport(lessonId: l.id, attendance: 40 + (seq * 37 + s.$8) % 90, women: (seq * 7) % 25);
         }
       }
     }
@@ -256,7 +256,7 @@ class DemoTaysirRepository implements TaysirRepository {
             {String language = 'ar', String audience = 'all', bool streamed = false, bool report = false}) {
       final l = lesson(type: type, topic: topic, ar: ar, en: en, preacher: p, mosque: m, date: addDays(_today, off),
           slot: slot, language: language, audience: audience, streamed: streamed);
-      if (report) reports[l.id] = TaysirReport(lessonId: l.id, attendance: 72, women: 20);
+      if (report) reports[l.id] = LessonsReport(lessonId: l.id, attendance: 72, women: 20);
     }
 
     one(0, 'isha', 'lecture', 'raqaiq', 'قيمة الوقت في حياة المسلم', 'The value of time in a Muslim’s life', 'p1', 'm3', streamed: true);
@@ -290,7 +290,7 @@ class DemoTaysirRepository implements TaysirRepository {
     lesson(type: 'talk', topic: 'fiqh', ar: 'أحكام الوضوء', en: 'The rulings of wudu', preacher: 'p8', mosque: 'm13',
         date: addDays(_today, 5), slot: 'maghrib', status: 'pending', submittedAgo: const Duration(hours: 26));
     // A pending weekly series of eight sessions, one request.
-    series['s8'] = const TaysirSeries(
+    series['s8'] = const LessonSeries(
         id: 's8', organizationId: org, requestId: 'rq-s8', preacherId: 'p4', mosqueId: 'm2', titleAr: 'السيرة للمبتدئين (بالأردية)',
         titleEn: 'Seerah for beginners (in Urdu)', type: 'lesson', topic: 'seerah', language: 'ur', audience: 'all', slot: 'isha',
         total: 8, status: 'pending');
@@ -309,61 +309,61 @@ class DemoTaysirRepository implements TaysirRepository {
         reason: 'تتعارض مع محاضرة الجمعية الكبرى في الليلة نفسها. نقترح الخميس بعد العشاء.');
 
     final s2next = lessons.values.firstWhere((l) => l.seriesId == 's2' && !l.date.isBefore(_today));
-    flags.add(TaysirFlag(
+    flags.add(LessonsFlag(
         id: 'f1', lessonId: s2next.id, organizationId: org, kind: 'time',
         message: 'إمام المسجد أعلن أن الدرس صار بعد العصر بدل المغرب.', reporterId: 'demo-viewer',
         createdAt: DateTime.now().subtract(const Duration(hours: 7))));
 
     team.addAll(const [
-      TaysirTeamMember(profileId: 'demo-owner', role: 'owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani'),
-      TaysirTeamMember(profileId: 'demo-coordinator', role: 'manager', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari',
+      LessonsTeamMember(profileId: 'demo-owner', role: 'owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani'),
+      LessonsTeamMember(profileId: 'demo-coordinator', role: 'manager', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari',
           coordinator: true, grantedByAr: 'م. سعد القحطاني', grantedByEn: 'Eng. Saad Al-Qahtani'),
-      TaysirTeamMember(profileId: 'demo-member-u3', role: 'manager', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari'),
-      TaysirTeamMember(profileId: 'demo-member-u4', role: 'moderator', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi'),
+      LessonsTeamMember(profileId: 'demo-member-u3', role: 'manager', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari'),
+      LessonsTeamMember(profileId: 'demo-member-u4', role: 'moderator', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi'),
     ]);
 
     final s1next = lessons.values.firstWhere((l) => l.seriesId == 's1' && !l.date.isBefore(_today));
-    _mine['demo-viewer'] = TaysirMine(
-      reminders: {s1next.id: TaysirReminder(lessonId: s1next.id, lead: 'adhan', remindAt: DateTime.now().add(const Duration(days: 1)))},
+    _mine['demo-viewer'] = LessonsMine(
+      reminders: {s1next.id: LessonsReminder(lessonId: s1next.id, lead: 'adhan', remindAt: DateTime.now().add(const Duration(days: 1)))},
       follows: const {'preacher:p1', 'preacher:p4', 'series:s1', 'mosque:m1'},
       attended: {for (final l in lessons.values.where((l) => l.seriesId == 's1' && l.date.isBefore(_today)).take(3)) l.id},
       notifications: [
-        TaysirNotification(id: 'n1', icon: 'bell', titleAr: 'تذكير: دروس الليلة', titleEn: "Reminder: tonight's lessons",
+        LessonsNotification(id: 'n1', icon: 'bell', titleAr: 'تذكير: دروس الليلة', titleEn: "Reminder: tonight's lessons",
             bodyAr: 'لديك تذكير بدرس بعد العشاء في جامع الهدى.', bodyEn: 'You have a reminder for a lesson after Isha at Al-Huda Grand Mosque.',
-            route: '/taysir/lessons/${s1next.id}', createdAt: DateTime.now().subtract(const Duration(minutes: 40))),
-        TaysirNotification(id: 'n2', icon: 'sparkle', titleAr: 'محاضرة جديدة من داعية تتابعه', titleEn: 'New lecture from a preacher you follow',
+            route: '/lessons/lesson/${s1next.id}', createdAt: DateTime.now().subtract(const Duration(minutes: 40))),
+        LessonsNotification(id: 'n2', icon: 'sparkle', titleAr: 'محاضرة جديدة من داعية تتابعه', titleEn: 'New lecture from a preacher you follow',
             bodyAr: 'الشيخ فهد العتيبي: الشباب والهوية.', bodyEn: 'Sheikh Fahd Al-Otaibi: Youth and identity.',
-            route: '/taysir/preachers/p1', createdAt: DateTime.now().subtract(const Duration(hours: 5))),
+            route: '/lessons/preachers/p1', createdAt: DateTime.now().subtract(const Duration(hours: 5))),
       ],
     );
-    _mine['demo-preacher'] = TaysirMine(notifications: [
-      TaysirNotification(id: 'n4', icon: 'x', titleAr: 'لم يُعتمد طلبك: السعادة الزوجية', titleEn: 'Not approved: A happy marriage',
+    _mine['demo-preacher'] = LessonsMine(notifications: [
+      LessonsNotification(id: 'n4', icon: 'x', titleAr: 'لم يُعتمد طلبك: السعادة الزوجية', titleEn: 'Not approved: A happy marriage',
           bodyAr: 'السبب: تتعارض مع محاضرة الجمعية الكبرى.', bodyEn: "Reason: it clashes with the Society's main lecture.",
-          route: '/taysir/me/lessons?tab=rejected', createdAt: DateTime.now().subtract(const Duration(days: 2))),
+          route: '/lessons/me/lessons?tab=rejected', createdAt: DateTime.now().subtract(const Duration(days: 2))),
     ]);
-    _mine['demo-coordinator'] = TaysirMine(notifications: [
-      TaysirNotification(id: 'n7', icon: 'inbox', titleAr: 'طلبات جديدة بانتظار المراجعة', titleEn: 'New requests to review',
+    _mine['demo-coordinator'] = LessonsMine(notifications: [
+      LessonsNotification(id: 'n7', icon: 'inbox', titleAr: 'طلبات جديدة بانتظار المراجعة', titleEn: 'New requests to review',
           bodyAr: 'منها سلسلة أسبوعية من ثماني جلسات بالأردية.', bodyEn: 'Including an eight-session weekly series in Urdu.',
-          route: '/taysir/console/review', createdAt: DateTime.now().subtract(const Duration(hours: 2))),
+          route: '/lessons/console/review', createdAt: DateTime.now().subtract(const Duration(hours: 2))),
     ]);
     audit.addAll([
-      TaysirAuditEntry(id: 'a1', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'reject',
+      LessonsAuditEntry(id: 'a1', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'reject',
           targetAr: 'السعادة الزوجية — الشيخ فهد العتيبي', targetEn: 'A happy marriage, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 2))),
-      TaysirAuditEntry(id: 'a2', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'approve',
+      LessonsAuditEntry(id: 'a2', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'approve',
           targetAr: 'الشباب والهوية — الشيخ فهد العتيبي', targetEn: 'Youth and identity, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 4))),
     ]);
   }
 
   // ---------------------------------------------------------------- reads
-  bool _visible(TaysirLesson l) =>
+  bool _visible(Lesson l) =>
       (organizations[l.organizationId]?.enabled ?? false) && (l.status == 'approved' || l.status == 'cancelled') ||
       _coord ||
-      (persona == TaysirDemoPersona.preacher && l.preacherId == ownPreacher);
+      (persona == LessonsDemoPersona.preacher && l.preacherId == ownPreacher);
 
   @override
-  Future<TaysirCatalog> loadCatalog() async => TaysirCatalog(
+  Future<LessonsCatalog> loadCatalog() async => LessonsCatalog(
         districts: Map.of(districts),
         organizations: {for (final o in organizations.values.where((o) => o.enabled)) o.id: o},
         mosques: {
@@ -374,37 +374,37 @@ class DemoTaysirRepository implements TaysirRepository {
         },
         series: {
           for (final s in series.values.where((s) =>
-              s.status == 'approved' || _coord || (persona == TaysirDemoPersona.preacher && s.preacherId == ownPreacher)))
+              s.status == 'approved' || _coord || (persona == LessonsDemoPersona.preacher && s.preacherId == ownPreacher)))
             s.id: s
         },
         lessons: {for (final l in lessons.values.where(_visible)) l.id: l},
       );
 
   @override
-  Future<TaysirRoles> loadRoles() async => switch (persona) {
-        TaysirDemoPersona.guest => TaysirRoles.guest,
-        TaysirDemoPersona.viewer => const TaysirRoles(signedIn: true),
-        TaysirDemoPersona.preacher => TaysirRoles(signedIn: true, preacherCards: [
+  Future<LessonsRoles> loadRoles() async => switch (persona) {
+        LessonsDemoPersona.guest => LessonsRoles.guest,
+        LessonsDemoPersona.viewer => const LessonsRoles(signedIn: true),
+        LessonsDemoPersona.preacher => LessonsRoles(signedIn: true, preacherCards: [
             (preacherId: ownPreacher, organizationId: org, canSubmit: submitPermission.contains(ownPreacher))
           ]),
-        TaysirDemoPersona.coordinator => TaysirRoles(signedIn: true, coordinate: {
+        LessonsDemoPersona.coordinator => LessonsRoles(signedIn: true, coordinate: {
             for (final o in coordinatorGrants['demo-coordinator'] ?? const <String>{})
               if (organizations[o]?.enabled ?? false) o
           }),
-        TaysirDemoPersona.owner => const TaysirRoles(signedIn: true, coordinate: {org}, lead: {org}),
-        TaysirDemoPersona.admin => const TaysirRoles(signedIn: true, admin: true, master: true, coordinate: {org}),
+        LessonsDemoPersona.owner => const LessonsRoles(signedIn: true, coordinate: {org}, lead: {org}),
+        LessonsDemoPersona.admin => const LessonsRoles(signedIn: true, admin: true, master: true, coordinate: {org}),
       };
 
   @override
-  Future<TaysirMine> loadMine() async => currentUserId == null ? const TaysirMine() : _me();
+  Future<LessonsMine> loadMine() async => currentUserId == null ? const LessonsMine() : _me();
 
   @override
-  Future<TaysirStaffData> loadStaff(String organizationId) async {
+  Future<LessonsStaffData> loadStaff(String organizationId) async {
     _need(_coord);
-    return TaysirStaffData(
+    return LessonsStaffData(
       roster: [
         for (final p in preachers.values.where((p) => p.organizationId == organizationId))
-          TaysirRosterEntry(
+          LessonsRosterEntry(
               preacher: p,
               phoneMask: phones[p.id] == null ? null : maskPhone(phones[p.id]),
               account: p.linkedProfileId != null ? 'linked' : invites.containsValue(p.id) ? 'invited' : 'none',
@@ -425,8 +425,8 @@ class DemoTaysirRepository implements TaysirRepository {
   }
 
   @override
-  Future<List<TaysirOrganization>> loadAdminOrganizations() async {
-    _need(persona == TaysirDemoPersona.admin);
+  Future<List<LessonsOrganization>> loadAdminOrganizations() async {
+    _need(persona == LessonsDemoPersona.admin);
     return organizations.values.toList();
   }
 
@@ -434,9 +434,9 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<void> setReminder(String lessonId, String lead, DateTime remindAt) async {
     _signedIn();
-    if (lessons[lessonId]?.status != 'approved') throw const TaysirException(TaysirFailure.forbidden);
+    if (lessons[lessonId]?.status != 'approved') throw const LessonsException(LessonsFailure.forbidden);
     _setMe(_me().copyWith(
-        reminders: {..._me().reminders, lessonId: TaysirReminder(lessonId: lessonId, lead: lead, remindAt: remindAt)}));
+        reminders: {..._me().reminders, lessonId: LessonsReminder(lessonId: lessonId, lead: lead, remindAt: remindAt)}));
   }
 
   @override
@@ -462,7 +462,7 @@ class DemoTaysirRepository implements TaysirRepository {
   }
 
   @override
-  Future<void> savePreferences(TaysirPreferences preferences) async {
+  Future<void> savePreferences(LessonsPreferences preferences) async {
     _signedIn();
     _setMe(_me().copyWith(preferences: preferences));
   }
@@ -479,33 +479,33 @@ class DemoTaysirRepository implements TaysirRepository {
   Future<void> flag(String lessonId, String kind, String message) async {
     _signedIn();
     final l = lessons[lessonId]!;
-    flags.insert(0, TaysirFlag(
+    flags.insert(0, LessonsFlag(
         id: _id('f'), lessonId: lessonId, organizationId: l.organizationId, kind: kind, message: message,
         reporterId: currentUserId, createdAt: DateTime.now()));
     _notifyCoordinators('flag', 'بلاغ جديد من مستخدم', 'New report from a user', l.titleAr, l.title('en'),
-        '/taysir/console/review?filter=reports');
+        '/lessons/console/review?filter=reports');
   }
 
   // ----------------------------------------------------- preacher / coord
   bool _ownCard(String preacherId) =>
-      persona == TaysirDemoPersona.preacher && preacherId == ownPreacher && submitPermission.contains(ownPreacher);
+      persona == LessonsDemoPersona.preacher && preacherId == ownPreacher && submitPermission.contains(ownPreacher);
 
   @override
-  Future<String> submit(TaysirDraft d) async {
+  Future<String> submit(LessonDraft d) async {
     _need(_coord || _ownCard(d.preacherId));
     if (d.direct) _need(_coord);
     if (d.dates.isEmpty || d.dates.length > 40 || d.dates.any((x) => x.isBefore(_today))) {
-      throw const TaysirException(TaysirFailure.invalid);
+      throw const LessonsException(LessonsFailure.invalid);
     }
     var mosqueId = d.mosqueId;
     if (d.newMosque != null) {
       mosqueId = _id('m');
-      mosques[mosqueId] = TaysirMosque(
+      mosques[mosqueId] = Mosque(
           id: mosqueId, nameAr: d.newMosque!.nameAr, nameEn: d.newMosque!.nameEn, districtId: d.newMosque!.districtId,
           latitude: d.newMosque!.latitude, longitude: d.newMosque!.longitude, facilities: d.newMosque!.facilities,
           verified: _coord, suggestedBy: currentUserId);
     }
-    if (mosqueId == null || !mosques.containsKey(mosqueId)) throw const TaysirException(TaysirFailure.invalid);
+    if (mosqueId == null || !mosques.containsKey(mosqueId)) throw const LessonsException(LessonsFailure.invalid);
     if (d.replaces != null) {
       for (final l in lessons.values.where((l) => l.requestId == d.replaces && (l.status == 'pending' || l.status == 'rejected')).toList()) {
         lessons[l.id] = l.copyWith(status: 'withdrawn');
@@ -517,14 +517,14 @@ class DemoTaysirRepository implements TaysirRepository {
     final dates = [...d.dates]..sort();
     if (dates.length > 1) {
       seriesId = _id('s');
-      series[seriesId] = TaysirSeries(
+      series[seriesId] = LessonSeries(
           id: seriesId, organizationId: preachers[d.preacherId]!.organizationId, requestId: req, preacherId: d.preacherId,
           mosqueId: mosqueId, titleAr: d.titleAr, titleEn: d.titleEn, type: d.type, topic: d.topic, language: d.language,
           audience: d.audience, slot: d.slot, total: dates.length, status: status);
     }
     for (var i = 0; i < dates.length; i++) {
       final id = _id('l');
-      lessons[id] = TaysirLesson(
+      lessons[id] = Lesson(
           id: id, organizationId: preachers[d.preacherId]!.organizationId, requestId: req, seriesId: seriesId,
           seq: seriesId == null ? null : i + 1, type: d.type, topic: d.topic, titleAr: d.titleAr, titleEn: d.titleEn,
           descriptionAr: d.descriptionAr, preacherId: d.preacherId, mosqueId: mosqueId, date: dates[i], slot: d.slot,
@@ -539,7 +539,7 @@ class DemoTaysirRepository implements TaysirRepository {
     } else {
       _log('submit', d.titleAr, d.titleEn.isEmpty ? d.titleAr : d.titleEn);
       _notifyCoordinators('inbox', 'طلب جديد بانتظار المراجعة', 'New request to review', '${d.titleAr} — ${p.nameAr}',
-          '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')}', '/taysir/console/review');
+          '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')}', '/lessons/console/review');
     }
     return req;
   }
@@ -548,7 +548,7 @@ class DemoTaysirRepository implements TaysirRepository {
   Future<int> review(List<String> requestIds, String decision, {String? reason}) async {
     _need(_coord);
     if (decision == 'reject' && (reason == null || reason.trim().length < 3)) {
-      throw const TaysirException(TaysirFailure.invalid);
+      throw const LessonsException(LessonsFailure.invalid);
     }
     final status = decision == 'approve' ? 'approved' : 'rejected';
     var n = 0;
@@ -568,16 +568,16 @@ class DemoTaysirRepository implements TaysirRepository {
       if (status == 'approved') {
         _notify(p.linkedProfileId, 'check', 'اعتُمد: ${l.titleAr}', 'Approved: ${l.title('en')}',
             'ظهر الدرس للجميع وعلى الخريطة، وأُشعر متابعوك.', 'The lesson is public and on the map, and your followers were notified.',
-            '/taysir/me/lessons?tab=approved');
+            '/lessons/me/lessons?tab=approved');
         for (final e in _mine.entries.toList()) {
           if (e.value.isFollowing('preacher', l.preacherId)) {
             _notify(e.key, 'sparkle', 'درس جديد من داعية تتابعه', 'New lesson from a preacher you follow',
-                '${p.nameAr}: ${l.titleAr}', '${p.name('en')}: ${l.title('en')}', '/taysir/lessons/${l.id}');
+                '${p.nameAr}: ${l.titleAr}', '${p.name('en')}: ${l.title('en')}', '/lessons/lesson/${l.id}');
           }
         }
       } else {
         _notify(p.linkedProfileId, 'x', 'لم يُعتمد: ${l.titleAr}', 'Not approved: ${l.title('en')}', 'السبب: $reason',
-            'Reason: $reason', '/taysir/me/lessons?tab=rejected');
+            'Reason: $reason', '/lessons/me/lessons?tab=rejected');
       }
     }
     return n;
@@ -603,7 +603,7 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<void> withdraw(String requestId) async {
     final items = lessons.values.where((l) => l.requestId == requestId && l.status == 'pending').toList();
-    if (items.isEmpty) throw const TaysirException(TaysirFailure.invalid);
+    if (items.isEmpty) throw const LessonsException(LessonsFailure.invalid);
     _need(_coord || _ownCard(items.first.preacherId));
     for (final l in items) {
       lessons[l.id] = l.copyWith(status: 'withdrawn');
@@ -614,7 +614,7 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<int> cancelLesson(String lessonId, String reason) async {
     final l = lessons[lessonId];
-    if (l == null || l.status != 'approved' || l.date.isBefore(_today)) throw const TaysirException(TaysirFailure.invalid);
+    if (l == null || l.status != 'approved' || l.date.isBefore(_today)) throw const LessonsException(LessonsFailure.invalid);
     _need(_coord || _ownCard(l.preacherId));
     lessons[lessonId] = l.copyWith(status: 'cancelled', cancelReason: reason);
     var n = 0;
@@ -622,12 +622,12 @@ class DemoTaysirRepository implements TaysirRepository {
       if (e.value.reminders.containsKey(lessonId)) {
         n++;
         _notify(e.key, 'alert', 'أُلغي موعد: ${l.titleAr}', 'Cancelled: ${l.title('en')}', '${isoDate(l.date)} — $reason',
-            '${isoDate(l.date)}: $reason', '/taysir/lessons/$lessonId');
+            '${isoDate(l.date)}: $reason', '/lessons/lesson/$lessonId');
       }
     }
     if (!_coord) {
       _notifyCoordinators('alert', 'ألغى داعية موعدًا', 'A preacher cancelled a session', l.titleAr, l.title('en'),
-          '/taysir/lessons/$lessonId');
+          '/lessons/lesson/$lessonId');
     }
     _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}');
     return n;
@@ -652,8 +652,8 @@ class DemoTaysirRepository implements TaysirRepository {
   Future<void> postReport(String lessonId, int attendance, int women, String issue, String notes) async {
     final l = lessons[lessonId]!;
     _need(_coord || _ownCard(l.preacherId));
-    if (l.status != 'approved' || l.date.isAfter(_today)) throw const TaysirException(TaysirFailure.invalid);
-    reports[lessonId] = TaysirReport(lessonId: lessonId, attendance: attendance, women: women, issue: issue, notes: notes);
+    if (l.status != 'approved' || l.date.isAfter(_today)) throw const LessonsException(LessonsFailure.invalid);
+    reports[lessonId] = LessonsReport(lessonId: lessonId, attendance: attendance, women: women, issue: issue, notes: notes);
     _log('report', l.titleAr, l.title('en'));
   }
 
@@ -662,7 +662,7 @@ class DemoTaysirRepository implements TaysirRepository {
     _need(_coord);
     final i = flags.indexWhere((f) => f.id == flagId);
     final f = flags[i];
-    flags[i] = TaysirFlag(
+    flags[i] = LessonsFlag(
         id: f.id, lessonId: f.lessonId, organizationId: f.organizationId, kind: f.kind, message: f.message,
         reporterId: f.reporterId, status: 'resolved', createdAt: f.createdAt);
     _log('resolve', 'بلاغ على درس', 'Report on a lesson');
@@ -674,7 +674,7 @@ class DemoTaysirRepository implements TaysirRepository {
     _need(_coord);
     final id = p['id'] as String? ?? _id('p');
     final old = preachers[id];
-    preachers[id] = TaysirPreacher(
+    preachers[id] = Preacher(
         id: id,
         organizationId: old?.organizationId ?? p['organization_id'] as String? ?? org,
         linkedProfileId: old?.linkedProfileId,
@@ -714,7 +714,7 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<void> setSubmit(String preacherId, bool enabled) async {
     _need(_coord);
-    if (preachers[preacherId]?.linkedProfileId == null) throw const TaysirException(TaysirFailure.invalid);
+    if (preachers[preacherId]?.linkedProfileId == null) throw const LessonsException(LessonsFailure.invalid);
     enabled ? submitPermission.add(preacherId) : submitPermission.remove(preacherId);
     _log(enabled ? 'grantSubmit' : 'revokeSubmit', preachers[preacherId]!.nameAr, preachers[preacherId]!.name('en'));
   }
@@ -730,7 +730,7 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<String> createInvite(String preacherId) async {
     _need(_coord);
-    if (preachers[preacherId]!.linkedProfileId != null) throw const TaysirException(TaysirFailure.invalid);
+    if (preachers[preacherId]!.linkedProfileId != null) throw const LessonsException(LessonsFailure.invalid);
     invites.removeWhere((_, v) => v == preacherId);
     final token = List.generate(32, (_) => 'abcdefghijkmnpqrstuvwxyz23456789'[math.Random().nextInt(32)]).join();
     invites[token] = preacherId;
@@ -739,12 +739,12 @@ class DemoTaysirRepository implements TaysirRepository {
   }
 
   @override
-  Future<TaysirInviteInfo?> inviteInfo(String token) async {
+  Future<LessonsInviteInfo?> inviteInfo(String token) async {
     final pid = invites[token];
     final p = pid == null ? null : preachers[pid];
     if (p == null || p.linkedProfileId != null) return null;
     final o = organizations[p.organizationId]!;
-    return TaysirInviteInfo(
+    return LessonsInviteInfo(
         preacherId: p.id, nameAr: p.nameAr, nameEn: p.nameEn, city: p.city, affiliation: p.affiliation,
         languages: p.languages, organizationAr: o.nameAr, organizationEn: o.nameEn);
   }
@@ -753,12 +753,12 @@ class DemoTaysirRepository implements TaysirRepository {
   Future<String> claimInvite(String token, List<String> languages) async {
     _signedIn();
     final pid = invites.remove(token);
-    if (pid == null || preachers[pid]!.linkedProfileId != null) throw const TaysirException(TaysirFailure.expired);
+    if (pid == null || preachers[pid]!.linkedProfileId != null) throw const LessonsException(LessonsFailure.expired);
     preachers[pid] = preachers[pid]!.copyWith(linkedProfileId: currentUserId, languages: languages.isEmpty ? null : languages);
     submitPermission.add(pid);
     _log('claim', preachers[pid]!.nameAr, preachers[pid]!.name('en'));
     _notifyCoordinators('user', 'ربط داعية حسابه', 'A preacher linked their account', preachers[pid]!.nameAr,
-        preachers[pid]!.name('en'), '/taysir/console/preachers');
+        preachers[pid]!.name('en'), '/lessons/console/preachers');
     return pid;
   }
 
@@ -781,8 +781,8 @@ class DemoTaysirRepository implements TaysirRepository {
     if (organizationId == org) {
       final t = i >= 0
           ? team[i]
-          : TaysirTeamMember(profileId: profileId, role: 'coordinator', nameAr: account?.nameAr ?? '', nameEn: account?.nameEn ?? '');
-      final updated = TaysirTeamMember(
+          : LessonsTeamMember(profileId: profileId, role: 'coordinator', nameAr: account?.nameAr ?? '', nameEn: account?.nameEn ?? '');
+      final updated = LessonsTeamMember(
           profileId: t.profileId, role: t.role, nameAr: t.nameAr, nameEn: t.nameEn, coordinator: enabled,
           grantedAt: enabled ? DateTime.now() : null, grantedByAr: enabled ? _personaName(persona) : null,
           grantedByEn: enabled ? _personaName(persona) : null);
@@ -798,14 +798,14 @@ class DemoTaysirRepository implements TaysirRepository {
   }
 
   @override
-  Future<List<TaysirCoordinator>> loadCoordinators() async {
-    _need(persona == TaysirDemoPersona.admin);
+  Future<List<LessonsCoordinator>> loadCoordinators() async {
+    _need(persona == LessonsDemoPersona.admin);
     return [
       for (final e in coordinatorGrants.entries)
         if (e.value.isNotEmpty)
           () {
             final a = accounts.where((a) => a.id == e.key).firstOrNull;
-            return TaysirCoordinator(
+            return LessonsCoordinator(
                 profileId: e.key, nameAr: a?.nameAr ?? '', nameEn: a?.nameEn ?? '', email: a?.email ?? '',
                 organizationIds: e.value.toList());
           }()
@@ -813,8 +813,8 @@ class DemoTaysirRepository implements TaysirRepository {
   }
 
   @override
-  Future<List<TaysirAccount>> searchAccounts(String query) async {
-    _need(persona == TaysirDemoPersona.admin);
+  Future<List<LessonsAccount>> searchAccounts(String query) async {
+    _need(persona == LessonsDemoPersona.admin);
     final q = query.trim().toLowerCase();
     return [
       for (final a in accounts)
@@ -824,8 +824,8 @@ class DemoTaysirRepository implements TaysirRepository {
 
   @override
   Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) async {
-    _need(persona == TaysirDemoPersona.admin);
-    if (organizationIds.any((o) => !organizations.containsKey(o))) throw const TaysirException(TaysirFailure.invalid);
+    _need(persona == LessonsDemoPersona.admin);
+    if (organizationIds.any((o) => !organizations.containsKey(o))) throw const LessonsException(LessonsFailure.invalid);
     final want = organizationIds.toSet(), had = {...?coordinatorGrants[profileId]};
     for (final o in had.difference(want)) {
       _grant(o, profileId, false);
@@ -838,7 +838,7 @@ class DemoTaysirRepository implements TaysirRepository {
 
   @override
   Future<void> setOrganizationEnabled(String organizationId, bool enabled) async {
-    _need(persona == TaysirDemoPersona.admin);
+    _need(persona == LessonsDemoPersona.admin);
     organizations[organizationId] = organizations[organizationId]!.copyWith(enabled: enabled);
     final o = organizations[organizationId]!;
     _log(enabled ? 'enable' : 'disable', o.nameAr, o.nameEn, organizationId: organizationId);
@@ -850,7 +850,7 @@ class DemoTaysirRepository implements TaysirRepository {
     _need(_coord);
     final id = m['id'] as String? ?? _id('m');
     final old = mosques[id];
-    mosques[id] = TaysirMosque(
+    mosques[id] = Mosque(
         id: id,
         nameAr: m['name_ar'] as String? ?? old!.nameAr,
         nameEn: m['name_en'] as String? ?? old?.nameEn ?? '',
@@ -883,7 +883,7 @@ class DemoTaysirRepository implements TaysirRepository {
       }
     } else {
       if (lessons.values.any((l) => l.mosqueId == mosqueId && (l.status == 'approved' || l.status == 'cancelled'))) {
-        throw const TaysirException(TaysirFailure.conflict);
+        throw const LessonsException(LessonsFailure.conflict);
       }
       lessons.removeWhere((_, l) => l.mosqueId == mosqueId);
     }

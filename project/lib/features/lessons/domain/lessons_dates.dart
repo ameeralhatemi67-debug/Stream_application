@@ -1,16 +1,16 @@
 import 'package:hijri/hijri_calendar.dart';
 
-/// Dates in Taysir are calendar days in Saudi time (UTC+3), not instants.
+/// Dates in Lessons are calendar days in Saudi time (UTC+3), not instants.
 /// Weekday and Hijri date are always derived here, never stored.
 
 /// Today in Riyadh, as a date at local noon (stable across DST-free math).
-DateTime taysirToday([DateTime? now]) {
+DateTime lessonsToday([DateTime? now]) {
   final riyadh = (now ?? DateTime.now()).toUtc().add(const Duration(hours: 3));
   return DateTime(riyadh.year, riyadh.month, riyadh.day, 12);
 }
 
 /// Hours since midnight, Riyadh time.
-double taysirNowHours([DateTime? now]) {
+double lessonsNowHours([DateTime? now]) {
   final riyadh = (now ?? DateTime.now()).toUtc().add(const Duration(hours: 3));
   return riyadh.hour + riyadh.minute / 60;
 }
@@ -102,7 +102,7 @@ double hhmmToHours(String s) {
 
 /// "Today", "Tomorrow" or the weekday.
 String relativeDayLabel(DateTime d, String lang, {DateTime? today}) {
-  final t = today ?? taysirToday();
+  final t = today ?? lessonsToday();
   if (sameDay(d, t)) return _ar(lang) ? 'اليوم' : 'Today';
   if (sameDay(d, addDays(t, 1))) return _ar(lang) ? 'غدًا' : 'Tomorrow';
   return weekdayName(d, lang);

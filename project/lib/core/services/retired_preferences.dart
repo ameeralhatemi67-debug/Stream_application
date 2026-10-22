@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Device settings left behind by switches that no longer exist: the green
-/// or gold palette (ADR-013) and the Hadayah Live / Taysir app switch. Taysir
-/// is part of Hadayah Live now (ADR-014), so a device that had chosen Taysir
+/// or gold palette (ADR-013) and the Hadayah Live / Lessons app switch. Lessons
+/// is part of Hadayah Live now (ADR-014), so a device that had chosen Lessons
 /// opens on the Discovery feed like every other.
 const retiredPreferenceKeys = ['hidayah_palette_enabled', 'app_experience'];
 

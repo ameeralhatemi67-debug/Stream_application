@@ -1,7 +1,7 @@
 /// The programme's fixed vocabulary. Values match the database CHECK
 /// constraints (supabase/migrations/20261021120000_taysir_lessons_programme.sql);
-/// labels live in assets/i18n under `taysir.*`.
-abstract final class TaysirVocab {
+/// labels live in assets/i18n under `lessons.*`.
+abstract final class LessonsVocab {
   /// Lessons are announced by prayer, the way every mosque does.
   static const slots = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 

@@ -2207,13 +2207,13 @@
     "studio_step3": "Start streaming",
     "studio_help": "Streaming from a laptop"
   },
-  "taysir": {
-    "app_name": "Taysir in Hadayah Live",
-    "programme": "Taysir programme",
+  "lessons": {
+    "app_name": "Mosque lessons",
+    "programme": "Lessons programme",
     "brand_sub": "Mosque lessons · Eastern Province",
     "sample_banner": "Sample data. Connect the backend to see the real programme.",
     "retry": "Try again",
-    "unavailable_title": "Taysir isn't available right now",
+    "unavailable_title": "Lessons aren't available right now",
     "unavailable_body": "We couldn't load the lessons programme. Check your connection and try again.",
     "see_all": "See all",
     "close": "Close",
@@ -2246,7 +2246,7 @@
       "map": "Map",
       "me": "Me",
       "my_lessons": "My lessons",
-      "console": "Taysir console",
+      "console": "Lessons console",
       "saved": "Saved",
       "notifications": "Notifications",
       "settings": "Settings",
@@ -2403,8 +2403,8 @@
       "addMosque": "Added a mosque",
       "grant": "Granted",
       "revoke": "Revoked",
-      "enable": "Enabled Taysir for",
-      "disable": "Disabled Taysir for"
+      "enable": "Enabled lessons for",
+      "disable": "Disabled lessons for"
     },
     "n": {
       "lessons": {
@@ -2529,7 +2529,7 @@
       "no_lessons": "No lessons",
       "live_now": "Live now",
       "upcoming": "Upcoming lessons",
-      "how_eyebrow": "The Taysir programme inside Hadayah Live",
+      "how_eyebrow": "Mosque lessons inside Hadayah Live",
       "how_title": "From the preacher's request to the viewer's map",
       "how_1_t": "The preacher submits",
       "how_1_b": "From their phone: type, mosque and prayer time, or a whole weekly series.",
@@ -2554,8 +2554,8 @@
       "empty": "No lessons are published yet",
       "empty_body": "Approved lessons from society coordinators appear here."
     },
-    "lessons": {
-      "eyebrow": "Mosque lessons · Taysir programme",
+    "calendar": {
+      "eyebrow": "Mosque lessons · Eastern Province",
       "title": "Lessons and lectures",
       "subtitle": "Everything approved by society coordinators, ordered by prayer time.",
       "upcoming": "Upcoming",
@@ -2687,7 +2687,7 @@
       "search_hint": "Search a mosque or district"
     },
     "preacher": {
-      "verified": "Verified preacher · Taysir",
+      "verified": "Verified preacher",
       "has_channel": "Has a live channel",
       "upcoming": "Upcoming",
       "series": "Series",
@@ -2701,7 +2701,7 @@
       "s_series": "series",
       "s_mosques": "mosques",
       "s_held": "held",
-      "bio_default": "One of the Taysir programme preachers at {}.",
+      "bio_default": "One of the programme's preachers in {}.",
       "no_upcoming": "No upcoming lessons",
       "follow_hint": "Follow to hear when a new lesson is approved.",
       "channel": "Open the channel"
@@ -2720,12 +2720,12 @@
       "following": "Following",
       "log": "My learning log",
       "notifications": "Notifications",
-      "permissions": "Taysir roles and permissions",
+      "permissions": "Lessons roles and permissions",
       "prefs": "Reminder preferences",
       "default_lead": "Default reminder time",
       "digest": "Tomorrow's lessons, after Isha",
       "digest_body": "One notification each evening with what is on tomorrow in your city.",
-      "console": "Taysir console",
+      "console": "Lessons console",
       "console_body": "{} waiting · {} from users",
       "open": "Open",
       "my_lessons": "My lessons",
@@ -2895,10 +2895,10 @@
       "saved": "Report saved. It feeds this month's report"
     },
     "perm": {
-      "eyebrow": "Taysir inside the existing permission system",
+      "eyebrow": "Lessons inside the existing permission system",
       "title": "Roles and permissions",
       "body": "No new role tier. Two organization-scoped permission keys in the existing permission table, checked in the database.",
-      "coord": "Taysir coordinator",
+      "coord": "Lessons coordinator",
       "coord_body": "Granted by the organization owner or a master admin. Reviews requests, manages preachers and mosques, and sees phone numbers, with every view logged.",
       "submit": "Verified preacher",
       "submit_body": "Granted when a preacher accepts the invitation and links their account. Submits their own lessons only, with no broadcast channel needed.",
@@ -2925,11 +2925,11 @@
       "r8": "Manage the mosque directory",
       "r9": "Statistics and monthly report",
       "r10": "Grant or revoke coordinator",
-      "r11": "Enable Taysir for an organization",
+      "r11": "Enable lessons for an organization",
       "highlight": "The highlighted column is your role."
     },
     "console": {
-      "title": "Taysir console",
+      "title": "Lessons console",
       "submit_for": "Submit for a preacher",
       "all_orgs": "All organizations",
       "overview": "Overview",
@@ -3038,7 +3038,7 @@
       "revoked": "Submit permission revoked",
       "invite_title": "Invite a preacher",
       "invite_note": "A personal link that works once and expires in 14 days. No default passwords and no accounts created on the preacher's behalf.",
-      "invite_msg": "Assalamu alaikum {},\n{} invites you to manage your Taysir lessons on Hadayah Live. Open the link and sign in with Google or Apple:\n{}\nThe link is personal and works once.",
+      "invite_msg": "Assalamu alaikum {},\n{} invites you to manage your lessons on Hadayah Live. Open the link and sign in with Google or Apple:\n{}\nThe link is personal and works once.",
       "copy_msg": "Copy message",
       "whatsapp": "WhatsApp",
       "import_title": "Import a preacher list",
@@ -3084,14 +3084,14 @@
       "busiest": "Busiest districts",
       "monthly": "Monthly report for the ministry branch",
       "copy_csv": "Copy as CSV",
-      "report_sub": "Taysir programme activity report",
+      "report_sub": "Mosque lessons activity report",
       "total": "Total",
       "attendance": "Attendance",
       "attendance_note": "Attendance comes from preachers' after-lesson reports.",
       "csv_note": "The copy is Excel-safe: cells starting with = + - or @ are neutralized."
     },
     "auditlog": {
-      "note": "Every Taysir action is recorded: who, when and on what. The log is read-only.",
+      "note": "Every lessons action is recorded: who, when and on what. The log is read-only.",
       "when": "When",
       "who": "Who",
       "action": "Action",
@@ -3104,9 +3104,9 @@
       "member": "Organization member, {}",
       "granted_by": " · granted by {}",
       "scoped": "An organization-scoped permission. It grants nothing platform-wide.",
-      "orgs": "Switch Taysir on for each organization",
-      "enabled": "Taysir enabled for this organization",
-      "disabled": "Taysir disabled for this organization",
+      "orgs": "Switch lessons on for each organization",
+      "enabled": "Lessons enabled for this organization",
+      "disabled": "Lessons disabled for this organization",
       "granted": "Coordinator permission granted",
       "revoked": "Coordinator permission revoked",
       "matrix": "Permission matrix",
@@ -3133,7 +3133,7 @@
       "change": "Change",
       "orgs": "Organizations they coordinate",
       "pick_org": "Choose at least one organization.",
-      "taysir_off": "Taysir is off for this organization"
+      "lessons_off": "Lessons are off for this organization"
     }
   }
 }

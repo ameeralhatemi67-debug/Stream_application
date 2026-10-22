@@ -8,11 +8,11 @@ import 'package:latlong2/latlong.dart';
 import '../../map/models/map_tricity_domain.dart';
 import '../../map/presentation/widgets/tricity_basemap_layer.dart';
 import '../../map/services/map_pack_controller.dart';
-import 'taysir_kit.dart';
+import 'lessons_kit.dart';
 
 /// One mosque on the lessons map.
-class TaysirPin {
-  const TaysirPin({required this.id, required this.lat, required this.lng, required this.label, this.count = 0, this.live = false, this.dim = false, this.verified = true});
+class MosquePin {
+  const MosquePin({required this.id, required this.lat, required this.lng, required this.label, this.count = 0, this.live = false, this.dim = false, this.verified = true});
   final String id, label;
   final double lat, lng;
   final int count;
@@ -21,9 +21,9 @@ class TaysirPin {
 
 /// Mosques on the bundled tri-city basemap (the same offline pack as the
 /// Spatial Map). Pins outside the pack's area are listed by the caller only.
-class TaysirMap extends StatefulWidget {
-  const TaysirMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5, this.markers = const []});
-  final List<TaysirPin> pins;
+class LessonsMap extends StatefulWidget {
+  const LessonsMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5, this.markers = const []});
+  final List<MosquePin> pins;
   final String? selected;
   final ValueChanged<String>? onPin;
   final bool interactive;
@@ -39,21 +39,21 @@ class TaysirMap extends StatefulWidget {
   static bool covers(double lat, double lng) => kTricityNavigationExtent.contains(lat, lng);
 
   @override
-  State<TaysirMap> createState() => _TaysirMapState();
+  State<LessonsMap> createState() => _LessonsMapState();
 }
 
-class _TaysirMapState extends State<TaysirMap> {
+class _LessonsMapState extends State<LessonsMap> {
   final _map = MapController();
   bool _ready = false;
 
   @override
   void initState() {
     super.initState();
-    if (!TaysirMap.debugPlaceholder) unawaited(MapPackController.shared.ensureOpened());
+    if (!LessonsMap.debugPlaceholder) unawaited(MapPackController.shared.ensureOpened());
   }
 
   @override
-  void didUpdateWidget(TaysirMap old) {
+  void didUpdateWidget(LessonsMap old) {
     super.didUpdateWidget(old);
     if (_ready && widget.selected != null && widget.selected != old.selected) {
       final p = widget.pins.where((p) => p.id == widget.selected).firstOrNull;
@@ -63,7 +63,7 @@ class _TaysirMapState extends State<TaysirMap> {
 
   @override
   Widget build(BuildContext context) {
-    if (TaysirMap.debugPlaceholder) {
+    if (LessonsMap.debugPlaceholder) {
       return Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text('${widget.pins.length + widget.markers.length}'));
     }
     final sel = widget.pins.where((p) => p.id == widget.selected).firstOrNull;
@@ -84,12 +84,12 @@ class _TaysirMapState extends State<TaysirMap> {
         children: [
           TricityBasemapLayer(controller: MapPackController.shared),
           MarkerLayer(markers: [
-            for (final p in widget.pins.where((p) => TaysirMap.covers(p.lat, p.lng)))
+            for (final p in widget.pins.where((p) => LessonsMap.covers(p.lat, p.lng)))
               Marker(
                 point: LatLng(p.lat, p.lng),
                 width: p.id == widget.selected ? 46 : 38,
                 height: p.id == widget.selected ? 46 : 38,
-                child: TaysirMosqueCoin(pin: p, selected: p.id == widget.selected, onTap: widget.onPin == null ? null : () => widget.onPin!(p.id)),
+                child: MosqueCoin(pin: p, selected: p.id == widget.selected, onTap: widget.onPin == null ? null : () => widget.onPin!(p.id)),
               ),
           ]),
           if (widget.markers.isNotEmpty) MarkerLayer(markers: widget.markers),
@@ -100,9 +100,9 @@ class _TaysirMapState extends State<TaysirMap> {
 }
 
 /// A mosque coin: its lesson count, ringed red while one is streamed live.
-class TaysirMosqueCoin extends StatelessWidget {
-  const TaysirMosqueCoin({super.key, required this.pin, this.selected = false, this.onTap});
-  final TaysirPin pin;
+class MosqueCoin extends StatelessWidget {
+  const MosqueCoin({super.key, required this.pin, this.selected = false, this.onTap});
+  final MosquePin pin;
   final bool selected;
   final VoidCallback? onTap;
   @override
@@ -134,16 +134,16 @@ class TaysirMosqueCoin extends StatelessWidget {
 }
 
 /// Tap to place a mosque's pin.
-class TaysirPinPicker extends StatelessWidget {
-  const TaysirPinPicker({super.key, required this.value, required this.onPick});
+class MosquePinPicker extends StatelessWidget {
+  const MosquePinPicker({super.key, required this.value, required this.onPick});
   final (double, double)? value;
   final ValueChanged<(double, double)> onPick;
   @override
   Widget build(BuildContext context) {
-    if (TaysirMap.debugPlaceholder) {
+    if (LessonsMap.debugPlaceholder) {
       return GestureDetector(
         onTap: () => onPick((26.29, 50.2)),
-        child: Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text(value == null ? 'taysir.submit.tap_map'.tr() : '✓')),
+        child: Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text(value == null ? 'lessons.submit.tap_map'.tr() : '✓')),
       );
     }
     unawaited(MapPackController.shared.ensureOpened());

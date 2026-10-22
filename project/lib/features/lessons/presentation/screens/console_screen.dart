@@ -7,16 +7,16 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/routing/sign_in_prompt.dart';
-import '../../domain/taysir_dates.dart';
-import '../../domain/taysir_models.dart';
-import '../../domain/taysir_rules.dart';
-import '../../domain/taysir_vocab.dart';
-import '../../state/taysir_controller.dart';
-import '../taysir_kit.dart';
-import '../taysir_map.dart';
-import '../taysir_modals.dart';
-import '../taysir_shell.dart';
-import '../taysir_widgets.dart';
+import '../../domain/lessons_dates.dart';
+import '../../domain/lessons_models.dart';
+import '../../domain/lessons_rules.dart';
+import '../../domain/lessons_vocab.dart';
+import '../../state/lessons_controller.dart';
+import '../lessons_kit.dart';
+import '../lessons_map.dart';
+import '../lessons_modals.dart';
+import '../lessons_shell.dart';
+import '../lessons_widgets.dart';
 import 'account_screens.dart' show PermissionMatrix;
 import 'coordinators_admin.dart';
 
@@ -32,46 +32,46 @@ TGlyph _tabGlyph(String t) => switch (t) {
       _ => TGlyph.key,
     };
 
-/// The coordinators' console (Taysir's dashboard, rebuilt inside the app).
-class TaysirConsoleScreen extends StatefulWidget {
-  const TaysirConsoleScreen({super.key, this.tab = 'overview', this.filter});
+/// The coordinators' console (Lessons's dashboard, rebuilt inside the app).
+class LessonsConsoleScreen extends StatefulWidget {
+  const LessonsConsoleScreen({super.key, this.tab = 'overview', this.filter});
   final String tab;
   final String? filter;
   @override
-  State<TaysirConsoleScreen> createState() => _TaysirConsoleScreenState();
+  State<LessonsConsoleScreen> createState() => _LessonsConsoleScreenState();
 }
 
-class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
+class _LessonsConsoleScreenState extends State<LessonsConsoleScreen> {
   late String tab = consoleTabs.contains(widget.tab) ? widget.tab : 'overview';
 
   @override
   void initState() {
     super.initState();
-    unawaited(context.read<TaysirController>().openConsole());
+    unawaited(context.read<LessonsController>().openConsole());
   }
 
   @override
-  void didUpdateWidget(TaysirConsoleScreen old) {
+  void didUpdateWidget(LessonsConsoleScreen old) {
     super.didUpdateWidget(old);
     if (old.tab != widget.tab && consoleTabs.contains(widget.tab)) tab = widget.tab;
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     if (!c.loaded) {
-      return TaysirPage(title: 'taysir.console.title'.tr(), children: const [Center(child: CircularProgressIndicator(color: TC.gold))]);
+      return LessonsPage(title: 'lessons.console.title'.tr(), children: const [Center(child: CircularProgressIndicator(color: TC.gold))]);
     }
     if (!c.canCoordinate) {
-      return TaysirPage(title: 'taysir.console.title'.tr(), children: [
+      return LessonsPage(title: 'lessons.console.title'.tr(), children: [
         TEmpty(
           icon: TGlyph.lock,
-          title: 'taysir.console.locked'.tr(),
-          body: 'taysir.console.locked_body'.tr(),
+          title: 'lessons.console.locked'.tr(),
+          body: 'lessons.console.locked_body'.tr(),
           action: c.signedIn
-              ? TButton('taysir.nav.permissions'.tr(), onPressed: () => context.push('/taysir/permissions'))
-              : TButton('taysir.sign_in'.tr(), kind: TBtn.minted, onPressed: () => openSignIn(context)),
+              ? TButton('lessons.nav.permissions'.tr(), onPressed: () => context.push('/lessons/permissions'))
+              : TButton('lessons.sign_in'.tr(), kind: TBtn.minted, onPressed: () => openSignIn(context)),
         ),
       ]);
     }
@@ -111,7 +111,7 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
                         child: Row(children: [
                           TIcon(_tabGlyph(t), size: 18, color: tab == t ? HidayahGold.g200 : TC.goldIcon),
                           const SizedBox(width: 10),
-                          Expanded(child: Text('taysir.console.$t'.tr(), style: tBody(14, color: tab == t ? HidayahGold.g200 : TC.ink, weight: FontWeight.w600, height: 1.3))),
+                          Expanded(child: Text('lessons.console.$t'.tr(), style: tBody(14, color: tab == t ? HidayahGold.g200 : TC.ink, weight: FontWeight.w600, height: 1.3))),
                           if ((counts[t] ?? 0) > 0) TTag('${counts[t]}', tone: tab == t ? TTone.slate : TTone.gold),
                         ]),
                       ),
@@ -126,16 +126,16 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
               for (final t in consoleTabs)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 6),
-                  child: TChip('taysir.console.$t'.tr(), icon: _tabGlyph(t), selected: tab == t, count: (counts[t] ?? 0) > 0 ? counts[t] : null,
+                  child: TChip('lessons.console.$t'.tr(), icon: _tabGlyph(t), selected: tab == t, count: (counts[t] ?? 0) > 0 ? counts[t] : null,
                       onTap: () => setState(() => tab = t)),
                 ),
             ]),
           );
     final head = Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.end, children: [
       Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        TEyebrow(c.roles.admin ? 'taysir.console.all_orgs'.tr() : (c.catalog.organizations[org]?.name(lang) ?? ''), icon: TGlyph.shield),
+        TEyebrow(c.roles.admin ? 'lessons.console.all_orgs'.tr() : (c.catalog.organizations[org]?.name(lang) ?? ''), icon: TGlyph.shield),
         const SizedBox(height: 4),
-        Text('taysir.console.title'.tr(), style: tDisplay(context.wide ? 32 : 24)),
+        Text('lessons.console.title'.tr(), style: tDisplay(context.wide ? 32 : 24)),
       ]),
       Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
         if (orgs.length > 1)
@@ -152,10 +152,10 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
               onChanged: (v) => v == null ? null : c.openConsole(v),
             ),
           ),
-        TButton('taysir.console.submit_for'.tr(), icon: TGlyph.plus, onPressed: () => context.push('/taysir/submit')),
+        TButton('lessons.console.submit_for'.tr(), icon: TGlyph.plus, onPressed: () => context.push('/lessons/submit')),
       ]),
     ]);
-    return TaysirPage(title: 'taysir.console.title'.tr(), children: [
+    return LessonsPage(title: 'lessons.console.title'.tr(), children: [
       head,
       if (context.wide)
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -177,7 +177,7 @@ class _Overview extends StatelessWidget {
   final ValueChanged<String> onTab;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final reqs = c.pendingRequests;
     final week = c.upcoming.where((l) => !l.date.isAfter(addDays(c.today, 6))).toList();
     final active = c.publicLessons.where((l) => l.isPublic && !l.date.isBefore(addDays(c.today, -30))).map((l) => l.preacherId).toSet().length;
@@ -186,47 +186,47 @@ class _Overview extends StatelessWidget {
         .where((l) => l.isPublic && l.date.isBefore(c.today) && !l.date.isBefore(addDays(c.today, -14)) && !c.staff.reports.containsKey(l.id))
         .length;
     final attention = [
-      (reqs.length, TGlyph.inbox, 'taysir.overview.a_requests', 'review', TTone.warning),
-      (clashN, TGlyph.alert, 'taysir.overview.a_clash', 'review', TTone.danger),
-      (c.staff.flags.where((f) => f.status == 'open').length, TGlyph.flag, 'taysir.overview.a_reports', 'review', TTone.warning),
-      (c.catalog.mosques.values.where((m) => !m.verified).length, TGlyph.mosque, 'taysir.overview.a_mosques', 'mosques', TTone.info),
-      (c.staff.roster.where((r) => r.account == 'none').length, TGlyph.link, 'taysir.overview.a_invite', 'preachers', TTone.info),
-      (due, TGlyph.file, 'taysir.overview.a_due', 'reports', TTone.slate),
+      (reqs.length, TGlyph.inbox, 'lessons.overview.a_requests', 'review', TTone.warning),
+      (clashN, TGlyph.alert, 'lessons.overview.a_clash', 'review', TTone.danger),
+      (c.staff.flags.where((f) => f.status == 'open').length, TGlyph.flag, 'lessons.overview.a_reports', 'review', TTone.warning),
+      (c.catalog.mosques.values.where((m) => !m.verified).length, TGlyph.mosque, 'lessons.overview.a_mosques', 'mosques', TTone.info),
+      (c.staff.roster.where((r) => r.account == 'none').length, TGlyph.link, 'lessons.overview.a_invite', 'preachers', TTone.info),
+      (due, TGlyph.file, 'lessons.overview.a_due', 'reports', TTone.slate),
     ].where((a) => a.$1 > 0).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       TStatTiles(big: true, [
-        ('${reqs.length}', 'taysir.overview.waiting'.tr()),
-        ('${week.length}', 'taysir.overview.week'.tr()),
-        ('$active', 'taysir.overview.active'.tr()),
-        ('${week.map((l) => l.mosqueId).toSet().length}', 'taysir.overview.covered'.tr()),
+        ('${reqs.length}', 'lessons.overview.waiting'.tr()),
+        ('${week.length}', 'lessons.overview.week'.tr()),
+        ('$active', 'lessons.overview.active'.tr()),
+        ('${week.map((l) => l.mosqueId).toSet().length}', 'lessons.overview.covered'.tr()),
       ]),
       const SizedBox(height: 16),
       TCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
-            Expanded(child: Text('taysir.overview.chart'.tr(), style: tStrong(17))),
-            Text('taysir.overview.eight'.tr(), style: tBody(13, color: TC.muted)),
+            Expanded(child: Text('lessons.overview.chart'.tr(), style: tStrong(17))),
+            Text('lessons.overview.eight'.tr(), style: tBody(13, color: TC.muted)),
           ]),
           const SizedBox(height: 12),
           const SizedBox(height: 210, child: _WeeklyChart()),
           const SizedBox(height: 8),
           Wrap(spacing: 14, runSpacing: 6, children: [
-            for (final t in TaysirVocab.types)
+            for (final t in LessonsVocab.types)
               Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(width: 12, height: 12, decoration: BoxDecoration(color: _typeColor(t), borderRadius: BorderRadius.circular(3))),
                 const SizedBox(width: 6),
                 Text(typeLabel(t), style: tBody(12.5, color: TC.ink2)),
               ]),
-            Text('taysir.overview.next_note'.tr(), style: tBody(12.5, color: TC.muted)),
+            Text('lessons.overview.next_note'.tr(), style: tBody(12.5, color: TC.muted)),
           ]),
         ]),
       ),
       const SizedBox(height: 16),
       TCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('taysir.overview.attention'.tr(), style: tStrong(17)),
+          Text('lessons.overview.attention'.tr(), style: tStrong(17)),
           const SizedBox(height: 8),
-          if (attention.isEmpty) TEmpty(ok: true, icon: TGlyph.check, title: 'taysir.overview.all_clear'.tr()),
+          if (attention.isEmpty) TEmpty(ok: true, icon: TGlyph.check, title: 'lessons.overview.all_clear'.tr()),
           for (final (n, glyph, key, target, tone) in attention)
             InkWell(
               onTap: () => onTab(target),
@@ -260,7 +260,7 @@ class _WeeklyChart extends StatelessWidget {
   const _WeeklyChart();
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     // Weeks start on Saturday, as the association counts them.
     final offset = (c.today.weekday - DateTime.saturday) % 7;
@@ -269,7 +269,7 @@ class _WeeklyChart extends StatelessWidget {
     final data = [
       for (final w in weeks)
         {
-          for (final t in TaysirVocab.types)
+          for (final t in LessonsVocab.types)
             t: c.publicLessons.where((l) => l.isPublic && l.type == t && !l.date.isBefore(w) && !l.date.isAfter(addDays(w, 6))).length
         }
     ];
@@ -289,7 +289,7 @@ class _WeeklyChart extends StatelessWidget {
                       Text('${data[i].values.fold<int>(0, (a, b) => a + b)}',
                           maxLines: 1, style: tBody(12, color: TC.ink2, weight: FontWeight.w700, height: 1.3)),
                       const SizedBox(height: 4),
-                      for (final t in TaysirVocab.types.reversed)
+                      for (final t in LessonsVocab.types.reversed)
                         Container(
                           width: bw,
                           height: math.max(0.0, area.maxHeight - MediaQuery.textScalerOf(context).scale(16) - 4) * data[i][t]! / maxV,
@@ -300,7 +300,7 @@ class _WeeklyChart extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(gregorianLabel(weeks[i], lang, short: true), maxLines: 1, style: tBody(11, color: TC.muted, height: 1.2)),
-                Text(sameDay(weeks[i], thisWeek) ? 'taysir.overview.this_week'.tr() : '', maxLines: 1, style: tBody(10.5, color: TC.bronze, weight: FontWeight.w700, height: 1.2)),
+                Text(sameDay(weeks[i], thisWeek) ? 'lessons.overview.this_week'.tr() : '', maxLines: 1, style: tBody(10.5, color: TC.bronze, weight: FontWeight.w700, height: 1.2)),
               ]),
             ),
           ),
@@ -324,11 +324,11 @@ class _ReviewState extends State<_Review> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final reqs = c.pendingRequests;
-    bool isClash(TaysirRequest r) => r.items.any((l) => c.clashes(l).isNotEmpty);
-    bool newMosque(TaysirRequest r) => !(c.mosque(r.first.mosqueId)?.verified ?? true);
+    bool isClash(LessonRequest r) => r.items.any((l) => c.clashes(l).isNotEmpty);
+    bool newMosque(LessonRequest r) => !(c.mosque(r.first.mosqueId)?.verified ?? true);
     final shown = reqs
         .where((r) => switch (filter) {
               'clash' => isClash(r),
@@ -343,8 +343,8 @@ class _ReviewState extends State<_Review> {
       final n = await tRun(context, () => c.review(ids, 'approve'));
       setState(selected.clear);
       if (n != null && context.mounted) {
-        tToast(context, 'taysir.review.approved'.tr(args: [tPlural('requests', n)]),
-            actionLabel: 'taysir.review.undo'.tr(), onAction: () => tRun(context, () => c.undoReview(ids), success: 'taysir.review.undone'.tr()));
+        tToast(context, 'lessons.review.approved'.tr(args: [tPlural('requests', n)]),
+            actionLabel: 'lessons.review.undo'.tr(), onAction: () => tRun(context, () => c.undoReview(ids), success: 'lessons.review.undone'.tr()));
       }
     }
 
@@ -353,19 +353,19 @@ class _ReviewState extends State<_Review> {
       if (done == true) setState(selected.clear);
     }
 
-    Widget flags(TaysirRequest r) => Wrap(spacing: 6, runSpacing: 6, children: [
-          if (isClash(r)) TTag('taysir.review.clash'.tr(), tone: TTone.danger, icon: TGlyph.alert),
-          if (newMosque(r)) TTag('taysir.review.new_mosque'.tr(), tone: TTone.info, icon: TGlyph.mosque),
+    Widget flags(LessonRequest r) => Wrap(spacing: 6, runSpacing: 6, children: [
+          if (isClash(r)) TTag('lessons.review.clash'.tr(), tone: TTone.danger, icon: TGlyph.alert),
+          if (newMosque(r)) TTag('lessons.review.new_mosque'.tr(), tone: TTone.info, icon: TGlyph.mosque),
           if (r.isSeries) TTag(tPlural('sessions', r.items.length), tone: TTone.slate, icon: TGlyph.repeat),
           if (r.first.language != 'ar') TTag(languageLabel(r.first.language), tone: TTone.info, icon: TGlyph.globe),
         ]);
 
-    Widget detail(TaysirRequest r) {
+    Widget detail(LessonRequest r) {
       final l = r.first;
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const SizedBox(height: 10),
-        if (l.description(lang).isNotEmpty) Text('${'taysir.review.description'.tr()}: ${l.description(lang)}', style: tBody(13.5)),
-        Text('${'taysir.lesson.audience'.tr()}: ${audienceLabel(l.audience)}${l.womenSection ? ' · ${'taysir.lesson.women'.tr()}' : ''}', style: tBody(13.5)),
+        if (l.description(lang).isNotEmpty) Text('${'lessons.review.description'.tr()}: ${l.description(lang)}', style: tBody(13.5)),
+        Text('${'lessons.lesson.audience'.tr()}: ${audienceLabel(l.audience)}${l.womenSection ? ' · ${'lessons.lesson.women'.tr()}' : ''}', style: tBody(13.5)),
         if (r.isSeries) ...[
           const SizedBox(height: 8),
           Wrap(spacing: 6, runSpacing: 6, children: [
@@ -381,9 +381,9 @@ class _ReviewState extends State<_Review> {
               child: TCallout(
                 tone: TTone.warning,
                 icon: TGlyph.alert,
-                action: TButton('taysir.review.view'.tr(), small: true, onPressed: () => context.push('/taysir/lessons/${o.id}')),
+                action: TButton('lessons.review.view'.tr(), small: true, onPressed: () => context.push('/lessons/lesson/${o.id}')),
                 child: Text(
-                    '${gregorianLabel(x.date, lang)} · ${slotLabel(x.slot)}: ${o.mosqueId == x.mosqueId ? 'taysir.review.clash_mosque'.tr() : 'taysir.review.clash_preacher'.tr()} «${o.title(lang)}» — ${c.preacher(o.preacherId)?.name(lang) ?? ''} (${statusLabel(o.status)})'),
+                    '${gregorianLabel(x.date, lang)} · ${slotLabel(x.slot)}: ${o.mosqueId == x.mosqueId ? 'lessons.review.clash_mosque'.tr() : 'lessons.review.clash_preacher'.tr()} «${o.title(lang)}» — ${c.preacher(o.preacherId)?.name(lang) ?? ''} (${statusLabel(o.status)})'),
               ),
             ),
         if (newMosque(r))
@@ -392,15 +392,15 @@ class _ReviewState extends State<_Review> {
             child: TCallout(
               tone: TTone.info,
               icon: TGlyph.mosque,
-              action: TButton('taysir.review.verify_now'.tr(), small: true,
-                  onPressed: () => tRun(context, () => c.verifyMosque(l.mosqueId), success: 'taysir.mosques.verified'.tr())),
-              child: Text('taysir.review.mosque_note'.tr()),
+              action: TButton('lessons.review.verify_now'.tr(), small: true,
+                  onPressed: () => tRun(context, () => c.verifyMosque(l.mosqueId), success: 'lessons.mosques.verified'.tr())),
+              child: Text('lessons.review.mosque_note'.tr()),
             ),
           ),
       ]);
     }
 
-    Widget card(TaysirRequest r) {
+    Widget card(LessonRequest r) {
       final l = r.first;
       return TCard(
         highlight: selected.contains(r.id),
@@ -417,15 +417,15 @@ class _ReviewState extends State<_Review> {
           Wrap(spacing: 6, children: [TypeTag(l.type)]),
           const SizedBox(height: 6),
           Text(l.title(lang), style: tStrong(16)),
-          Text('${placeOf(c, l, lang)} · ${whenOf(c, l, lang)}${r.isSeries ? 'taysir.review.weekly'.tr() : ''}', style: tBody(13, color: TC.muted)),
+          Text('${placeOf(c, l, lang)} · ${whenOf(c, l, lang)}${r.isSeries ? 'lessons.review.weekly'.tr() : ''}', style: tBody(13, color: TC.muted)),
           const SizedBox(height: 8),
           flags(r),
           if (open == r.id) detail(r),
           const SizedBox(height: 10),
           Wrap(spacing: 8, runSpacing: 8, children: [
-            TButton('taysir.review.approve'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.check, onPressed: () => approve([r.id])),
-            TButton('taysir.review.reject'.tr(), kind: TBtn.danger, small: true, icon: TGlyph.x, onPressed: () => reject([r.id])),
-            TButton('taysir.review.details'.tr(), kind: TBtn.ghost, small: true, icon: open == r.id ? TGlyph.chevronDown : TGlyph.info,
+            TButton('lessons.review.approve'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.check, onPressed: () => approve([r.id])),
+            TButton('lessons.review.reject'.tr(), kind: TBtn.danger, small: true, icon: TGlyph.x, onPressed: () => reject([r.id])),
+            TButton('lessons.review.details'.tr(), kind: TBtn.ghost, small: true, icon: open == r.id ? TGlyph.chevronDown : TGlyph.info,
                 onPressed: () => setState(() => open = open == r.id ? null : r.id)),
           ]),
         ]),
@@ -442,24 +442,24 @@ class _ReviewState extends State<_Review> {
             ('series', reqs.where((r) => r.isSeries).length),
             ('reports', reports.length),
           ])
-            TChip('taysir.review.$k'.tr(), small: true, count: n, selected: filter == k, onTap: () => setState(() {
+            TChip('lessons.review.$k'.tr(), small: true, count: n, selected: filter == k, onTap: () => setState(() {
               filter = k;
               selected.clear();
             })),
         ]),
         if (filter != 'reports')
           Wrap(spacing: 8, runSpacing: 8, children: [
-            TButton('taysir.review.select_all'.tr(), small: true, kind: TBtn.ghost,
+            TButton('lessons.review.select_all'.tr(), small: true, kind: TBtn.ghost,
                 onPressed: shown.isEmpty ? null : () => setState(() => selected.length == shown.length ? selected.clear() : selected.addAll(shown.map((r) => r.id)))),
-            TButton('taysir.review.approve_sel'.tr(args: ['${selected.length}']), small: true, kind: TBtn.minted, icon: TGlyph.check,
+            TButton('lessons.review.approve_sel'.tr(args: ['${selected.length}']), small: true, kind: TBtn.minted, icon: TGlyph.check,
                 onPressed: selected.isEmpty ? null : () => approve(selected.toList())),
-            TButton('taysir.review.reject_sel'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x, onPressed: selected.isEmpty ? null : () => reject(selected.toList())),
+            TButton('lessons.review.reject_sel'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x, onPressed: selected.isEmpty ? null : () => reject(selected.toList())),
           ]),
       ]),
       const SizedBox(height: 14),
       if (filter == 'reports')
         reports.isEmpty
-            ? TEmpty(icon: TGlyph.flag, title: 'taysir.review.no_reports'.tr())
+            ? TEmpty(icon: TGlyph.flag, title: 'lessons.review.no_reports'.tr())
             : Column(children: [
                 for (final f in reports)
                   Padding(
@@ -467,7 +467,7 @@ class _ReviewState extends State<_Review> {
                     child: TCard(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         Row(children: [
-                          TTag('taysir.flag_kind.${f.kind}'.tr(), tone: TTone.warning, icon: TGlyph.flag),
+                          TTag('lessons.flag_kind.${f.kind}'.tr(), tone: TTone.warning, icon: TGlyph.flag),
                           const Spacer(),
                           Text(agoText(f.createdAt), style: tBody(12, color: TC.faint)),
                         ]),
@@ -478,9 +478,9 @@ class _ReviewState extends State<_Review> {
                               style: tBody(13, color: TC.muted)),
                         const SizedBox(height: 10),
                         Wrap(spacing: 8, children: [
-                          TButton('taysir.review.open_lesson'.tr(), small: true, icon: TGlyph.eye, onPressed: () => context.push('/taysir/lessons/${f.lessonId}')),
-                          TButton('taysir.review.resolved'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.check, onPressed: () async {
-                            await tRun(context, () => c.resolveFlag(f.id), success: 'taysir.review.resolved_toast'.tr());
+                          TButton('lessons.review.open_lesson'.tr(), small: true, icon: TGlyph.eye, onPressed: () => context.push('/lessons/lesson/${f.lessonId}')),
+                          TButton('lessons.review.resolved'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.check, onPressed: () async {
+                            await tRun(context, () => c.resolveFlag(f.id), success: 'lessons.review.resolved_toast'.tr());
                             await c.openConsole(c.staffOrganizationId);
                           }),
                         ]),
@@ -489,7 +489,7 @@ class _ReviewState extends State<_Review> {
                   ),
               ])
       else if (shown.isEmpty)
-        TEmpty(ok: true, icon: TGlyph.check, title: 'taysir.review.empty'.tr(), body: 'taysir.review.empty_body'.tr())
+        TEmpty(ok: true, icon: TGlyph.check, title: 'lessons.review.empty'.tr(), body: 'lessons.review.empty_body'.tr())
       else
         Column(children: [for (final r in shown) Padding(padding: const EdgeInsets.only(bottom: 10), child: card(r))]),
     ]);
@@ -511,7 +511,7 @@ class _RosterState extends State<_Roster> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final roster = c.staff.roster;
     final list = roster
@@ -520,7 +520,7 @@ class _RosterState extends State<_Roster> {
     int n(String a) => roster.where((r) => r.account == a).length;
     TTone accTone(String a) => a == 'linked' ? TTone.success : a == 'invited' ? TTone.warning : TTone.slate;
 
-    Future<void> reveal(TaysirRosterEntry r) async {
+    Future<void> reveal(LessonsRosterEntry r) async {
       if (revealed.containsKey(r.preacher.id)) {
         setState(() => revealed.remove(r.preacher.id));
         return;
@@ -528,10 +528,10 @@ class _RosterState extends State<_Roster> {
       final phone = await tRun(context, () => c.revealPhone(r.preacher.id));
       if (phone == null || !mounted) return;
       setState(() => revealed[r.preacher.id] = phone);
-      if (context.mounted) tToast(context, 'taysir.roster.logged'.tr());
+      if (context.mounted) tToast(context, 'lessons.roster.logged'.tr());
     }
 
-    Widget row(TaysirRosterEntry r) {
+    Widget row(LessonsRosterEntry r) {
       final p = r.preacher;
       return TCard(
         padding: const EdgeInsets.all(14),
@@ -542,16 +542,16 @@ class _RosterState extends State<_Roster> {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(p.name(lang), style: tStrong(14.5)),
-                Text('${cityLabel(p.city)} · ${'taysir.affiliation.${p.affiliation}'.tr()} · ${p.languages.map((x) => TaysirVocab.languageNative[x] ?? x).join(' · ')}',
+                Text('${cityLabel(p.city)} · ${'lessons.affiliation.${p.affiliation}'.tr()} · ${p.languages.map((x) => LessonsVocab.languageNative[x] ?? x).join(' · ')}',
                     style: tBody(12.5, color: TC.muted, height: 1.4)),
               ]),
             ),
-            TTag('taysir.account.${r.account}'.tr(), tone: accTone(r.account)),
+            TTag('lessons.account.${r.account}'.tr(), tone: accTone(r.account)),
           ]),
           const SizedBox(height: 10),
           Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
             Tooltip(
-              message: 'taysir.roster.show_number'.tr(),
+              message: 'lessons.roster.show_number'.tr(),
               child: InkWell(
                 onTap: r.phoneMask == null ? null : () => reveal(r),
                 borderRadius: BorderRadius.circular(999),
@@ -566,26 +566,26 @@ class _RosterState extends State<_Roster> {
                 ),
               ),
             ),
-            TTag('${'taysir.roster.h_lessons'.tr()}: ${r.lessons30d}', tone: TTone.slate),
+            TTag('${'lessons.roster.h_lessons'.tr()}: ${r.lessons30d}', tone: TTone.slate),
             if (r.account == 'linked')
               Row(mainAxisSize: MainAxisSize.min, children: [
-                Text('taysir.roster.h_verified'.tr(), style: tBody(13, color: TC.ink2)),
+                Text('lessons.roster.h_verified'.tr(), style: tBody(13, color: TC.ink2)),
                 Switch.adaptive(
                     value: r.canSubmit,
                     activeTrackColor: TC.gold,
                     onChanged: (v) async {
-                      await tRun(context, () => c.setSubmit(p.id, v), success: v ? 'taysir.roster.granted'.tr() : 'taysir.roster.revoked'.tr());
+                      await tRun(context, () => c.setSubmit(p.id, v), success: v ? 'lessons.roster.granted'.tr() : 'lessons.roster.revoked'.tr());
                       await c.openConsole(widget.org);
                     }),
               ]),
             if (r.account != 'linked')
-              TButton(r.account == 'invited' ? 'taysir.roster.resend'.tr() : 'taysir.roster.invite'.tr(), small: true, icon: TGlyph.send, onPressed: () async {
+              TButton(r.account == 'invited' ? 'lessons.roster.resend'.tr() : 'lessons.roster.invite'.tr(), small: true, icon: TGlyph.send, onPressed: () async {
                 await showInviteSheet(context, p);
                 await c.openConsole(widget.org);
               }),
-            TButton('taysir.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showPreacherEditSheet(context, widget.org, entry: r)),
+            TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showPreacherEditSheet(context, widget.org, entry: r)),
             if (r.account == 'linked')
-              TButton('taysir.roster.unlink'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.link, onPressed: () async {
+              TButton('lessons.roster.unlink'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.link, onPressed: () async {
                 await tRun(context, () => c.unlinkPreacher(p.id));
                 await c.openConsole(widget.org);
               }),
@@ -596,22 +596,22 @@ class _RosterState extends State<_Roster> {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       TStatTiles([
-        ('${roster.length}', 'taysir.roster.t_listed'.tr()),
-        ('${n('linked')}', 'taysir.roster.t_linked'.tr()),
-        ('${n('invited')}', 'taysir.roster.t_invited'.tr()),
-        ('${n('none')}', 'taysir.roster.t_none'.tr()),
+        ('${roster.length}', 'lessons.roster.t_listed'.tr()),
+        ('${n('linked')}', 'lessons.roster.t_linked'.tr()),
+        ('${n('invited')}', 'lessons.roster.t_invited'.tr()),
+        ('${n('none')}', 'lessons.roster.t_none'.tr()),
       ]),
       const SizedBox(height: 14),
       Wrap(spacing: 10, runSpacing: 10, alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        SizedBox(width: 260, child: TSearchBox(hint: 'taysir.roster.search'.tr(), onChanged: (v) => setState(() => q = v.trim()))),
+        SizedBox(width: 260, child: TSearchBox(hint: 'lessons.roster.search'.tr(), onChanged: (v) => setState(() => q = v.trim()))),
         TChips([
-          TChip('taysir.all'.tr(), small: true, selected: account == null, onTap: () => setState(() => account = null)),
+          TChip('lessons.all'.tr(), small: true, selected: account == null, onTap: () => setState(() => account = null)),
           for (final a in ['linked', 'invited', 'none'])
-            TChip('taysir.account.$a'.tr(), small: true, selected: account == a, onTap: () => setState(() => account = a)),
+            TChip('lessons.account.$a'.tr(), small: true, selected: account == a, onTap: () => setState(() => account = a)),
         ]),
         Wrap(spacing: 8, children: [
-          TButton('taysir.roster.import'.tr(), small: true, icon: TGlyph.upload, onPressed: () => showImportSheet(context, widget.org)),
-          TButton('taysir.roster.add'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => showPreacherEditSheet(context, widget.org)),
+          TButton('lessons.roster.import'.tr(), small: true, icon: TGlyph.upload, onPressed: () => showImportSheet(context, widget.org)),
+          TButton('lessons.roster.add'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => showPreacherEditSheet(context, widget.org)),
         ]),
       ]),
       const SizedBox(height: 14),
@@ -620,7 +620,7 @@ class _RosterState extends State<_Roster> {
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const TIcon(TGlyph.lock, size: 13, color: TC.muted),
         const SizedBox(width: 6),
-        Expanded(child: Text('taysir.roster.privacy'.tr(), style: tBody(12.5, color: TC.muted))),
+        Expanded(child: Text('lessons.roster.privacy'.tr(), style: tBody(12.5, color: TC.muted))),
       ]),
     ]);
   }
@@ -638,7 +638,7 @@ class _MosquesState extends State<_Mosques> {
   final merge = <String, String>{};
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final pending = c.catalog.mosques.values.where((m) => !m.verified).toList();
     final verified = c.verifiedMosques;
@@ -647,17 +647,17 @@ class _MosquesState extends State<_Mosques> {
       Row(children: [
         Expanded(
           child: TTabs<String>(value: t, onChanged: (v) => setState(() => tab = v), options: [
-            TSegOption('pending', 'taysir.mosques.to_verify'.tr(), count: pending.length),
-            TSegOption('all', 'taysir.mosques.directory'.tr(), count: verified.length),
+            TSegOption('pending', 'lessons.mosques.to_verify'.tr(), count: pending.length),
+            TSegOption('all', 'lessons.mosques.directory'.tr(), count: verified.length),
           ]),
         ),
         const SizedBox(width: 10),
-        TButton('taysir.mosques.add'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => showAddMosqueSheet(context)),
+        TButton('lessons.mosques.add'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => showAddMosqueSheet(context)),
       ]),
       const SizedBox(height: 14),
       if (t == 'pending')
         if (pending.isEmpty)
-          TEmpty(ok: true, icon: TGlyph.check, title: 'taysir.mosques.none'.tr())
+          TEmpty(ok: true, icon: TGlyph.check, title: 'lessons.mosques.none'.tr())
         else
           for (final m in pending)
             Padding(
@@ -671,32 +671,32 @@ class _MosquesState extends State<_Mosques> {
                         Text('${c.district(m.districtId)?.name(lang) ?? ''} · ${cityLabel(c.cityOfMosque(m.id))}', style: tBody(13, color: TC.muted)),
                       ]),
                     ),
-                    TTag('taysir.mosques.suggested'.tr(), tone: TTone.info, icon: TGlyph.mosque),
+                    TTag('lessons.mosques.suggested'.tr(), tone: TTone.info, icon: TGlyph.mosque),
                   ]),
-                  if (m.hasPin && TaysirMap.covers(m.latitude!, m.longitude!)) ...[
+                  if (m.hasPin && LessonsMap.covers(m.latitude!, m.longitude!)) ...[
                     const SizedBox(height: 10),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(TC.r),
                       child: SizedBox(
                         height: 180,
-                        child: TaysirMap(pins: [
-                          TaysirPin(id: m.id, lat: m.latitude!, lng: m.longitude!, label: m.name(lang), verified: false),
+                        child: LessonsMap(pins: [
+                          MosquePin(id: m.id, lat: m.latitude!, lng: m.longitude!, label: m.name(lang), verified: false),
                           for (final v in verified.where((v) => v.hasPin && v.districtId == m.districtId))
-                            TaysirPin(id: v.id, lat: v.latitude!, lng: v.longitude!, label: v.name(lang), dim: true),
+                            MosquePin(id: v.id, lat: v.latitude!, lng: v.longitude!, label: v.name(lang), dim: true),
                         ], selected: m.id),
                       ),
                     ),
                   ],
                   const SizedBox(height: 10),
                   Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    TButton('taysir.mosques.verify'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.check,
-                        onPressed: () => tRun(context, () => c.verifyMosque(m.id), success: 'taysir.mosques.verified'.tr())),
+                    TButton('lessons.mosques.verify'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.check,
+                        onPressed: () => tRun(context, () => c.verifyMosque(m.id), success: 'lessons.mosques.verified'.tr())),
                     SizedBox(
                       width: 240,
                       child: DropdownButtonFormField<String>(
                         initialValue: merge[m.id],
                         isExpanded: true,
-                        hint: Text('taysir.mosques.merge_into'.tr()),
+                        hint: Text('lessons.mosques.merge_into'.tr()),
                         decoration: tInput(),
                         items: [
                           for (final v in verified.where((v) => c.cityOfMosque(v.id) == c.cityOfMosque(m.id)))
@@ -705,17 +705,17 @@ class _MosquesState extends State<_Mosques> {
                         onChanged: (v) => setState(() => merge[m.id] = v ?? ''),
                       ),
                     ),
-                    TButton('taysir.mosques.merge'.tr(), small: true, onPressed: (merge[m.id] ?? '').isEmpty
+                    TButton('lessons.mosques.merge'.tr(), small: true, onPressed: (merge[m.id] ?? '').isEmpty
                         ? null
-                        : () => tRun(context, () => c.rejectMosque(m.id, mergeInto: merge[m.id]), success: 'taysir.mosques.merged'.tr())),
-                    TButton('taysir.mosques.reject'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.x,
-                        onPressed: () => tRun(context, () => c.rejectMosque(m.id), success: 'taysir.mosques.rejected'.tr())),
+                        : () => tRun(context, () => c.rejectMosque(m.id, mergeInto: merge[m.id]), success: 'lessons.mosques.merged'.tr())),
+                    TButton('lessons.mosques.reject'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.x,
+                        onPressed: () => tRun(context, () => c.rejectMosque(m.id), success: 'lessons.mosques.rejected'.tr())),
                   ]),
                 ]),
               ),
             )
       else
-        for (final city in TaysirVocab.cities)
+        for (final city in LessonsVocab.cities)
           if (verified.any((m) => c.cityOfMosque(m.id) == city)) ...[
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 8),
@@ -725,14 +725,14 @@ class _MosquesState extends State<_Mosques> {
               for (final m in verified.where((m) => c.cityOfMosque(m.id) == city))
                 TCard(
                   padding: const EdgeInsets.all(14),
-                  onTap: () => context.push('/taysir/mosques/${m.id}'),
+                  onTap: () => context.push('/lessons/mosques/${m.id}'),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(m.name(lang), style: tStrong(14)),
                     Text(c.district(m.districtId)?.name(lang) ?? '', style: tBody(12.5, color: TC.muted)),
                     const SizedBox(height: 6),
                     FacilityList(m.facilities, dense: true),
                     const SizedBox(height: 6),
-                    Text('${tPlural('ahead', lessonsAt(c, m.id).length)}${m.hasPin && TaysirMap.covers(m.latitude!, m.longitude!) ? '' : 'taysir.mosques.off_map'.tr()}',
+                    Text('${tPlural('ahead', lessonsAt(c, m.id).length)}${m.hasPin && LessonsMap.covers(m.latitude!, m.longitude!) ? '' : 'lessons.mosques.off_map'.tr()}',
                         style: tBody(12, color: TC.bronze)),
                   ]),
                 ),
@@ -754,7 +754,7 @@ class _StatsState extends State<_Stats> {
   int monthsBack = 0;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final first = DateTime(c.today.year, c.today.month - monthsBack, 1, 12);
     final last = DateTime(c.today.year, c.today.month - monthsBack + 1, 0, 12);
@@ -762,7 +762,7 @@ class _StatsState extends State<_Stats> {
     final held = c.publicLessons
         .where((l) => l.isPublic && l.organizationId == widget.org && !l.date.isBefore(first) && !l.date.isAfter(end))
         .toList();
-    Map<String, int> by(String Function(TaysirLesson) key) {
+    Map<String, int> by(String Function(Lesson) key) {
       final m = <String, int>{};
       for (final l in held) {
         m[key(l)] = (m[key(l)] ?? 0) + 1;
@@ -785,7 +785,7 @@ class _StatsState extends State<_Stats> {
     ]..sort((a, b) => (b.$2 + b.$3 + b.$4).compareTo(a.$2 + a.$3 + a.$4));
     final monthLabel = '${gregorianMonthLabel(first, lang)} · ${hijriMonthLabel(first, lang)}';
     final csv = excelSafeCsv([
-      ['taysir.review.h_preacher'.tr(), 'taysir.type.lesson'.tr(), 'taysir.type.lecture'.tr(), 'taysir.type.talk'.tr(), 'taysir.stats.attendance'.tr()],
+      ['lessons.review.h_preacher'.tr(), 'lessons.type.lesson'.tr(), 'lessons.type.lecture'.tr(), 'lessons.type.talk'.tr(), 'lessons.stats.attendance'.tr()],
       for (final r in preachers) [r.$1?.name(lang) ?? '', r.$2, r.$3, r.$4, r.$5],
     ]);
     Widget bars(String title, Map<String, int> rows, String Function(String) label) {
@@ -812,30 +812,30 @@ class _StatsState extends State<_Stats> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Wrap(spacing: 10, runSpacing: 10, alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, children: [
         TSeg<int>(small: true, value: monthsBack, onChanged: (v) => setState(() => monthsBack = v), options: [
-          TSegOption(0, 'taysir.stats.this_month'.tr()),
-          TSegOption(1, 'taysir.stats.last_month'.tr()),
+          TSegOption(0, 'lessons.stats.this_month'.tr()),
+          TSegOption(1, 'lessons.stats.last_month'.tr()),
         ]),
         Text(monthLabel, style: tBody(13, color: TC.muted)),
       ]),
       const SizedBox(height: 14),
       TStatTiles([
-        ('${held.length}', 'taysir.stats.held'.tr()),
-        ('${held.map((l) => l.preacherId).toSet().length}', 'taysir.stats.preachers'.tr()),
-        ('$att', 'taysir.stats.attendees'.tr(args: ['$withRep'])),
-        ('${held.map((l) => l.language).toSet().length}', 'taysir.stats.languages'.tr()),
+        ('${held.length}', 'lessons.stats.held'.tr()),
+        ('${held.map((l) => l.preacherId).toSet().length}', 'lessons.stats.preachers'.tr()),
+        ('$att', 'lessons.stats.attendees'.tr(args: ['$withRep'])),
+        ('${held.map((l) => l.language).toSet().length}', 'lessons.stats.languages'.tr()),
       ]),
       const SizedBox(height: 14),
       TGrid(minWidth: 260, children: [
-        bars('taysir.stats.by_type'.tr(), by((l) => l.type), typeLabel),
-        bars('taysir.stats.by_language'.tr(), by((l) => l.language), languageLabel),
-        bars('taysir.stats.busiest'.tr(), by((l) => c.mosque(l.mosqueId)?.districtId ?? ''), (id) => c.district(id)?.name(lang) ?? id),
+        bars('lessons.stats.by_type'.tr(), by((l) => l.type), typeLabel),
+        bars('lessons.stats.by_language'.tr(), by((l) => l.language), languageLabel),
+        bars('lessons.stats.busiest'.tr(), by((l) => c.mosque(l.mosqueId)?.districtId ?? ''), (id) => c.district(id)?.name(lang) ?? id),
       ]),
       const SizedBox(height: 14),
       TCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
-            Expanded(child: Text('taysir.stats.monthly'.tr(), style: tStrong(17))),
-            TButton('taysir.stats.copy_csv'.tr(), small: true, icon: TGlyph.copy, onPressed: () => copyToClipboard(context, csv)),
+            Expanded(child: Text('lessons.stats.monthly'.tr(), style: tStrong(17))),
+            TButton('lessons.stats.copy_csv'.tr(), small: true, icon: TGlyph.copy, onPressed: () => copyToClipboard(context, csv)),
           ]),
           const SizedBox(height: 12),
           Container(
@@ -843,16 +843,16 @@ class _StatsState extends State<_Stats> {
             decoration: BoxDecoration(color: TC.page, borderRadius: BorderRadius.circular(TC.r), border: Border.all(color: TC.hair)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(org?.name(lang) ?? '', style: tStrong(14)),
-              Text('${'taysir.stats.report_sub'.tr()} · $monthLabel', style: tBody(12.5, color: TC.muted)),
+              Text('${'lessons.stats.report_sub'.tr()} · $monthLabel', style: tBody(12.5, color: TC.muted)),
               const SizedBox(height: 8),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   headingRowColor: const WidgetStatePropertyAll(TC.tint),
                   columns: [
-                    DataColumn(label: Text('taysir.review.h_preacher'.tr(), style: tStrong(13))),
-                    for (final t in TaysirVocab.types) DataColumn(numeric: true, label: Text(typeLabel(t), style: tStrong(13))),
-                    DataColumn(numeric: true, label: Text('taysir.stats.attendance'.tr(), style: tStrong(13))),
+                    DataColumn(label: Text('lessons.review.h_preacher'.tr(), style: tStrong(13))),
+                    for (final t in LessonsVocab.types) DataColumn(numeric: true, label: Text(typeLabel(t), style: tStrong(13))),
+                    DataColumn(numeric: true, label: Text('lessons.stats.attendance'.tr(), style: tStrong(13))),
                   ],
                   rows: [
                     for (final r in preachers)
@@ -864,7 +864,7 @@ class _StatsState extends State<_Stats> {
                         DataCell(Text(r.$5 == 0 ? '—' : '${r.$5}')),
                       ]),
                     DataRow(color: const WidgetStatePropertyAll(TC.tint), cells: [
-                      DataCell(Text('taysir.stats.total'.tr(), style: tStrong(13))),
+                      DataCell(Text('lessons.stats.total'.tr(), style: tStrong(13))),
                       DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$2)}', style: tStrong(13))),
                       DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$3)}', style: tStrong(13))),
                       DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$4)}', style: tStrong(13))),
@@ -874,11 +874,11 @@ class _StatsState extends State<_Stats> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('taysir.stats.attendance_note'.tr(), style: tBody(12.5, color: TC.muted)),
+              Text('lessons.stats.attendance_note'.tr(), style: tBody(12.5, color: TC.muted)),
             ]),
           ),
           const SizedBox(height: 8),
-          Text('taysir.stats.csv_note'.tr(), style: tBody(12.5, color: TC.muted)),
+          Text('lessons.stats.csv_note'.tr(), style: tBody(12.5, color: TC.muted)),
         ]),
       ),
     ]);
@@ -890,9 +890,9 @@ class _Audit extends StatelessWidget {
   const _Audit();
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
-    String who(TaysirAuditEntry a) {
+    String who(LessonsAuditEntry a) {
       if (a.actorName.isNotEmpty) return a.actorName;
       for (final t in c.staff.team) {
         if (t.profileId == a.actorId) return t.name(lang);
@@ -910,10 +910,10 @@ class _Audit extends StatelessWidget {
             : TTone.slate;
     final list = c.staff.audit;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text('taysir.auditlog.note'.tr(), style: tBody(14, color: TC.muted)),
+      Text('lessons.auditlog.note'.tr(), style: tBody(14, color: TC.muted)),
       const SizedBox(height: 12),
       if (list.isEmpty)
-        TEmpty(icon: TGlyph.history, title: 'taysir.auditlog.empty'.tr())
+        TEmpty(icon: TGlyph.history, title: 'lessons.auditlog.empty'.tr())
       else
         TCard(
           padding: EdgeInsets.zero,
@@ -925,7 +925,7 @@ class _Audit extends StatelessWidget {
                 child: Wrap(spacing: 12, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
                   SizedBox(width: 90, child: Text(agoText(a.createdAt), style: tBody(12.5, color: TC.faint))),
                   SizedBox(width: 170, child: Text(who(a), maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(13.5, color: TC.ink, weight: FontWeight.w600))),
-                  TTag('taysir.audit.${a.action}'.tr(), tone: tone(a.action)),
+                  TTag('lessons.audit.${a.action}'.tr(), tone: tone(a.action)),
                   Text(a.target(lang), style: tBody(13.5, color: TC.ink2)),
                 ]),
               ),
@@ -941,7 +941,7 @@ class _Team extends StatelessWidget {
   final String org;
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final c = context.watch<LessonsController>();
     final lang = context.lang;
     final mayGrant = c.roles.admin || c.roles.lead.contains(org);
     final orgName = c.organization(org)?.name(lang) ?? '';
@@ -950,11 +950,11 @@ class _Team extends StatelessWidget {
       TCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Wrap(spacing: 10, runSpacing: 6, alignment: WrapAlignment.spaceBetween, children: [
-            Text('taysir.team.coordinators'.tr(args: [orgName]), style: tStrong(17)),
-            if (!mayGrant) TTag('taysir.team.view_only'.tr(), tone: TTone.slate, icon: TGlyph.lock),
+            Text('lessons.team.coordinators'.tr(args: [orgName]), style: tStrong(17)),
+            if (!mayGrant) TTag('lessons.team.view_only'.tr(), tone: TTone.slate, icon: TGlyph.lock),
           ]),
           const SizedBox(height: 8),
-          if (c.staff.team.isEmpty) Text('taysir.team.empty'.tr(), style: tBody(13.5, color: TC.muted)),
+          if (c.staff.team.isEmpty) Text('lessons.team.empty'.tr(), style: tBody(13.5, color: TC.muted)),
           for (final m in c.staff.team)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -965,7 +965,7 @@ class _Team extends StatelessWidget {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(m.name(lang), style: tStrong(14)),
                     Text(
-                        '${'taysir.team.member'.tr(args: ['taysir.role.${m.role}'.tr()])}${m.coordinator && (m.grantedByAr ?? m.grantedByEn) != null ? 'taysir.team.granted_by'.tr(args: [lang == 'ar' ? (m.grantedByAr ?? '') : (m.grantedByEn ?? '')]) : ''}',
+                        '${'lessons.team.member'.tr(args: ['lessons.role.${m.role}'.tr()])}${m.coordinator && (m.grantedByAr ?? m.grantedByEn) != null ? 'lessons.team.granted_by'.tr(args: [lang == 'ar' ? (m.grantedByAr ?? '') : (m.grantedByEn ?? '')]) : ''}',
                         style: tBody(12.5, color: TC.muted)),
                     if (m.coordinator) const Padding(padding: EdgeInsets.only(top: 4), child: TTag('activities.coordinate', icon: TGlyph.key)),
                   ]),
@@ -977,21 +977,21 @@ class _Team extends StatelessWidget {
                     onChanged: !mayGrant
                         ? null
                         : (v) async {
-                            await tRun(context, () => c.setCoordinator(org, m.profileId, v), success: v ? 'taysir.team.granted'.tr() : 'taysir.team.revoked'.tr());
+                            await tRun(context, () => c.setCoordinator(org, m.profileId, v), success: v ? 'lessons.team.granted'.tr() : 'lessons.team.revoked'.tr());
                             await c.openConsole(org);
                           },
                   ),
               ]),
             ),
           const SizedBox(height: 6),
-          Text('taysir.team.scoped'.tr(), style: tBody(12.5, color: TC.muted)),
+          Text('lessons.team.scoped'.tr(), style: tBody(12.5, color: TC.muted)),
         ]),
       ),
       if (c.roles.master) ...[
         const SizedBox(height: 14),
         TCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text('taysir.team.orgs'.tr(), style: tStrong(17)),
+            Text('lessons.team.orgs'.tr(), style: tStrong(17)),
             const SizedBox(height: 8),
             for (final o in c.adminOrganizations)
               Padding(
@@ -1005,7 +1005,7 @@ class _Team extends StatelessWidget {
                     value: o.enabled,
                     activeTrackColor: TC.gold,
                     onChanged: (v) => tRun(context, () => c.setOrganizationEnabled(o.id, v),
-                        success: v ? 'taysir.team.enabled'.tr() : 'taysir.team.disabled'.tr()),
+                        success: v ? 'lessons.team.enabled'.tr() : 'lessons.team.disabled'.tr()),
                   ),
                 ]),
               ),
@@ -1013,7 +1013,7 @@ class _Team extends StatelessWidget {
         ),
       ],
       const SizedBox(height: 14),
-      Text('taysir.team.matrix'.tr(), style: tStrong(17)),
+      Text('lessons.team.matrix'.tr(), style: tStrong(17)),
       const SizedBox(height: 8),
       PermissionMatrix(highlight: c.roles.master ? 5 : c.roles.lead.contains(org) ? 4 : 3),
     ]);

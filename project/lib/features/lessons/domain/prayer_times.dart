@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
-import 'taysir_dates.dart';
+import 'lessons_dates.dart';
 
 /// Prayer times by the Umm al-Qura method: Fajr at 18.5 degrees, Isha 90
 /// minutes after Maghrib (120 in Ramadan), Asr by the standard shadow.
 /// Times are hours from local midnight in Saudi time (UTC+3), the zone every
-/// Taysir mosque is in.
+/// Lessons mosque is in.
 class PrayerTimes {
   const PrayerTimes(
       {required this.fajr,

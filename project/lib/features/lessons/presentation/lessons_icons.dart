@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-/// Taysir's stroke icons (24 px grid, 1.8 stroke), the set the reviewed
+/// Lessons's stroke icons (24 px grid, 1.8 stroke), the set the reviewed
 /// prototype uses. Directional ones mirror in right-to-left layouts.
 enum TGlyph {
   search, bell, bookmark, gear, languages, map, pin, calendar, clock, user, users, check, x, plus, minus,

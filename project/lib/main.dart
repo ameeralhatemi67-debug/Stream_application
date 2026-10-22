@@ -14,9 +14,9 @@ import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/widgets/device_session_presenter.dart';
-import 'features/taysir/data/demo_taysir_repository.dart';
-import 'features/taysir/data/supabase_taysir_repository.dart';
-import 'features/taysir/state/taysir_controller.dart';
+import 'features/lessons/data/demo_lessons_repository.dart';
+import 'features/lessons/data/supabase_lessons_repository.dart';
+import 'features/lessons/state/lessons_controller.dart';
 
 Future<void> main() async {
   // ~180 debugPrint calls (some on per-rebuild or per-failure paths) stay
@@ -129,13 +129,13 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
-        // Taysir: created on first use; follows sign-in and sign-out. Without
+        // Lessons: created on first use; follows sign-in and sign-out. Without
         // a configured backend it shows sample data, marked as such.
-        ChangeNotifierProxyProvider<AppProvider, TaysirController>(
-          create: (_) => TaysirController(SupabaseConfig.isConfigured
-              ? SupabaseTaysirRepository()
-              : DemoTaysirRepository()),
-          update: (_, app, taysir) => taysir!
+        ChangeNotifierProxyProvider<AppProvider, LessonsController>(
+          create: (_) => LessonsController(SupabaseConfig.isConfigured
+              ? SupabaseLessonsRepository()
+              : DemoLessonsRepository()),
+          update: (_, app, lessons) => lessons!
             ..onAccountChanged(app.isLoggedInStreamer ? app.currentUserId : null),
         ),
       ],
