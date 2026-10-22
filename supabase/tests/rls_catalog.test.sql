@@ -42,7 +42,7 @@ insert into expected_anon_select values
   ('streamer_public_profiles'),      -- non-PII view
   ('organization_public_profiles'),  -- non-PII view
   ('broadcast_sessions'),            -- public sessions only, via broadcast_is_public (20261001111022)
-  -- Mosque lessons (20261022110000): districts, visible mosques, listed
+  -- Mosque lessons (20261022125222): districts, visible mosques, listed
   -- preachers (no phone) and approved/cancelled sessions.
   ('mosque_districts'), ('mosques'), ('preachers'), ('lesson_series'), ('lessons');
 
@@ -58,12 +58,12 @@ insert into expected_anon_execute values
   ('broadcast_chat_read'),     -- guests read a public session's chat (20261001114055)
   ('list_upcoming_schedules'), -- guests see sanitized announcements (20260930010000)
   ('can_publish_upcoming'),    -- announcement visibility check (20260930010000)
-  ('lessons_today'),           -- the programme's date in Riyadh (20261022110000)
+  ('lessons_today'),           -- the programme's date in Riyadh (20261022125222)
   -- A preacher's link works without an account; each call checks the key
-  -- (20261022110000).
+  -- (20261022125222).
   ('lessons_key_open'), ('lessons_key_update_profile'), ('lessons_key_request_lesson'),
   ('lessons_key_withdraw'),
-  ('is_lessons_admin');        -- false for guests (20261022100000)
+  ('is_lessons_admin');        -- false for guests (20261022124908)
 
 create temporary table expected_realtime(relname text) on commit drop;
 insert into expected_realtime values

@@ -4,7 +4,7 @@ import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import 'lessons_repository.dart';
 
-/// Lessons on our Supabase project (migration 20261022110000).
+/// Lessons on our Supabase project (migration 20261022125222).
 class SupabaseLessonsRepository implements LessonsRepository {
   SupabaseLessonsRepository([SupabaseClient? client]) : _injected = client;
   final SupabaseClient? _injected;

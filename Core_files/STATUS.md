@@ -18,7 +18,7 @@ Owner decisions (ADR-015): "Taysir" is gone as a name; Lessons is one platform-w
 - **Public side:** the preacher page shows his photo and languages; lesson pages give admins edit, cancel, report and "Manage preacher".
 - **Removed:** the console at `/lessons/console`, coordinators, invitation claim, the permissions page, "My lessons" and the preacher submit button (old addresses redirect), and 229 translation keys only they used.
 
-**Not deployed.** Migrations `20261022100000_admin_email_grants.sql` and `20261022110000_lessons_programme_v2.sql` wait for the owner's yes. The app on master reads only the new tables, so it must not reach hosted (push and Vercel) before the migrations, or the Lessons tab shows its unavailable state.
+**Database deployed 2026-10-22** with the owner's yes, through the MCP connector, stamped `20261022124908_admin_email_grants.sql` and `20261022125222_lessons_programme_v2.sql` (local files renamed to match). Hosted no longer has the `taysir_*` tables (they held only the 13 seeded districts), so the website built from the last pushed commit (`7e8ef88`, which still reads them) shows Lessons as unavailable until master is pushed.
 
 Verification: see the ledger's RESUME block of the same day.
 

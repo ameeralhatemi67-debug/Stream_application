@@ -14,7 +14,7 @@ class LessonsException implements Exception {
 }
 
 /// Every Lessons read and write. Writes go through server functions that check
-/// the caller (migration 20261022110000): admins manage everything, viewers
+/// the caller (migration 20261022125222): admins manage everything, viewers
 /// keep their own reminders and follows, and a preacher acts only through
 /// his link. The client never decides authority on its own.
 abstract class LessonsRepository {

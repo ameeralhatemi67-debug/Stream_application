@@ -50,12 +50,12 @@ stands. "Taysir" is no longer a name in the app: the feature is Lessons
 - **Public card:** name, title, bio, languages, photo, upcoming lessons and
   mosques. The phone stays private: admins see a mask, and each reveal is
   logged.
-- **Data:** migration `20261022110000_lessons_programme_v2.sql` drops the
+- **Data:** migration `20261022125222_lessons_programme_v2.sql` drops the
   `taysir_*` schema (hosted held only seeded districts) and creates
   `mosque_districts`, `mosques`, `preachers`, `preacher_edits`,
   `lesson_series`, `lessons`, `lesson_*` and private `preacher_contacts` /
   `preacher_keys`; every write is a security definer `lessons_*` function.
-  `20261022100000_admin_email_grants.sql` adds the email grants and the
+  `20261022124908_admin_email_grants.sql` adds the email grants and the
   lessons-only role. Both are tested on a hosted-equivalent database
   (pgTAP: `supabase/tests/lessons_programme.test.sql`,
   `admin_email_grants.test.sql`) and must be applied to hosted together

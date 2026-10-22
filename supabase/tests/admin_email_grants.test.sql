@@ -1,5 +1,5 @@
 -- Admin access by email and the lessons-only admin role
--- (20261022100000_admin_email_grants.sql).
+-- (20261022124908_admin_email_grants.sql).
 begin;
 set local search_path = public, extensions;
 select plan(20);

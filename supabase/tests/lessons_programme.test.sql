@@ -1,4 +1,4 @@
--- Mosque lessons v2 (20261022110000): admins run everything, preachers act
+-- Mosque lessons v2 (20261022125222): admins run everything, preachers act
 -- only through one-time or timed links, edits and requests wait for an
 -- admin, and the public sees approved lessons. Run as supabase_admin (one
 -- test ends a timed link by editing it directly).
