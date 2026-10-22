@@ -2,7 +2,8 @@ import 'hidayah_gold.dart';
 export 'hidayah_gold.dart';
 
 /// Role names for the Hidayah Gold values the app reaches for most (see
-/// [HidayahGold] for the full ramps). Hidayah Gold is the only design.
+/// [HidayahGold] for the full ramps). Hidayah Gold is the default design; the
+/// Hedayah skin (ADR-016) has its own tokens in hedayah_skin.dart.
 abstract final class AppPalette {
   static const gold = HidayahGold.g500;
   static const goldLight = HidayahGold.g400;

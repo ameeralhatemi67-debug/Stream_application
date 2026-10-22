@@ -8,6 +8,7 @@ import '../../../core/widgets/ds/ca_rows.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 
 import 'settings/notification_settings_section.dart';
 import 'settings/legal_settings_section.dart';
@@ -15,6 +16,7 @@ import 'settings/application_settings_section.dart';
 import 'settings/broadcasting_settings_section.dart';
 import 'settings/privacy_settings_section.dart';
 import 'settings/about_settings_section.dart';
+import 'settings/appearance_settings_section.dart';
 import '../../lessons/presentation/lessons_in_app.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -129,10 +131,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isStreamer = appProvider.isStreamerModeEnabled;
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       appBar: CaAppBar(
         title: Text('settings.title'.tr()),
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         elevation: 0,
         actions: const [
           // Icon only, without a pill or circle behind it.
@@ -215,6 +217,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ])),
             const SizedBox(height: AppTheme.spaceLg),
           ],
+        ];
+        // Design: gold & black or the Hedayah skin (ADR-016).
+        final appearance = <Widget>[
+          const AppearanceSettingsSection(),
+          const SizedBox(height: AppTheme.spaceLg),
         ];
         final preferences = <Widget>[
           CaCard(
@@ -318,6 +325,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: CaGlyph.user,
               children: [...personal.skip(2), ...signOut]
             ),
+            (label: 'skin.title'.tr(), icon: CaGlyph.eye, children: appearance),
             (
               label: 'nav.notifications'.tr(),
               icon: CaGlyph.bell,
@@ -398,6 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     children: [
                       ...personal,
+                      ...appearance,
                       ...preferences,
                       ...lessons,
                       ...privacy,
@@ -418,6 +427,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final email =
         provider.googleUserEmail ?? 'settings.guest_not_signed_in'.tr();
     final handle = isStreamerCard ? _displayHandle(provider, profile) : '';
+    // The account card shows the user's own banner; without one it keeps the
+    // Canopy lattice, or in the Hedayah skin a gold band with ink text
+    // (ADR-016). A scrim keeps the white identity text readable on any photo.
+    final banner = (isStreamerCard
+            ? provider.currentBroadcasterStreamer.bannerUrl
+            : profile.bannerUrl)
+        .trim();
+    final onGold = banner.isEmpty && context.isHedayahSkin;
+    final onBand = onGold ? HedayahSkin.ink : Canopy.paper;
     final identity = Row(children: [
       CaAvatar(
           name: isAr ? profile.nameAr : profile.nameEn,
@@ -431,18 +449,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
-                ?.copyWith(color: Canopy.paper)),
+                ?.copyWith(color: onBand)),
         if (handle.isNotEmpty)
           Text(handle,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: Canopy.paper)),
+                  ?.copyWith(color: onBand)),
         Text(email,
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
-                ?.copyWith(color: Canopy.paper)),
+                ?.copyWith(color: onBand)),
         const SizedBox(height: AppTheme.spaceSm),
         CaStatusChip(
             kind: CaStatusKind.offline,
@@ -455,8 +473,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: const Icon(Icons.edit_outlined),
       label: Text('settings.edit_profile'.tr()),
       style: OutlinedButton.styleFrom(
-          foregroundColor: Canopy.paper,
-          side: const BorderSide(color: Canopy.paper)),
+          foregroundColor: onBand,
+          side: BorderSide(color: onBand, width: onGold ? 1.5 : 1)),
       onPressed: () {
         // "Edit Profile"must never open the broadcaster onboarding
         // flow for a non-verified viewer -- issue_log.md: "clicking
@@ -475,14 +493,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       },
     );
-    // The account card shows the user's own banner; without one it keeps the
-    // Canopy lattice. A scrim keeps the white identity text readable on any
-    // photo.
-    final banner = (isStreamerCard
-            ? provider.currentBroadcasterStreamer.bannerUrl
-            : profile.bannerUrl)
-        .trim();
-    Widget backdrop(Widget child) => banner.isEmpty
+    Widget backdrop(Widget child) => onGold
+        ? HedayahGoldBand(child: child)
+        : banner.isEmpty
         ? DecoratedBox(
             decoration: const BoxDecoration(gradient: CanopyGradients.panel),
             child: CanopyLatticeBackground(

@@ -23,27 +23,35 @@ class CaCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   @override
   Widget build(BuildContext context) {
+    // Hedayah skin: the website's service card, 15 px corners and a soft
+    // ambient shadow instead of the warm drop and bezel.
+    final hedayah = context.isHedayahSkin;
+    final radius = hedayah ? HedayahSkin.radiusCard : CanopyRadius.card;
     final card = Container(
       decoration: BoxDecoration(
           color: Canopy.paper,
-          borderRadius: BorderRadius.circular(CanopyRadius.card),
+          borderRadius: BorderRadius.circular(radius),
+          border: hedayah && variant == CaCardVariant.flat
+              ? Border.all(color: HedayahSkin.lineSoft)
+              : null,
           boxShadow: variant == CaCardVariant.flat
               ? null
-              : [
-                  if (variant == CaCardVariant.feature) ...CanopyShadow.bezel,
-                  ...CanopyShadow.card,
-                ]),
+              : hedayah
+                  ? HedayahSkin.ambient
+                  : [
+                      if (variant == CaCardVariant.feature)
+                        ...CanopyShadow.bezel,
+                      ...CanopyShadow.card,
+                    ]),
       child: ClipRRect(
-          borderRadius: BorderRadius.circular(CanopyRadius.card),
+          borderRadius: BorderRadius.circular(radius),
           child: Material(
               type: MaterialType.transparency,
               child: InkWell(
                   onTap: onTap,
                   child: Padding(padding: padding, child: child)))),
     );
-    return onTap == null
-        ? card
-        : CaFocusRing(radius: CanopyRadius.card, child: card);
+    return onTap == null ? card : CaFocusRing(radius: radius, child: card);
   }
 }
 

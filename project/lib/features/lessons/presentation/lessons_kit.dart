@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/hedayah/hedayah_pattern.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import '../data/lessons_repository.dart';
 import 'lessons_icons.dart';
@@ -406,7 +407,9 @@ class TCard extends StatelessWidget {
       );
 }
 
-/// The night band: slate gradient, faint lattice, gold glow.
+/// The night band: slate gradient, faint lattice, gold glow. In the Hedayah
+/// skin (ADR-016) it is the identity's night variant, flat ink carrying the
+/// Hedayah lattice; its text stays light.
 class TNight extends StatelessWidget {
   const TNight({super.key, required this.child, this.radius, this.padding = EdgeInsets.zero});
   final Widget child;
@@ -415,7 +418,15 @@ class TNight extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
         borderRadius: radius ?? BorderRadius.zero,
-        child: DecoratedBox(
+        child: context.isHedayahSkin
+            ? ColoredBox(
+                color: HedayahSkin.ink,
+                child: Stack(children: [
+                  const Positioned.fill(child: HedayahPattern(color: Color(0x1FE2C389), step: 28)),
+                  Padding(padding: padding, child: child),
+                ]),
+              )
+            : DecoratedBox(
           decoration: const BoxDecoration(gradient: TC.night),
           child: Stack(children: [
             const Positioned.fill(child: HidayahLattice(color: HidayahGold.g200, opacity: .06)),

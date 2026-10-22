@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/providers/app_provider.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/hedayah/hedayah_rosette.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../web/presentation/hidayah_web_header.dart';
@@ -48,9 +50,9 @@ class _LessonsTabState extends State<LessonsTab> {
   @override
   Widget build(BuildContext context) {
     final body = _LessonsGate(child: widget.child);
-    if (context.wide) return Material(color: TC.page, child: body);
+    if (context.wide) return Material(color: context.pageGround, child: body);
     return Scaffold(
-      backgroundColor: TC.page,
+      backgroundColor: context.pageGround,
       appBar: LessonsPhoneBar(title: widget.titleKey?.tr()),
       body: body,
     );
@@ -112,13 +114,13 @@ class LessonsPhoneBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(56);
   @override
   Widget build(BuildContext context) => AppBar(
-        backgroundColor: TC.page,
+        backgroundColor: context.isHedayahSkin ? HedayahSkin.paper : TC.page,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: 6,
-        shape: const Border(bottom: BorderSide(color: TC.hair)),
+        shape: Border(bottom: BorderSide(color: context.isHedayahSkin ? HedayahSkin.line : TC.hair)),
         leading: title == null
             ? null
             : TIconButton(TGlyph.arrow, tooltip: 'lessons.back'.tr(), color: TC.ink, onPressed: () => context.canPop() ? context.pop() : context.go('/lessons')),
@@ -128,7 +130,7 @@ class LessonsPhoneBar extends StatelessWidget implements PreferredSizeWidget {
                 onTap: () => context.go('/lessons'),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const SizedBox(width: 6),
-                  const AppLogo(size: 30),
+                  if (context.isHedayahSkin) const HedayahRosette(size: 28) else const AppLogo(size: 30),
                   const SizedBox(width: 8),
                   Flexible(child: Text('lessons.app_name'.tr(), maxLines: 1, overflow: TextOverflow.ellipsis, style: tDisplay(17))),
                 ]),
@@ -162,7 +164,7 @@ class LessonsPage extends StatelessWidget {
     final gated = _LessonsGate(child: scroll);
     if (context.wide) {
       return Scaffold(
-        backgroundColor: TC.page,
+        backgroundColor: context.pageGround,
         body: SafeArea(
             child: Column(children: [
           const HidayahWebHeader(active: HidayahWebSection.lessons),
@@ -170,7 +172,7 @@ class LessonsPage extends StatelessWidget {
         ])),
       );
     }
-    return Scaffold(backgroundColor: TC.page, appBar: LessonsPhoneBar(title: title), body: gated);
+    return Scaffold(backgroundColor: context.pageGround, appBar: LessonsPhoneBar(title: title), body: gated);
   }
 }
 

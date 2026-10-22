@@ -13,6 +13,7 @@ import '../widgets/ds/ca_icon.dart';
 import '../widgets/ds/ca_navigation.dart';
 import '../widgets/ds/canopy_motion.dart';
 import '../widgets/floating_stream_mini_player.dart';
+import '../widgets/hedayah/hedayah_kit.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
 import '../../features/auth/presentation/role_select_screen.dart';
@@ -606,7 +607,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
     // of the app's side rail. The branches keep their own stacks either way.
     if (context.usesHidayahWeb) {
       return Scaffold(
-          backgroundColor: HidayahGold.g50,
+          backgroundColor: context.pageGround,
           body: Stack(children: [
             // No system bars on a browser; a landscape tablet has them.
             SafeArea(
@@ -625,6 +626,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
           ]));
     }
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
+    final hedayah = context.isHedayahSkin;
     final (
       isStreamerModeEnabled,
       isAdminUser,
@@ -640,7 +642,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
         ));
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       body: Stack(
         children: [
           if (isDesktop)
@@ -650,10 +652,14 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 SizedBox(
                   width: CanopySize.railExpanded,
                   child: DecoratedBox(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Canopy.paper,
                       border: BorderDirectional(
-                        end: BorderSide(color: Canopy.hairline, width: 1.0),
+                        end: BorderSide(
+                            color: hedayah
+                                ? HedayahSkin.line
+                                : Canopy.hairline,
+                            width: 1.0),
                       ),
                     ),
                     child: SafeArea(
@@ -671,9 +677,11 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     const SizedBox(height: AppTheme.spaceLg),
-                                    const Center(
-                                        child:
-                                            AppLogo(size: CanopySize.railLogo)),
+                                    Center(
+                                        child: hedayah
+                                            ? const HedayahLockup(size: 46)
+                                            : const AppLogo(
+                                                size: CanopySize.railLogo)),
                                     const SizedBox(height: AppTheme.spaceXl),
 
                                     // Navigation Items
@@ -746,9 +754,16 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                           horizontal: AppTheme.spaceMd,
                                           vertical: AppTheme.spaceSm),
                                       decoration: BoxDecoration(
-                                        gradient: AppGradients.pill,
+                                        color: hedayah
+                                            ? HedayahSkin.chip
+                                            : null,
+                                        gradient: hedayah
+                                            ? null
+                                            : AppGradients.pill,
                                         borderRadius: BorderRadius.circular(
-                                            CanopyRadius.input),
+                                            hedayah
+                                                ? HedayahSkin.radiusPill
+                                                : CanopyRadius.input),
                                       ),
                                       child: Row(
                                         children: [
@@ -828,7 +843,14 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? HidayahGold.g200 : Canopy.brandGreen;
+    // Hedayah skin: the chosen item is a gold pill with ink, as the
+    // website's tabs; the others are slate.
+    final hedayah = context.isHedayahSkin;
+    final color = hedayah
+        ? (isSelected ? HedayahSkin.ink : HedayahSkin.slate)
+        : isSelected
+            ? HidayahGold.g200
+            : Canopy.brandGreen;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
       child: Semantics(
@@ -836,13 +858,14 @@ class _DesktopNavItem extends StatelessWidget {
         selected: isSelected,
         label: label,
         child: CaFocusRing(
-          onDark: isSelected,
-          radius: CanopyRadius.input,
+          onDark: isSelected && !hedayah,
+          radius: hedayah ? HedayahSkin.radiusPill : CanopyRadius.input,
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(CanopyRadius.input),
+              borderRadius: BorderRadius.circular(
+                  hedayah ? HedayahSkin.radiusPill : CanopyRadius.input),
               child: ExcludeSemantics(
                 child: Container(
                   constraints:
@@ -850,8 +873,12 @@ class _DesktopNavItem extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    gradient: isSelected ? HidayahGradients.selected : null,
-                    borderRadius: BorderRadius.circular(CanopyRadius.input),
+                    color: isSelected && hedayah ? HedayahSkin.gold : null,
+                    gradient: isSelected && !hedayah
+                        ? HidayahGradients.selected
+                        : null,
+                    borderRadius: BorderRadius.circular(
+                        hedayah ? HedayahSkin.radiusPill : CanopyRadius.input),
                   ),
                   child: Row(
                     children: [
@@ -864,7 +891,13 @@ class _DesktopNavItem extends StatelessWidget {
                               .textTheme
                               .labelLarge
                               ?.copyWith(
-                                color: isSelected ? HidayahGold.g200 : Canopy.slate,
+                                color: hedayah
+                                    ? (isSelected
+                                        ? HedayahSkin.ink
+                                        : HedayahSkin.muted)
+                                    : isSelected
+                                        ? HidayahGold.g200
+                                        : Canopy.slate,
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,

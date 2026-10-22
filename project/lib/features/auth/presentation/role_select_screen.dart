@@ -9,6 +9,7 @@ import '../../../core/widgets/ds/ca_navigation.dart';
 import '../../../core/widgets/ds/ca_button.dart';
 import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 
 class RoleSelectScreen extends StatelessWidget {
   const RoleSelectScreen({super.key});
@@ -37,7 +38,7 @@ class RoleSelectScreen extends StatelessWidget {
       context.go('/streamer-apply');
     });
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         appBar: CaAppBar(languageBare: true),
         bottomNavigationBar: dock
             ? SafeArea(
@@ -61,13 +62,21 @@ class RoleSelectScreen extends StatelessWidget {
                         child: Column(children: [
                           CaAvatar(name: name, url: avatar, radius: 32),
                           const SizedBox(height: AppTheme.spaceMd),
-                          Text('role_select.welcome_user'.tr(args: [name]),
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall),
-                          const SizedBox(height: AppTheme.spaceSm),
-                          Text('role_select.prompt_title'.tr(),
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyLarge),
+                          // Hedayah skin: the website's gold-ruled title.
+                          if (context.isHedayahSkin)
+                            HedayahSectionTitle(
+                                'role_select.welcome_user'.tr(args: [name]),
+                                subtitle: 'role_select.prompt_title'.tr())
+                          else ...[
+                            Text('role_select.welcome_user'.tr(args: [name]),
+                                textAlign: TextAlign.center,
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall),
+                            const SizedBox(height: AppTheme.spaceSm),
+                            Text('role_select.prompt_title'.tr(),
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyLarge),
+                          ],
                           const SizedBox(height: AppTheme.spaceXl),
                           if (expanded)
                             IntrinsicHeight(
@@ -90,6 +99,7 @@ class RoleSelectScreen extends StatelessWidget {
   Widget _option(BuildContext context,
       {required bool viewer, required VoidCallback onTap, bool dock = false}) {
     final prefix = viewer ? 'viewer' : 'streamer';
+    final hedayah = context.isHedayahSkin;
     return CaCard(
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -98,9 +108,15 @@ class RoleSelectScreen extends StatelessWidget {
           child: Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                  gradient: viewer ? CanopyGradients.pill : null,
-                  color: viewer ? null : Canopy.mint,
-                  borderRadius: BorderRadius.circular(CanopyRadius.input)),
+                  gradient: viewer && !hedayah ? CanopyGradients.pill : null,
+                  color: hedayah
+                      ? (viewer ? HedayahSkin.gold : HedayahSkin.chip)
+                      : viewer
+                          ? null
+                          : Canopy.mint,
+                  borderRadius: BorderRadius.circular(hedayah
+                      ? HedayahSkin.radiusCard
+                      : CanopyRadius.input)),
               child: CaIcon(viewer ? CaGlyph.compass : CaGlyph.mic,
                   color: viewer ? AppPalette.ink : Canopy.brandGreen))),
       const SizedBox(height: AppTheme.spaceMd),

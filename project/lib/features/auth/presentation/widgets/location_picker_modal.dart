@@ -290,7 +290,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                           initialZoom: initial.zoom,
                           minZoom: _policy.minZoom(canvas, _padding),
                           maxZoom: kMapMaxZoom,
-                          backgroundColor: Canopy.dawn,
+                          backgroundColor: context.pageGround,
                           cameraConstraint: CameraConstraint.contain(
                             bounds: kTricityNavigationExtent.bounds,
                           ),

@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 
 /// Lightweight Viewer / Student Quick Profile Setup
 class ViewerSetupScreen extends StatefulWidget {
@@ -96,8 +98,132 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
     }
   }
 
+  /// The Hedayah skin (ADR-016): the welcome page's gold band and white
+  /// sheet, with the name form as the website's cards and pills.
+  Widget _buildHedayah(BuildContext context) => Scaffold(
+      backgroundColor: HedayahSkin.paper,
+      body: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        HedayahGoldBand(
+            child: SafeArea(
+                bottom: false,
+                child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 56),
+                    child: Column(children: [
+                      Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .backButtonTooltip,
+                              onPressed: () => context.go('/welcome'),
+                              icon: const CaIcon(CaGlyph.back,
+                                  color: HedayahSkin.ink))),
+                      const HedayahRosette(size: 64, color: HedayahSkin.paper),
+                    ])))),
+        Transform.translate(
+            offset: const Offset(0, -32),
+            child: Container(
+                decoration: const BoxDecoration(
+                    color: HedayahSkin.paper,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28))),
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+                child: Center(
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              HedayahSectionTitle('viewer_setup.title'.tr(),
+                                  subtitle: 'viewer_setup.subtitle'.tr()),
+                              const SizedBox(height: 24),
+                              HedayahCard(
+                                  child: Column(children: [
+                                Text('viewer_setup.avatar_section_title'.tr(),
+                                    style: HedayahSkin.displayStyle(14,
+                                        weight: FontWeight.w500)),
+                                const SizedBox(height: 14),
+                                Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 10,
+                                    runSpacing: 10,
+                                    children: [
+                                      for (final preset in _avatarPresets)
+                                        Semantics(
+                                            button: true,
+                                            selected:
+                                                _selectedAvatarUrl == preset,
+                                            label: 'viewer_setup.avatar_option'
+                                                .tr(args: [
+                                              '${_avatarPresets.indexOf(preset) + 1}'
+                                            ]),
+                                            child: GestureDetector(
+                                                onTap: () => setState(() =>
+                                                    _selectedAvatarUrl =
+                                                        preset),
+                                                child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(3),
+                                                    decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                            color: _selectedAvatarUrl ==
+                                                                    preset
+                                                                ? HedayahSkin
+                                                                    .gold
+                                                                : Colors
+                                                                    .transparent,
+                                                            width: 2.5)),
+                                                    child: CircleAvatar(
+                                                        radius: 22,
+                                                        backgroundImage:
+                                                            AssetImage(
+                                                                preset))))),
+                                      Semantics(
+                                          button: true,
+                                          label:
+                                              'viewer_setup.custom_avatar'.tr(),
+                                          child: GestureDetector(
+                                              onTap: _pickCustomAvatar,
+                                              child: Container(
+                                                  width: 53,
+                                                  height: 53,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          color: HedayahSkin
+                                                              .chip),
+                                                  child: const Center(
+                                                      child: CaIcon(
+                                                          CaGlyph.plus,
+                                                          color: HedayahSkin
+                                                              .bronze))))),
+                                    ]),
+                              ])),
+                              const SizedBox(height: 20),
+                              TextField(
+                                  controller: _nameController,
+                                  style: HedayahSkin.textStyle(15,
+                                      color: HedayahSkin.ink, height: 1.4),
+                                  decoration: InputDecoration(
+                                      labelText: 'viewer_setup.name_label'.tr(),
+                                      hintText: 'viewer_setup.name_hint'.tr(),
+                                      prefixIcon: const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: CaIcon(CaGlyph.user,
+                                              size: 20)))),
+                              const SizedBox(height: 24),
+                              HedayahButton(
+                                  label: 'viewer_setup.btn_enter'.tr(),
+                                  loading: _isLoading,
+                                  onPressed: _handleEnter),
+                            ]))))),
+      ])));
+
   @override
   Widget build(BuildContext context) {
+    if (context.isHedayahSkin) return _buildHedayah(context);
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(

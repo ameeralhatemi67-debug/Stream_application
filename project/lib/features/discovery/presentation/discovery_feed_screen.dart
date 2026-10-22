@@ -17,6 +17,7 @@ import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_feedback.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/connectivity_banner.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 import '../models/academic_category_model.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
@@ -283,9 +284,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                 ? null
                 : () => context.push('/live/${live.first.activeStreamId}')),
         0);
+    final hedayah = context.isHedayahSkin;
     Widget heading(String label, int count) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
-        child: Wrap(
+        child: hedayah
+            ? HedayahHeading(label, count: count)
+            : Wrap(
             alignment: WrapAlignment.spaceBetween,
             spacing: AppTheme.spaceSm,
             children: [
@@ -309,7 +313,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
           loading: loadingCards);
     }
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         appBar: CaAppBar(
             compactLanguage: true,
             languageBare: true,
@@ -386,6 +390,17 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
             child:
                 ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsetsDirectional.fromSTEB(context.windowInset, AppTheme.spaceSm, context.windowInset, AppTheme.space2Xl), children: [
               const ConnectivityBanner(),
+              // Hedayah skin: Discover opens on a gold band (ADR-016).
+              if (hedayah) ...[
+                HedayahHeroBand(
+                    eyebrow: 'web.hero_eyebrow'.tr(),
+                    title: 'web.hero_title'.tr(),
+                    badge: live.isEmpty
+                        ? null
+                        : HedayahLiveBadge(
+                            'web.live_count'.plural(live.length))),
+                const SizedBox(height: AppTheme.spaceMd),
+              ],
               if (!inlineSearch) ...[
                 search(),
                 const SizedBox(height: AppTheme.spaceMd)

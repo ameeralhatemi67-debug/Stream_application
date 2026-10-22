@@ -74,16 +74,25 @@ class CaIcon extends StatelessWidget {
   final double size;
   final String? label;
   @override
-  Widget build(BuildContext context) => SvgPicture.asset(
-        'assets/canopy/icons/${glyph.name}.svg',
-        width: size,
-        height: size,
-        matchTextDirection:
-            const [CaGlyph.back, CaGlyph.arrow, CaGlyph.send].contains(glyph),
-        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-        semanticsLabel: label,
-        excludeFromSemantics: label == null,
-      );
+  Widget build(BuildContext context) {
+    // The Hedayah skin has its own set (same names) and draws the default
+    // brand colour in its icon gold.
+    final hedayah = context.isHedayahSkin;
+    return SvgPicture.asset(
+      hedayah
+          ? 'assets/hedayah/icons/${glyph.name}.svg'
+          : 'assets/canopy/icons/${glyph.name}.svg',
+      width: size,
+      height: size,
+      matchTextDirection:
+          const [CaGlyph.back, CaGlyph.arrow, CaGlyph.send].contains(glyph),
+      colorFilter: ColorFilter.mode(
+          hedayah && color == Canopy.brandGreen ? HedayahSkin.gold600 : color,
+          BlendMode.srcIn),
+      semanticsLabel: label,
+      excludeFromSemantics: label == null,
+    );
+  }
 }
 
 class CaIconButton extends StatelessWidget {

@@ -13,6 +13,7 @@ import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/consent_dialog.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
+import 'hedayah_welcome_view.dart';
 
 /// Master Welcome & Authentication Landing Screen
 class WelcomeScreen extends StatefulWidget {
@@ -134,6 +135,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
   }
 
+  Future<void> _continueAsGuest() async {
+    final consented = await _ensureConsent();
+    if (!consented || !mounted) return;
+    // A guest already set up on this device goes back to browsing, not to
+    // the name form.
+    if (context.read<AppProvider>().isReturningGuest) {
+      context.canPop() ? context.pop() : context.go('/feed');
+      return;
+    }
+    context.go('/viewer-setup');
+  }
+
   void _showSignInUnavailable() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -144,6 +157,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isHedayahSkin) {
+      return HedayahWelcomeView(
+          loading: _isLoading,
+          registrationsOpen: _flags.registrationsOpen,
+          showApple: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
+          onGoogle: _handleGoogleAuth,
+          onApple: _handleAppleAuth,
+          onGuest: _continueAsGuest,
+          pausedNotice: _flags.registrationsOpen
+              ? null
+              : _buildRegistrationsPausedNotice());
+    }
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
@@ -384,21 +409,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               foregroundColor: AppTheme.primary,
                               padding: const EdgeInsets.symmetric(vertical: 10),
                             ),
-                            onPressed: () async {
-                              final consented = await _ensureConsent();
-                              if (!consented || !context.mounted) return;
-                              // A guest already set up on this device goes
-                              // back to browsing, not to the name form.
-                              if (context
-                                  .read<AppProvider>()
-                                  .isReturningGuest) {
-                                context.canPop()
-                                    ? context.pop()
-                                    : context.go('/feed');
-                                return;
-                              }
-                              context.go('/viewer-setup');
-                            },
+                            onPressed: _continueAsGuest,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

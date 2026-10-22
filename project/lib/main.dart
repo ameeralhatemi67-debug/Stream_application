@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/app_skin_preference.dart';
 import 'core/services/reminder_push_service.dart';
 import 'core/services/retired_preferences.dart';
 import 'core/theme/app_theme.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
   }
 
   await ReminderPushService.initializeIfConfigured();
+  final skin = await readAppSkin();
 
   runApp(
     EasyLocalization(
@@ -60,13 +62,16 @@ Future<void> main() async {
       // count above 2 to "other", which never selects Arabic's few/many forms
       // (audit 2026-10-21, section 5.3).
       ignorePluralRules: false,
-      child: const StreamerApp(),
+      child: StreamerApp(initialSkin: skin),
     ),
   );
 }
 
 class StreamerApp extends StatefulWidget {
-  const StreamerApp({super.key});
+  const StreamerApp({super.key, this.initialSkin = AppSkin.gold});
+
+  /// The design saved on this device (or named by a web link).
+  final AppSkin initialSkin;
 
   @override
   State<StreamerApp> createState() => _StreamerAppState();
@@ -81,7 +86,7 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _appProvider = AppProvider();
+    _appProvider = AppProvider()..restoreAppSkin(widget.initialSkin);
     // Start real-time live viewer polling now that the provider exists.
     // This is intentionally NOT done inside AppProvider's constructor so that
     // widget tests (which use their own AppProvider instances) stay free of
@@ -141,10 +146,11 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
       ],
       child: Builder(
         builder: (context) {
+          final skin = context.select<AppProvider, AppSkin>((p) => p.appSkin);
           return MaterialApp.router(
             title: AppIdentity.name(context.locale.languageCode),
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.forLocale(context.locale),
+            theme: AppTheme.forLocale(context.locale, skin: skin),
             themeMode: ThemeMode.light,
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,

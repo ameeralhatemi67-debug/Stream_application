@@ -107,6 +107,11 @@ flutter:
     # Canopy design-system icons and lattice texture (streaming screens).
     - assets/canopy/icons/
     - assets/canopy/textures/
+    # Hedayah skin (ADR-016): its icon set and the association's wordmark.
+    # The pattern motif's source SVG (assets/hedayah/source/) stays on disk;
+    # brief/tools/make_hedayah_motif.py turns it into Dart path data.
+    - assets/hedayah/icons/
+    - assets/hedayah/wordmark.png
     - assets/images/hadayah_association_logo.png
 
   fonts:
@@ -125,6 +130,11 @@ flutter:
     - family: Reem Kufi
       fonts:
         - asset: assets/fonts/ReemKufi-Variable.ttf
+    # Hedayah skin headings, standing in for the website's Hacen Maghreb as
+    # the identity book does (SIL OFL, assets/fonts/OFL-Readex-Pro.txt).
+    - family: Readex Pro
+      fonts:
+        - asset: assets/fonts/ReadexPro-Variable.ttf
 
 
 # Launcher, adaptive and web icons, built by `dart run flutter_launcher_icons`

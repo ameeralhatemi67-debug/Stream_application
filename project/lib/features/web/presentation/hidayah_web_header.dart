@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 import '../../discovery/presentation/bookmarks_sheet.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import '../../profile/presentation/widgets/legal_document_reader_screen.dart';
@@ -60,8 +61,15 @@ class HidayahWebHeader extends StatelessWidget {
               p.isLessonsAdmin,
               p.isPermittedAdmin,
             ));
+    // Hedayah skin (ADR-016): the association website's white header under
+    // a thin gold utility strip; the cinema variant stays dark.
+    final hedayah = !dark && context.isHedayahSkin;
     final ink = dark ? HidayahGold.g50 : HidayahGold.s900;
-    final soft = dark ? HidayahGold.s300 : HidayahGold.s700;
+    final soft = dark
+        ? HidayahGold.s300
+        : hedayah
+            ? HedayahSkin.muted
+            : HidayahGold.s700;
     Widget link(HidayahWebSection section, String label, {Widget? trailing}) {
       final selected = section == active;
       return Semantics(
@@ -79,12 +87,21 @@ class HidayahWebHeader extends StatelessWidget {
                             child:
                                 Row(mainAxisSize: MainAxisSize.min, children: [
                               Text(label,
-                                  style: HidayahText.body(14.5,
-                                      color: selected ? ink : soft,
-                                      weight: selected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      height: 1.2)),
+                                  style: hedayah
+                                      ? HedayahSkin.displayStyle(15,
+                                          color: selected
+                                              ? HedayahSkin.bronze
+                                              : soft,
+                                          weight: selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                          height: 1.2)
+                                      : HidayahText.body(14.5,
+                                          color: selected ? ink : soft,
+                                          weight: selected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          height: 1.2)),
                               if (trailing != null) ...[
                                 const SizedBox(width: 7),
                                 trailing
@@ -94,7 +111,18 @@ class HidayahWebHeader extends StatelessWidget {
                         left: 6,
                         right: 6,
                         bottom: 0,
-                        child: HidayahGiltUnderline(visible: selected)),
+                        child: hedayah
+                            ? AnimatedOpacity(
+                                opacity: selected ? 1 : 0,
+                                duration: HidayahWeb.hover,
+                                child: const SizedBox(
+                                    height: 3,
+                                    child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                            color: HedayahSkin.gold,
+                                            borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(3))))))
+                            : HidayahGiltUnderline(visible: selected)),
                   ]))));
     }
 
@@ -124,15 +152,18 @@ class HidayahWebHeader extends StatelessWidget {
                                             shape: BoxShape.circle)))),
                         ])))));
 
-    return Material(
+    final header = Material(
         color: dark ? HidayahGold.s900 : HidayahGold.card,
         child: Container(
             height: HidayahWeb.headerHeight,
             decoration: BoxDecoration(
                 border: Border(
                     bottom: BorderSide(
-                        color:
-                            dark ? HidayahGold.s800 : HidayahGold.hairline))),
+                        color: dark
+                            ? HidayahGold.s800
+                            : hedayah
+                                ? HedayahSkin.line
+                                : HidayahGold.hairline))),
             child: Center(
                 child: ConstrainedBox(
                     constraints: const BoxConstraints(
@@ -147,7 +178,9 @@ class HidayahWebHeader extends StatelessWidget {
                   child: InkWell(
                       onTap: () => _go(context, HidayahWebSection.discover),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        const AppLogo(size: 40),
+                        hedayah
+                            ? const HedayahRosette(size: 38)
+                            : const AppLogo(size: 40),
                         const SizedBox(width: 10),
                         // The wordmark is a lockup in a 72 px bar: it grows
                         // with large text up to 1.4x, then holds.
@@ -161,14 +194,19 @@ class HidayahWebHeader extends StatelessWidget {
                               Text(AppIdentity.name(lang),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: HidayahText.display(20, color: ink)),
+                                  style: hedayah
+                                      ? HedayahSkin.displayStyle(19,
+                                          weight: FontWeight.w700, height: 1.3)
+                                      : HidayahText.display(20, color: ink)),
                               Text('web.brand_sub'.tr(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: HidayahText.body(11,
                                       color: dark
                                           ? HidayahGold.s300
-                                          : HidayahGold.s600,
+                                          : hedayah
+                                              ? HedayahSkin.bodyGrey
+                                              : HidayahGold.s600,
                                       height: 1.3)),
                             ]))),
                       ]))),
@@ -216,12 +254,35 @@ class HidayahWebHeader extends StatelessWidget {
                     () => context.push('/org-admin')),
               if (!signedIn) ...[
                 const SizedBox(width: AppTheme.spaceSm),
-                HidayahButton(
-                    label: 'web.sign_in'.tr(),
-                    compact: true,
-                    onPressed: () => openSignIn(context)),
+                hedayah
+                    ? HedayahButton(
+                        label: 'web.sign_in'.tr(),
+                        expand: false,
+                        compact: true,
+                        onPressed: () => openSignIn(context))
+                    : HidayahButton(
+                        label: 'web.sign_in'.tr(),
+                        compact: true,
+                        onPressed: () => openSignIn(context)),
               ],
             ]))))));
+    if (!hedayah) return header;
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      HedayahGoldBand(
+          step: 20,
+          child: SizedBox(
+              height: 30,
+              child: HidayahWebWidth(
+                  wide: true,
+                  child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text('skin.association'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HedayahSkin.displayStyle(12.5,
+                              weight: FontWeight.w500, height: 1.2)))))),
+      header,
+    ]);
   }
 }
 
@@ -241,11 +302,19 @@ class HidayahWebFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     void onLegal(int index) => showHidayahLegal(context, index);
     final lang = context.locale.languageCode;
+    // Hedayah skin: the website closes on gold; its text is ink here.
+    final hedayah = context.isHedayahSkin;
+    final heading = hedayah ? HedayahSkin.ink : HidayahGold.g300;
+    final linkColour = hedayah ? HedayahSkin.ink : HidayahGold.s200;
+    final quiet =
+        hedayah ? HedayahSkin.ink.withValues(alpha: .86) : HidayahGold.s300;
+    final faint =
+        hedayah ? HedayahSkin.ink.withValues(alpha: .86) : HidayahGold.s400;
     Widget column(String title, List<(String, VoidCallback?)> links) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(HidayahText.upper(context, title),
-                  style: HidayahText.eyebrow(context, HidayahGold.g300)),
+                  style: HidayahText.eyebrow(context, heading)),
               const SizedBox(height: 14),
               for (final (label, onTap) in links)
                 Padding(
@@ -254,10 +323,9 @@ class HidayahWebFooter extends StatelessWidget {
                         onTap: onTap,
                         child: Text(label,
                             style: HidayahText.body(14,
-                                color: HidayahGold.s200, height: 1.4)))),
+                                color: linkColour, height: 1.4)))),
             ]);
-    return HidayahNightBand(
-        child: HidayahWebWidth(
+    final content = HidayahWebWidth(
             child: Padding(
                 padding: const EdgeInsets.only(top: 48, bottom: 28),
                 child: Column(children: [
@@ -268,11 +336,17 @@ class HidayahWebFooter extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(children: [
-                                const AppLogo(size: 40),
+                                hedayah
+                                    ? const HedayahRosette(
+                                        size: 38, color: HedayahSkin.paper)
+                                    : const AppLogo(size: 40),
                                 const SizedBox(width: 10),
                                 Text(AppIdentity.name(lang),
-                                    style: HidayahText.display(20,
-                                        color: HidayahGold.g50)),
+                                    style: hedayah
+                                        ? HedayahSkin.displayStyle(20,
+                                            weight: FontWeight.w700)
+                                        : HidayahText.display(20,
+                                            color: HidayahGold.g50)),
                               ]),
                               const SizedBox(height: 14),
                               ConstrainedBox(
@@ -280,7 +354,7 @@ class HidayahWebFooter extends StatelessWidget {
                                       const BoxConstraints(maxWidth: 380),
                                   child: Text('web.footer_about'.tr(),
                                       style: HidayahText.body(13.5,
-                                          color: HidayahGold.s300))),
+                                          color: quiet))),
                             ])),
                     Expanded(
                         child: column('web.footer_platform'.tr(), [
@@ -306,18 +380,23 @@ class HidayahWebFooter extends StatelessWidget {
                     ])),
                   ]),
                   const SizedBox(height: 36),
-                  const Divider(color: Color(0x29E2C389), height: 1),
+                  Divider(
+                      color: hedayah
+                          ? HedayahSkin.ink.withValues(alpha: .18)
+                          : const Color(0x29E2C389),
+                      height: 1),
                   const SizedBox(height: 18),
                   Row(children: [
                     Expanded(
                         child: Text('web.footer_copyright'.tr(),
-                            style: HidayahText.body(12.5,
-                                color: HidayahGold.s400))),
+                            style: HidayahText.body(12.5, color: faint))),
                     Text('web.footer_made'.tr(),
-                        style: HidayahText.body(12.5,
-                            color: HidayahGold.s400)),
+                        style: HidayahText.body(12.5, color: faint)),
                   ]),
-                ]))));
+                ])));
+    return hedayah
+        ? HedayahGoldBand(step: 34, child: content)
+        : HidayahNightBand(child: content);
   }
 }
 
@@ -330,7 +409,7 @@ class HidayahWebPage extends StatelessWidget {
   final bool dark;
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: dark ? HidayahGold.s950 : HidayahGold.g50,
+      backgroundColor: dark ? HidayahGold.s950 : context.pageGround,
       // On a browser there are no system bars; a landscape tablet has them.
       body: SafeArea(
           child: Column(children: [

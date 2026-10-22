@@ -9,8 +9,9 @@ import 'package:streamer_app/features/profile/presentation/settings/about_settin
 import 'support/localized_app.dart';
 
 /// The palette toggle (ADR-013) and the Hadayah Live / Lessons app switch
-/// are gone: gold is the only design and Lessons is part of the app
-/// (ADR-014). Devices that used either lose the old setting on start.
+/// are gone: gold is the default design and Lessons is part of the app
+/// (ADR-014). Devices that used either lose the old setting on start. The
+/// Hedayah skin (ADR-016) has its own setting; see hedayah_skin_test.dart.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
@@ -29,7 +30,8 @@ void main() {
     expect(preferences.getString('unrelated'), 'kept');
   });
 
-  test('gold is the only theme: ivory pages, bronze primary, Plex Arabic', () {
+  test('gold is the default theme: ivory pages, bronze primary, Plex Arabic',
+      () {
     for (final lang in ['en', 'ar']) {
       final theme = AppTheme.forLocale(Locale(lang));
       expect(theme.scaffoldBackgroundColor, HidayahGold.g50);

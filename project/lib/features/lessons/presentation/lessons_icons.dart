@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/theme/app_skin.dart';
+
 /// Lessons's stroke icons (24 px grid, 1.8 stroke), the set the reviewed
 /// prototype uses. Directional ones mirror in right-to-left layouts.
 enum TGlyph {
@@ -81,6 +83,19 @@ const _paths = <TGlyph, String>{
 
 const _mirrored = {TGlyph.chevron, TGlyph.arrow, TGlyph.arrowEnd, TGlyph.send, TGlyph.nav};
 
+/// The Hedayah skin's icon for a Lessons glyph, where its set has one
+/// (ADR-016). The rest keep their own drawing at the skin's lighter weight.
+const _hedayahIcons = <TGlyph, String>{
+  TGlyph.search: 'search', TGlyph.bell: 'bell', TGlyph.bookmark: 'bookmark', TGlyph.gear: 'gear',
+  TGlyph.languages: 'translate', TGlyph.map: 'map', TGlyph.pin: 'pin', TGlyph.calendar: 'cal',
+  TGlyph.clock: 'clock', TGlyph.user: 'user', TGlyph.users: 'users', TGlyph.check: 'check', TGlyph.x: 'close',
+  TGlyph.plus: 'plus', TGlyph.share: 'share', TGlyph.mic: 'mic', TGlyph.chat: 'chat', TGlyph.chart: 'bars',
+  TGlyph.shield: 'shield', TGlyph.key: 'key', TGlyph.eye: 'eye', TGlyph.list: 'list', TGlyph.edit: 'edit',
+  TGlyph.trash: 'trash', TGlyph.globe: 'globe', TGlyph.info: 'info', TGlyph.alert: 'alert', TGlyph.link: 'link',
+  TGlyph.copy: 'copy', TGlyph.send: 'send', TGlyph.logout: 'logout', TGlyph.refresh: 'refresh',
+  TGlyph.lock: 'lock', TGlyph.home: 'home', TGlyph.compass: 'compass',
+};
+
 class TIcon extends StatelessWidget {
   const TIcon(this.glyph, {super.key, this.size = 18, this.color, this.stroke = 1.8, this.semanticLabel});
   final TGlyph glyph;
@@ -91,15 +106,25 @@ class TIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = color ?? IconTheme.of(context).color ?? const Color(0xFF151D24);
-    final svg = SvgPicture.string(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" '
-      'stroke-width="$stroke" stroke-linecap="round" stroke-linejoin="round">${_paths[glyph]}</svg>',
-      width: size,
-      height: size,
-      colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
-      semanticsLabel: semanticLabel,
-      excludeFromSemantics: semanticLabel == null,
-    );
+    final hedayah = context.isHedayahSkin;
+    final asset = hedayah ? _hedayahIcons[glyph] : null;
+    final svg = asset != null
+        ? SvgPicture.asset('assets/hedayah/icons/$asset.svg',
+            width: size,
+            height: size,
+            colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
+            semanticsLabel: semanticLabel,
+            excludeFromSemantics: semanticLabel == null)
+        : SvgPicture.string(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" '
+            'stroke-width="${hedayah && stroke == 1.8 ? 1.5 : stroke}" stroke-linecap="round" '
+            'stroke-linejoin="round">${_paths[glyph]}</svg>',
+            width: size,
+            height: size,
+            colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
+            semanticsLabel: semanticLabel,
+            excludeFromSemantics: semanticLabel == null,
+          );
     if (!_mirrored.contains(glyph) || Directionality.of(context) == TextDirection.ltr) return svg;
     return Transform.flip(flipX: true, child: svg);
   }

@@ -10,7 +10,7 @@ class OrganizationAppBar extends CaAppBar {
       : super(
             title: title == null ? null : _OrganizationBarTitle(child: title),
             toolbarHeight: CanopySize.appBarScaled,
-            backgroundColor: Canopy.dawn,
+            backgroundColor: context.pageGround,
             elevation: 0,
             compactLanguage: true,
             languageBare: true);

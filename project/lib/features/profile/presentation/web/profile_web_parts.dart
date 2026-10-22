@@ -242,7 +242,7 @@ class ProfileWebTabs extends StatelessWidget {
   static const height = 77.0;
   @override
   Widget build(BuildContext context) => ColoredBox(
-      color: HidayahGold.g50,
+      color: context.pageGround,
       child: HidayahWebWidth(
           child: Padding(
               padding: const EdgeInsets.only(top: 24),

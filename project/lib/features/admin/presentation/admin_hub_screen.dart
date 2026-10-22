@@ -308,7 +308,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // Access Guard
     if (!provider.isAdminUser) {
       return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         appBar: CaAppBar(
           backgroundColor: AppTheme.surface,
           languageBare: true,
@@ -392,7 +392,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       ],
     );
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       appBar: CaAppBar(
         languageBare: true,
         leading: isDesktop

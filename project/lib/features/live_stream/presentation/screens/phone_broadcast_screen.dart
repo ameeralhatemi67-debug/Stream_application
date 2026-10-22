@@ -716,7 +716,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     if (!_presetConfirmed) {
       return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         appBar: CaAppBar(
           backgroundColor: AppTheme.surface,
           title: Text('live.broadcast_from_phone'.tr()),
@@ -839,7 +839,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       resizeToAvoidBottomInset: true,
       appBar: CaAppBar(
         backgroundColor: AppTheme.surface,

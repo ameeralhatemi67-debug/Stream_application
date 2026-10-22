@@ -599,7 +599,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       ]),
     );
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       appBar: CaAppBar(
         languageBare: true,
         leading: CaIconButton(

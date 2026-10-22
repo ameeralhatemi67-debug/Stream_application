@@ -47,12 +47,12 @@ class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
     final doc = docs[_currentIndex];
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       appBar: CaAppBar(
         compactLanguage: true,
         languageBare: true,
         title: Text(doc.title),
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         elevation: 0,
       ),
       body: SingleChildScrollView(

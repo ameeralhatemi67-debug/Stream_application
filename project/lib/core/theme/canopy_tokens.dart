@@ -1,5 +1,6 @@
 // Design-system tokens. The names come from the original Canopy layout
-// system; every value is Hidayah Gold (the only design since 2026-10-21).
+// system; every value is Hidayah Gold (the default design; the Hedayah skin,
+// ADR-016, changes chosen widgets at run time rather than these values).
 import 'package:flutter/material.dart';
 import 'hidayah_gold.dart';
 

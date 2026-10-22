@@ -8,6 +8,10 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Second design: the Hedayah skin, 2026-10-22 (local, not committed)
+
+Owner request: a third palette beside gold & black, from the association's identity book ("Hedayah Brand Identity", hedayh.org.sa), switchable so the team can compare (ADR-016). Settings → Design picks **Gold & black** or **Hedayah** per device; on the web `/?skin=hedayah-skin#/welcome` opens it without signing in. New layouts in the Hedayah skin: splash (all gold with the owner's seamless lattice and the rosette drawing itself), welcome/sign-in (gold band, white sheet, pill actions; split on wide windows), guest name, role choice, Discover's opening band and headings, the Settings account card, a white docked tab bar with the gold rule, the laptop rail, and the website header (gold utility strip) and footer (gold). Everywhere else the shared controls, icons (a new 55-glyph set), fonts (Readex Pro added) and page grounds follow the skin. Gold & black is unchanged.
+
 ## Lessons run by admins; preacher links; admin emails, 2026-10-22 (not on hosted yet)
 
 Owner decisions (ADR-015): "Taysir" is gone as a name; Lessons is one platform-wide programme with no organizations, no coordinators and no preacher accounts. Built in four local commits (`b482522` rename, `11205d1` admin emails and lessons-only admins, `0fc00d3` lessons database v2, and the commit for this entry):

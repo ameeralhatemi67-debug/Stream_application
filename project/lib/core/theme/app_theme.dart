@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'app_skin.dart';
 import 'canopy_tokens.dart';
+import 'hedayah_skin.dart';
 export 'app_palette.dart';
+export 'app_skin.dart';
+export 'hedayah_skin.dart';
+export 'skin_colors.dart';
 // Canopy tokens back the redesigned streaming screens; the app-wide values
 // below are unchanged.
 export 'canopy_tokens.dart';
@@ -102,10 +107,16 @@ abstract final class AppTheme {
 
   static final Map<String, ThemeData> _themeByLanguage = {};
 
-  /// One ThemeData per language: MaterialApp rebuilds used to build a fresh one
-  /// (and its text theme) every time (audit ST-01).
-  static ThemeData forLocale(Locale locale) =>
-      _themeByLanguage.putIfAbsent(locale.languageCode, () => _buildTheme(locale));
+  /// One ThemeData per language and skin: MaterialApp rebuilds used to build a
+  /// fresh one (and its text theme) every time (audit ST-01).
+  static ThemeData forLocale(Locale locale, {AppSkin skin = AppSkin.gold}) {
+    ActiveSkin.current = skin;
+    return _themeByLanguage.putIfAbsent(
+        '${skin.id}/${locale.languageCode}',
+        () => skin == AppSkin.hedayah
+            ? HedayahSkin.theme(locale)
+            : _buildTheme(locale));
+  }
 
   static ThemeData _buildTheme(Locale locale) => ThemeData(
     useMaterial3: true,
@@ -113,6 +124,7 @@ abstract final class AppTheme {
     fontFamily: HidayahType.text,
     fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
     textTheme: buildTextTheme(locale.languageCode),
+    extensions: const [AppSkinTheme(AppSkin.gold)],
     scaffoldBackgroundColor: AppPalette.ivory, canvasColor: bg, cardColor: surface,
     primaryColor: primary, dividerColor: border, disabledColor: textMuted,
     colorScheme: const ColorScheme.light(

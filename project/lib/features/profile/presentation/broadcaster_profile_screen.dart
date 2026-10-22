@@ -204,7 +204,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             ],
         body: panel(body()));
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         bottomNavigationBar: _dockPrimary
             ? SafeArea(
                 top: false,

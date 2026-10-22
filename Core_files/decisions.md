@@ -8,6 +8,53 @@ updated: 2026-10-22
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
 
+## ADR-016: A second design, the Hedayah skin, beside gold & black (2026-10-22)
+
+Owner request 2026-10-22: the team should see two design versions and switch
+between them. Gold & black (ADR-013) stays the default; the **Hedayah skin**
+(`hedayah-skin`) follows the association's identity book ("Hedayah Brand
+Identity", scanned from hedayh.org.sa): white and mist grounds, flat gold
+bands carrying the owner's lattice, slate, 25 px pills, Readex Pro headings
+over IBM Plex Sans Arabic, and its own icon set. This amends ADR-013's "only
+design"; nothing in gold & black changes.
+
+- **Where it is chosen.** Settings → Design (two picture tiles), per device
+  (`app_skin` in shared preferences: `gold-black` or `hedayah-skin`). On the
+  web a link can carry it, `/?skin=hedayah-skin#/welcome`, so guests and the
+  team can see it without signing in; a linked skin is remembered. It is read
+  before the first frame (`readAppSkin` in `main.dart`), so the app never opens
+  in one design and flips.
+- **How it reaches the screens.** The skin rides on the theme
+  (`AppSkinTheme` extension; `context.isHedayahSkin`). The gold tokens stay
+  `const`; a runtime remap of every token was removed in ADR-013 and is not
+  brought back. Instead the shared pieces change by skin: `CaIcon` (icon set
+  and icon gold), `CaButton`, `CaCard`, `CaChip`, `CaInput`, `CaNavBar`, the
+  laptop rail, the website header and footer, page grounds
+  (`context.pageGround`), the Lessons icons and night bands, and the Material
+  theme. Pages with their own Hedayah layout: splash, welcome/sign-in, guest
+  name, role choice, Discover's opening band and headings, the Settings
+  account card. Two text-style helpers with no context (website and Lessons
+  display face) read `ActiveSkin`, set when a theme is built; a change of
+  skin rebuilds every element, as a language change does.
+- **Identity rules kept.** Gold is a fill; text on gold is ink #151D24
+  (6.0:1), never white (2.8:1). Gold-coloured text is bronze #805B1B; icons on
+  white are Gold 600 #A87726. The rosette is never shown in its primary
+  colours on gold: the reversed (white) lockup is. Dark bands that carry light
+  text (Lessons heroes) become the book's night variant, flat ink with the
+  lattice, rather than gold.
+- **Assets.** The lattice is the owner's motif (`assets/hedayah/source/
+  motif.svg`, their `solopattern.svg`), turned into Dart path data by
+  `brief/tools/make_hedayah_motif.py` and repeated on the exact 12.149 mm grid
+  the book measured, so it has no seams; its 0.12 mm lines get a screen-scaled
+  stroke to read at about a pixel. The rosette is drawn in code (four loops at
+  45°, proportions from the logo file). The wordmark is cropped from the
+  association logo. Icons: `brief/tools/make_hedayah_icons.py` →
+  `assets/hedayah/icons/` (one per `CaGlyph`). Font: Readex Pro (SIL OFL), the
+  book's stand-in for the website's Hacen Maghreb.
+- **Not covered yet.** Screens built from their own fixed colours (admin
+  consoles, the broadcast studio, channel pages, Lessons cards) take the
+  icons, fonts and shared controls but keep their gold layouts.
+
 ## ADR-015: Admins run the lessons; preachers use links, not accounts (2026-10-22)
 
 Owner decisions 2026-10-22 (the seven questions, answered as recommended).

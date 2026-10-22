@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../core/widgets/hedayah/hedayah_kit.dart';
 
 /// Clean, stutter-free App Startup Splash Screen.
 /// Displays high-fidelity branding, warms up provider services,
@@ -89,6 +90,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isHedayahSkin) return const _HedayahSplash();
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: EntryBackground(
@@ -158,6 +160,80 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
                 const Spacer(),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The Hedayah skin's opening (ADR-016): all gold with the lattice, the
+/// reversed lockup drawing itself, and the association's tagline in ink.
+class _HedayahSplash extends StatelessWidget {
+  const _HedayahSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final wide = size.width >= 900;
+    // A phone on its side has little height: a smaller lockup keeps it all in.
+    final lockup = size.height < 600 ? 72.0 : (wide ? 140.0 : 112.0);
+    return Scaffold(
+      backgroundColor: HedayahSkin.gold,
+      body: HedayahGoldBand(
+        step: wide ? 36 : 30,
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                children: [
+                  const Spacer(flex: 3),
+                  HedayahLockup(size: lockup, reversed: true, draw: true),
+                  const SizedBox(height: 26),
+                  Text(
+                    AppIdentity.name(context.locale.languageCode),
+                    textAlign: TextAlign.center,
+                    style: HedayahSkin.displayStyle(wide ? 32 : 26,
+                        weight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Text(
+                      'skin.tagline'.tr(),
+                      textAlign: TextAlign.center,
+                      style: HedayahSkin.displayStyle(15,
+                          weight: FontWeight.w400,
+                          color: HedayahSkin.ink.withValues(alpha: .86),
+                          height: 1.8),
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: SizedBox(
+                      width: 128,
+                      height: 4,
+                      child: LinearProgressIndicator(
+                        color: HedayahSkin.ink,
+                        backgroundColor:
+                            HedayahSkin.paper.withValues(alpha: .45),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'design_copy.initializing_platform_map_assets'.tr(),
+                    textAlign: TextAlign.center,
+                    style: HedayahSkin.textStyle(12,
+                        color: HedayahSkin.ink.withValues(alpha: .9),
+                        height: 1.5),
+                  ),
+                  const Spacer(),
+                ],
+              ),
             ),
           ),
         ),

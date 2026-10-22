@@ -34,7 +34,7 @@ class LanguageSwitcher extends StatelessWidget {
   /// Sets [language] (see [toggle]).
   static Future<void> set(BuildContext context, String language) async {
     await context.setLocale(Locale(language));
-    _rebuildAll();
+    rebuildAll();
     if (context.mounted) {
       unawaited(context.read<AppProvider>().syncReminderPush(
           requestPermission: false, language: language));
@@ -44,8 +44,8 @@ class LanguageSwitcher extends StatelessWidget {
   /// Labels read with tr() without a context do not depend on the locale, so
   /// const widgets and pages that never read it kept the old language (the
   /// Lessons tabs and header did). Rebuild every element once, as a hot
-  /// reload does.
-  static void _rebuildAll() {
+  /// reload does. A skin change does the same (ADR-016).
+  static void rebuildAll() {
     void mark(Element element) {
       element.markNeedsBuild();
       element.visitChildren(mark);
@@ -58,6 +58,8 @@ class LanguageSwitcher extends StatelessWidget {
   Widget build(BuildContext context) {
     final isArabic = context.locale.languageCode == 'ar';
     final targetLangCode = isArabic ? 'EN' : 'عربي';
+    // Hedayah skin (ADR-016): its own translate glyph and cool greys.
+    final hedayah = context.isHedayahSkin;
 
     return CaFocusRing(
         onDark: overlay,
@@ -85,7 +87,9 @@ class LanguageSwitcher extends StatelessWidget {
                 color: overlay
                     ? AppTheme.surface
                         .withValues(alpha: canopy ? CanopySize.glassAlpha : .6)
-                    : AppTheme.surfaceAlt,
+                    : hedayah
+                        ? HedayahSkin.surface
+                        : AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(overlay || canopy
                     ? AppTheme.radiusFull
                     : AppTheme.radiusSm),
@@ -96,7 +100,7 @@ class LanguageSwitcher extends StatelessWidget {
                                 .withValues(alpha: CanopySize.glassBorderAlpha))
                         : null)
                     : Border.all(
-                        color: AppTheme.border,
+                        color: hedayah ? HedayahSkin.line : AppTheme.border,
                         width: 1.0,
                       ),
               ),
@@ -104,11 +108,17 @@ class LanguageSwitcher extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SvgPicture.asset(
-                    'assets/Language.svg',
+                    hedayah
+                        ? 'assets/hedayah/icons/translate.svg'
+                        : 'assets/Language.svg',
                     width: canopy ? CanopySize.icon : 18,
                     height: canopy ? CanopySize.icon : 18,
                     colorFilter: ColorFilter.mode(
-                      canopy && overlay ? Canopy.paper : AppTheme.primary,
+                      canopy && overlay
+                          ? Canopy.paper
+                          : hedayah
+                              ? HedayahSkin.gold600
+                              : AppTheme.primary,
                       BlendMode.srcIn,
                     ),
                   ),

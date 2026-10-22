@@ -24,6 +24,7 @@ import '../services/hidden_content_service.dart';
 import '../services/reminder_push_service.dart';
 import '../config/reminder_firebase_config.dart';
 import '../services/connectivity_service.dart';
+import '../services/app_skin_preference.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
 import '../../features/map/models/map_models.dart';
@@ -794,6 +795,23 @@ class AppProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to flush pending consent: $e');
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Design skin (ADR-016): gold & black, or the Hedayah identity. Per device,
+  // read before the first frame (main.dart) and changed from Settings.
+  // ---------------------------------------------------------------------
+  AppSkin _appSkin = AppSkin.gold;
+  AppSkin get appSkin => _appSkin;
+
+  /// The skin read at start-up; no save and no notification.
+  void restoreAppSkin(AppSkin skin) => _appSkin = skin;
+
+  Future<void> setAppSkin(AppSkin skin) async {
+    if (skin == _appSkin) return;
+    _appSkin = skin;
+    notifyListeners();
+    await saveAppSkin(skin);
   }
 
   // ---------------------------------------------------------------------

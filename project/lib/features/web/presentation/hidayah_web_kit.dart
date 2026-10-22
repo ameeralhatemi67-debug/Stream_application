@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/hedayah/hedayah_pattern.dart';
 
 /// The Hidayah Gold *website* layouts (owner review 2026-10-19) replace the
 /// app-on-a-laptop layout only when the gold palette is on and the window is
@@ -26,15 +27,19 @@ extension HidayahWebX on BuildContext {
 }
 
 abstract final class HidayahText {
+  /// Reem Kufi in gold & black; the Hedayah skin's Readex Pro (ADR-016).
   static TextStyle display(double size,
           {Color color = HidayahGold.s900, FontWeight weight = FontWeight.w600}) =>
-      TextStyle(
-          fontFamily: HidayahType.display,
-          fontFamilyFallback: const [HidayahType.text],
-          fontSize: size,
-          fontWeight: weight,
-          height: 1.2,
-          color: color);
+      ActiveSkin.hedayah
+          ? HedayahSkin.displayStyle(size,
+              color: color, weight: weight, height: 1.3)
+          : TextStyle(
+              fontFamily: HidayahType.display,
+              fontFamilyFallback: const [HidayahType.text],
+              fontSize: size,
+              fontWeight: weight,
+              height: 1.2,
+              color: color);
 
   static TextStyle body(double size,
           {Color color = HidayahGold.s700,
@@ -165,7 +170,9 @@ class _LatticePainter extends CustomPainter {
       old.color != color || old.direction != direction;
 }
 
-/// Night slate band with the warm corner glow and the gilt lattice.
+/// Night slate band with the warm corner glow and the gilt lattice. In the
+/// Hedayah skin (ADR-016) it is the identity's night variant: flat ink with
+/// the Hedayah lattice; its light text reads the same.
 class HidayahNightBand extends StatelessWidget {
   const HidayahNightBand(
       {super.key, required this.child, this.lattice = true, this.radius});
@@ -175,7 +182,16 @@ class HidayahNightBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
       borderRadius: radius ?? BorderRadius.zero,
-      child: DecoratedBox(
+      child: context.isHedayahSkin
+          ? ColoredBox(
+              color: HedayahSkin.ink,
+              child: Stack(children: [
+                if (lattice)
+                  const Positioned.fill(
+                      child: HedayahPattern(color: Color(0x1FE2C389), step: 34)),
+                child,
+              ]))
+          : DecoratedBox(
           decoration: const BoxDecoration(gradient: HidayahGradients.night),
           child: Stack(children: [
             const Positioned.fill(
@@ -215,8 +231,15 @@ class _HidayahButtonState extends State<HidayahButton> {
     final enabled = widget.onPressed != null;
     final gold = widget.kind == HidayahButtonKind.gold;
     final dark = widget.kind == HidayahButtonKind.onDark;
+    // Hedayah skin (ADR-016): the website's flat pills; the main one gold
+    // with ink, the others outlined.
+    final hedayah = context.isHedayahSkin;
     final foreground = dark ? HidayahGold.g200 : HidayahGold.s900;
-    final radius = BorderRadius.circular(widget.compact ? 10 : 12);
+    final radius = BorderRadius.circular(hedayah
+        ? HedayahSkin.radiusPill
+        : widget.compact
+            ? 10
+            : 12);
     // A tight slot (narrow card, enlarged text) scales the label down rather
     // than clipping or overflowing it.
     final content = FittedBox(
@@ -229,8 +252,11 @@ class _HidayahButtonState extends State<HidayahButton> {
           ],
           Text(widget.label,
               maxLines: 1,
-              style: HidayahText.body(widget.compact ? 13 : 14.5,
-                  color: foreground, weight: FontWeight.w700, height: 1.2)),
+              style: hedayah
+                  ? HedayahSkin.displayStyle(widget.compact ? 13.5 : 15,
+                      color: foreground, weight: FontWeight.w500, height: 1.2)
+                  : HidayahText.body(widget.compact ? 13 : 14.5,
+                      color: foreground, weight: FontWeight.w700, height: 1.2)),
         ]));
     return Semantics(
         button: true,
@@ -245,9 +271,9 @@ class _HidayahButtonState extends State<HidayahButton> {
                     duration: CanopyMotion.press,
                     height: widget.compact ? 36 : 44,
                     decoration: BoxDecoration(
-                        gradient: gold ? HidayahGradients.minted : null,
+                        gradient: gold && !hedayah ? HidayahGradients.minted : null,
                         color: gold
-                            ? null
+                            ? (hedayah ? HedayahSkin.gold : null)
                             : dark
                                 ? (_hover
                                     ? const Color(0x14E2C389)
@@ -257,20 +283,24 @@ class _HidayahButtonState extends State<HidayahButton> {
                         border: gold
                             ? null
                             : Border.all(
+                                width: hedayah ? 1.5 : 1,
                                 color: dark
                                     ? HidayahGold.g300
                                         .withValues(alpha: _hover ? .8 : .45)
-                                    : (_hover
-                                        ? HidayahGold.s600
-                                        : HidayahGold.s300)),
-                        boxShadow: gold ? HidayahShadow.minted : null),
+                                    : hedayah
+                                        ? HedayahSkin.ink
+                                        : (_hover
+                                            ? HidayahGold.s600
+                                            : HidayahGold.s300)),
+                        boxShadow:
+                            gold && !hedayah ? HidayahShadow.minted : null),
                     child: Material(
                         type: MaterialType.transparency,
                         child: InkWell(
                             borderRadius: radius,
                             onTap: widget.onPressed,
                             child: Stack(children: [
-                              if (gold)
+                              if (gold && !hedayah)
                                 Positioned(
                                     top: 1,
                                     left: 10,

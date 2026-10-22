@@ -66,7 +66,9 @@ class CaNavBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context) => context.isHedayahSkin
+      ? _HedayahNavBar(index: index, onChanged: onChanged)
+      : SafeArea(
       top: false,
       child: Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(
@@ -108,6 +110,99 @@ class CaNavBar extends StatelessWidget {
                                   ],
                                 ]));
                       }))))));
+}
+
+/// The Hedayah skin's tab bar (ADR-016): white and docked, the chosen tab
+/// marked with the website's short gold rule above a bronze icon.
+class _HedayahNavBar extends StatelessWidget {
+  const _HedayahNavBar({required this.index, required this.onChanged});
+  final int index;
+  final ValueChanged<int> onChanged;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: const BoxDecoration(
+          color: HedayahSkin.paper,
+          border: Border(top: BorderSide(color: HedayahSkin.line)),
+          boxShadow: [
+            BoxShadow(
+                color: Color(0x0D000000), blurRadius: 18, offset: Offset(0, -4))
+          ]),
+      child: SafeArea(
+          top: false,
+          child: SizedBox(
+              height: 66,
+              child: Row(children: [
+                for (var i = 0; i < caTabDestinations.length; i++)
+                  Expanded(
+                      child: _HedayahTab(
+                          index: i,
+                          selected: i == index,
+                          onTap: () => onChanged(i))),
+              ]))));
+}
+
+class _HedayahTab extends StatelessWidget {
+  const _HedayahTab(
+      {required this.index, required this.selected, required this.onTap});
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final (glyph, key) = caTabDestinations[index];
+    final label = key.tr();
+    final duration = CanopyMotion.reduced(context)
+        ? CanopyMotion.none
+        : CanopyMotion.navPill;
+    return Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: CaFocusRing(
+            radius: HedayahSkin.radiusCard,
+            child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                    onTap: onTap,
+                    child: ExcludeSemantics(
+                        child: Stack(children: [
+                      Align(
+                          alignment: Alignment.topCenter,
+                          child: AnimatedContainer(
+                              duration: duration,
+                              curve: CanopyMotion.easeOut,
+                              width: selected ? 32 : 0,
+                              height: 3,
+                              decoration: const BoxDecoration(
+                                  color: HedayahSkin.gold,
+                                  borderRadius: BorderRadius.vertical(
+                                      bottom: Radius.circular(3))))),
+                      Center(
+                          child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CaIcon(glyph,
+                                        color: selected
+                                            ? HedayahSkin.bronze
+                                            : HedayahSkin.slate),
+                                    const SizedBox(height: 4),
+                                    Text(label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: HedayahSkin.displayStyle(12,
+                                            weight: selected
+                                                ? FontWeight.w600
+                                                : FontWeight.w400,
+                                            color: selected
+                                                ? HedayahSkin.ink
+                                                : HedayahSkin.bodyGrey,
+                                            height: 1.3)),
+                                  ]))),
+                    ]))))));
+  }
 }
 
 /// How selected item [i] is while the pill animates to position [t].

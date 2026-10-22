@@ -49,7 +49,7 @@ class DiscoveryWebView extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     return Material(
-        color: HidayahGold.g50,
+        color: context.pageGround,
         child: CustomScrollView(slivers: [
           SliverToBoxAdapter(child: _Hero(live: live, total: displayed.length, topics: categories.where((c) => c.isActive).length)),
           SliverToBoxAdapter(
@@ -540,7 +540,9 @@ class _CategoryBar extends StatelessWidget {
                             decoration: InputDecoration(
                                 isDense: true,
                                 filled: true,
-                                fillColor: const Color(0xFFF4EEE1),
+                                fillColor: context.isHedayahSkin
+                                    ? HedayahSkin.paper
+                                    : const Color(0xFFF4EEE1),
                                 hintText: 'feed.search_feed'.tr(),
                                 hintStyle: HidayahText.body(13.5,
                                     color: HidayahGold.s600, height: 1.2),
@@ -563,7 +565,10 @@ class _CategoryBar extends StatelessWidget {
                                     borderSide: BorderSide.none),
                                 enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none),
+                                    borderSide: context.isHedayahSkin
+                                        ? const BorderSide(
+                                            color: HedayahSkin.line)
+                                        : BorderSide.none),
                                 focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                     borderSide: const BorderSide(

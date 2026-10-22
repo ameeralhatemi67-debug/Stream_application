@@ -3146,5 +3146,17 @@
       "publish": "Publish",
       "published": "Published. It is on the calendar and the map."
     }
+  },
+  "skin": {
+    "title": "Design",
+    "hint": "Choose how the app looks on this device. Only this device changes.",
+    "gold": "Gold & black",
+    "gold_hint": "The app's own design: ivory, night slate and gilded gold.",
+    "hedayah": "Hedayah",
+    "hedayah_hint": "The association's identity: white, flat gold and the Hedayah pattern.",
+    "in_use": "In use",
+    "changed": "Design changed to {}",
+    "tagline": "Hedayah: a call made with insight, a message carried with mercy, an impact that reaches everyone.",
+    "association": "Hedayah Association · Eastern Province"
   }
 }

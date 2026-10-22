@@ -40,7 +40,7 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
 
     if (orgIds.isEmpty) {
       return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         appBar: OrganizationAppBar(context: context,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded,
@@ -74,7 +74,7 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
         {OrgRole.owner, OrgRole.coOwner}.contains(membership.role);
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: context.pageGround,
       appBar: OrganizationAppBar(context: context,
         leading: IconButton(
           icon:

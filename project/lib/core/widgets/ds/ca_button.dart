@@ -123,13 +123,18 @@ class _CaButtonState extends State<CaButton>
     final primary = widget.variant == CaButtonVariant.primary;
     final destructive = widget.variant == CaButtonVariant.destructive;
     final text = widget.variant == CaButtonVariant.text;
+    // Hedayah skin: flat gold pill for the main action and an ink outline for
+    // the second (the identity book's readable buttons); no minted coin.
+    final hedayah = context.isHedayahSkin;
     final foreground = !active
         ? Canopy.slate
         : primary
             ? AppPalette.ink
             : destructive
                 ? Canopy.paper
-                : Canopy.brandGreen;
+                : hedayah && !text
+                    ? HedayahSkin.ink
+                    : Canopy.brandGreen;
     final label = Row(mainAxisSize: MainAxisSize.min, children: [
       if (widget.icon != null) ...[
         if (widget.confirm)
@@ -167,25 +172,34 @@ class _CaButtonState extends State<CaButton>
               constraints: const BoxConstraints(minHeight: CanopySize.target),
               decoration: BoxDecoration(
                 color: !active
-                    ? Canopy.mint
+                    ? (hedayah ? HedayahSkin.disabled : Canopy.mint)
                     : destructive
                         ? Canopy.liveCrimson
-                        : primary || text
-                            ? null
-                            : Canopy.mint,
-                gradient: active && primary ? AppGradients.pill : null,
+                        : primary
+                            ? (hedayah ? HedayahSkin.gold : null)
+                            : text
+                                ? null
+                                : (hedayah ? Canopy.paper : Canopy.mint),
+                gradient:
+                    active && primary && !hedayah ? AppGradients.pill : null,
                 borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 border: !primary && !destructive && !text
-                    ? Border.all(color: Canopy.mist)
+                    ? Border.all(
+                        color: hedayah && active
+                            ? HedayahSkin.ink
+                            : hedayah
+                                ? HedayahSkin.line
+                                : Canopy.mist,
+                        width: hedayah ? 1.5 : 1)
                     : null,
-                boxShadow: active && primary
+                boxShadow: active && primary && !hedayah
                     ? HidayahShadow.minted
                     : null,
               ),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(CanopyRadius.pill),
                   child: Stack(alignment: Alignment.center, children: [
-                    if (active && primary)
+                    if (active && primary && !hedayah)
                       PositionedDirectional(
                           top: CanopySize.stroke,
                           start: AppTheme.spaceXl,

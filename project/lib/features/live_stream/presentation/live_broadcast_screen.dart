@@ -912,7 +912,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
     if (!_roomActive) {
       return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: context.pageGround,
         body: SafeArea(
             child: LiveRoomConnectionView(
           status: networkStatus,
@@ -2376,8 +2376,8 @@ class _RoomStatusScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
     return Scaffold(
-      backgroundColor: Canopy.dawn,
-      appBar: CaAppBar(backgroundColor: Canopy.dawn),
+      backgroundColor: context.pageGround,
+      appBar: CaAppBar(backgroundColor: context.pageGround),
       body: SafeArea(
         child: Center(
           child: Padding(

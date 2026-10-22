@@ -19,6 +19,9 @@ class CaChip extends StatelessWidget {
   final ValueChanged<bool>? onSelected;
   @override
   Widget build(BuildContext context) {
+    // Hedayah skin: the chosen chip is the website's gold pill with ink text.
+    final hedayah = context.isHedayahSkin;
+    final selectedInk = hedayah ? HedayahSkin.ink : HidayahGold.g200;
     Widget contents(Color color) => Padding(
         padding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceSm),
@@ -26,7 +29,7 @@ class CaChip extends StatelessWidget {
           if (icon != null) ...[
             CaIcon(icon!,
                 size: CanopySize.inlineIcon,
-                color: color == HidayahGold.g200 ? color : Canopy.brandGreen),
+                color: color == selectedInk ? color : Canopy.brandGreen),
             const SizedBox(width: AppTheme.spaceSm)
           ],
           Flexible(
@@ -41,7 +44,7 @@ class CaChip extends StatelessWidget {
         selected: onSelected == null ? null : selected,
         enabled: onSelected == null ? null : true,
         child: CaFocusRing(
-            onDark: selected,
+            onDark: selected && !hedayah,
             child: Material(
                 type: MaterialType.transparency,
                 child: InkWell(
@@ -67,9 +70,13 @@ class CaChip extends StatelessWidget {
                                   BorderRadius.circular(CanopyRadius.pill),
                               border: selected
                                   ? null
-                                  : Border.all(color: Canopy.hairline)),
+                                  : Border.all(
+                                      color: hedayah
+                                          ? HedayahSkin.line
+                                          : Canopy.hairline)),
                           child: Stack(fit: StackFit.passthrough, children: [
-                            contents(Canopy.slate),
+                            contents(
+                                hedayah ? HedayahSkin.muted : Canopy.slate),
                             if (value > 0)
                               Positioned.fill(
                                   child: IgnorePointer(
@@ -86,10 +93,15 @@ class CaChip extends StatelessWidget {
                                                           BorderRadius.circular(
                                                               CanopyRadius
                                                                   .pill),
-                                                      gradient:
-                                                          HidayahGradients.selected),
+                                                      color: hedayah
+                                                          ? HedayahSkin.gold
+                                                          : null,
+                                                      gradient: hedayah
+                                                          ? null
+                                                          : HidayahGradients
+                                                              .selected),
                                                   child: contents(
-                                                      HidayahGold.g200)))))),
+                                                      selectedInk)))))),
                           ])),
                     )))));
   }
@@ -288,9 +300,15 @@ class CaInput extends StatelessWidget {
   final FocusNode? focusNode;
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(CanopyRadius.input);
-    final rest =
-        OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
+    // Hedayah skin: white fields on a hairline, the website's quiet inputs.
+    final hedayah = context.isHedayahSkin;
+    final radius = BorderRadius.circular(
+        hedayah ? HedayahSkin.radiusField : CanopyRadius.input);
+    final rest = OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: hedayah
+            ? const BorderSide(color: HedayahSkin.line)
+            : BorderSide.none);
     Widget errorRow(BuildContext context, String message) =>
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const CaIcon(CaGlyph.alert,
@@ -341,11 +359,15 @@ class CaInput extends StatelessWidget {
                         decoration: InputDecoration(
                           hintText: hint,
                           filled: true,
-                          fillColor: Canopy.mint,
+                          fillColor:
+                              hedayah ? HedayahSkin.paper : Canopy.mint,
                           hintStyle: Theme.of(context)
                               .textTheme
                               .bodyLarge
-                              ?.copyWith(color: Canopy.haze),
+                              ?.copyWith(
+                                  color: hedayah
+                                      ? HedayahSkin.bodyGrey
+                                      : Canopy.haze),
                           isDense: true,
                           contentPadding: const EdgeInsetsDirectional.symmetric(
                               horizontal: AppTheme.spaceLg,
