@@ -59,6 +59,7 @@ int compareLessons(Lesson a, Lesson b) {
 }
 
 /// Same mosque and slot on the same day, or the same preacher booked twice.
+/// A request with no mosque yet can only clash on its preacher.
 List<Lesson> clashesFor(
   ({String? id, String requestId, DateTime date, String slot, String mosqueId, String preacherId}) l,
   Iterable<Lesson> lessons,
@@ -70,7 +71,7 @@ List<Lesson> clashesFor(
             (o.status == 'approved' || o.status == 'pending') &&
             sameDay(o.date, l.date) &&
             o.slot == l.slot &&
-            (o.mosqueId == l.mosqueId || o.preacherId == l.preacherId))
+            ((l.mosqueId.isNotEmpty && o.mosqueId == l.mosqueId) || o.preacherId == l.preacherId))
         .toList();
 
 List<Lesson> clashesOfLesson(Lesson l, Iterable<Lesson> lessons) => clashesFor(

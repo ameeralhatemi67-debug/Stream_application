@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/routing/sign_in_prompt.dart';
-import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../data/demo_lessons_repository.dart';
 import '../../domain/lessons_models.dart';
@@ -51,10 +50,9 @@ class LessonsMeScreen extends StatelessWidget {
           ]),
         ),
       ] else ...[
-        if (c.canSubmitOwn) _PreacherSummary(c: c),
-        if (c.canCoordinate)
+        if (c.canManage)
           TCard(
-            onTap: () => context.push('/lessons/console'),
+            onTap: () => context.push('/admin/lessons'),
             child: Row(children: [
               Container(width: 44, height: 44, alignment: Alignment.center, decoration: const BoxDecoration(color: TC.tagBg, shape: BoxShape.circle),
                   child: const TIcon(TGlyph.inbox, size: 20, color: TC.goldIcon)),
@@ -63,12 +61,12 @@ class LessonsMeScreen extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('lessons.me.console'.tr(), style: tStrong(15)),
                   Text('lessons.me.console_body'.tr(args: [
-                    tPlural('requests', c.pendingRequests.length),
-                    tPlural('reports', c.staff.flags.where((f) => f.status == 'open').length),
+                    tPlural('requests', c.pendingRequests.length + c.pendingEdits.length),
+                    tPlural('reports', c.openFlags.length),
                   ]), style: tBody(13, color: TC.muted)),
                 ]),
               ),
-              TButton('lessons.me.open'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/lessons/console')),
+              TButton('lessons.me.open'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/admin/lessons')),
             ]),
           ),
         TCard(
@@ -78,7 +76,6 @@ class LessonsMeScreen extends StatelessWidget {
             _MenuRow(TGlyph.users, 'lessons.me.following'.tr(), count: c.mine.follows.length, onTap: () => context.push('/lessons/me/saved?tab=preachers')),
             _MenuRow(TGlyph.book, 'lessons.me.log'.tr(), count: c.mine.attended.length, onTap: () => context.push('/lessons/me/saved?tab=log')),
             _MenuRow(TGlyph.inbox, 'lessons.me.notifications'.tr(), count: c.mine.unread, onTap: () => context.push('/lessons/me/notifications')),
-            _MenuRow(TGlyph.key, 'lessons.me.permissions'.tr(), onTap: () => context.push('/lessons/permissions')),
           ]),
         ),
         const _PrefsCard(),
@@ -112,34 +109,6 @@ class _MenuRow extends StatelessWidget {
           ]),
         ),
       );
-}
-
-class _PreacherSummary extends StatelessWidget {
-  const _PreacherSummary({required this.c});
-  final LessonsController c;
-  @override
-  Widget build(BuildContext context) {
-    final reqs = c.myRequests();
-    final up = c.myLessons(upcomingOnly: true).where((l) => l.isPublic).length;
-    final due = c.myLessons(upcomingOnly: false).where((l) => !c.staff.reports.containsKey(l.id)).length;
-    return TCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          Expanded(child: Text('lessons.me.my_lessons'.tr(), style: tStrong(17))),
-          TButton('lessons.discover.submit'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.plus, onPressed: () => context.push('/lessons/submit')),
-        ]),
-        const SizedBox(height: 12),
-        TStatTiles([
-          ('$up', 'lessons.me.t_approved'.tr()),
-          ('${reqs.where((r) => r.status == 'pending').length}', 'lessons.me.t_review'.tr()),
-          ('${reqs.where((r) => r.status == 'rejected').length}', 'lessons.me.t_changes'.tr()),
-          ('$due', 'lessons.me.t_reports'.tr()),
-        ]),
-        const SizedBox(height: 12),
-        TButton('lessons.me.manage'.tr(), expand: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/lessons/me/lessons')),
-      ]),
-    );
-  }
 }
 
 class _PrefsCard extends StatelessWidget {
@@ -345,260 +314,4 @@ class _LessonsSavedScreenState extends State<LessonsSavedScreen> {
       ],
     ]);
   }
-}
-
-// ------------------------------------------------------------ permissions
-class LessonsPermissionsScreen extends StatelessWidget {
-  const LessonsPermissionsScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final c = context.watch<LessonsController>();
-    return LessonsPage(title: 'lessons.nav.permissions'.tr(), children: [
-      TPageHead(eyebrow: 'lessons.perm.eyebrow'.tr(), title: 'lessons.perm.title'.tr(), subtitle: 'lessons.perm.body'.tr()),
-      TGrid(minWidth: 320, children: [
-        TCard(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const TTag('activities.coordinate', icon: TGlyph.key),
-            const SizedBox(height: 8),
-            Text('lessons.perm.coord'.tr(), style: tStrong(15)),
-            Text('lessons.perm.coord_body'.tr(), style: tBody(13, color: TC.muted)),
-          ]),
-        ),
-        TCard(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const TTag('activities.submit', icon: TGlyph.key),
-            const SizedBox(height: 8),
-            Text('lessons.perm.submit'.tr(), style: tStrong(15)),
-            Text('lessons.perm.submit_body'.tr(), style: tBody(13, color: TC.muted)),
-          ]),
-        ),
-      ]),
-      PermissionMatrix(highlight: c.roles.master
-          ? 5
-          : c.roles.lead.isNotEmpty
-              ? 4
-              : c.canCoordinate
-                  ? 3
-                  : c.canSubmitOwn
-                      ? 2
-                      : c.signedIn
-                          ? 1
-                          : 0),
-      Text('lessons.perm.highlight'.tr(), style: tBody(13, color: TC.muted)),
-    ]);
-  }
-}
-
-/// Who may do what: the table from the reviewed design.
-class PermissionMatrix extends StatelessWidget {
-  const PermissionMatrix({super.key, required this.highlight});
-  final int highlight;
-  static const _rows = [
-    ['✓', '✓', '✓', '✓', '✓', '✓'],
-    ['in', '✓', '✓', '✓', '✓', '✓'],
-    ['—', '—', 'own', 'org', 'org', 'all'],
-    ['—', '—', 'self', 'org', 'org', 'all'],
-    ['—', '—', 'own', 'org', 'org', 'all'],
-    ['—', '—', '—', 'org', 'org', 'all'],
-    ['—', '—', '—', 'org', 'org', 'all'],
-    ['—', '—', 'suggest', '✓', '✓', '✓'],
-    ['—', '—', 'own', 'org', 'org', 'all'],
-    ['—', '—', '—', '—', 'org', 'all'],
-    ['—', '—', '—', '—', '—', '✓'],
-  ];
-  @override
-  Widget build(BuildContext context) {
-    const cols = ['guest', 'viewer', 'preacher', 'coordinator', 'owner', 'admin'];
-    Widget cell(String v) => switch (v) {
-          '✓' => const TIcon(TGlyph.check, size: 15, color: TC.successFg, stroke: 2.6),
-          '—' => Text('—', style: tBody(13, color: TC.faint)),
-          _ => Text('lessons.perm.v_$v'.tr(), style: tBody(12, color: TC.bronze, weight: FontWeight.w600)),
-        };
-    return TCard(
-      padding: EdgeInsets.zero,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: const WidgetStatePropertyAll(TC.tint),
-          columnSpacing: 18,
-          columns: [
-            DataColumn(label: Text('lessons.perm.action'.tr(), style: tStrong(13))),
-            for (var i = 0; i < cols.length; i++)
-              DataColumn(label: Text('lessons.perm.c_${cols[i]}'.tr(), style: tStrong(13, color: i == highlight ? TC.bronze : TC.ink))),
-          ],
-          rows: [
-            for (var r = 0; r < _rows.length; r++)
-              DataRow(cells: [
-                DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 260), child: Text('lessons.perm.r${r + 1}'.tr(), style: tBody(13, color: TC.ink)))),
-                for (var i = 0; i < cols.length; i++)
-                  DataCell(Container(
-                    color: i == highlight ? TC.tint : null,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                    child: cell(_rows[r][i]),
-                  )),
-              ]),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ------------------------------------------------------------------ claim
-/// A preacher opens the coordinator's invitation link.
-class LessonsClaimScreen extends StatefulWidget {
-  const LessonsClaimScreen({super.key, required this.token});
-  final String token;
-  @override
-  State<LessonsClaimScreen> createState() => _LessonsClaimScreenState();
-}
-
-class _LessonsClaimScreenState extends State<LessonsClaimScreen> {
-  late final Future<LessonsInviteInfo?> info = context.read<LessonsController>().inviteInfo(widget.token).catchError((_) => null);
-  Set<String>? langs;
-  bool agree = false, done = false, busy = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.watch<LessonsController>();
-    final lang = context.lang;
-    return LessonsPage(title: 'lessons.nav.claim'.tr(), narrow: true, children: [
-      FutureBuilder<LessonsInviteInfo?>(
-        future: info,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator(color: TC.gold));
-          final i = snap.data;
-          if (done) {
-            return TCard(
-              child: TEmpty(
-                ok: true,
-                icon: TGlyph.check,
-                title: 'lessons.claim.done'.tr(),
-                body: 'lessons.claim.done_body'.tr(args: [i?.organization(lang) ?? '']),
-                action: TButton('lessons.claim.first'.tr(), kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => context.go('/lessons/submit')),
-              ),
-            );
-          }
-          if (i == null) {
-            return TCard(child: TEmpty(icon: TGlyph.lock, title: 'lessons.claim.invalid'.tr(), body: 'lessons.claim.invalid_body'.tr()));
-          }
-          langs ??= {...i.languages};
-          final step = !c.signedIn ? 1 : 2;
-          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            _Stepper(step: step),
-            const SizedBox(height: 16),
-            TCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Center(child: AppLogo(size: 64)),
-                const SizedBox(height: 10),
-                Center(child: TEyebrow('lessons.claim.from'.tr(args: [i.organization(lang)]))),
-                const SizedBox(height: 6),
-                Text('lessons.claim.welcome'.tr(args: [i.name(lang)]), textAlign: TextAlign.center, style: tDisplay(24)),
-                const SizedBox(height: 8),
-                Text('lessons.claim.body'.tr(), textAlign: TextAlign.center, style: tBody(15, color: TC.muted)),
-                const SizedBox(height: 12),
-                TCallout(tone: TTone.info, icon: TGlyph.lock, child: Text('lessons.claim.no_password'.tr())),
-                const SizedBox(height: 16),
-                if (!c.signedIn)
-                  TButton('lessons.claim.sign_in'.tr(), kind: TBtn.minted, large: true, expand: true, icon: TGlyph.user,
-                      onPressed: () => openSignIn(context, returnTo: '/lessons/claim/${widget.token}'))
-                else ...[
-                  Text('lessons.claim.confirm'.tr(), style: tStrong(16)),
-                  const SizedBox(height: 8),
-                  _ClaimKv([
-                    ('lessons.claim.name'.tr(), i.name(lang)),
-                    ('lessons.claim.city'.tr(), cityLabel(i.city)),
-                    ('lessons.claim.affiliation'.tr(), 'lessons.affiliation.${i.affiliation}'.tr()),
-                  ]),
-                  const SizedBox(height: 10),
-                  Text('lessons.claim.languages'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
-                  const SizedBox(height: 6),
-                  TChips([
-                    for (final x in LessonsVocab.languages)
-                      TChip(LessonsVocab.languageNative[x]!, small: true, selected: langs!.contains(x),
-                          onTap: () => setState(() => langs!.contains(x) && langs!.length > 1 ? langs!.remove(x) : langs!.add(x))),
-                  ]),
-                  TToggleRow(label: 'lessons.claim.agree'.tr(), icon: TGlyph.file, value: agree, onChanged: (v) => setState(() => agree = v)),
-                  const SizedBox(height: 8),
-                  TButton('lessons.claim.link'.tr(), kind: TBtn.minted, large: true, expand: true, onPressed: !agree || busy
-                      ? null
-                      : () async {
-                          setState(() => busy = true);
-                          final r = await tRun(context, () => c.claimInvite(widget.token, langs!.toList()));
-                          if (mounted) {
-                            setState(() {
-                              busy = false;
-                              done = r != null;
-                            });
-                          }
-                        }),
-                ],
-              ]),
-            ),
-          ]);
-        },
-      ),
-    ]);
-  }
-}
-
-class _ClaimKv extends StatelessWidget {
-  const _ClaimKv(this.rows);
-  final List<(String, String)> rows;
-  @override
-  Widget build(BuildContext context) => Column(children: [
-        for (final (k, v) in rows)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(children: [
-              SizedBox(width: 110, child: Text(k, style: tBody(14, color: TC.muted))),
-              Expanded(child: Text(v, style: tBody(14, color: TC.ink, weight: FontWeight.w600))),
-            ]),
-          ),
-      ]);
-}
-
-class _Stepper extends StatelessWidget {
-  const _Stepper({required this.step});
-  final int step;
-  @override
-  Widget build(BuildContext context) {
-    final labels = ['lessons.claim.s_invite'.tr(), 'lessons.claim.s_sign_in'.tr(), 'lessons.claim.s_profile'.tr(), 'lessons.claim.s_done'.tr()];
-    return TStepper(labels: labels, current: step);
-  }
-}
-
-/// Numbered steps; finished ones show a tick.
-class TStepper extends StatelessWidget {
-  const TStepper({super.key, required this.labels, required this.current, this.onTap});
-  final List<String> labels;
-  final int current;
-  final ValueChanged<int>? onTap;
-  @override
-  Widget build(BuildContext context) => Row(children: [
-        for (var i = 0; i < labels.length; i++)
-          Expanded(
-            child: InkWell(
-              onTap: onTap == null || i >= current ? null : () => onTap!(i),
-              child: Column(children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: i == current ? HidayahGradients.minted : (i < current ? HidayahGradients.selected : null),
-                    color: i > current ? TC.tint : null,
-                  ),
-                  child: i < current
-                      ? const TIcon(TGlyph.check, size: 14, color: HidayahGold.g200, stroke: 2.6)
-                      : Text('${i + 1}', style: tStrong(13, color: TC.ink)),
-                ),
-                const SizedBox(height: 4),
-                Text(labels[i], textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: tBody(12, color: i == current ? TC.ink : TC.muted, weight: FontWeight.w600, height: 1.3)),
-              ]),
-            ),
-          ),
-      ]);
 }

@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TermsAndConditionsModel termsAndConditions,
           NotificationPreferencesModel notificationPreferences,
           bool isPermittedAdmin,
-          bool isAdminUser,
+          bool isLessonsAdmin,
           bool isApprovedStreamer,
           BroadcasterApplicationModel? myApplication,
         })>((p) => (
@@ -119,7 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           termsAndConditions: p.termsAndConditions,
           notificationPreferences: p.notificationPreferences,
           isPermittedAdmin: p.isPermittedAdmin,
-          isAdminUser: p.isAdminUser,
+          isLessonsAdmin: p.isLessonsAdmin,
           // Approval and revocation must re-render this page immediately.
           isApprovedStreamer: p.isApprovedStreamer,
           myApplication: p.myApplication,
@@ -279,8 +279,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: AppTheme.spaceLg),
           ],
 
-          // Section 4.6 (Admin/Master Admin Only): Admin Hub Shortcut
-          if (appProvider.isAdminUser) ...[
+          // Section 4.6 (admins, including lessons-only admins): Admin Hub Shortcut
+          if (appProvider.isLessonsAdmin) ...[
             _buildAdminHubShortcutCard(context),
             const SizedBox(height: AppTheme.spaceLg),
           ],

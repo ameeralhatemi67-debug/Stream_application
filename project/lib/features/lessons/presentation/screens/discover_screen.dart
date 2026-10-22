@@ -96,24 +96,17 @@ class LessonsDiscoverScreen extends StatelessWidget {
       ),
     );
 
-    final roleBand = c.canSubmitOwn
+    final roleBand = c.canManage
         ? _RoleBand(
-            glyph: TGlyph.book,
-            title: 'lessons.discover.welcome'.tr(args: [c.preacher(c.ownPreacherId ?? '')?.name(lang) ?? '']),
-            body: 'lessons.discover.preacher_band'.tr(),
+            glyph: TGlyph.inbox,
+            title: 'lessons.admin.title'.tr(),
+            body: '${tPlural('requests', c.pendingRequests.length + c.pendingEdits.length)} ${'lessons.discover.waiting'.tr()}',
             actions: [
-              TButton('lessons.discover.submit'.tr(), kind: TBtn.minted, small: true, icon: TGlyph.plus, onPressed: () => context.push('/lessons/submit')),
-              TButton('lessons.nav.my_lessons'.tr(), small: true, onPressed: () => context.push('/lessons/me/lessons')),
+              TButton('lessons.discover.open_review'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd,
+                  onPressed: () => context.push('/admin/lessons/approvals')),
+              TButton('lessons.admin.add_lesson'.tr(), small: true, icon: TGlyph.plus, onPressed: () => context.push('/admin/lessons/add')),
             ])
-        : c.canCoordinate
-            ? _RoleBand(
-                glyph: TGlyph.inbox,
-                title: 'lessons.nav.console'.tr(),
-                body: '${tPlural('requests', c.pendingRequests.length)} ${'lessons.discover.waiting'.tr()}',
-                actions: [
-                  TButton('lessons.discover.open_review'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/lessons/console/review')),
-                ])
-            : null;
+        : null;
 
     final topics = Wrap(spacing: 8, runSpacing: 8, children: [
       TChip('lessons.discover.all_subjects'.tr(), selected: true, small: true, onTap: () => context.go('/lessons/calendar')),

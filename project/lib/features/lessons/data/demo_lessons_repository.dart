@@ -5,8 +5,32 @@ import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
 import 'lessons_repository.dart';
 
-/// Who the sample data is being viewed as.
-enum LessonsDemoPersona { guest, viewer, preacher, coordinator, owner, admin }
+/// Who the sample data is being viewed as. admin covers every admin who
+/// manages lessons (admins, master admins and lessons-only admins).
+enum LessonsDemoPersona { guest, viewer, admin }
+
+/// A sample preacher link (the real server keeps only hashes of the key
+/// and of the phone it is bound to).
+class DemoPreacherLink {
+  DemoPreacherLink({
+    required this.id,
+    required this.preacherId,
+    required this.kind,
+    this.validFrom,
+    this.validUntil,
+    this.note = '',
+    required this.createdAt,
+  });
+  final String id, preacherId, kind, note;
+  final DateTime? validFrom, validUntil;
+  final DateTime createdAt;
+  String? device;
+  DateTime? openedAt, lastUsedAt, revokedAt;
+
+  PreacherKey get view => PreacherKey(
+      id: id, kind: kind, validFrom: validFrom, validUntil: validUntil, openedAt: openedAt, lastUsedAt: lastUsedAt,
+      revokedAt: revokedAt, note: note, createdAt: createdAt, bound: device != null);
+}
 
 /// Sample data for builds without a backend and for widget tests. Names of
 /// people are invented; neighbourhoods are real. The permission rules mirror
@@ -22,9 +46,11 @@ class DemoLessonsRepository implements LessonsRepository {
   int _seq = 1000;
   String _id(String p) => '$p-${++_seq}';
 
-  static const org = 'demo-org-hidayah';
-  static const org2 = 'demo-org-dammam';
-  static const ownPreacher = 'p1';
+  /// The sample one-time link of Sheikh Fahd (p1): `/preacher/demo-fahd`.
+  static const fahdLink = 'demo-fahd';
+
+  /// A timed link of Sheikh Muhammad Iqbal (p4), open this week.
+  static const iqbalLink = 'demo-iqbal';
 
   @override
   bool get isDemo => true;
@@ -33,12 +59,7 @@ class DemoLessonsRepository implements LessonsRepository {
   String? get currentUserId =>
       persona == LessonsDemoPersona.guest ? null : 'demo-${persona.name}';
 
-  bool get _coord => switch (persona) {
-        LessonsDemoPersona.owner || LessonsDemoPersona.admin => true,
-        LessonsDemoPersona.coordinator => (coordinatorGrants['demo-coordinator'] ?? const {}).isNotEmpty,
-        _ => false,
-      };
-  bool get _leader => persona == LessonsDemoPersona.owner || persona == LessonsDemoPersona.admin;
+  bool get _admin => persona == LessonsDemoPersona.admin;
 
   void _need(bool ok) {
     if (!ok) throw const LessonsException(LessonsFailure.forbidden);
@@ -48,7 +69,6 @@ class DemoLessonsRepository implements LessonsRepository {
 
   // ---------------------------------------------------------------- state
   final districts = <String, District>{};
-  final organizations = <String, LessonsOrganization>{};
   final mosques = <String, Mosque>{};
   final preachers = <String, Preacher>{};
   final series = <String, LessonSeries>{};
@@ -57,22 +77,15 @@ class DemoLessonsRepository implements LessonsRepository {
   final flags = <LessonsFlag>[];
   final audit = <LessonsAuditEntry>[];
   final phones = <String, String>{};
-  final invites = <String, String>{}; // token -> preacher
-  final submitPermission = <String>{}; // preacher ids whose linked account may submit
-  /// activities.coordinate grants: who coordinates which organizations.
-  final coordinatorGrants = <String, Set<String>>{
-    'demo-coordinator': {org}
-  };
-  final team = <LessonsTeamMember>[];
+  final edits = <PreacherEdit>[];
+  /// Preacher links by their key.
+  final links = <String, DemoPreacherLink>{};
 
   /// Accounts an admin can find (invented people, example.invalid emails).
   static const accounts = [
-    LessonsAccount(id: 'demo-owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani', email: 'saad@example.invalid'),
-    LessonsAccount(id: 'demo-coordinator', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari', email: 'khalid@example.invalid'),
-    LessonsAccount(id: 'demo-member-u3', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari', email: 'badr@example.invalid'),
-    LessonsAccount(id: 'demo-member-u4', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi', email: 'majed@example.invalid'),
+    LessonsAccount(id: 'demo-account-fahd', nameAr: 'فهد العتيبي', nameEn: 'Fahd Al-Otaibi', email: 'fahd@example.invalid'),
+    LessonsAccount(id: 'demo-account-badr', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari', email: 'badr@example.invalid'),
     LessonsAccount(id: 'demo-viewer', nameAr: 'عبدالله السالم', nameEn: 'Abdullah Al-Salem', email: 'abdullah@example.invalid'),
-    LessonsAccount(id: 'demo-account-reem', nameAr: 'ريم العنزي', nameEn: 'Reem Al-Anazi', email: 'reem@example.invalid'),
   ];
   final _mine = <String, LessonsMine>{};
 
@@ -90,23 +103,18 @@ class DemoLessonsRepository implements LessonsRepository {
     ]);
   }
 
-  void _notifyCoordinators(String icon, String titleAr, String titleEn, String bodyAr, String bodyEn, String route) {
-    for (final c in {'demo-coordinator', 'demo-owner'}) {
-      _notify(c, icon, titleAr, titleEn, bodyAr, bodyEn, route);
-    }
-  }
+  void _notifyAdmins(String icon, String titleAr, String titleEn, String bodyAr, String bodyEn, String route) =>
+      _notify('demo-admin', icon, titleAr, titleEn, bodyAr, bodyEn, route);
 
-  void _log(String action, String ar, String en, {String? organizationId = org}) => audit.insert(
+  void _log(String action, String ar, String en, {String? preacherId, bool byLink = false}) => audit.insert(
       0,
       LessonsAuditEntry(
-          id: _id('a'), organizationId: organizationId, actorId: currentUserId,
-          actorName: _personaName(persona), action: action, targetAr: ar, targetEn: en, createdAt: DateTime.now()));
+          id: _id('a'), actorId: byLink ? null : currentUserId, preacherId: preacherId,
+          actorName: byLink ? '' : _personaName(persona), action: action, targetAr: ar, targetEn: en,
+          createdAt: DateTime.now()));
 
   static String _personaName(LessonsDemoPersona p) => switch (p) {
-        LessonsDemoPersona.coordinator => 'Khalid Al-Dosari',
-        LessonsDemoPersona.owner => 'Eng. Saad Al-Qahtani',
-        LessonsDemoPersona.admin => 'Master admin',
-        LessonsDemoPersona.preacher => 'Sheikh Fahd Al-Otaibi',
+        LessonsDemoPersona.admin => 'Khalid Al-Dosari',
         LessonsDemoPersona.viewer => 'Abdullah Al-Salem',
         LessonsDemoPersona.guest => '',
       };
@@ -129,15 +137,9 @@ class DemoLessonsRepository implements LessonsRepository {
     district('rayyan', 'dammam', 'الريان', 'Al-Rayyan', 40);
     district('qatif_central', 'qatif', 'وسط القطيف', 'Central Qatif', 10);
 
-    organizations[org] = const LessonsOrganization(
-        id: org, nameAr: 'جمعية هداية للدعوة والإرشاد وتوعية الجاليات', nameEn: 'Hidayah Society', verified: true);
-    organizations[org2] = const LessonsOrganization(
-        id: org2, nameAr: 'مركز الدعوة بالدمام (مثال)', nameEn: 'Dammam Dawah Centre (sample)', enabled: false);
-
     void mosque(String id, String ar, String en, String d, double lat, double lng, List<String> fac, {bool verified = true}) =>
         mosques[id] = Mosque(
-            id: id, nameAr: ar, nameEn: en, districtId: d, latitude: lat, longitude: lng, facilities: fac, verified: verified,
-            suggestedBy: verified ? null : 'demo-preacher-p8');
+            id: id, nameAr: ar, nameEn: en, districtId: d, latitude: lat, longitude: lng, facilities: fac, verified: verified);
     mosque('m1', 'جامع الهدى', 'Al-Huda Grand Mosque', 'aqrabiyah', 26.292, 50.198, ['women', 'parking', 'access', 'kids']);
     mosque('m2', 'مسجد الفرقان', 'Al-Furqan Mosque', 'thuqbah', 26.270, 50.184, ['women', 'interp']);
     mosque('m3', 'جامع الإحسان', 'Al-Ihsan Grand Mosque', 'khobar_north', 26.305, 50.207, ['women', 'parking', 'access', 'interp']);
@@ -150,17 +152,15 @@ class DemoLessonsRepository implements LessonsRepository {
     mosque('m10', 'مسجد التقوى', 'Al-Taqwa Mosque', 'rayyan', 26.392, 50.132, ['parking', 'interp']);
     mosque('m11', 'جامع المغفرة', 'Al-Maghfirah Grand Mosque', 'yarmouk', 26.255, 50.196, ['women', 'parking']);
     mosque('m12', 'مسجد الأنصار', 'Al-Ansar Mosque', 'qatif_central', 26.565, 50.005, ['women']);
+    // Hidden from the public until an admin checks its pin.
     mosque('m13', 'مسجد الإيمان', 'Al-Iman Mosque', 'golden_belt', 26.262, 50.172, ['parking'], verified: false);
 
     void preacher(String id, String ar, String en, String tAr, String tEn, String city, String aff, List<String> langs,
-        {String account = 'linked', String bioAr = '', String bioEn = ''}) {
+        {String bioAr = '', String bioEn = ''}) {
       preachers[id] = Preacher(
-          id: id, organizationId: org, nameAr: ar, nameEn: en, titleAr: tAr, titleEn: tEn, city: city,
-          affiliation: aff, languages: langs, bioAr: bioAr, bioEn: bioEn,
-          linkedProfileId: account == 'linked' ? (id == ownPreacher ? 'demo-preacher' : 'demo-preacher-$id') : null);
+          id: id, nameAr: ar, nameEn: en, titleAr: tAr, titleEn: tEn, city: city,
+          affiliation: aff, languages: langs, bioAr: bioAr, bioEn: bioEn);
       phones[id] = '05000001${id.substring(1).padLeft(2, '0')}';
-      if (account == 'linked') submitPermission.add(id);
-      if (account == 'invited') invites['invite-$id'] = id;
     }
 
     preacher('p1', 'الشيخ فهد بن سالم العتيبي', 'Sheikh Fahd Al-Otaibi', 'داعية ومدرّس شرعي', 'Preacher and Sharia teacher', 'khobar', 'coop', ['ar'],
@@ -169,12 +169,12 @@ class DemoLessonsRepository implements LessonsRepository {
     preacher('p2', 'د. عبدالله بن محمد الشهري', 'Dr. Abdullah Al-Shehri', 'أستاذ الفقه المشارك', 'Associate professor of Fiqh', 'dammam', 'ministry', ['ar']);
     preacher('p3', 'الشيخ ياسر بن علي القرني', 'Sheikh Yasser Al-Qarni', 'مدرّس القرآن وعلومه', 'Teacher of the Quran and its sciences', 'dhahran', 'coop', ['ar', 'en']);
     preacher('p4', 'الشيخ محمد إقبال الندوي', 'Sheikh Muhammad Iqbal Nadwi', 'داعية الجالية الناطقة بالأردية', 'Preacher to the Urdu-speaking community', 'khobar', 'coop', ['ur', 'en', 'ar']);
-    preacher('p5', 'الشيخ عمر بن خالد الحربي', 'Sheikh Omar Al-Harbi', 'إمام وخطيب', 'Imam and khateeb', 'dammam', 'coop', ['ar'], account: 'invited');
+    preacher('p5', 'الشيخ عمر بن خالد الحربي', 'Sheikh Omar Al-Harbi', 'إمام وخطيب', 'Imam and khateeb', 'dammam', 'coop', ['ar']);
     preacher('p6', 'الشيخ عبدالكريم سانتوس', 'Sheikh Abdulkareem Santos', 'داعية الجالية الفلبينية', 'Preacher to the Filipino community', 'khobar', 'coop', ['tl', 'en']);
-    preacher('p7', 'د. سلمان بن إبراهيم الزهراني', 'Dr. Salman Al-Zahrani', 'داعية في فرع الوزارة', 'Ministry branch preacher', 'khobar', 'ministry', ['ar'], account: 'none');
-    preacher('p8', 'الشيخ نايف بن سعد الدوسري', 'Sheikh Naif Al-Dosari', 'إمام جامع', 'Mosque imam', 'khobar', 'coop', ['ar'], account: 'invited');
+    preacher('p7', 'د. سلمان بن إبراهيم الزهراني', 'Dr. Salman Al-Zahrani', 'داعية في فرع الوزارة', 'Ministry branch preacher', 'khobar', 'ministry', ['ar']);
+    preacher('p8', 'الشيخ نايف بن سعد الدوسري', 'Sheikh Naif Al-Dosari', 'إمام جامع', 'Mosque imam', 'khobar', 'coop', ['ar']);
     preacher('p9', 'أ. نورة بنت عبدالله السبيعي', 'Ustadha Noura Al-Subaie', 'داعية ومدرّسة (دروس النساء)', "Preacher and teacher (women's lessons)", 'khobar', 'coop', ['ar']);
-    preacher('p10', 'الشيخ حسن الرحمن', 'Sheikh Hasan Rahman', 'داعية الجالية البنغالية', 'Preacher to the Bengali community', 'dammam', 'coop', ['bn', 'ar'], account: 'none');
+    preacher('p10', 'الشيخ حسن الرحمن', 'Sheikh Hasan Rahman', 'داعية الجالية البنغالية', 'Preacher to the Bengali community', 'dammam', 'coop', ['bn', 'ar']);
     preacher('p11', 'الشيخ منصور بن علي الخالدي', 'Sheikh Mansour Al-Khalidi', 'داعية في فرع الوزارة', 'Ministry branch preacher', 'qatif', 'ministry', ['ar']);
 
     const desc = {
@@ -191,13 +191,15 @@ class DemoLessonsRepository implements LessonsRepository {
       required String ar,
       required String en,
       required String preacher,
-      required String mosque,
+      String mosque = '',
       required DateTime date,
       required String slot,
       String? seriesId,
       int? seq,
       String? requestId,
       String status = 'approved',
+      String source = 'admin',
+      String note = '',
       String language = 'ar',
       String audience = 'all',
       String? interp,
@@ -207,14 +209,14 @@ class DemoLessonsRepository implements LessonsRepository {
     }) {
       final id = _id('l');
       final l = Lesson(
-          id: id, organizationId: org, requestId: requestId ?? 'r-$id', seriesId: seriesId, seq: seq,
+          id: id, requestId: requestId ?? 'r-$id', seriesId: seriesId, seq: seq,
           type: type, topic: topic, titleAr: ar, titleEn: en,
-          descriptionAr: desc[type]!.$1, descriptionEn: desc[type]!.$2, preacherId: preacher, mosqueId: mosque,
-          date: date, slot: slot, language: language, interpretation: interp, audience: audience,
-          womenSection: audience == 'women' || mosques[mosque]!.facilities.contains('women'), streamed: streamed,
-          status: status, rejectionReason: reason, submittedBy: 'demo-preacher',
-          submittedAt: DateTime.now().subtract(submittedAgo),
-          reviewedBy: status == 'approved' ? 'demo-coordinator' : null);
+          descriptionAr: source == 'admin' ? desc[type]!.$1 : '', descriptionEn: source == 'admin' ? desc[type]!.$2 : '',
+          preacherId: preacher, mosqueId: mosque, date: date, slot: slot, language: language, interpretation: interp,
+          audience: audience, womenSection: audience == 'women' || (mosques[mosque]?.facilities.contains('women') ?? false),
+          streamed: streamed, status: status, source: source, preacherNote: note, rejectionReason: reason,
+          submittedBy: source == 'admin' ? 'demo-admin' : null, submittedAt: DateTime.now().subtract(submittedAgo),
+          reviewedBy: status == 'approved' || status == 'rejected' ? 'demo-admin' : null);
       lessons[id] = l;
       return l;
     }
@@ -232,7 +234,7 @@ class DemoLessonsRepository implements LessonsRepository {
     for (final s in seriesSeed) {
       final reqId = 'rs-${s.$1}';
       series[s.$1] = LessonSeries(
-          id: s.$1, organizationId: org, requestId: reqId, preacherId: s.$4, mosqueId: s.$5, titleAr: s.$2, titleEn: s.$3,
+          id: s.$1, requestId: reqId, preacherId: s.$4, mosqueId: s.$5, titleAr: s.$2, titleEn: s.$3,
           type: 'lesson', topic: s.$10, language: s.$11, audience: s.$12, slot: s.$7, total: s.$8, status: 'approved');
       var first = _today;
       while (first.weekday != s.$6) {
@@ -276,51 +278,63 @@ class DemoLessonsRepository implements LessonsRepository {
     one(-5, 'maghrib', 'lecture', 'aqeedah', 'محبة النبي ﷺ', 'Love of the Prophet ﷺ', 'p3', 'm5', report: true);
     one(-9, 'isha', 'lecture', 'intro', 'من هو محمد ﷺ؟ (بالإنجليزية)', 'Who is Muhammad ﷺ? (in English)', 'p6', 'm3', language: 'en', report: true);
 
-    // Pending requests for the coordinator queue.
-    lesson(type: 'lecture', topic: 'raqaiq', ar: 'الأمانة في العمل', en: 'Integrity at work', preacher: 'p1', mosque: 'm3',
-        date: addDays(_today, 3), slot: 'isha', status: 'pending', submittedAgo: const Duration(hours: 5));
-    final clashDate = lessons.values
-        .firstWhere((l) => l.seriesId == 's1' && !l.date.isBefore(_today), orElse: () => lessons.values.first)
-        .date;
-    lesson(type: 'talk', topic: 'raqaiq', ar: 'فضل الذكر', en: 'The virtue of remembrance', preacher: 'p5', mosque: 'm1',
-        date: clashDate, slot: 'isha', status: 'pending', submittedAgo: const Duration(hours: 9));
-    lesson(type: 'lecture', topic: 'intro', ar: 'مدخل إلى الإسلام (بالإنجليزية والتغالوغ)', en: 'Introduction to Islam (English and Tagalog)',
-        preacher: 'p6', mosque: 'm3', date: addDays(_today, 2), slot: 'asr', status: 'pending', language: 'tl', interp: 'en',
-        submittedAgo: const Duration(hours: 20));
-    lesson(type: 'talk', topic: 'fiqh', ar: 'أحكام الوضوء', en: 'The rulings of wudu', preacher: 'p8', mosque: 'm13',
-        date: addDays(_today, 5), slot: 'maghrib', status: 'pending', submittedAgo: const Duration(hours: 26));
-    // A pending weekly series of eight sessions, one request.
+    // Requests preachers sent through their links: no mosque yet, the
+    // approving admin chooses it.
+    lesson(type: 'lecture', topic: 'raqaiq', ar: 'الأمانة في العمل', en: '', preacher: 'p1',
+        date: addDays(_today, 3), slot: 'isha', status: 'pending', source: 'preacher', note: 'في جامع الإحسان إن أمكن.',
+        submittedAgo: const Duration(hours: 5));
+    final s7next = lessons.values.firstWhere((l) => l.seriesId == 's7' && !l.date.isBefore(_today)).date;
+    lesson(type: 'talk', topic: 'raqaiq', ar: 'فضل الذكر', en: '', preacher: 'p5', date: s7next, slot: 'fajr',
+        status: 'pending', source: 'preacher', submittedAgo: const Duration(hours: 9));
+    lesson(type: 'lecture', topic: 'intro', ar: 'مدخل إلى الإسلام (بالتغالوغ)', en: '', preacher: 'p6',
+        date: addDays(_today, 2), slot: 'asr', status: 'pending', source: 'preacher', language: 'tl',
+        note: 'للجالية الفلبينية، يُفضّل مسجد فيه ترجمة.', submittedAgo: const Duration(hours: 20));
+    lesson(type: 'talk', topic: 'fiqh', ar: 'أحكام الوضوء', en: '', preacher: 'p8', date: addDays(_today, 5),
+        slot: 'maghrib', status: 'pending', source: 'preacher', submittedAgo: const Duration(hours: 26));
+    // A weekly series of eight sessions, one request.
     series['s8'] = const LessonSeries(
-        id: 's8', organizationId: org, requestId: 'rq-s8', preacherId: 'p4', mosqueId: 'm2', titleAr: 'السيرة للمبتدئين (بالأردية)',
-        titleEn: 'Seerah for beginners (in Urdu)', type: 'lesson', topic: 'seerah', language: 'ur', audience: 'all', slot: 'isha',
-        total: 8, status: 'pending');
+        id: 's8', requestId: 'rq-s8', preacherId: 'p4', titleAr: 'السيرة للمبتدئين (بالأردية)', type: 'lesson',
+        topic: 'seerah', language: 'ur', audience: 'all', slot: 'isha', total: 8, status: 'pending');
     var d8 = addDays(_today, 1);
     while (d8.weekday != DateTime.wednesday) {
       d8 = addDays(d8, 1);
     }
     for (var i = 0; i < 8; i++) {
-      lesson(type: 'lesson', topic: 'seerah', ar: 'السيرة للمبتدئين (بالأردية)', en: 'Seerah for beginners (in Urdu)', preacher: 'p4',
-          mosque: 'm2', date: addDays(d8, i * 7), slot: 'isha', seriesId: 's8', seq: i + 1, requestId: 'rq-s8', status: 'pending',
-          language: 'ur', submittedAgo: const Duration(hours: 2));
+      lesson(type: 'lesson', topic: 'seerah', ar: 'السيرة للمبتدئين (بالأردية)', en: '', preacher: 'p4',
+          date: addDays(d8, i * 7), slot: 'isha', seriesId: 's8', seq: i + 1, requestId: 'rq-s8', status: 'pending',
+          source: 'preacher', language: 'ur', note: 'في مسجد الفرقان كالعادة.', submittedAgo: const Duration(hours: 2));
     }
-    // One rejection the preacher can see and fix.
-    lesson(type: 'lecture', topic: 'family', ar: 'السعادة الزوجية', en: 'A happy marriage', preacher: 'p1', mosque: 'm1',
-        date: addDays(_today, 2), slot: 'isha', status: 'rejected', submittedAgo: const Duration(days: 3),
+    // One request an admin turned down, which the preacher sees on his link.
+    lesson(type: 'lecture', topic: 'family', ar: 'السعادة الزوجية', en: '', preacher: 'p1', date: addDays(_today, 2),
+        slot: 'isha', status: 'rejected', source: 'preacher', submittedAgo: const Duration(days: 3),
         reason: 'تتعارض مع محاضرة الجمعية الكبرى في الليلة نفسها. نقترح الخميس بعد العشاء.');
 
     final s2next = lessons.values.firstWhere((l) => l.seriesId == 's2' && !l.date.isBefore(_today));
     flags.add(LessonsFlag(
-        id: 'f1', lessonId: s2next.id, organizationId: org, kind: 'time',
-        message: 'إمام المسجد أعلن أن الدرس صار بعد العصر بدل المغرب.', reporterId: 'demo-viewer',
-        createdAt: DateTime.now().subtract(const Duration(hours: 7))));
+        id: 'f1', lessonId: s2next.id, kind: 'time', message: 'إمام المسجد أعلن أن الدرس صار بعد العصر بدل المغرب.',
+        reporterId: 'demo-viewer', createdAt: DateTime.now().subtract(const Duration(hours: 7))));
 
-    team.addAll(const [
-      LessonsTeamMember(profileId: 'demo-owner', role: 'owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani'),
-      LessonsTeamMember(profileId: 'demo-coordinator', role: 'manager', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari',
-          coordinator: true, grantedByAr: 'م. سعد القحطاني', grantedByEn: 'Eng. Saad Al-Qahtani'),
-      LessonsTeamMember(profileId: 'demo-member-u3', role: 'manager', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari'),
-      LessonsTeamMember(profileId: 'demo-member-u4', role: 'moderator', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi'),
-    ]);
+    // Sheikh Muhammad Iqbal proposed a fuller card through his link.
+    edits.add(PreacherEdit(
+        id: 'e1', preacherId: 'p4',
+        changes: const {
+          'title_ar': 'داعية الجالية الناطقة بالأردية ومدرّس الحديث',
+          'bio_ar': 'يلقي دروسه بالأردية في مساجد الخبر منذ عشر سنين، ويشرح الأربعين النووية كل جمعة.',
+          'languages': ['ur', 'en', 'ar'],
+        },
+        createdAt: DateTime.now().subtract(const Duration(hours: 3))));
+
+    // Links: Sheikh Fahd's one-time link not opened yet; Sheikh Iqbal's
+    // timed link open this week (he has opened it); an old revoked one.
+    links[fahdLink] = DemoPreacherLink(id: 'k1', preacherId: 'p1', kind: 'once', createdAt: DateTime.now().subtract(const Duration(days: 1)));
+    links[iqbalLink] = DemoPreacherLink(
+        id: 'k2', preacherId: 'p4', kind: 'window', validFrom: DateTime.now().subtract(const Duration(days: 2)),
+        validUntil: DateTime.now().add(const Duration(days: 5)), note: 'رمضان', createdAt: DateTime.now().subtract(const Duration(days: 2)))
+      ..openedAt = DateTime.now().subtract(const Duration(hours: 4))
+      ..lastUsedAt = DateTime.now().subtract(const Duration(hours: 3));
+    links['demo-old'] = DemoPreacherLink(id: 'k3', preacherId: 'p4', kind: 'once', createdAt: DateTime.now().subtract(const Duration(days: 40)))
+      ..device = 'old-phone'
+      ..revokedAt = DateTime.now().subtract(const Duration(days: 30));
 
     final s1next = lessons.values.firstWhere((l) => l.seriesId == 's1' && !l.date.isBefore(_today));
     _mine['demo-viewer'] = LessonsMine(
@@ -336,47 +350,32 @@ class DemoLessonsRepository implements LessonsRepository {
             route: '/lessons/preachers/p1', createdAt: DateTime.now().subtract(const Duration(hours: 5))),
       ],
     );
-    _mine['demo-preacher'] = LessonsMine(notifications: [
-      LessonsNotification(id: 'n4', icon: 'x', titleAr: 'لم يُعتمد طلبك: السعادة الزوجية', titleEn: 'Not approved: A happy marriage',
-          bodyAr: 'السبب: تتعارض مع محاضرة الجمعية الكبرى.', bodyEn: "Reason: it clashes with the Society's main lecture.",
-          route: '/lessons/me/lessons?tab=rejected', createdAt: DateTime.now().subtract(const Duration(days: 2))),
-    ]);
-    _mine['demo-coordinator'] = LessonsMine(notifications: [
-      LessonsNotification(id: 'n7', icon: 'inbox', titleAr: 'طلبات جديدة بانتظار المراجعة', titleEn: 'New requests to review',
+    _mine['demo-admin'] = LessonsMine(notifications: [
+      LessonsNotification(id: 'n7', icon: 'inbox', titleAr: 'طلبات جديدة من الدعاة', titleEn: 'New requests from preachers',
           bodyAr: 'منها سلسلة أسبوعية من ثماني جلسات بالأردية.', bodyEn: 'Including an eight-session weekly series in Urdu.',
-          route: '/lessons/console/review', createdAt: DateTime.now().subtract(const Duration(hours: 2))),
+          route: '/admin/lessons/approvals', createdAt: DateTime.now().subtract(const Duration(hours: 2))),
     ]);
     audit.addAll([
-      LessonsAuditEntry(id: 'a1', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'reject',
+      LessonsAuditEntry(id: 'a1', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', action: 'reject',
           targetAr: 'السعادة الزوجية — الشيخ فهد العتيبي', targetEn: 'A happy marriage, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 2))),
-      LessonsAuditEntry(id: 'a2', organizationId: org, actorId: 'demo-coordinator', actorName: 'Khalid Al-Dosari', action: 'approve',
+      LessonsAuditEntry(id: 'a2', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', action: 'add',
           targetAr: 'الشباب والهوية — الشيخ فهد العتيبي', targetEn: 'Youth and identity, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 4))),
     ]);
   }
 
   // ---------------------------------------------------------------- reads
-  bool _visible(Lesson l) =>
-      (organizations[l.organizationId]?.enabled ?? false) && (l.status == 'approved' || l.status == 'cancelled') ||
-      _coord ||
-      (persona == LessonsDemoPersona.preacher && l.preacherId == ownPreacher);
+  bool _visible(Lesson l) => l.status == 'approved' || l.status == 'cancelled' || _admin;
 
   @override
   Future<LessonsCatalog> loadCatalog() async => LessonsCatalog(
         districts: Map.of(districts),
-        organizations: {for (final o in organizations.values.where((o) => o.enabled)) o.id: o},
-        mosques: {
-          for (final m in mosques.values.where((m) => m.verified || _coord || m.suggestedBy == currentUserId)) m.id: m
-        },
+        mosques: {for (final m in mosques.values.where((m) => m.verified || _admin)) m.id: m},
         preachers: {
-          for (final p in preachers.values.where((p) => p.listed || _coord || p.linkedProfileId == currentUserId)) p.id: p
+          for (final p in preachers.values.where((p) => p.listed || _admin || p.linkedProfileId == currentUserId)) p.id: p
         },
-        series: {
-          for (final s in series.values.where((s) =>
-              s.status == 'approved' || _coord || (persona == LessonsDemoPersona.preacher && s.preacherId == ownPreacher)))
-            s.id: s
-        },
+        series: {for (final s in series.values.where((s) => s.status == 'approved' || _admin)) s.id: s},
         lessons: {for (final l in lessons.values.where(_visible)) l.id: l},
       );
 
@@ -384,31 +383,30 @@ class DemoLessonsRepository implements LessonsRepository {
   Future<LessonsRoles> loadRoles() async => switch (persona) {
         LessonsDemoPersona.guest => LessonsRoles.guest,
         LessonsDemoPersona.viewer => const LessonsRoles(signedIn: true),
-        LessonsDemoPersona.preacher => LessonsRoles(signedIn: true, preacherCards: [
-            (preacherId: ownPreacher, organizationId: org, canSubmit: submitPermission.contains(ownPreacher))
-          ]),
-        LessonsDemoPersona.coordinator => LessonsRoles(signedIn: true, coordinate: {
-            for (final o in coordinatorGrants['demo-coordinator'] ?? const <String>{})
-              if (organizations[o]?.enabled ?? false) o
-          }),
-        LessonsDemoPersona.owner => const LessonsRoles(signedIn: true, coordinate: {org}, lead: {org}),
-        LessonsDemoPersona.admin => const LessonsRoles(signedIn: true, admin: true, master: true, coordinate: {org}),
+        LessonsDemoPersona.admin => const LessonsRoles(signedIn: true, admin: true),
       };
 
   @override
   Future<LessonsMine> loadMine() async => currentUserId == null ? const LessonsMine() : _me();
 
   @override
-  Future<LessonsStaffData> loadStaff(String organizationId) async {
-    _need(_coord);
-    return LessonsStaffData(
+  Future<LessonsAdminData> loadAdmin() async {
+    _need(_admin);
+    final now = DateTime.now();
+    return LessonsAdminData(
       roster: [
-        for (final p in preachers.values.where((p) => p.organizationId == organizationId))
+        for (final p in preachers.values.toList()..sort((a, b) => a.nameAr.compareTo(b.nameAr)))
           LessonsRosterEntry(
               preacher: p,
               phoneMask: phones[p.id] == null ? null : maskPhone(phones[p.id]),
-              account: p.linkedProfileId != null ? 'linked' : invites.containsValue(p.id) ? 'invited' : 'none',
-              canSubmit: p.linkedProfileId != null && submitPermission.contains(p.id),
+              activeKeys: links.values
+                  .where((k) => k.preacherId == p.id && k.revokedAt == null && (k.validUntil == null || k.validUntil!.isAfter(now)))
+                  .length,
+              lastSeen: links.values
+                  .where((k) => k.preacherId == p.id && k.lastUsedAt != null)
+                  .map((k) => k.lastUsedAt!)
+                  .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a),
+              pendingEdits: edits.where((e) => e.preacherId == p.id && e.pending).length,
               lessons30d: lessons.values
                   .where((l) =>
                       l.preacherId == p.id &&
@@ -417,17 +415,11 @@ class DemoLessonsRepository implements LessonsRepository {
                       !l.date.isBefore(addDays(_today, -30)))
                   .length)
       ],
-      team: [for (final t in team) t],
-      flags: [for (final f in flags.where((f) => f.organizationId == organizationId)) f],
-      audit: [for (final a in audit.where((a) => a.organizationId == organizationId || a.organizationId == null)) a],
+      edits: [for (final e in edits.where((e) => e.pending)) e],
+      flags: List.of(flags),
+      audit: List.of(audit),
       reports: Map.of(reports),
     );
-  }
-
-  @override
-  Future<List<LessonsOrganization>> loadAdminOrganizations() async {
-    _need(persona == LessonsDemoPersona.admin);
-    return organizations.values.toList();
   }
 
   // --------------------------------------------------------------- viewer
@@ -480,21 +472,27 @@ class DemoLessonsRepository implements LessonsRepository {
     _signedIn();
     final l = lessons[lessonId]!;
     flags.insert(0, LessonsFlag(
-        id: _id('f'), lessonId: lessonId, organizationId: l.organizationId, kind: kind, message: message,
-        reporterId: currentUserId, createdAt: DateTime.now()));
-    _notifyCoordinators('flag', 'بلاغ جديد من مستخدم', 'New report from a user', l.titleAr, l.title('en'),
-        '/lessons/console/review?filter=reports');
+        id: _id('f'), lessonId: lessonId, kind: kind, message: message, reporterId: currentUserId, createdAt: DateTime.now()));
+    _notifyAdmins('flag', 'بلاغ جديد من مستخدم', 'New report from a user', l.titleAr, l.title('en'), '/admin/lessons/reports');
   }
 
-  // ----------------------------------------------------- preacher / coord
-  bool _ownCard(String preacherId) =>
-      persona == LessonsDemoPersona.preacher && preacherId == ownPreacher && submitPermission.contains(ownPreacher);
+  // --------------------------------------------------------------- lessons
+  void _notifyFollowers(Preacher p, Lesson l) {
+    for (final e in _mine.entries.toList()) {
+      if (e.value.isFollowing('preacher', p.id) || e.value.isFollowing('mosque', l.mosqueId)) {
+        _notify(e.key, 'sparkle', 'درس جديد من داعية تتابعه', 'New lesson from a preacher you follow',
+            '${p.nameAr}: ${l.titleAr}', '${p.name('en')}: ${l.title('en')}', '/lessons/requests/${l.requestId}');
+      }
+    }
+  }
 
   @override
-  Future<String> submit(LessonDraft d) async {
-    _need(_coord || _ownCard(d.preacherId));
-    if (d.direct) _need(_coord);
-    if (d.dates.isEmpty || d.dates.length > 40 || d.dates.any((x) => x.isBefore(_today))) {
+  Future<String> addLessons(LessonDraft d) async {
+    _need(_admin);
+    final p = preachers[d.preacherId];
+    final dates = {...d.dates}.toList()..sort();
+    if (p == null || dates.isEmpty || dates.length > 40 ||
+        dates.first.isBefore(addDays(_today, -60)) || dates.last.isAfter(addDays(_today, 400))) {
       throw const LessonsException(LessonsFailure.invalid);
     }
     var mosqueId = d.mosqueId;
@@ -502,93 +500,79 @@ class DemoLessonsRepository implements LessonsRepository {
       mosqueId = _id('m');
       mosques[mosqueId] = Mosque(
           id: mosqueId, nameAr: d.newMosque!.nameAr, nameEn: d.newMosque!.nameEn, districtId: d.newMosque!.districtId,
-          latitude: d.newMosque!.latitude, longitude: d.newMosque!.longitude, facilities: d.newMosque!.facilities,
-          verified: _coord, suggestedBy: currentUserId);
+          latitude: d.newMosque!.latitude, longitude: d.newMosque!.longitude, facilities: d.newMosque!.facilities);
+      _log('addMosque', d.newMosque!.nameAr, d.newMosque!.nameEn.isEmpty ? d.newMosque!.nameAr : d.newMosque!.nameEn);
     }
     if (mosqueId == null || !mosques.containsKey(mosqueId)) throw const LessonsException(LessonsFailure.invalid);
-    if (d.replaces != null) {
-      for (final l in lessons.values.where((l) => l.requestId == d.replaces && (l.status == 'pending' || l.status == 'rejected')).toList()) {
-        lessons[l.id] = l.copyWith(status: 'withdrawn');
-      }
-    }
     final req = _id('rq');
-    final status = d.direct ? 'approved' : 'pending';
     String? seriesId;
-    final dates = [...d.dates]..sort();
     if (dates.length > 1) {
       seriesId = _id('s');
       series[seriesId] = LessonSeries(
-          id: seriesId, organizationId: preachers[d.preacherId]!.organizationId, requestId: req, preacherId: d.preacherId,
-          mosqueId: mosqueId, titleAr: d.titleAr, titleEn: d.titleEn, type: d.type, topic: d.topic, language: d.language,
-          audience: d.audience, slot: d.slot, total: dates.length, status: status);
+          id: seriesId, requestId: req, preacherId: d.preacherId, mosqueId: mosqueId, titleAr: d.titleAr,
+          titleEn: d.titleEn, type: d.type, topic: d.topic, language: d.language, audience: d.audience, slot: d.slot,
+          total: dates.length, status: 'approved');
     }
-    for (var i = 0; i < dates.length; i++) {
-      final id = _id('l');
-      lessons[id] = Lesson(
-          id: id, organizationId: preachers[d.preacherId]!.organizationId, requestId: req, seriesId: seriesId,
-          seq: seriesId == null ? null : i + 1, type: d.type, topic: d.topic, titleAr: d.titleAr, titleEn: d.titleEn,
-          descriptionAr: d.descriptionAr, preacherId: d.preacherId, mosqueId: mosqueId, date: dates[i], slot: d.slot,
-          exactTime: d.exactTime, language: d.language, interpretation: d.interpretation, audience: d.audience,
-          womenSection: d.womenSection, streamed: d.streamed, notifyFollowers: d.notifyFollowers, status: status,
-          submittedBy: currentUserId, submittedAt: DateTime.now(), reviewedBy: d.direct ? currentUserId : null,
-          reviewedAt: d.direct ? DateTime.now() : null);
+    final added = [
+      for (var i = 0; i < dates.length; i++)
+        Lesson(
+            id: _id('l'), requestId: req, seriesId: seriesId, seq: seriesId == null ? null : i + 1, type: d.type,
+            topic: d.topic, titleAr: d.titleAr, titleEn: d.titleEn, descriptionAr: d.descriptionAr,
+            preacherId: d.preacherId, mosqueId: mosqueId, date: dates[i], slot: d.slot, exactTime: d.exactTime,
+            language: d.language, interpretation: d.interpretation, audience: d.audience,
+            womenSection: d.womenSection, streamed: d.streamed, notifyFollowers: d.notifyFollowers,
+            submittedBy: currentUserId, submittedAt: DateTime.now(), reviewedBy: currentUserId,
+            reviewedAt: DateTime.now()),
+    ];
+    for (final l in added) {
+      lessons[l.id] = l;
     }
-    final p = preachers[d.preacherId]!;
-    if (d.direct) {
-      _log('approve', '${d.titleAr} — ${p.nameAr} (اعتماد مباشر)', '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')} (approved on entry)');
-    } else {
-      _log('submit', d.titleAr, d.titleEn.isEmpty ? d.titleAr : d.titleEn);
-      _notifyCoordinators('inbox', 'طلب جديد بانتظار المراجعة', 'New request to review', '${d.titleAr} — ${p.nameAr}',
-          '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')}', '/lessons/console/review');
-    }
+    _log('add', '${d.titleAr} — ${p.nameAr}', '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')}',
+        preacherId: p.id);
+    if (d.notifyFollowers) _notifyFollowers(p, added.first);
     return req;
   }
 
   @override
-  Future<int> review(List<String> requestIds, String decision, {String? reason}) async {
-    _need(_coord);
+  Future<int> review(List<String> requestIds, String decision, {String? reason, String? mosqueId}) async {
+    _need(_admin);
+    if (decision != 'approve' && decision != 'reject') throw const LessonsException(LessonsFailure.invalid);
     if (decision == 'reject' && (reason == null || reason.trim().length < 3)) {
       throw const LessonsException(LessonsFailure.invalid);
     }
+    if (mosqueId != null && !mosques.containsKey(mosqueId)) throw const LessonsException(LessonsFailure.invalid);
     final status = decision == 'approve' ? 'approved' : 'rejected';
     var n = 0;
     for (final rid in requestIds) {
       final items = lessons.values.where((l) => l.requestId == rid && l.status == 'pending').toList();
       if (items.isEmpty) continue;
+      if (status == 'approved' && items.any((l) => !l.hasMosque) && mosqueId == null) {
+        throw const LessonsException(LessonsFailure.invalid, 'mosque');
+      }
       n++;
       for (final l in items) {
-        lessons[l.id] = l.copyWith(status: status, reviewedBy: currentUserId, reviewedAt: DateTime.now(),
+        lessons[l.id] = l.copyWith(
+            status: status, reviewedBy: currentUserId, reviewedAt: DateTime.now(),
+            mosqueId: status == 'approved' && !l.hasMosque ? mosqueId : null,
             rejectionReason: status == 'rejected' ? reason : null);
       }
       for (final s in series.values.where((s) => s.requestId == rid).toList()) {
-        series[s.id] = s.copyWith(status: status);
+        series[s.id] = s.copyWith(status: status, mosqueId: status == 'approved' && s.mosqueId.isEmpty ? mosqueId : null);
       }
-      final l = items.first, p = preachers[l.preacherId]!;
-      _log(decision, '${l.titleAr} — ${p.nameAr}', '${l.title('en')}, ${p.name('en')}');
-      if (status == 'approved') {
-        _notify(p.linkedProfileId, 'check', 'اعتُمد: ${l.titleAr}', 'Approved: ${l.title('en')}',
-            'ظهر الدرس للجميع وعلى الخريطة، وأُشعر متابعوك.', 'The lesson is public and on the map, and your followers were notified.',
-            '/lessons/me/lessons?tab=approved');
-        for (final e in _mine.entries.toList()) {
-          if (e.value.isFollowing('preacher', l.preacherId)) {
-            _notify(e.key, 'sparkle', 'درس جديد من داعية تتابعه', 'New lesson from a preacher you follow',
-                '${p.nameAr}: ${l.titleAr}', '${p.name('en')}: ${l.title('en')}', '/lessons/lesson/${l.id}');
-          }
-        }
-      } else {
-        _notify(p.linkedProfileId, 'x', 'لم يُعتمد: ${l.titleAr}', 'Not approved: ${l.title('en')}', 'السبب: $reason',
-            'Reason: $reason', '/lessons/me/lessons?tab=rejected');
-      }
+      final l = lessons[items.first.id]!, p = preachers[l.preacherId]!;
+      _log(decision, '${l.titleAr} — ${p.nameAr}', '${l.title('en')}, ${p.name('en')}', preacherId: p.id);
+      if (status == 'approved' && l.notifyFollowers) _notifyFollowers(p, l);
     }
     return n;
   }
 
   @override
   Future<int> undoReview(List<String> requestIds) async {
-    _need(_coord);
+    _need(_admin);
     var n = 0;
     for (final l in lessons.values.toList()) {
-      if (requestIds.contains(l.requestId) && (l.status == 'approved' || l.status == 'rejected') && l.reviewedBy == currentUserId) {
+      if (requestIds.contains(l.requestId) && l.fromPreacher && (l.status == 'approved' || l.status == 'rejected') &&
+          l.reviewedBy == currentUserId) {
         lessons[l.id] = l.copyWith(status: 'pending', clearReview: true, clearRejection: true);
         n++;
       }
@@ -600,22 +584,31 @@ class DemoLessonsRepository implements LessonsRepository {
     return n;
   }
 
-  @override
-  Future<void> withdraw(String requestId) async {
+  void _withdraw(String requestId, {bool byLink = false}) {
     final items = lessons.values.where((l) => l.requestId == requestId && l.status == 'pending').toList();
     if (items.isEmpty) throw const LessonsException(LessonsFailure.invalid);
-    _need(_coord || _ownCard(items.first.preacherId));
     for (final l in items) {
       lessons[l.id] = l.copyWith(status: 'withdrawn');
     }
-    _log('withdraw', items.first.titleAr, items.first.title('en'));
+    for (final s in series.values.where((s) => s.requestId == requestId).toList()) {
+      series[s.id] = s.copyWith(status: 'withdrawn');
+    }
+    _log('withdraw', items.first.titleAr, items.first.title('en'), preacherId: items.first.preacherId, byLink: byLink);
+  }
+
+  @override
+  Future<void> withdraw(String requestId) async {
+    _need(_admin);
+    _withdraw(requestId);
   }
 
   @override
   Future<int> cancelLesson(String lessonId, String reason) async {
+    _need(_admin);
     final l = lessons[lessonId];
-    if (l == null || l.status != 'approved' || l.date.isBefore(_today)) throw const LessonsException(LessonsFailure.invalid);
-    _need(_coord || _ownCard(l.preacherId));
+    if (l == null || l.status != 'approved' || l.date.isBefore(_today) || reason.trim().isEmpty) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
     lessons[lessonId] = l.copyWith(status: 'cancelled', cancelReason: reason);
     var n = 0;
     for (final e in _mine.entries.toList()) {
@@ -625,63 +618,67 @@ class DemoLessonsRepository implements LessonsRepository {
             '${isoDate(l.date)}: $reason', '/lessons/lesson/$lessonId');
       }
     }
-    if (!_coord) {
-      _notifyCoordinators('alert', 'ألغى داعية موعدًا', 'A preacher cancelled a session', l.titleAr, l.title('en'),
-          '/lessons/lesson/$lessonId');
-    }
-    _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}');
+    _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId);
     return n;
   }
 
   @override
   Future<void> editLesson(String lessonId, Map<String, dynamic> patch) async {
-    _need(_coord);
-    final l = lessons[lessonId]!;
+    _need(_admin);
+    final l = lessons[lessonId];
+    if (l == null || (l.status != 'approved' && l.status != 'pending')) throw const LessonsException(LessonsFailure.invalid);
+    if (patch['mosque_id'] != null && !mosques.containsKey(patch['mosque_id'])) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
     lessons[lessonId] = l.copyWith(
         titleAr: patch['title_ar'] as String?,
         titleEn: patch['title_en'] as String?,
+        type: patch['type'] as String?,
+        topic: patch['topic'] as String?,
         mosqueId: patch['mosque_id'] as String?,
         date: patch['lesson_date'] == null ? null : parseIsoDate(patch['lesson_date'] as String),
         slot: patch['slot'] as String?,
         exactTime: patch['exact_time'] as String?,
         clearExact: patch.containsKey('exact_time') && patch['exact_time'] == null);
-    _log('edit', l.titleAr, l.title('en'));
+    _log('edit', l.titleAr, l.title('en'), preacherId: l.preacherId);
   }
 
   @override
   Future<void> postReport(String lessonId, int attendance, int women, String issue, String notes) async {
+    _need(_admin);
     final l = lessons[lessonId]!;
-    _need(_coord || _ownCard(l.preacherId));
     if (l.status != 'approved' || l.date.isAfter(_today)) throw const LessonsException(LessonsFailure.invalid);
     reports[lessonId] = LessonsReport(lessonId: lessonId, attendance: attendance, women: women, issue: issue, notes: notes);
-    _log('report', l.titleAr, l.title('en'));
+    _log('report', l.titleAr, l.title('en'), preacherId: l.preacherId);
   }
 
   @override
   Future<void> resolveFlag(String flagId) async {
-    _need(_coord);
+    _need(_admin);
     final i = flags.indexWhere((f) => f.id == flagId);
-    final f = flags[i];
-    flags[i] = LessonsFlag(
-        id: f.id, lessonId: f.lessonId, organizationId: f.organizationId, kind: f.kind, message: f.message,
-        reporterId: f.reporterId, status: 'resolved', createdAt: f.createdAt);
+    if (i < 0) throw const LessonsException(LessonsFailure.invalid);
+    flags[i] = flags[i].resolved();
     _log('resolve', 'بلاغ على درس', 'Report on a lesson');
   }
 
-  // --------------------------------------------------------------- roster
+  // ------------------------------------------------------------ preachers
   @override
   Future<String> upsertPreacher(Map<String, dynamic> p) async {
-    _need(_coord);
+    _need(_admin);
     final id = p['id'] as String? ?? _id('p');
     final old = preachers[id];
+    final name = (p['name_ar'] as String? ?? old?.nameAr ?? '').trim();
+    if (name.length < 3) throw const LessonsException(LessonsFailure.invalid);
     preachers[id] = Preacher(
         id: id,
-        organizationId: old?.organizationId ?? p['organization_id'] as String? ?? org,
-        linkedProfileId: old?.linkedProfileId,
-        nameAr: p['name_ar'] as String? ?? old!.nameAr,
+        linkedProfileId: p.containsKey('linked_profile_id') ? p['linked_profile_id'] as String? : old?.linkedProfileId,
+        nameAr: name,
         nameEn: p['name_en'] as String? ?? old?.nameEn ?? '',
         titleAr: p['title_ar'] as String? ?? old?.titleAr ?? '',
         titleEn: p['title_en'] as String? ?? old?.titleEn ?? '',
+        bioAr: p['bio_ar'] as String? ?? old?.bioAr ?? '',
+        bioEn: p['bio_en'] as String? ?? old?.bioEn ?? '',
+        photoUrl: p.containsKey('photo_url') ? p['photo_url'] as String? : old?.photoUrl,
         city: p['city'] as String? ?? old?.city ?? 'khobar',
         affiliation: p['affiliation'] as String? ?? old?.affiliation ?? 'coop',
         languages: (p['languages'] as List?)?.cast<String>() ?? old?.languages ?? const ['ar'],
@@ -690,15 +687,40 @@ class DemoLessonsRepository implements LessonsRepository {
       final phone = (p['phone'] as String? ?? '').replaceAll(RegExp(r'[^0-9+]'), '');
       phone.isEmpty ? phones.remove(id) : phones[id] = phone;
     }
-    _log(old == null ? 'addPreacher' : 'editPreacher', preachers[id]!.nameAr, preachers[id]!.name('en'));
+    _log(old == null ? 'addPreacher' : 'editPreacher', preachers[id]!.nameAr, preachers[id]!.name('en'),
+        preacherId: old == null ? null : id);
     return id;
   }
 
   @override
-  Future<int> importPreachers(String organizationId, List<Map<String, dynamic>> rows) async {
-    _need(_coord);
+  Future<int> removePreacher(String preacherId) async {
+    _need(_admin);
+    final p = preachers.remove(preacherId);
+    if (p == null) throw const LessonsException(LessonsFailure.invalid);
+    final n = lessons.values.where((l) => l.preacherId == preacherId).length;
+    lessons.removeWhere((_, l) => l.preacherId == preacherId);
+    series.removeWhere((_, s) => s.preacherId == preacherId);
+    links.removeWhere((_, k) => k.preacherId == preacherId);
+    edits.removeWhere((e) => e.preacherId == preacherId);
+    phones.remove(preacherId);
+    for (final e in _mine.entries.toList()) {
+      _mine[e.key] = e.value.copyWith(follows: {...e.value.follows}..remove('preacher:$preacherId'));
+    }
+    _log('removePreacher', p.nameAr, p.name('en'));
+    return n;
+  }
+
+  @override
+  Future<int> importPreachers(List<Map<String, dynamic>> rows) async {
+    _need(_admin);
+    if (rows.length > 500) throw const LessonsException(LessonsFailure.invalid);
     for (final r in rows) {
-      await upsertPreacher({'organization_id': organizationId, 'name_ar': r['name'], 'city': r['city'], 'affiliation': r['affiliation'], 'phone': r['phone']});
+      final id = _id('p');
+      preachers[id] = Preacher(
+          id: id, nameAr: (r['name'] as String).trim(), city: r['city'] as String? ?? 'khobar',
+          affiliation: r['affiliation'] as String? ?? 'coop');
+      final phone = (r['phone'] as String? ?? '').replaceAll(RegExp(r'[^0-9+]'), '');
+      if (phone.isNotEmpty) phones[id] = phone;
     }
     _log('import', 'استيراد ${rows.length} داعية', 'Imported ${rows.length} preachers');
     return rows.length;
@@ -706,115 +728,41 @@ class DemoLessonsRepository implements LessonsRepository {
 
   @override
   Future<String?> revealPhone(String preacherId) async {
-    _need(_coord);
-    _log('phone', preachers[preacherId]!.nameAr, preachers[preacherId]!.name('en'));
+    _need(_admin);
+    final p = preachers[preacherId];
+    if (p == null) throw const LessonsException(LessonsFailure.invalid);
+    _log('phone', p.nameAr, p.name('en'), preacherId: preacherId);
     return phones[preacherId];
   }
 
   @override
-  Future<void> setSubmit(String preacherId, bool enabled) async {
-    _need(_coord);
-    if (preachers[preacherId]?.linkedProfileId == null) throw const LessonsException(LessonsFailure.invalid);
-    enabled ? submitPermission.add(preacherId) : submitPermission.remove(preacherId);
-    _log(enabled ? 'grantSubmit' : 'revokeSubmit', preachers[preacherId]!.nameAr, preachers[preacherId]!.name('en'));
-  }
-
-  @override
-  Future<void> unlinkPreacher(String preacherId) async {
-    _need(_coord);
-    preachers[preacherId] = preachers[preacherId]!.copyWith(clearLink: true);
-    submitPermission.remove(preacherId);
-    _log('unlink', preachers[preacherId]!.nameAr, preachers[preacherId]!.name('en'));
-  }
-
-  @override
-  Future<String> createInvite(String preacherId) async {
-    _need(_coord);
-    if (preachers[preacherId]!.linkedProfileId != null) throw const LessonsException(LessonsFailure.invalid);
-    invites.removeWhere((_, v) => v == preacherId);
-    final token = List.generate(32, (_) => 'abcdefghijkmnpqrstuvwxyz23456789'[math.Random().nextInt(32)]).join();
-    invites[token] = preacherId;
-    _log('invite', preachers[preacherId]!.nameAr, preachers[preacherId]!.name('en'));
-    return token;
-  }
-
-  @override
-  Future<LessonsInviteInfo?> inviteInfo(String token) async {
-    final pid = invites[token];
-    final p = pid == null ? null : preachers[pid];
-    if (p == null || p.linkedProfileId != null) return null;
-    final o = organizations[p.organizationId]!;
-    return LessonsInviteInfo(
-        preacherId: p.id, nameAr: p.nameAr, nameEn: p.nameEn, city: p.city, affiliation: p.affiliation,
-        languages: p.languages, organizationAr: o.nameAr, organizationEn: o.nameEn);
-  }
-
-  @override
-  Future<String> claimInvite(String token, List<String> languages) async {
-    _signedIn();
-    final pid = invites.remove(token);
-    if (pid == null || preachers[pid]!.linkedProfileId != null) throw const LessonsException(LessonsFailure.expired);
-    preachers[pid] = preachers[pid]!.copyWith(linkedProfileId: currentUserId, languages: languages.isEmpty ? null : languages);
-    submitPermission.add(pid);
-    _log('claim', preachers[pid]!.nameAr, preachers[pid]!.name('en'));
-    _notifyCoordinators('user', 'ربط داعية حسابه', 'A preacher linked their account', preachers[pid]!.nameAr,
-        preachers[pid]!.name('en'), '/lessons/console/preachers');
-    return pid;
-  }
-
-  @override
-  Future<void> setCoordinator(String organizationId, String profileId, bool enabled) async {
-    _need(_leader);
-    _grant(organizationId, profileId, enabled);
-  }
-
-  /// One activities.coordinate grant or revocation, with the organization's
-  /// team list kept in step (the sample team belongs to the main society).
-  void _grant(String organizationId, String profileId, bool enabled) {
-    final orgs = coordinatorGrants.putIfAbsent(profileId, () => <String>{});
-    enabled ? orgs.add(organizationId) : orgs.remove(organizationId);
-    if (orgs.isEmpty) coordinatorGrants.remove(profileId);
-    final account = accounts.where((a) => a.id == profileId).firstOrNull;
-    final i = team.indexWhere((t) => t.profileId == profileId);
-    final ar = account?.nameAr ?? (i >= 0 ? team[i].nameAr : profileId);
-    final en = account?.nameEn ?? (i >= 0 ? team[i].nameEn : profileId);
-    if (organizationId == org) {
-      final t = i >= 0
-          ? team[i]
-          : LessonsTeamMember(profileId: profileId, role: 'coordinator', nameAr: account?.nameAr ?? '', nameEn: account?.nameEn ?? '');
-      final updated = LessonsTeamMember(
-          profileId: t.profileId, role: t.role, nameAr: t.nameAr, nameEn: t.nameEn, coordinator: enabled,
-          grantedAt: enabled ? DateTime.now() : null, grantedByAr: enabled ? _personaName(persona) : null,
-          grantedByEn: enabled ? _personaName(persona) : null);
-      if (i < 0) {
-        if (enabled) team.add(updated);
-      } else if (!enabled && t.role == 'coordinator') {
-        team.removeAt(i);
-      } else {
-        team[i] = updated;
-      }
+  Future<void> decideEdit(String editId, bool approve, {String? reason}) async {
+    _need(_admin);
+    final i = edits.indexWhere((e) => e.id == editId && e.pending);
+    if (i < 0) throw const LessonsException(LessonsFailure.invalid);
+    final e = edits[i];
+    final p = preachers[e.preacherId]!;
+    if (approve) {
+      final x = e.changes;
+      final name = (x['name_ar'] as String? ?? '').trim();
+      preachers[p.id] = p.copyWith(
+          nameAr: name.isEmpty ? null : name,
+          nameEn: x['name_en'] as String?,
+          titleAr: x['title_ar'] as String?,
+          titleEn: x['title_en'] as String?,
+          bioAr: x['bio_ar'] as String?,
+          bioEn: x['bio_en'] as String?,
+          languages: (x['languages'] as List?)?.cast<String>());
     }
-    _log(enabled ? 'grant' : 'revoke', '$ar ← منسق', '$en → coordinator', organizationId: organizationId);
-  }
-
-  @override
-  Future<List<LessonsCoordinator>> loadCoordinators() async {
-    _need(persona == LessonsDemoPersona.admin);
-    return [
-      for (final e in coordinatorGrants.entries)
-        if (e.value.isNotEmpty)
-          () {
-            final a = accounts.where((a) => a.id == e.key).firstOrNull;
-            return LessonsCoordinator(
-                profileId: e.key, nameAr: a?.nameAr ?? '', nameEn: a?.nameEn ?? '', email: a?.email ?? '',
-                organizationIds: e.value.toList());
-          }()
-    ];
+    edits[i] = PreacherEdit(
+        id: e.id, preacherId: e.preacherId, changes: e.changes, status: approve ? 'approved' : 'rejected',
+        reason: reason, createdAt: e.createdAt);
+    _log(approve ? 'editApproved' : 'editRejected', p.nameAr, p.name('en'), preacherId: p.id);
   }
 
   @override
   Future<List<LessonsAccount>> searchAccounts(String query) async {
-    _need(persona == LessonsDemoPersona.admin);
+    _need(_admin);
     final q = query.trim().toLowerCase();
     return [
       for (final a in accounts)
@@ -822,72 +770,208 @@ class DemoLessonsRepository implements LessonsRepository {
     ];
   }
 
+  // ---------------------------------------------------------------- links
   @override
-  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) async {
-    _need(persona == LessonsDemoPersona.admin);
-    if (organizationIds.any((o) => !organizations.containsKey(o))) throw const LessonsException(LessonsFailure.invalid);
-    final want = organizationIds.toSet(), had = {...?coordinatorGrants[profileId]};
-    for (final o in had.difference(want)) {
-      _grant(o, profileId, false);
+  Future<NewPreacherKey> createKey(String preacherId, String kind,
+      {DateTime? validFrom, DateTime? validUntil, String note = ''}) async {
+    _need(_admin);
+    final p = preachers[preacherId];
+    if (p == null || (kind != 'once' && kind != 'window')) throw const LessonsException(LessonsFailure.invalid);
+    if (kind == 'window' && (validFrom == null || validUntil == null)) throw const LessonsException(LessonsFailure.invalid);
+    if (validUntil != null && !validUntil.isAfter(DateTime.now())) throw const LessonsException(LessonsFailure.invalid);
+    if (validFrom != null && validUntil != null && !validUntil.isAfter(validFrom)) {
+      throw const LessonsException(LessonsFailure.invalid);
     }
-    for (final o in want.difference(had)) {
-      _grant(o, profileId, true);
-    }
-    return had.difference(want).length + want.difference(had).length;
+    final token = List.generate(32, (_) => 'abcdefghijkmnpqrstuvwxyz23456789'[math.Random().nextInt(32)]).join();
+    final k = links[token] = DemoPreacherLink(
+        id: _id('k'), preacherId: preacherId, kind: kind, validFrom: kind == 'window' ? validFrom : null,
+        validUntil: validUntil, note: note.trim(), createdAt: DateTime.now());
+    _log(kind == 'once' ? 'keyOnce' : 'keyWindow', p.nameAr, p.name('en'), preacherId: preacherId);
+    return NewPreacherKey(id: k.id, token: token, kind: kind, validFrom: k.validFrom, validUntil: k.validUntil);
   }
 
   @override
-  Future<void> setOrganizationEnabled(String organizationId, bool enabled) async {
-    _need(persona == LessonsDemoPersona.admin);
-    organizations[organizationId] = organizations[organizationId]!.copyWith(enabled: enabled);
-    final o = organizations[organizationId]!;
-    _log(enabled ? 'enable' : 'disable', o.nameAr, o.nameEn, organizationId: organizationId);
+  Future<List<PreacherKey>> loadKeys(String preacherId) async {
+    _need(_admin);
+    return [
+      for (final k in links.values.where((k) => k.preacherId == preacherId).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+        k.view
+    ];
+  }
+
+  @override
+  Future<void> revokeKey(String keyId) async {
+    _need(_admin);
+    final k = links.values.where((k) => k.id == keyId).firstOrNull;
+    if (k == null) throw const LessonsException(LessonsFailure.invalid);
+    k.revokedAt ??= DateTime.now();
+    final p = preachers[k.preacherId]!;
+    _log('keyRevoke', p.nameAr, p.name('en'), preacherId: p.id);
+  }
+
+  /// The checks of the server's private.preacher_key().
+  DemoPreacherLink _key(String token, String device) {
+    final k = links[token];
+    final now = DateTime.now();
+    if (k == null || k.revokedAt != null || !preachers.containsKey(k.preacherId)) {
+      throw const LessonsException(LessonsFailure.expired, 'revoked');
+    }
+    if (k.validFrom != null && now.isBefore(k.validFrom!)) throw const LessonsException(LessonsFailure.expired, 'not_yet');
+    if (k.validUntil != null && now.isAfter(k.validUntil!)) throw const LessonsException(LessonsFailure.expired, 'expired');
+    if (k.kind == 'once') {
+      if (device.length < 16) throw const LessonsException(LessonsFailure.invalid);
+      if (k.device == null) {
+        k
+          ..device = device
+          ..openedAt = now;
+      } else if (k.device != device) {
+        throw const LessonsException(LessonsFailure.expired, 'used');
+      }
+    } else {
+      k.openedAt ??= now;
+    }
+    k.lastUsedAt = now;
+    return k;
+  }
+
+  @override
+  Future<PreacherLinkView> openLink(String token, String device) async {
+    final k = _key(token, device);
+    final p = preachers[k.preacherId]!;
+    final since = addDays(_today, -60);
+    final mine = lessons.values.where((l) => l.preacherId == p.id && l.status != 'withdrawn' && !l.date.isBefore(since)).toList()
+      ..sort(compareLessons);
+    return PreacherLinkView(
+      preacher: p,
+      kind: k.kind,
+      validUntil: k.validUntil,
+      pendingEdit: edits.where((e) => e.preacherId == p.id && e.pending).lastOrNull?.changes,
+      lessons: [
+        for (final l in mine)
+          PreacherLinkLesson(
+              id: l.id, requestId: l.requestId, seriesId: l.seriesId, seq: l.seq, titleAr: l.titleAr,
+              titleEn: l.titleEn, type: l.type, topic: l.topic, date: l.date, slot: l.slot, exactTime: l.exactTime,
+              status: l.status, source: l.source, preacherNote: l.preacherNote, rejectionReason: l.rejectionReason,
+              cancelReason: l.cancelReason, mosqueAr: mosques[l.mosqueId]?.nameAr ?? '',
+              mosqueEn: mosques[l.mosqueId]?.nameEn ?? ''),
+      ],
+    );
+  }
+
+  @override
+  Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes) async {
+    final k = _key(token, device);
+    const fields = ['name_ar', 'name_en', 'title_ar', 'title_en', 'bio_ar', 'bio_en'];
+    final x = <String, dynamic>{
+      for (final f in fields)
+        if (changes.containsKey(f)) f: (changes[f] as String? ?? '').trim(),
+      if (changes['languages'] is List) 'languages': (changes['languages'] as List).cast<String>(),
+    };
+    final langs = x['languages'] as List<String>?;
+    if (x.isEmpty ||
+        (x.containsKey('name_ar') && ((x['name_ar'] as String).length < 3 || (x['name_ar'] as String).length > 120)) ||
+        ['bio_ar', 'bio_en'].any((f) => ((x[f] as String?) ?? '').length > 1500) ||
+        ['name_en', 'title_ar', 'title_en'].any((f) => ((x[f] as String?) ?? '').length > 120) ||
+        (langs != null && (langs.isEmpty || langs.length > 7))) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    final i = edits.indexWhere((e) => e.preacherId == k.preacherId && e.pending);
+    final edit = PreacherEdit(id: i < 0 ? _id('e') : edits[i].id, preacherId: k.preacherId, changes: x, createdAt: DateTime.now());
+    i < 0 ? edits.add(edit) : edits[i] = edit;
+    final p = preachers[k.preacherId]!;
+    _log('preacherEdit', p.nameAr, p.name('en'), preacherId: p.id, byLink: true);
+    _notifyAdmins('user', 'داعية اقترح تعديلًا على بطاقته', 'A preacher proposed a card change', p.nameAr, p.name('en'),
+        '/admin/lessons/approvals');
+  }
+
+  @override
+  Future<String> requestLesson(String token, String device, LessonRequestDraft d) async {
+    final k = _key(token, device);
+    final waiting = lessons.values.where((l) => l.preacherId == k.preacherId && l.status == 'pending').map((l) => l.requestId).toSet();
+    if (waiting.length >= 20) throw const LessonsException(LessonsFailure.busy);
+    final dates = {...d.dates}.toList()..sort();
+    if (dates.isEmpty || dates.length > 12 || dates.first.isBefore(_today) || dates.last.isAfter(addDays(_today, 180)) ||
+        d.titleAr.trim().length < 3) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    final req = _id('rq');
+    String? seriesId;
+    if (dates.length > 1) {
+      seriesId = _id('s');
+      series[seriesId] = LessonSeries(
+          id: seriesId, requestId: req, preacherId: k.preacherId, titleAr: d.titleAr.trim(), type: d.type,
+          topic: d.topic, language: d.language, audience: d.audience, slot: d.slot, total: dates.length,
+          status: 'pending');
+    }
+    for (var i = 0; i < dates.length; i++) {
+      final id = _id('l');
+      lessons[id] = Lesson(
+          id: id, requestId: req, seriesId: seriesId, seq: seriesId == null ? null : i + 1, type: d.type,
+          topic: d.topic, titleAr: d.titleAr.trim(), preacherId: k.preacherId, date: dates[i], slot: d.slot,
+          language: d.language, audience: d.audience, status: 'pending', source: 'preacher',
+          preacherNote: d.note.trim(), submittedAt: DateTime.now());
+    }
+    final p = preachers[k.preacherId]!;
+    _log('request', '${d.titleAr} — ${p.nameAr}', '${d.titleAr}, ${p.name('en')}', preacherId: p.id, byLink: true);
+    _notifyAdmins('inbox', 'طلب درس جديد من داعية', 'A preacher requested a lesson', '${d.titleAr} — ${p.nameAr}',
+        '${d.titleAr}, ${p.name('en')}', '/admin/lessons/approvals');
+    return req;
+  }
+
+  @override
+  Future<void> withdrawRequest(String token, String device, String requestId) async {
+    final k = _key(token, device);
+    if (!lessons.values.any((l) => l.requestId == requestId && l.preacherId == k.preacherId && l.status == 'pending')) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    _withdraw(requestId, byLink: true);
   }
 
   // -------------------------------------------------------------- mosques
   @override
   Future<String> upsertMosque(Map<String, dynamic> m) async {
-    _need(_coord);
+    _need(_admin);
     final id = m['id'] as String? ?? _id('m');
     final old = mosques[id];
+    final name = (m['name_ar'] as String? ?? old?.nameAr ?? '').trim();
+    final district = m['district_id'] as String? ?? old?.districtId;
+    if (name.length < 2 || !districts.containsKey(district)) throw const LessonsException(LessonsFailure.invalid);
     mosques[id] = Mosque(
         id: id,
-        nameAr: m['name_ar'] as String? ?? old!.nameAr,
+        nameAr: name,
         nameEn: m['name_en'] as String? ?? old?.nameEn ?? '',
-        districtId: m['district_id'] as String? ?? old!.districtId,
-        latitude: (m['latitude'] as num?)?.toDouble() ?? old?.latitude,
-        longitude: (m['longitude'] as num?)?.toDouble() ?? old?.longitude,
+        districtId: district!,
+        latitude: m.containsKey('latitude') ? (m['latitude'] as num?)?.toDouble() : old?.latitude,
+        longitude: m.containsKey('longitude') ? (m['longitude'] as num?)?.toDouble() : old?.longitude,
         facilities: (m['facilities'] as List?)?.cast<String>() ?? old?.facilities ?? const [],
-        verified: true);
-    if (old == null) _log('addMosque', mosques[id]!.nameAr, mosques[id]!.name('en'), organizationId: null);
+        verified: m['verified'] as bool? ?? old?.verified ?? true);
+    _log(old == null ? 'addMosque' : 'editMosque', mosques[id]!.nameAr, mosques[id]!.name('en'));
     return id;
   }
 
   @override
-  Future<void> verifyMosque(String mosqueId) async {
-    _need(_coord);
-    mosques[mosqueId] = mosques[mosqueId]!.copyWith(verified: true);
-    _log('verifyMosque', mosques[mosqueId]!.nameAr, mosques[mosqueId]!.name('en'), organizationId: null);
-  }
-
-  @override
-  Future<void> rejectMosque(String mosqueId, {String? mergeInto}) async {
-    _need(_coord);
-    final m = mosques[mosqueId]!;
+  Future<void> removeMosque(String mosqueId, {String? mergeInto}) async {
+    _need(_admin);
+    final m = mosques[mosqueId];
+    if (m == null) throw const LessonsException(LessonsFailure.invalid);
     if (mergeInto != null) {
+      if (mergeInto == mosqueId || !mosques.containsKey(mergeInto)) throw const LessonsException(LessonsFailure.invalid);
       for (final l in lessons.values.where((l) => l.mosqueId == mosqueId).toList()) {
         lessons[l.id] = l.copyWith(mosqueId: mergeInto);
       }
       for (final s in series.values.where((s) => s.mosqueId == mosqueId).toList()) {
         series[s.id] = s.copyWith(mosqueId: mergeInto);
       }
-    } else {
-      if (lessons.values.any((l) => l.mosqueId == mosqueId && (l.status == 'approved' || l.status == 'cancelled'))) {
-        throw const LessonsException(LessonsFailure.conflict);
-      }
-      lessons.removeWhere((_, l) => l.mosqueId == mosqueId);
+    } else if (lessons.values.any((l) => l.mosqueId == mosqueId)) {
+      throw const LessonsException(LessonsFailure.conflict);
+    }
+    for (final e in _mine.entries.toList()) {
+      final f = {...e.value.follows};
+      if (f.remove('mosque:$mosqueId') && mergeInto != null) f.add('mosque:$mergeInto');
+      _mine[e.key] = e.value.copyWith(follows: f);
     }
     mosques.remove(mosqueId);
-    _log(mergeInto == null ? 'rejectMosque' : 'mergeMosque', m.nameAr, m.name('en'), organizationId: null);
+    _log(mergeInto == null ? 'removeMosque' : 'mergeMosque', m.nameAr, m.name('en'));
   }
 }

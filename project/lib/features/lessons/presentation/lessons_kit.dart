@@ -956,3 +956,38 @@ class TGrid extends StatelessWidget {
 }
 
 String tPlural(String key, int n) => 'lessons.n.$key'.plural(n);
+
+/// Numbered steps; finished ones show a tick.
+class TStepper extends StatelessWidget {
+  const TStepper({super.key, required this.labels, required this.current, this.onTap});
+  final List<String> labels;
+  final int current;
+  final ValueChanged<int>? onTap;
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        for (var i = 0; i < labels.length; i++)
+          Expanded(
+            child: InkWell(
+              onTap: onTap == null || i >= current ? null : () => onTap!(i),
+              child: Column(children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: i == current ? HidayahGradients.minted : (i < current ? HidayahGradients.selected : null),
+                    color: i > current ? TC.tint : null,
+                  ),
+                  child: i < current
+                      ? const TIcon(TGlyph.check, size: 14, color: HidayahGold.g200, stroke: 2.6)
+                      : Text('${i + 1}', style: tStrong(13, color: TC.ink)),
+                ),
+                const SizedBox(height: 4),
+                Text(labels[i], textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: tBody(12, color: i == current ? TC.ink : TC.muted, weight: FontWeight.w600, height: 1.3)),
+              ]),
+            ),
+          ),
+      ]);
+}

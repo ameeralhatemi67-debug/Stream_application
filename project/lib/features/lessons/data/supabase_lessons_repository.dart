@@ -4,7 +4,7 @@ import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import 'lessons_repository.dart';
 
-/// Lessons on our Supabase project (migration 20261021142359).
+/// Lessons on our Supabase project (migration 20261022110000).
 class SupabaseLessonsRepository implements LessonsRepository {
   SupabaseLessonsRepository([SupabaseClient? client]) : _injected = client;
   final SupabaseClient? _injected;
@@ -20,13 +20,15 @@ class SupabaseLessonsRepository implements LessonsRepository {
     try {
       return await call();
     } on PostgrestException catch (e) {
+      // A preacher link that no longer opens carries its reason as the hint.
+      if (e.code == '28000') throw LessonsException(LessonsFailure.expired, e.hint ?? 'revoked');
       throw LessonsException(
           switch (e.code) {
             '42501' => LessonsFailure.forbidden,
             '22023' || '23514' || '22P02' => LessonsFailure.invalid,
             '23505' || '23503' => LessonsFailure.conflict,
-            '55000' => LessonsFailure.expired,
-            '42P01' || 'PGRST202' || 'PGRST205' => LessonsFailure.unavailable,
+            '54000' => LessonsFailure.busy,
+            '42P01' || '42883' || 'PGRST202' || 'PGRST205' => LessonsFailure.unavailable,
             _ => LessonsFailure.unknown,
           },
           e.message);
@@ -39,38 +41,36 @@ class SupabaseLessonsRepository implements LessonsRepository {
   }
 
   List<Map<String, dynamic>> _rows(Object? data) =>
-      (data as List).map((r) => Map<String, dynamic>.from(r as Map)).toList();
+      (data as List? ?? const []).map((r) => Map<String, dynamic>.from(r as Map)).toList();
 
   Future<Object?> _rpc(String fn, [Map<String, dynamic>? params]) =>
       _guard(() => _db.rpc(fn, params: params));
+
+  String? _instant(DateTime? t) => t?.toUtc().toIso8601String();
 
   @override
   Future<LessonsCatalog> loadCatalog() => _guard(() async {
         final since = isoDate(addDays(lessonsToday(), -120));
         final results = await Future.wait<Object?>([
-          _db.from('taysir_districts').select().order('sort'),
-          _db.rpc('taysir_public_organizations'),
-          _db.from('taysir_mosques').select(),
-          _db.from('taysir_preachers').select(),
-          _db.from('taysir_series').select(),
-          _db.from('taysir_lessons').select().or('lesson_date.gte.$since,status.eq.pending'),
+          _db.from('mosque_districts').select().order('sort'),
+          _db.from('mosques').select(),
+          _db.from('preachers').select(),
+          _db.from('lesson_series').select(),
+          _db.from('lessons').select().or('lesson_date.gte.$since,status.eq.pending'),
         ]);
         return LessonsCatalog(
           districts: {for (final r in _rows(results[0])) r['id'] as String: District.fromJson(r)},
-          organizations: {
-            for (final r in _rows(results[1])) r['organization_id'] as String: LessonsOrganization.fromJson(r)
-          },
-          mosques: {for (final r in _rows(results[2])) r['id'] as String: Mosque.fromJson(r)},
-          preachers: {for (final r in _rows(results[3])) r['id'] as String: Preacher.fromJson(r)},
-          series: {for (final r in _rows(results[4])) r['id'] as String: LessonSeries.fromJson(r)},
-          lessons: {for (final r in _rows(results[5])) r['id'] as String: Lesson.fromJson(r)},
+          mosques: {for (final r in _rows(results[1])) r['id'] as String: Mosque.fromJson(r)},
+          preachers: {for (final r in _rows(results[2])) r['id'] as String: Preacher.fromJson(r)},
+          series: {for (final r in _rows(results[3])) r['id'] as String: LessonSeries.fromJson(r)},
+          lessons: {for (final r in _rows(results[4])) r['id'] as String: Lesson.fromJson(r)},
         );
       });
 
   @override
   Future<LessonsRoles> loadRoles() async {
     if (currentUserId == null) return LessonsRoles.guest;
-    final r = await _rpc('taysir_my_roles');
+    final r = await _rpc('lessons_my_roles');
     return LessonsRoles.fromJson(r == null ? null : Map<String, dynamic>.from(r as Map));
   }
 
@@ -79,11 +79,11 @@ class SupabaseLessonsRepository implements LessonsRepository {
     if (currentUserId == null) return const LessonsMine();
     return _guard(() async {
       final r = await Future.wait<Object?>([
-        _db.from('taysir_reminders').select(),
-        _db.from('taysir_follows').select(),
-        _db.from('taysir_attendance').select('lesson_id'),
-        _db.from('taysir_preferences').select().maybeSingle(),
-        _db.from('taysir_notifications').select().order('created_at', ascending: false).limit(100),
+        _db.from('lesson_reminders').select(),
+        _db.from('lesson_follows').select(),
+        _db.from('lesson_attendance').select('lesson_id'),
+        _db.from('lesson_preferences').select().maybeSingle(),
+        _db.from('lesson_notifications').select().order('created_at', ascending: false).limit(100),
       ]);
       final prefs = r[3] as Map<String, dynamic>?;
       return LessonsMine(
@@ -101,88 +101,91 @@ class SupabaseLessonsRepository implements LessonsRepository {
   }
 
   @override
-  Future<LessonsStaffData> loadStaff(String organizationId) => _guard(() async {
+  Future<LessonsAdminData> loadAdmin() => _guard(() async {
         final r = await Future.wait<Object?>([
-          _db.rpc('taysir_roster', params: {'p_org': organizationId}),
-          _db.rpc('taysir_team', params: {'p_org': organizationId}),
-          _db.from('taysir_flags').select().eq('organization_id', organizationId).order('created_at', ascending: false),
-          _db.from('taysir_audit').select().eq('organization_id', organizationId).order('created_at', ascending: false).limit(300),
-          _db.from('taysir_lesson_reports').select(),
+          _db.rpc('lessons_roster'),
+          _db.from('preacher_edits').select().eq('status', 'pending').order('created_at'),
+          _db.from('lesson_flags').select().order('created_at', ascending: false).limit(200),
+          _db.from('lesson_audit').select().order('created_at', ascending: false).limit(300),
+          _db.from('lesson_reports').select(),
         ]);
-        return LessonsStaffData(
+        return LessonsAdminData(
           roster: [for (final x in _rows(r[0])) LessonsRosterEntry.fromJson(x)],
-          team: [for (final x in _rows(r[1])) LessonsTeamMember.fromJson(x)],
+          edits: [for (final x in _rows(r[1])) PreacherEdit.fromJson(x)],
           flags: [for (final x in _rows(r[2])) LessonsFlag.fromJson(x)],
           audit: [for (final x in _rows(r[3])) LessonsAuditEntry.fromJson(x)],
           reports: {for (final x in _rows(r[4])) x['lesson_id'] as String: LessonsReport.fromJson(x)},
         );
       });
 
-  @override
-  Future<List<LessonsOrganization>> loadAdminOrganizations() async =>
-      [for (final r in _rows(await _rpc('taysir_admin_organizations'))) LessonsOrganization.fromJson(r)];
-
+  // --------------------------------------------------------------- viewers
   @override
   Future<void> setReminder(String lessonId, String lead, DateTime remindAt) => _guard(() => _db
-      .from('taysir_reminders')
-      .upsert({'profile_id': currentUserId, 'lesson_id': lessonId, 'lead': lead, 'remind_at': remindAt.toUtc().toIso8601String()}));
+      .from('lesson_reminders')
+      .upsert({'profile_id': currentUserId, 'lesson_id': lessonId, 'lead': lead, 'remind_at': _instant(remindAt)}));
 
   @override
   Future<void> removeReminder(String lessonId) =>
-      _guard(() => _db.from('taysir_reminders').delete().eq('lesson_id', lessonId));
+      _guard(() => _db.from('lesson_reminders').delete().eq('lesson_id', lessonId));
 
   @override
   Future<void> setFollow(String kind, String id, bool on) => _guard(() => on
-      ? _db.from('taysir_follows').upsert({'profile_id': currentUserId, 'kind': kind, 'target_id': id})
-      : _db.from('taysir_follows').delete().eq('kind', kind).eq('target_id', id));
+      ? _db.from('lesson_follows').upsert({'profile_id': currentUserId, 'kind': kind, 'target_id': id})
+      : _db.from('lesson_follows').delete().eq('kind', kind).eq('target_id', id));
 
   @override
   Future<void> setAttended(String lessonId, bool on) => _guard(() => on
-      ? _db.from('taysir_attendance').upsert({'profile_id': currentUserId, 'lesson_id': lessonId})
-      : _db.from('taysir_attendance').delete().eq('lesson_id', lessonId));
+      ? _db.from('lesson_attendance').upsert({'profile_id': currentUserId, 'lesson_id': lessonId})
+      : _db.from('lesson_attendance').delete().eq('lesson_id', lessonId));
 
   @override
-  Future<void> savePreferences(LessonsPreferences p) => _guard(() => _db.from('taysir_preferences').upsert({
+  Future<void> savePreferences(LessonsPreferences p) => _guard(() => _db.from('lesson_preferences').upsert({
         'profile_id': currentUserId,
         'default_lead': p.defaultLead,
         'evening_digest': p.eveningDigest,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': _instant(DateTime.now()),
       }));
 
   @override
   Future<void> markNotificationsRead([List<String>? ids]) =>
-      _rpc('taysir_mark_notifications_read', {'p_ids': ids});
+      _rpc('lessons_mark_notifications_read', {'p_ids': ids});
 
   @override
   Future<void> flag(String lessonId, String kind, String message) =>
-      _rpc('taysir_flag', {'p_lesson': lessonId, 'p_kind': kind, 'p_message': message});
+      _rpc('lessons_flag', {'p_lesson': lessonId, 'p_kind': kind, 'p_message': message});
+
+  // --------------------------------------------------------- admin lessons
+  @override
+  Future<String> addLessons(LessonDraft draft) async =>
+      (await _rpc('lessons_add', {'p': draft.toJson()})) as String;
 
   @override
-  Future<String> submit(LessonDraft draft) async =>
-      (await _rpc('taysir_submit', {'p': draft.toJson()})) as String;
-
-  @override
-  Future<int> review(List<String> requestIds, String decision, {String? reason}) async =>
-      (await _rpc('taysir_review', {'p_requests': requestIds, 'p_decision': decision, 'p_reason': reason})) as int;
+  Future<int> review(List<String> requestIds, String decision, {String? reason, String? mosqueId}) async =>
+      (await _rpc('lessons_review', {
+        'p_requests': requestIds,
+        'p_decision': decision,
+        'p_reason': reason,
+        'p_mosque': mosqueId,
+      })) as int;
 
   @override
   Future<int> undoReview(List<String> requestIds) async =>
-      (await _rpc('taysir_undo_review', {'p_requests': requestIds})) as int;
+      (await _rpc('lessons_undo_review', {'p_requests': requestIds})) as int;
 
   @override
-  Future<void> withdraw(String requestId) => _rpc('taysir_withdraw', {'p_request': requestId});
+  Future<void> withdraw(String requestId) => _rpc('lessons_withdraw', {'p_request': requestId});
 
   @override
   Future<int> cancelLesson(String lessonId, String reason) async =>
-      (await _rpc('taysir_cancel_lesson', {'p_lesson': lessonId, 'p_reason': reason})) as int;
+      (await _rpc('lessons_cancel_lesson', {'p_lesson': lessonId, 'p_reason': reason})) as int;
 
   @override
   Future<void> editLesson(String lessonId, Map<String, dynamic> patch) =>
-      _rpc('taysir_edit_lesson', {'p_lesson': lessonId, 'p': patch});
+      _rpc('lessons_edit_lesson', {'p_lesson': lessonId, 'p': patch});
 
   @override
   Future<void> postReport(String lessonId, int attendance, int women, String issue, String notes) =>
-      _rpc('taysir_post_report', {
+      _rpc('lessons_post_report', {
         'p_lesson': lessonId,
         'p_attendance': attendance,
         'p_women': women,
@@ -191,55 +194,28 @@ class SupabaseLessonsRepository implements LessonsRepository {
       });
 
   @override
-  Future<void> resolveFlag(String flagId) => _rpc('taysir_resolve_flag', {'p_flag': flagId});
+  Future<void> resolveFlag(String flagId) => _rpc('lessons_resolve_flag', {'p_flag': flagId});
 
+  // ------------------------------------------------------- admin preachers
   @override
   Future<String> upsertPreacher(Map<String, dynamic> preacher) async =>
-      (await _rpc('taysir_upsert_preacher', {'p': preacher})) as String;
+      (await _rpc('lessons_upsert_preacher', {'p': preacher})) as String;
 
   @override
-  Future<int> importPreachers(String organizationId, List<Map<String, dynamic>> rows) async =>
-      (await _rpc('taysir_import_preachers', {'p_org': organizationId, 'p_rows': rows})) as int;
+  Future<int> removePreacher(String preacherId) async =>
+      (await _rpc('lessons_remove_preacher', {'p_preacher': preacherId})) as int;
+
+  @override
+  Future<int> importPreachers(List<Map<String, dynamic>> rows) async =>
+      (await _rpc('lessons_import_preachers', {'p_rows': rows})) as int;
 
   @override
   Future<String?> revealPhone(String preacherId) async =>
-      (await _rpc('taysir_reveal_phone', {'p_preacher': preacherId})) as String?;
+      (await _rpc('lessons_reveal_phone', {'p_preacher': preacherId})) as String?;
 
   @override
-  Future<void> setSubmit(String preacherId, bool enabled) =>
-      _rpc('taysir_set_submit', {'p_preacher': preacherId, 'p_enabled': enabled});
-
-  @override
-  Future<void> unlinkPreacher(String preacherId) =>
-      _rpc('taysir_unlink_preacher', {'p_preacher': preacherId});
-
-  @override
-  Future<String> createInvite(String preacherId) async {
-    final r = await _rpc('taysir_create_invite', {'p_preacher': preacherId});
-    return (r as Map)['token'] as String;
-  }
-
-  @override
-  Future<LessonsInviteInfo?> inviteInfo(String token) async {
-    final r = await _rpc('taysir_invite_info', {'p_token': token});
-    return r == null ? null : LessonsInviteInfo.fromJson(Map<String, dynamic>.from(r as Map));
-  }
-
-  @override
-  Future<String> claimInvite(String token, List<String> languages) async =>
-      (await _rpc('taysir_claim_invite', {'p_token': token, 'p_languages': languages})) as String;
-
-  @override
-  Future<void> setCoordinator(String organizationId, String profileId, bool enabled) =>
-      _rpc('taysir_set_coordinator', {'p_org': organizationId, 'p_profile': profileId, 'p_enabled': enabled});
-
-  @override
-  Future<void> setOrganizationEnabled(String organizationId, bool enabled) =>
-      _rpc('taysir_set_org_enabled', {'p_org': organizationId, 'p_enabled': enabled});
-
-  @override
-  Future<List<LessonsCoordinator>> loadCoordinators() async =>
-      [for (final r in _rows(await _rpc('taysir_admin_coordinators'))) LessonsCoordinator.fromJson(r)];
+  Future<void> decideEdit(String editId, bool approve, {String? reason}) =>
+      _rpc('lessons_decide_edit', {'p_edit': editId, 'p_approve': approve, 'p_reason': reason});
 
   /// The admin user directory (admin tier only on the server).
   @override
@@ -248,18 +224,48 @@ class SupabaseLessonsRepository implements LessonsRepository {
           if (r['is_banned'] != true) LessonsAccount.fromJson(r)
       ];
 
+  // ----------------------------------------------------------- admin links
   @override
-  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) async =>
-      (await _rpc('taysir_set_coordinator_orgs', {'p_profile': profileId, 'p_orgs': organizationIds})) as int;
+  Future<NewPreacherKey> createKey(String preacherId, String kind,
+          {DateTime? validFrom, DateTime? validUntil, String note = ''}) async =>
+      NewPreacherKey.fromJson(Map<String, dynamic>.from((await _rpc('lessons_create_key', {
+        'p_preacher': preacherId,
+        'p_kind': kind,
+        'p_valid_from': _instant(validFrom),
+        'p_valid_until': _instant(validUntil),
+        'p_note': note,
+      })) as Map));
 
+  @override
+  Future<List<PreacherKey>> loadKeys(String preacherId) async =>
+      [for (final r in _rows(await _rpc('lessons_preacher_keys', {'p_preacher': preacherId}))) PreacherKey.fromJson(r)];
+
+  @override
+  Future<void> revokeKey(String keyId) => _rpc('lessons_revoke_key', {'p_key': keyId});
+
+  // --------------------------------------------------------- admin mosques
   @override
   Future<String> upsertMosque(Map<String, dynamic> mosque) async =>
-      (await _rpc('taysir_upsert_mosque', {'p': mosque})) as String;
+      (await _rpc('lessons_upsert_mosque', {'p': mosque})) as String;
 
   @override
-  Future<void> verifyMosque(String mosqueId) => _rpc('taysir_verify_mosque', {'p_mosque': mosqueId});
+  Future<void> removeMosque(String mosqueId, {String? mergeInto}) =>
+      _rpc('lessons_remove_mosque', {'p_mosque': mosqueId, 'p_merge_into': mergeInto});
+
+  // -------------------------------------------------------- preacher links
+  @override
+  Future<PreacherLinkView> openLink(String token, String device) async => PreacherLinkView.fromJson(
+      Map<String, dynamic>.from((await _rpc('lessons_key_open', {'p_key': token, 'p_device': device})) as Map));
 
   @override
-  Future<void> rejectMosque(String mosqueId, {String? mergeInto}) =>
-      _rpc('taysir_reject_mosque', {'p_mosque': mosqueId, 'p_merge_into': mergeInto});
+  Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes) =>
+      _rpc('lessons_key_update_profile', {'p_key': token, 'p_device': device, 'p': changes});
+
+  @override
+  Future<String> requestLesson(String token, String device, LessonRequestDraft draft) async =>
+      (await _rpc('lessons_key_request_lesson', {'p_key': token, 'p_device': device, 'p': draft.toJson()})) as String;
+
+  @override
+  Future<void> withdrawRequest(String token, String device, String requestId) =>
+      _rpc('lessons_key_withdraw', {'p_key': token, 'p_device': device, 'p_request': requestId});
 }

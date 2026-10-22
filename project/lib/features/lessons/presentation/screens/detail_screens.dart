@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
 import '../../domain/lessons_rules.dart';
@@ -59,12 +60,10 @@ class LessonScreen extends StatelessWidget {
     final s = c.seriesOf(l.seriesId);
     final sibs = s == null ? <Lesson>[] : c.sessionsOf(s.id);
     final past = l.date.isBefore(c.today);
-    final mine = c.ownPreacherId == l.preacherId;
-    final staff = c.coordinates(l.organizationId);
-    final report = c.staff.reports[l.id];
+    final admin = c.canManage;
+    final report = c.admin.reports[l.id];
     final channel = preacherChannel(context, p);
     final liveNow = c.isLiveNow(l) || (channel?.isCurrentlyLive ?? false) && l.streamed && sameDay(l.date, c.today);
-    final org = c.catalog.organizations[l.organizationId];
 
     final facts = [
       _Fact(TGlyph.calendar, 'lessons.lesson.date'.tr(), '${relativeDayLabel(l.date, lang) == weekdayName(l.date, lang) ? '' : '${relativeDayLabel(l.date, lang)} · '}${weekdayName(l.date, lang)} ${gregorianLabel(l.date, lang)}',
@@ -122,23 +121,22 @@ class LessonScreen extends StatelessWidget {
       ),
     );
 
-    final ownerBar = (mine || staff)
+    final ownerBar = admin
         ? Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: TC.tint, borderRadius: BorderRadius.circular(TC.rLg), border: Border.all(color: TC.hair2)),
             child: Wrap(spacing: 10, runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              TIcon(mine ? TGlyph.user : TGlyph.shield, size: 18, color: TC.goldIcon),
-              Text(l.status == 'pending' ? 'lessons.lesson.pending_note'.tr() : (mine ? 'lessons.lesson.yours'.tr() : 'lessons.lesson.approved_by'.tr()),
+              const TIcon(TGlyph.shield, size: 18, color: TC.goldIcon),
+              Text(l.status == 'pending' ? 'lessons.lesson.pending_note'.tr() : 'lessons.lesson.admin_note'.tr(),
                   style: tBody(14, color: TC.ink2, weight: FontWeight.w600)),
               if (l.isPublic && !past) ...[
-                if (staff)
-                  TButton('lessons.lesson.edit'.tr(), small: true, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l))
-                else
-                  TButton('lessons.lesson.request_change'.tr(), small: true, icon: TGlyph.edit, onPressed: () => context.push('/lessons/submit?from=${l.id}')),
+                TButton('lessons.lesson.edit'.tr(), small: true, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
                 TButton('lessons.lesson.cancel'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
               ],
-              if (past && l.isPublic && report == null && (mine || staff))
-                TButton('lessons.lesson.add_report'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.file, onPressed: () => context.push('/lessons/report/${l.id}')),
+              if (past && l.isPublic && report == null)
+                TButton('lessons.lesson.add_report'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.file, onPressed: () => context.push('/admin/lessons/report/${l.id}')),
+              TButton('lessons.admin.manage_preacher'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.user,
+                  onPressed: () => context.push('/admin/lessons/preachers/${l.preacherId}')),
               if (report != null) TTag('lessons.lesson.report_done'.tr(args: ['${report.attendance}']), tone: TTone.success, icon: TGlyph.check),
             ]),
           )
@@ -158,7 +156,6 @@ class LessonScreen extends StatelessWidget {
             ('lessons.lesson.language'.tr(),
                 '${languageLabel(l.language)}${l.interpretation == null ? '' : ' · ${'lessons.lesson.interp_into'.tr(args: [languageLabel(l.interpretation!)])}'}'),
             ('lessons.lesson.audience'.tr(), '${audienceLabel(l.audience)}${l.womenSection ? ' · ${'lessons.lesson.women'.tr()}' : ''}'),
-            if (org != null) ('lessons.lesson.organized_by'.tr(), '${org.name(lang)} · ${'lessons.programme'.tr()}'),
           ]),
         ]),
       ),
@@ -381,11 +378,16 @@ class _PreacherScreenState extends State<PreacherScreen> {
     final series = c.approvedSeries.where((s) => s.preacherId == p.id).toList();
     final places = {...up, ...past}.map((l) => c.mosque(l.mosqueId)).whereType<Mosque>().toSet().toList();
     final channel = preacherChannel(context, p);
-    final org = c.catalog.organizations[p.organizationId];
-    final bio = p.bio(lang).isNotEmpty ? p.bio(lang) : 'lessons.preacher.bio_default'.tr(args: [org?.name(lang) ?? 'lessons.programme'.tr()]);
+    final bio = p.bio(lang).isNotEmpty ? p.bio(lang) : 'lessons.preacher.bio_default'.tr(args: ['lessons.programme'.tr()]);
     final header = TCard(
       child: Wrap(spacing: 20, runSpacing: 16, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        TAvatar(name: p.name(lang), size: context.wide ? 104 : 84, live: channel?.isCurrentlyLive ?? false),
+        resolveImageProviderOrNull(p.photoUrl) == null
+            ? TAvatar(name: p.name(lang), size: context.wide ? 104 : 84, live: channel?.isCurrentlyLive ?? false)
+            : CircleAvatar(
+                key: const ValueKey('preacher-photo'),
+                radius: context.wide ? 52 : 42,
+                backgroundColor: TC.tint,
+                backgroundImage: resolveImageProviderOrNull(p.photoUrl)),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -396,6 +398,7 @@ class _PreacherScreenState extends State<PreacherScreen> {
               TTag('lessons.preacher.verified'.tr(), icon: TGlyph.shield),
               if (p.affiliation == 'ministry') TTag('lessons.affiliation.ministry'.tr(), tone: TTone.info),
               TTag(cityLabel(p.city), tone: TTone.slate, icon: TGlyph.pin),
+              TTag(p.languages.map((x) => LessonsVocab.languageNative[x] ?? x).join(' · '), tone: TTone.slate, icon: TGlyph.globe),
               if (channel != null) TTag('lessons.preacher.has_channel'.tr(), tone: TTone.liveSoft, icon: TGlyph.radio),
             ]),
           ]),
@@ -406,6 +409,9 @@ class _PreacherScreenState extends State<PreacherScreen> {
             TButton('lessons.preacher.channel'.tr(), icon: TGlyph.radio, onPressed: () => context.push('/profile/${channel.streamerId}')),
           TButton('lessons.preacher.copy_link'.tr(), kind: TBtn.ghost, icon: TGlyph.share,
               onPressed: () => copyToClipboard(context, lessonsLink('/lessons/preachers/${p.id}'))),
+          if (c.canManage)
+            TButton('lessons.admin.manage_preacher'.tr(), kind: TBtn.ghost, icon: TGlyph.shield,
+                onPressed: () => context.push('/admin/lessons/preachers/${p.id}')),
         ]),
       ]),
     );

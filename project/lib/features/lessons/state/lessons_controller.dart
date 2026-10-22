@@ -9,7 +9,8 @@ import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
 
 /// Lessons's client state: the public catalogue, the signed-in account's own
-/// data and roles, and (for coordinators) one organization's staff view.
+/// data and roles, and (for admins) the preacher list, waiting changes,
+/// reports and log.
 ///
 /// A standalone controller, not part of AppProvider (see CLAUDE.md: feature
 /// state lives with its feature). Every write goes to the repository and is
@@ -22,12 +23,7 @@ class LessonsController extends ChangeNotifier {
   LessonsCatalog catalog = const LessonsCatalog();
   LessonsMine mine = const LessonsMine();
   LessonsRoles roles = LessonsRoles.guest;
-  LessonsStaffData staff = const LessonsStaffData();
-
-  /// Admins: every organization (Lessons on or off) and every coordinator.
-  List<LessonsOrganization> adminOrganizations = const [];
-  List<LessonsCoordinator> coordinators = const [];
-  String? staffOrganizationId;
+  LessonsAdminData admin = const LessonsAdminData();
 
   bool loading = false;
   bool loaded = false;
@@ -56,23 +52,10 @@ class LessonsController extends ChangeNotifier {
       catalog = r[0] as LessonsCatalog;
       roles = r[1] as LessonsRoles;
       mine = r[2] as LessonsMine;
+      admin = roles.admin ? await repository.loadAdmin() : const LessonsAdminData();
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
-      if (roles.admin) {
-        final r = await Future.wait<Object>([repository.loadAdminOrganizations(), repository.loadCoordinators()]);
-        adminOrganizations = r[0] as List<LessonsOrganization>;
-        coordinators = r[1] as List<LessonsCoordinator>;
-      } else {
-        adminOrganizations = const [];
-        coordinators = const [];
-      }
-      // Coordinators get their organization's staff data (open reports,
-      // roster) without opening the console first; the Me tab counts it.
-      if (roles.isCoordinator) staffOrganizationId ??= consoleOrganizations.firstOrNull;
-      if (staffOrganizationId != null && roles.coordinates(staffOrganizationId!)) {
-        staff = await repository.loadStaff(staffOrganizationId!);
-      }
     } on LessonsException catch (e) {
       failure = e.failure;
     } finally {
@@ -84,23 +67,8 @@ class LessonsController extends ChangeNotifier {
   /// Sign-in, sign-out and account switches change what the server shows.
   void onAccountChanged(String? userId) {
     if (!loaded || userId == _userId) return;
-    staff = const LessonsStaffData();
-    staffOrganizationId = null;
+    admin = const LessonsAdminData();
     unawaited(refresh());
-  }
-
-  /// Opens the console on [organizationId] (or the first one coordinated).
-  Future<void> openConsole([String? organizationId]) async {
-    await ensureLoaded();
-    final org = organizationId ?? consoleOrganizations.firstOrNull;
-    if (org == null) return;
-    staffOrganizationId = org;
-    try {
-      staff = await repository.loadStaff(org);
-    } on LessonsException catch (e) {
-      failure = e.failure;
-    }
-    _notify();
   }
 
   /// Sample data only: view the programme as another role.
@@ -108,8 +76,7 @@ class LessonsController extends ChangeNotifier {
     final repo = repository;
     if (repo is! DemoLessonsRepository) return;
     repo.persona = persona;
-    staff = const LessonsStaffData();
-    staffOrganizationId = null;
+    admin = const LessonsAdminData();
     unawaited(refresh());
   }
 
@@ -134,12 +101,12 @@ class LessonsController extends ChangeNotifier {
   }
 
   // ----------------------------------------------------------- selectors
-  Mosque? mosque(String id) => catalog.mosques[id];
-  Preacher? preacher(String id) => catalog.preachers[id];
+  Mosque? mosque(String? id) => catalog.mosques[id];
+  Preacher? preacher(String? id) => catalog.preachers[id];
   District? district(String? id) => catalog.districts[id];
   LessonSeries? seriesOf(String? id) => id == null ? null : catalog.series[id];
   Lesson? lesson(String id) => catalog.lessons[id];
-  String cityOfMosque(String mosqueId) => cityOf(catalog.mosques[mosqueId], catalog.districts);
+  String cityOfMosque(String? mosqueId) => cityOf(catalog.mosques[mosqueId], catalog.districts);
 
   /// What the public calendar shows: approved sessions, and cancelled ones
   /// (kept visible, marked cancelled).
@@ -175,48 +142,27 @@ class LessonsController extends ChangeNotifier {
     return now >= start && now <= start + 1.25;
   }
 
-  // Roles
-  /// Organizations the console can open. Admins see all of them, including
-  /// ones without Lessons yet (that is where a master admin switches it on).
-  List<String> get consoleOrganizations {
-    if (roles.admin) {
-      return adminOrganizations.isNotEmpty
-          ? [for (final o in adminOrganizations) o.id]
-          : catalog.organizations.keys.toList();
-    }
-    return roles.coordinate.toList();
-  }
+  // -------------------------------------------------------------- admins
+  /// Admins, master admins and lessons-only admins manage everything.
+  bool get canManage => roles.admin;
 
-  LessonsOrganization? organization(String id) =>
-      catalog.organizations[id] ?? adminOrganizations.where((o) => o.id == id).firstOrNull;
+  /// Lesson requests preachers sent through their links, waiting.
+  List<LessonRequest> get pendingRequests => canManage ? requestsOf(catalog.lessons.values) : const [];
 
-  String? get ownPreacherId => roles.ownPreacherId;
-  bool get canSubmitOwn => roles.isPreacher;
-  bool get canCoordinate => roles.isCoordinator;
-  bool coordinates(String organizationId) => roles.coordinates(organizationId);
+  /// Card changes preachers proposed, waiting.
+  List<PreacherEdit> get pendingEdits => admin.edits.where((e) => e.pending).toList();
 
-  /// Pending requests the caller may review.
-  List<LessonRequest> get pendingRequests =>
-      requestsOf(catalog.lessons.values.where((l) => roles.coordinates(l.organizationId)));
+  List<LessonsFlag> get openFlags => admin.flags.where((f) => f.status == 'open').toList();
 
-  /// The caller's own preacher requests (pending, rejected and withdrawn).
-  List<LessonRequest> myRequests() {
-    final pid = ownPreacherId;
-    if (pid == null) return const [];
-    return requestsOf(catalog.lessons.values.where((l) => l.preacherId == pid),
-        statuses: const {'pending', 'rejected', 'withdrawn'});
-  }
+  /// Everything an admin should look at: requests, card changes, reports.
+  int get waitingCount => pendingRequests.length + pendingEdits.length + openFlags.length;
 
-  List<Lesson> myLessons({required bool upcomingOnly}) {
-    final pid = ownPreacherId;
-    if (pid == null) return const [];
-    final list = catalog.lessons.values
-        .where((l) => l.preacherId == pid && (l.isPublic || l.isCancelled))
-        .where((l) => upcomingOnly ? !l.date.isBefore(today) : l.date.isBefore(today) && l.isPublic)
-        .toList();
-    list.sort(upcomingOnly ? compareLessons : (a, b) => compareLessons(b, a));
-    return list;
-  }
+  LessonsRosterEntry? rosterEntry(String preacherId) =>
+      admin.roster.where((r) => r.preacher.id == preacherId).firstOrNull;
+
+  /// Every lesson of [preacherId] the caller can see, newest request first.
+  List<LessonRequest> requestsOfPreacher(String preacherId, {Set<String> statuses = const {'pending', 'rejected'}}) =>
+      requestsOf(catalog.lessons.values.where((l) => l.preacherId == preacherId), statuses: statuses);
 
   List<Lesson> clashes(Lesson l) => clashesOfLesson(l, catalog.lessons.values);
 
@@ -243,10 +189,10 @@ class LessonsController extends ChangeNotifier {
   Future<void> flag(String lessonId, String kind, String message) =>
       _write(() => repository.flag(lessonId, kind, message));
 
-  // ---------------------------------------------------- preacher / staff
-  Future<String> submit(LessonDraft d) => _write(() => repository.submit(d));
-  Future<int> review(List<String> ids, String decision, {String? reason}) =>
-      _write(() => repository.review(ids, decision, reason: reason));
+  // -------------------------------------------------------- admin writes
+  Future<String> addLessons(LessonDraft d) => _write(() => repository.addLessons(d));
+  Future<int> review(List<String> ids, String decision, {String? reason, String? mosqueId}) =>
+      _write(() => repository.review(ids, decision, reason: reason, mosqueId: mosqueId));
   Future<int> undoReview(List<String> ids) => _write(() => repository.undoReview(ids));
   Future<void> withdraw(String requestId) => _write(() => repository.withdraw(requestId));
   Future<int> cancelLesson(String id, String reason) => _write(() => repository.cancelLesson(id, reason));
@@ -254,25 +200,22 @@ class LessonsController extends ChangeNotifier {
   Future<void> postReport(String id, int attendance, int women, String issue, String notes) =>
       _write(() => repository.postReport(id, attendance, women, issue, notes));
   Future<void> resolveFlag(String id) => _write(() => repository.resolveFlag(id));
+
   Future<String> upsertPreacher(Map<String, dynamic> p) => _write(() => repository.upsertPreacher(p));
-  Future<int> importPreachers(String org, List<Map<String, dynamic>> rows) =>
-      _write(() => repository.importPreachers(org, rows));
+  Future<int> removePreacher(String preacherId) => _write(() => repository.removePreacher(preacherId));
+  Future<int> importPreachers(List<Map<String, dynamic>> rows) => _write(() => repository.importPreachers(rows));
   Future<String?> revealPhone(String preacherId) => _write(() => repository.revealPhone(preacherId));
-  Future<void> setSubmit(String preacherId, bool on) => _write(() => repository.setSubmit(preacherId, on));
-  Future<void> unlinkPreacher(String preacherId) => _write(() => repository.unlinkPreacher(preacherId));
-  Future<String> createInvite(String preacherId) => _write(() => repository.createInvite(preacherId));
-  Future<LessonsInviteInfo?> inviteInfo(String token) => repository.inviteInfo(token);
-  Future<String> claimInvite(String token, List<String> languages) =>
-      _write(() => repository.claimInvite(token, languages));
-  Future<void> setCoordinator(String org, String profileId, bool on) =>
-      _write(() => repository.setCoordinator(org, profileId, on));
-  Future<void> setOrganizationEnabled(String org, bool on) =>
-      _write(() => repository.setOrganizationEnabled(org, on));
+  Future<void> decideEdit(String editId, bool approve, {String? reason}) =>
+      _write(() => repository.decideEdit(editId, approve, reason: reason));
   Future<List<LessonsAccount>> searchAccounts(String query) => repository.searchAccounts(query);
-  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) =>
-      _write(() => repository.setCoordinatorOrganizations(profileId, organizationIds));
+
+  Future<NewPreacherKey> createKey(String preacherId, String kind,
+          {DateTime? validFrom, DateTime? validUntil, String note = ''}) =>
+      _write(() => repository.createKey(preacherId, kind, validFrom: validFrom, validUntil: validUntil, note: note));
+  Future<List<PreacherKey>> loadKeys(String preacherId) => repository.loadKeys(preacherId);
+  Future<void> revokeKey(String keyId) => _write(() => repository.revokeKey(keyId));
+
   Future<String> upsertMosque(Map<String, dynamic> m) => _write(() => repository.upsertMosque(m));
-  Future<void> verifyMosque(String id) => _write(() => repository.verifyMosque(id));
-  Future<void> rejectMosque(String id, {String? mergeInto}) =>
-      _write(() => repository.rejectMosque(id, mergeInto: mergeInto));
+  Future<void> removeMosque(String id, {String? mergeInto}) =>
+      _write(() => repository.removeMosque(id, mergeInto: mergeInto));
 }

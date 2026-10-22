@@ -28,8 +28,8 @@ StreamerModel? preacherChannel(BuildContext context, Preacher? p) {
 
 /// A page of Hadayah Live's Lessons tab (ADR-014). The tab shell owns the
 /// tab bar on phones and the website header on wide screens; this adds the
-/// phone app bar, the loading and failure states, and a preacher's submit
-/// button on the tab's home. [titleKey] is null on that home.
+/// phone app bar and the loading and failure states. [titleKey] is null on
+/// the tab's home.
 class LessonsTab extends StatefulWidget {
   const LessonsTab({super.key, required this.child, this.titleKey});
   final Widget child;
@@ -49,20 +49,10 @@ class _LessonsTabState extends State<LessonsTab> {
   Widget build(BuildContext context) {
     final body = _LessonsGate(child: widget.child);
     if (context.wide) return Material(color: TC.page, child: body);
-    final submit = context.select<LessonsController, bool>((c) => c.canSubmitOwn);
     return Scaffold(
       backgroundColor: TC.page,
       appBar: LessonsPhoneBar(title: widget.titleKey?.tr()),
       body: body,
-      floatingActionButton: submit && widget.titleKey == null
-          ? FloatingActionButton(
-              onPressed: () => context.push('/lessons/submit'),
-              backgroundColor: HidayahGold.g400,
-              foregroundColor: TC.ink,
-              tooltip: 'lessons.discover.submit'.tr(),
-              child: const TIcon(TGlyph.plus, size: 24, color: TC.ink, stroke: 2.2),
-            )
-          : null,
     );
   }
 }

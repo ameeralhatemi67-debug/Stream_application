@@ -60,7 +60,7 @@ void main() {
     test('a clash is the same mosque and slot, or the preacher booked twice', () {
       final day = DateTime(2026, 10, 25, 12);
       Lesson l(String id, String req, String mosque, String preacher, {String slot = 'isha', String status = 'approved'}) =>
-          Lesson(id: id, organizationId: 'o', requestId: req, type: 'talk', topic: 'fiqh', titleAr: 'درس',
+          Lesson(id: id, requestId: req, type: 'talk', topic: 'fiqh', titleAr: 'درس',
               preacherId: preacher, mosqueId: mosque, date: day, slot: slot, status: status);
       final existing = [l('a', 'r1', 'm1', 'p1'), l('b', 'r2', 'm2', 'p2', slot: 'asr'), l('c', 'r3', 'm9', 'p9', status: 'rejected')];
       expect(clashesOfLesson(l('x', 'rx', 'm1', 'p5'), existing).map((c) => c.id), ['a']);
@@ -78,26 +78,42 @@ void main() {
   });
 
   group('controller on sample data', () {
-    test('a preacher submits, a coordinator approves, a guest sees it', () async {
-      final repo = DemoLessonsRepository(persona: LessonsDemoPersona.preacher);
+    const phone = 'test-phone-0123456789abcdef';
+
+    test('a preacher asks through his link, an admin approves with a mosque, a guest sees it', () async {
+      final repo = DemoLessonsRepository();
       final c = LessonsController(repo);
       await c.ensureLoaded();
-      expect(c.canSubmitOwn, isTrue);
       final before = c.publicLessons.length;
-      final req = await c.submit(LessonDraft(
-          preacherId: DemoLessonsRepository.ownPreacher, type: 'lecture', topic: 'raqaiq', titleAr: 'محاضرة اختبار',
-          slot: 'isha', dates: [addDays(c.today, 9)], mosqueId: 'm1'));
-      expect(c.myRequests().map((r) => r.id), contains(req));
+      final req = await repo.requestLesson(DemoLessonsRepository.fahdLink, phone, LessonRequestDraft(
+          type: 'lecture', topic: 'raqaiq', titleAr: 'محاضرة اختبار', slot: 'isha', dates: [addDays(c.today, 9)]));
+      final view = await repo.openLink(DemoLessonsRepository.fahdLink, phone);
+      expect(view.lessons.where((l) => l.requestId == req).single.status, 'pending');
 
-      c.setDemoPersona(LessonsDemoPersona.coordinator);
+      c.setDemoPersona(LessonsDemoPersona.admin);
       await c.refresh();
       expect(c.pendingRequests.map((r) => r.id), contains(req));
-      expect(await c.review([req], 'approve'), 1);
+      // Approving needs a mosque: the request came without one.
+      expect(() => c.review([req], 'approve'), throwsA(isA<LessonsException>()));
+      expect(await c.review([req], 'approve', mosqueId: 'm1'), 1);
+      expect(repo.lessons.values.where((l) => l.requestId == req).single.mosqueId, 'm1');
 
       c.setDemoPersona(LessonsDemoPersona.guest);
       await c.refresh();
       expect(c.publicLessons.length, before + 1);
       expect(() => c.review([req], 'approve'), throwsA(isA<LessonsException>()));
+    });
+
+    test('an admin adds a lesson that is public at once', () async {
+      final c = LessonsController(DemoLessonsRepository(persona: LessonsDemoPersona.admin));
+      await c.ensureLoaded();
+      final req = await c.addLessons(LessonDraft(
+          preacherId: 'p7', type: 'talk', topic: 'fiqh', titleAr: 'كلمة اختبار', slot: 'asr',
+          dates: [addDays(c.today, 4), addDays(c.today, 11)], mosqueId: 'm2'));
+      final added = c.catalog.lessons.values.where((l) => l.requestId == req).toList();
+      expect(added, hasLength(2));
+      expect(added.every((l) => l.status == 'approved' && l.seriesId != null), isTrue);
+      expect(c.pendingRequests.map((r) => r.id), isNot(contains(req)));
     });
 
     test('a viewer reminder is timed to the adhan', () async {
@@ -110,15 +126,61 @@ void main() {
       expect(c.hasReminder(l.id), isFalse);
     });
 
-    test('rejecting needs a reason, and only staff see pending requests', () async {
-      final c = LessonsController(DemoLessonsRepository(persona: LessonsDemoPersona.coordinator));
+    test('rejecting needs a reason, and only admins see pending requests', () async {
+      final c = LessonsController(DemoLessonsRepository(persona: LessonsDemoPersona.admin));
       await c.ensureLoaded();
+      expect(c.canManage, isTrue);
       final req = c.pendingRequests.first.id;
       expect(() => c.review([req], 'reject', reason: ''), throwsA(isA<LessonsException>()));
       c.setDemoPersona(LessonsDemoPersona.viewer);
       await c.refresh();
+      expect(c.canManage, isFalse);
       expect(c.pendingRequests, isEmpty);
       expect(c.catalog.lessons.values.where((l) => l.status == 'pending'), isEmpty);
+    });
+
+    test('a one-time link keeps to the first phone; a timed link to its window', () async {
+      final repo = DemoLessonsRepository();
+      Future<String> opens(String token, String device) async {
+        try {
+          await repo.openLink(token, device);
+          return 'opened';
+        } on LessonsException catch (e) {
+          return e.detail;
+        }
+      }
+
+      expect((await repo.openLink(DemoLessonsRepository.fahdLink, phone)).preacher.id, 'p1');
+      expect(await opens(DemoLessonsRepository.fahdLink, phone), 'opened');
+      expect(await opens(DemoLessonsRepository.fahdLink, 'another-phone-0123456789'), 'used');
+      expect(await opens('demo-old', phone), 'revoked');
+      expect(await opens('not-a-link', phone), 'revoked');
+      // A timed link opens on any phone while it lasts.
+      expect(await opens(DemoLessonsRepository.iqbalLink, 'another-phone-0123456789'), 'opened');
+
+      repo.persona = LessonsDemoPersona.admin;
+      final soon = await repo.createKey('p2', 'window',
+          validFrom: DateTime.now().add(const Duration(days: 1)), validUntil: DateTime.now().add(const Duration(days: 2)));
+      expect(await opens(soon.token, phone), 'not_yet');
+      final keys = await repo.loadKeys('p2');
+      expect(keys.single.state(DateTime.now()), 'scheduled');
+      await repo.revokeKey(keys.single.id);
+      expect((await repo.loadKeys('p2')).single.state(DateTime.now()), 'revoked');
+      expect(await opens(soon.token, phone), 'revoked');
+    });
+
+    test('a card change waits for an admin, who applies it', () async {
+      final repo = DemoLessonsRepository();
+      await repo.proposeCardEdit(DemoLessonsRepository.fahdLink, phone, {'title_ar': 'إمام وخطيب جامع الهدى'});
+      expect(repo.preachers['p1']!.titleAr, isNot('إمام وخطيب جامع الهدى'));
+      expect((await repo.openLink(DemoLessonsRepository.fahdLink, phone)).pendingEdit, {'title_ar': 'إمام وخطيب جامع الهدى'});
+
+      final c = LessonsController(repo..persona = LessonsDemoPersona.admin);
+      await c.ensureLoaded();
+      final edit = c.pendingEdits.firstWhere((e) => e.preacherId == 'p1');
+      await c.decideEdit(edit.id, true);
+      expect(repo.preachers['p1']!.titleAr, 'إمام وخطيب جامع الهدى');
+      expect(c.pendingEdits.where((e) => e.preacherId == 'p1'), isEmpty);
     });
   });
 }

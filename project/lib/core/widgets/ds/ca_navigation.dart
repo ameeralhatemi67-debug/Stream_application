@@ -376,7 +376,7 @@ class _RailAccountLinks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final role = context.select<AppProvider, (bool, bool, bool)>(
-        (p) => (p.isStreamerModeEnabled, p.isAdminUser, p.isPermittedAdmin));
+        (p) => (p.isStreamerModeEnabled, p.isLessonsAdmin, p.isPermittedAdmin));
     Widget link(CaGlyph icon, String label, VoidCallback onTap) => Padding(
         padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
         child: TextButton(
@@ -416,7 +416,7 @@ class CaAccountMenu extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final role = context.select<AppProvider, (bool, bool, bool)>(
-        (p) => (p.isStreamerModeEnabled, p.isAdminUser, p.isPermittedAdmin));
+        (p) => (p.isStreamerModeEnabled, p.isLessonsAdmin, p.isPermittedAdmin));
     if (!role.$1 && !role.$2 && !role.$3) return const SizedBox.shrink();
     return PopupMenuButton<String>(
         tooltip: 'ds.account_actions'.tr(),

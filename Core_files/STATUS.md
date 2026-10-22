@@ -8,6 +8,20 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Lessons run by admins; preacher links; admin emails, 2026-10-22 (not on hosted yet)
+
+Owner decisions (ADR-015): "Taysir" is gone as a name; Lessons is one platform-wide programme with no organizations, no coordinators and no preacher accounts. Built in four local commits (`b482522` rename, `11205d1` admin emails and lessons-only admins, `0fc00d3` lessons database v2, and the commit for this entry):
+
+- **Who runs it:** admins, master admins and the new lessons-only admin (`is_lessons_admin()`; a master admin grants it in Roles & Permissions). Master admins add admin emails; a verified account with that email becomes an admin at once or at first sign-in.
+- **Admin page, second area:** a "Platform / Preachers & lessons" switch at the top of the admin navigation (with what is waiting counted on it). `/admin/lessons/:tab`: overview, approvals (preachers' lesson requests, each approved with a mosque the admin chooses, alone or several at once, with undo; card changes shown before/after), preachers (list with link and change status; add, import CSV), lessons (upcoming, past with reports, cancelled; edit, cancel, copy as new), mosques (add, edit, hide/show, remove or merge), reports from users, statistics and monthly report, action log. A page per preacher: card (title, bio, photo, languages, public or hidden), private phone with a logged reveal, his links, waiting card change, requests, upcoming lessons, linking the card to a streaming account (platform admins), removal. "Add lesson" publishes at once, for any preacher, with a new mosque if needed. A lessons-only admin opening `/admin` lands here; admin shortcuts (rail, account menu, website header, Settings) now show for lessons-only admins too.
+- **Preacher links:** one-time (the first phone keeps it, optional end) or timed (from a start to an end), shown once with a WhatsApp message. `/preacher/:key` needs no sign-in: large text, Arabic first; his coming and past lessons with their state (a request shows "the admins will choose the mosque"), "Ask for a lesson" (type, title, topic, day or every week, prayer, language, audience, note), "Edit my card" (changes wait for an admin), withdraw a request, and plain messages when a link is revoked, not started, ended or open on another phone. Settings shows "My preacher page" on a device where his link opened.
+- **Public side:** the preacher page shows his photo and languages; lesson pages give admins edit, cancel, report and "Manage preacher".
+- **Removed:** the console at `/lessons/console`, coordinators, invitation claim, the permissions page, "My lessons" and the preacher submit button (old addresses redirect), and 229 translation keys only they used.
+
+**Not deployed.** Migrations `20261022100000_admin_email_grants.sql` and `20261022110000_lessons_programme_v2.sql` wait for the owner's yes. The app on master reads only the new tables, so it must not reach hosted (push and Vercel) before the migrations, or the Lessons tab shows its unavailable state.
+
+Verification: see the ledger's RESUME block of the same day.
+
 ## Polish: map preview on Discover, wider cards, verified on avatars, sign out, association logo, 2026-10-22
 
 Owner requests after testing the merge:

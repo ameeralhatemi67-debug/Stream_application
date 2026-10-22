@@ -1,7 +1,9 @@
 import '../domain/lessons_models.dart';
 
-/// Why a Lessons call failed, in terms the UI can explain.
-enum LessonsFailure { forbidden, invalid, conflict, expired, unavailable, unknown }
+/// Why a Lessons call failed, in terms the UI can explain. [expired] is a
+/// preacher link that no longer opens; its detail says why (revoked,
+/// not_yet, expired, used). [busy] is a limit (too many requests waiting).
+enum LessonsFailure { forbidden, invalid, conflict, expired, busy, unavailable, unknown }
 
 class LessonsException implements Exception {
   const LessonsException(this.failure, [this.detail = '']);
@@ -12,8 +14,9 @@ class LessonsException implements Exception {
 }
 
 /// Every Lessons read and write. Writes go through server functions that check
-/// the caller (see the migration 20261021142359); the client never decides
-/// authority on its own.
+/// the caller (migration 20261022110000): admins manage everything, viewers
+/// keep their own reminders and follows, and a preacher acts only through
+/// his link. The client never decides authority on its own.
 abstract class LessonsRepository {
   /// True for the in-memory sample data used when no backend is configured.
   bool get isDemo;
@@ -24,8 +27,9 @@ abstract class LessonsRepository {
   Future<LessonsCatalog> loadCatalog();
   Future<LessonsRoles> loadRoles();
   Future<LessonsMine> loadMine();
-  Future<LessonsStaffData> loadStaff(String organizationId);
-  Future<List<LessonsOrganization>> loadAdminOrganizations();
+
+  /// Admins only.
+  Future<LessonsAdminData> loadAdmin();
 
   // Viewers
   Future<void> setReminder(String lessonId, String lead, DateTime remindAt);
@@ -36,9 +40,13 @@ abstract class LessonsRepository {
   Future<void> markNotificationsRead([List<String>? ids]);
   Future<void> flag(String lessonId, String kind, String message);
 
-  // Preachers and coordinators
-  Future<String> submit(LessonDraft draft);
-  Future<int> review(List<String> requestIds, String decision, {String? reason});
+  // Admins: lessons
+  /// Adds a lesson or weekly series, published at once. Returns its request id.
+  Future<String> addLessons(LessonDraft draft);
+
+  /// Decides preachers' requests. Approving needs a mosque: [mosqueId] is set
+  /// on every session that has none.
+  Future<int> review(List<String> requestIds, String decision, {String? reason, String? mosqueId});
   Future<int> undoReview(List<String> requestIds);
   Future<void> withdraw(String requestId);
   Future<int> cancelLesson(String lessonId, String reason);
@@ -46,29 +54,35 @@ abstract class LessonsRepository {
   Future<void> postReport(String lessonId, int attendance, int women, String issue, String notes);
   Future<void> resolveFlag(String flagId);
 
-  // Roster, invitations and team
+  // Admins: preachers
   Future<String> upsertPreacher(Map<String, dynamic> preacher);
-  Future<int> importPreachers(String organizationId, List<Map<String, dynamic>> rows);
-  Future<String?> revealPhone(String preacherId);
-  Future<void> setSubmit(String preacherId, bool enabled);
-  Future<void> unlinkPreacher(String preacherId);
-  Future<String> createInvite(String preacherId);
-  Future<LessonsInviteInfo?> inviteInfo(String token);
-  Future<String> claimInvite(String token, List<String> languages);
-  Future<void> setCoordinator(String organizationId, String profileId, bool enabled);
-  Future<void> setOrganizationEnabled(String organizationId, bool enabled);
 
-  // Admins: coordinators across organizations
-  Future<List<LessonsCoordinator>> loadCoordinators();
+  /// Removes a preacher with all his lessons and links. Returns how many
+  /// lessons went with him.
+  Future<int> removePreacher(String preacherId);
+  Future<int> importPreachers(List<Map<String, dynamic>> rows);
+  Future<String?> revealPhone(String preacherId);
+  Future<void> decideEdit(String editId, bool approve, {String? reason});
+
+  /// The admin user directory, to link a preacher to his account.
   Future<List<LessonsAccount>> searchAccounts(String query);
 
-  /// Sets exactly which organizations [profileId] coordinates: adding,
-  /// changing and removing (an empty list) a coordinator. Returns the number
-  /// of grants and revocations made.
-  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds);
+  // Admins: preacher links
+  Future<NewPreacherKey> createKey(String preacherId, String kind,
+      {DateTime? validFrom, DateTime? validUntil, String note = ''});
+  Future<List<PreacherKey>> loadKeys(String preacherId);
+  Future<void> revokeKey(String keyId);
 
-  // Mosque directory
+  // Admins: mosques
   Future<String> upsertMosque(Map<String, dynamic> mosque);
-  Future<void> verifyMosque(String mosqueId);
-  Future<void> rejectMosque(String mosqueId, {String? mergeInto});
+
+  /// Removes a mosque, or with [mergeInto] moves its sessions to that one.
+  Future<void> removeMosque(String mosqueId, {String? mergeInto});
+
+  // A preacher, through his link (no account needed). [device] identifies
+  // the phone: a one-time link binds to the first one.
+  Future<PreacherLinkView> openLink(String token, String device);
+  Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes);
+  Future<String> requestLesson(String token, String device, LessonRequestDraft draft);
+  Future<void> withdrawRequest(String token, String device, String requestId);
 }

@@ -8,7 +8,64 @@ updated: 2026-10-22
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
 
+## ADR-015: Admins run the lessons; preachers use links, not accounts (2026-10-22)
+
+Owner decisions 2026-10-22 (the seven questions, answered as recommended).
+This replaces ADR-014's authority model; its "inside Hadayah Live" layout
+stands. "Taysir" is no longer a name in the app: the feature is Lessons
+(الدروس) in code, links and screens.
+
+- **One platform-wide programme, run only by admins.** No organization owns
+  preachers, mosques or lessons, and nothing is switched on per organization.
+  There are no coordinators and no preacher accounts. Who manages lessons is
+  `is_lessons_admin()`: admins, master admins and the new **lessons-only
+  admin** role (`user_roles.role = 'lessons_admin'`, granted by a master
+  admin in Roles & Permissions). Lessons-only admins are not admin tier
+  (`is_admin_tier()` is unchanged) and see only the lessons area.
+- **Admin emails.** A master admin adds an email address
+  (`admin_email_grants`); a verified account with that email becomes an
+  admin now or at its first sign-in. Emails grant only `admin`; master admin
+  is given only by an existing master admin. The old hard-coded bootstrap
+  list moved into the table as master-admin rows.
+- **A preacher is a person in the admins' list, never an organization.**
+  Admins add, edit, hide and remove preachers and can do everything for them
+  (add lessons, choose mosques, file reports) whether or not the preacher is
+  ever involved. A card can be linked to a Hadayah Live account only for a
+  preacher who also streams.
+- **Preacher links instead of accounts.** An admin creates a link for a
+  preacher: **one-time** (the first phone that opens it keeps it, until
+  revoked or an optional end) or **timed** (any phone, from a start to an
+  end). Only hashes of the key and of the bound phone's id are stored; the
+  link is shown once, to send on WhatsApp. Through the link (`/preacher/:key`,
+  no sign-in) a preacher sees his lessons, proposes card changes and requests
+  lessons (date, prayer time, topic, a note). Each request and each card
+  change waits for an admin; approving a request needs a mosque, which the
+  admin chooses. Errors carry why a link no longer opens (revoked, not yet,
+  ended, used on another phone).
+- **The admin page has two areas**: the platform and Preachers & lessons
+  (`/admin/lessons/:tab`: overview, approvals, preachers, lessons, mosques,
+  reports from users, statistics, log; plus a page per preacher with his
+  links). A switch at the top of the navigation moves between them; a
+  lessons-only admin opening `/admin` lands on the lessons area.
+- **Public card:** name, title, bio, languages, photo, upcoming lessons and
+  mosques. The phone stays private: admins see a mask, and each reveal is
+  logged.
+- **Data:** migration `20261022110000_lessons_programme_v2.sql` drops the
+  `taysir_*` schema (hosted held only seeded districts) and creates
+  `mosque_districts`, `mosques`, `preachers`, `preacher_edits`,
+  `lesson_series`, `lessons`, `lesson_*` and private `preacher_contacts` /
+  `preacher_keys`; every write is a security definer `lessons_*` function.
+  `20261022100000_admin_email_grants.sql` adds the email grants and the
+  lessons-only role. Both are tested on a hosted-equivalent database
+  (pgTAP: `supabase/tests/lessons_programme.test.sql`,
+  `admin_email_grants.test.sql`) and must be applied to hosted together
+  with the app that uses them.
+
 ## ADR-014: Taysir, the mosque lessons programme, inside Hadayah Live (2026-10-21)
+
+> **Superseded in part by ADR-015 (2026-10-22):** the organization-scoped
+> permissions, coordinators and invitation claims below are gone; the
+> layout inside Hadayah Live stands.
 
 Owner request: build the reviewed "Taysir in Hadayah Live" prototype into the
 app on our Supabase, taking Taysir's features but not its code or security

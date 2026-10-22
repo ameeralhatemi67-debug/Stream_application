@@ -40,12 +40,13 @@ import '../../features/web/presentation/hidayah_web_header.dart';
 import '../../features/web/presentation/hidayah_web_kit.dart';
 import '../widgets/hadayah_loading_indicator.dart';
 import '../../features/lessons/domain/lessons_rules.dart';
+import '../../features/lessons/presentation/admin/lessons_admin_pages.dart'
+    deferred as lessons_admin;
 import '../../features/lessons/presentation/screens/account_screens.dart';
-import '../../features/lessons/presentation/screens/console_screen.dart';
 import '../../features/lessons/presentation/screens/detail_screens.dart';
 import '../../features/lessons/presentation/screens/discover_screen.dart';
 import '../../features/lessons/presentation/screens/lessons_screen.dart';
-import '../../features/lessons/presentation/screens/preacher_screens.dart';
+import '../../features/lessons/presentation/screens/preacher_link_screen.dart';
 import '../../features/lessons/presentation/lessons_shell.dart';
 import '../../features/lessons/state/lessons_controller.dart';
 
@@ -83,6 +84,16 @@ class AppRouter {
       GlobalKey<NavigatorState>(debugLabel: 'lessonsBranch');
 
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
+
+  /// The old lessons console's tabs and where they live now.
+  static const _consoleTabs = {
+    'overview': 'overview',
+    'review': 'approvals',
+    'preachers': 'preachers',
+    'mosques': 'mosques',
+    'reports': 'stats',
+    'audit': 'log',
+  };
 
   /// Routes that require a live, authenticated Supabase session.
   /// See doc/Audit/01_Security_Data_Protection_Audit.md VULN-RBAC-01.
@@ -158,8 +169,22 @@ class AppRouter {
             return isLoggedIn ? '/feed' : '/welcome';
           }
 
+          // The admin page's Preachers & lessons area: every admin, and
+          // lessons-only admins (who have no other area).
+          if (path.startsWith('/admin/lessons')) {
+            if (!isLoggedIn) return '/welcome';
+            if (!provider.adminRoleLoading && !provider.isLessonsAdmin) {
+              return '/feed';
+            }
+            return null;
+          }
           if (_authGuardedPaths.contains(path)) {
             if (!isLoggedIn) return '/welcome';
+            if (path == '/admin' &&
+                !provider.adminRoleLoading &&
+                provider.isLessonsOnlyAdmin) {
+              return '/admin/lessons';
+            }
             if (path == '/admin' &&
                 !provider.adminRoleLoading &&
                 !provider.isAdminUser) {
@@ -313,7 +338,8 @@ class AppRouter {
               // Mosque lessons are a tab of Hadayah Live (ADR-014). Public
               // pages need no sign-in; screens that act check roles
               // themselves and the server enforces every write. Lesson pages
-              // and the console open above the tabs.
+              // open above the tabs; admins run the programme from the admin
+              // page (/admin/lessons).
               StatefulShellBranch(
                 navigatorKey: _lessonsNavigatorKey,
                 routes: [
@@ -414,40 +440,67 @@ class AppRouter {
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me/saved',
               builder: (context, state) => LessonsSavedScreen(tab: state.uri.queryParameters['tab'])),
+          // A preacher's page from the link an admin sent him: no account.
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/me/lessons',
-              builder: (context, state) => LessonsMyLessonsScreen(tab: state.uri.queryParameters['tab'])),
+              path: '/preacher/:token',
+              builder: (context, state) =>
+                  PreacherLinkScreen(
+                      key: ValueKey(state.pathParameters['token']),
+                      token: state.pathParameters['token']!)),
+          // The admin page's Preachers & lessons area (loaded on demand).
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/submit',
-              builder: (context, state) => LessonsSubmitScreen(
-                  key: ValueKey(state.uri.query),
-                  fromLessonId: state.uri.queryParameters['from'],
-                  replaces: state.uri.queryParameters['replaces'])),
+              path: '/admin/lessons',
+              builder: (context, state) => _Deferred(
+                  loader: lessons_admin.loadLibrary,
+                  builder: () => lessons_admin.lessonsAdminTab('overview'))),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/report/:id',
-              builder: (context, state) => LessonsReportScreen(lessonId: state.pathParameters['id']!)),
+              path: '/admin/lessons/add',
+              builder: (context, state) => _Deferred(
+                  loader: lessons_admin.loadLibrary,
+                  builder: () => lessons_admin.lessonsAdminAdd(
+                      fromLessonId: state.uri.queryParameters['from'],
+                      preacherId: state.uri.queryParameters['preacher']))),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/claim/:token',
-              builder: (context, state) => LessonsClaimScreen(token: state.pathParameters['token']!)),
+              path: '/admin/lessons/preachers/:id',
+              builder: (context, state) => _Deferred(
+                  loader: lessons_admin.loadLibrary,
+                  builder: () => lessons_admin
+                      .lessonsAdminPreacher(state.pathParameters['id']!))),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/permissions',
-              builder: (context, state) => const LessonsPermissionsScreen()),
+              path: '/admin/lessons/report/:id',
+              builder: (context, state) => _Deferred(
+                  loader: lessons_admin.loadLibrary,
+                  builder: () => lessons_admin
+                      .lessonsAdminReport(state.pathParameters['id']!))),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
+              path: '/admin/lessons/:tab',
+              builder: (context, state) => _Deferred(
+                  loader: lessons_admin.loadLibrary,
+                  builder: () => lessons_admin
+                      .lessonsAdminTab(state.pathParameters['tab']!))),
+          // Pages from before admins ran the programme alone (2026-10-22).
+          GoRoute(
               path: '/lessons/console',
-              builder: (context, state) => LessonsConsoleScreen(filter: state.uri.queryParameters['filter'])),
+              redirect: (context, state) => '/admin/lessons',
+              routes: [
+                GoRoute(
+                    path: ':tab',
+                    redirect: (context, state) =>
+                        '/admin/lessons/${_consoleTabs[state.pathParameters['tab']] ?? 'overview'}'),
+              ]),
+          GoRoute(path: '/lessons/submit', redirect: (context, state) => '/admin/lessons/add'),
           GoRoute(
-              parentNavigatorKey: _rootNavigatorKey,
-              path: '/lessons/console/:tab',
-              builder: (context, state) => LessonsConsoleScreen(
-                  key: ValueKey(state.uri.toString()),
-                  tab: state.pathParameters['tab']!,
-                  filter: state.uri.queryParameters['filter'])),
+              path: '/lessons/report/:id',
+              redirect: (context, state) => '/admin/lessons/report/${state.pathParameters['id']}'),
+          GoRoute(path: '/lessons/me/lessons', redirect: (context, state) => '/lessons/me'),
+          GoRoute(path: '/lessons/permissions', redirect: (context, state) => '/lessons/me'),
+          GoRoute(path: '/lessons/claim/:token', redirect: (context, state) => '/lessons'),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/profile/:id',
@@ -871,6 +924,7 @@ class _RouteGate extends ChangeNotifier {
         _provider.hasCompletedRoleSelection,
         _provider.isApprovedStreamer,
         _provider.isAdminUser,
+        _provider.isLessonsAdmin,
         _provider.myApplication != null,
         _provider.adminRoleLoading,
         _provider.isPermittedAdmin,

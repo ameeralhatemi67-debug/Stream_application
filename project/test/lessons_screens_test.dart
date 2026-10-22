@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/routing/app_router.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/ds/ca_navigation.dart';
@@ -16,12 +17,13 @@ import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart'
 import 'package:streamer_app/features/lessons/domain/lessons_dates.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_models.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_rules.dart';
+import 'package:streamer_app/features/lessons/presentation/admin/lessons_admin_shell.dart';
 import 'package:streamer_app/features/lessons/presentation/screens/discover_screen.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_in_app.dart';
-import 'package:streamer_app/features/lessons/presentation/lessons_kit.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_map.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_widgets.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
+import 'package:streamer_app/features/lessons/state/preacher_link_controller.dart';
 import 'package:streamer_app/features/web/presentation/hidayah_web_header.dart';
 
 import 'support/localized_app.dart';
@@ -71,12 +73,20 @@ Future<_App> _open(
   String lang = 'en',
   double scale = 1,
   void Function(DemoLessonsRepository repo)? setup,
+  bool platformAdmin = false,
+  bool? signIn,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final provider = AppProvider();
+  final provider = AppProvider(AdminDatabaseService(null));
+  // The admin page checks the account's role; the sample admin is a lessons
+  // admin, and also a platform admin when [platformAdmin].
+  if (signIn ?? persona == LessonsDemoPersona.admin) {
+    provider.debugSetSignedInForTests(
+        email: 'admin@example.invalid', isLessonsAdmin: true, isAdmin: platformAdmin);
+  }
   final repo = DemoLessonsRepository(persona: persona);
   setup?.call(repo);
   final lessons = LessonsController(repo);
@@ -147,6 +157,21 @@ Lesson _nextTawhid(DemoLessonsRepository repo) {
           .toList()
         ..sort(compareLessons))
       .first;
+}
+
+/// Chooses the first mosque in an approval card's picker; returns its id.
+Future<String> _pickMosque(WidgetTester tester, _App app, String requestId) async {
+  final c = app.lessons, lang = app.lang;
+  final mosques = c.catalog.mosques.values.toList()
+    ..sort((a, b) {
+      final city = c.cityOfMosque(a.id).compareTo(c.cityOfMosque(b.id));
+      return city != 0 ? city : a.name(lang).compareTo(b.name(lang));
+    });
+  final m = mosques.first;
+  await _tap(tester, find.byKey(ValueKey('approval-mosque-$requestId')));
+  await tester.tap(find.text('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}').last);
+  await _settle(tester);
+  return m.id;
 }
 
 int _upcomingMatching(LessonsController c, LessonFilter f) => c.publicLessons
@@ -440,15 +465,13 @@ void main() {
       });
     }
 
-    testWidgets('a preacher sees the submit band and button', (tester) async {
+    testWidgets('an admin sees the Preachers & lessons band', (tester) async {
       final app =
-          await _open(tester, '/lessons', persona: LessonsDemoPersona.preacher);
-      final name = app.repo.preachers['p1']!.name('en');
-      expect(find.text('lessons.discover.welcome'.tr(args: [name])),
-          findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      await _tap(tester, find.byType(FloatingActionButton));
-      expect(app.at, '/lessons/submit');
+          await _open(tester, '/lessons', persona: LessonsDemoPersona.admin);
+      expect(find.text('lessons.admin.title'.tr()), findsWidgets);
+      expect(find.byType(FloatingActionButton), findsNothing);
+      await _tap(tester, find.text('lessons.discover.open_review'.tr()));
+      expect(app.at, '/admin/lessons/approvals');
       await app.close();
     });
   });
@@ -559,10 +582,10 @@ void main() {
     }
 
     for (final (lang, size) in [('en', _phone), ('ar', _web)]) {
-      testWidgets('a coordinator cancels a session and reminded viewers are told ($lang ${size.width})',
+      testWidgets('an admin cancels a session and reminded viewers are told ($lang ${size.width})',
           (tester) async {
         final app = await _open(tester, '/lessons',
-            persona: LessonsDemoPersona.coordinator, lang: lang, size: size);
+            persona: LessonsDemoPersona.admin, lang: lang, size: size);
         final l = _nextTawhid(app.repo);
         await app.go('/lessons/lesson/${l.id}');
         await _tap(tester, find.text('lessons.lesson.cancel'.tr()));
@@ -579,94 +602,52 @@ void main() {
         await app.close();
       });
     }
-  });
 
-  group('submit wizard', () {
-    for (final (lang, size, scale) in [
-      ('en', _phone, 1.0),
-      ('ar', _smallPhone, 2.0),
-      ('ar', _web, 1.0),
-    ]) {
-      testWidgets('a preacher sends a lesson for review ($lang ${size.width} x$scale)',
-          (tester) async {
-        final app = await _open(tester, '/lessons/submit',
-            persona: LessonsDemoPersona.preacher,
-            lang: lang,
-            size: size,
-            scale: scale);
-        const title = 'درس تجريبي في فقه الصيام';
-        final next = find.text('lessons.next'.tr());
-
-        await tester.enterText(find.byType(TextField).first, title);
-        await _settle(tester);
-        await _tap(tester, next);
-
-        await _tap(tester, find.text(app.repo.mosques['m1']!.name(lang)));
-        await _tap(tester, next);
-        await _tap(tester, next);
-
-        expect(find.text('lessons.submit.summary'.tr()), findsOneWidget);
-        await _tap(tester, find.text('lessons.submit.send'.tr()));
-
-        final sent = app.repo.lessons.values.where((l) => l.titleAr == title);
-        expect(sent, hasLength(1));
-        expect(sent.single.status, 'pending');
-        expect(sent.single.mosqueId, 'm1');
-        expect(sent.single.date, addDays(lessonsToday(), 2));
-        expect(app.at, '/lessons/me/lessons');
-        expect(find.text(title), findsOneWidget);
-        await app.close();
-      });
-    }
-
-    testWidgets('the wizard holds Next until a title is written',
-        (tester) async {
-      final app = await _open(tester, '/lessons/submit',
-          persona: LessonsDemoPersona.preacher);
-      await _tap(tester, find.text('lessons.next'.tr()));
-      // Still on the first step.
-      expect(find.text('lessons.submit.title_ar_hint'.tr()), findsOneWidget);
-      await app.close();
-    });
-
-    testWidgets('a guest or viewer cannot submit', (tester) async {
-      final app = await _open(tester, '/lessons/submit',
-          persona: LessonsDemoPersona.viewer);
-      expect(find.text('lessons.submit.not_allowed'.tr()), findsOneWidget);
-      await app.close();
-    });
-
-    testWidgets('a coordinator publishes directly for a chosen preacher (1280)',
-        (tester) async {
-      final app = await _open(tester, '/lessons/submit',
-          persona: LessonsDemoPersona.coordinator, size: _web);
-      const title = 'محاضرة منشورة مباشرة';
-      await _tap(tester, find.byType(DropdownButtonFormField<String>).first);
-      await tester.tap(find.text(app.repo.preachers['p3']!.name('en')).last);
-      await _settle(tester);
-      await tester.enterText(find.byType(TextField).first, title);
-      await _settle(tester);
-      await _tap(tester, find.text('lessons.next'.tr()));
-      await _tap(tester, find.text('lessons.city.dhahran'.tr()));
-      await _tap(tester, find.text(app.repo.mosques['m5']!.name('en')));
-      await _tap(tester, find.text('lessons.next'.tr()));
-      await _tap(tester, find.text('lessons.next'.tr()));
-      await _tap(tester, find.text('lessons.submit.direct'.tr()));
-      await _tap(tester, find.text('lessons.submit.publish'.tr()));
-
-      final sent = app.repo.lessons.values.where((l) => l.titleAr == title);
-      expect(sent.single.status, 'approved');
-      expect(sent.single.preacherId, 'p3');
-      expect(app.at, '/lessons/console/review');
+    testWidgets('viewers get no admin tools on a lesson', (tester) async {
+      final app = await _open(tester, '/lessons', persona: LessonsDemoPersona.viewer);
+      await app.go('/lessons/lesson/${_nextTawhid(app.repo).id}');
+      expect(find.text('lessons.lesson.cancel'.tr()), findsNothing);
+      expect(find.text('lessons.admin.manage_preacher'.tr()), findsNothing);
       await app.close();
     });
   });
 
-  group('console', () {
-    testWidgets('guests and viewers see the locked console', (tester) async {
-      final app = await _open(tester, '/lessons/console',
-          persona: LessonsDemoPersona.viewer);
-      expect(find.text('lessons.console.locked'.tr()), findsOneWidget);
+  // The admin page's Preachers & lessons area (owner decisions 2026-10-22).
+  group('admin area', () {
+    testWidgets('a platform admin opens the platform area from the switch (1280)',
+        (tester) async {
+      final app = await _open(tester, '/admin/lessons',
+          persona: LessonsDemoPersona.admin, platformAdmin: true, size: _web);
+      expect(find.byKey(const ValueKey('lessons-admin-navigation')), findsOneWidget);
+      // The platform area (a deferred library) is checked in admin_roles_test.
+      await tester.tap(find.byKey(const ValueKey('admin-area-platform')));
+      await tester.pump();
+      expect(app.at, '/admin');
+      await app.close();
+    });
+
+    testWidgets('a lessons-only admin goes straight to Preachers & lessons',
+        (tester) async {
+      final app = await _open(tester, '/admin',
+          persona: LessonsDemoPersona.admin, size: _web);
+      expect(app.at, '/admin/lessons');
+      expect(find.byKey(const ValueKey('admin-area-platform')), findsNothing);
+      await app.close();
+    });
+
+    testWidgets('phone: the tabs are in the drawer', (tester) async {
+      final app = await _open(tester, '/admin/lessons', persona: LessonsDemoPersona.admin);
+      tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
+      await _settle(tester);
+      await _tap(tester, find.byKey(const ValueKey('lessons-admin-tab-mosques')));
+      expect(app.at, '/admin/lessons/mosques');
+      expect(find.text('lessons.mosques.body'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('guests and viewers are kept out', (tester) async {
+      final app = await _open(tester, '/admin/lessons', persona: LessonsDemoPersona.viewer);
+      expect(app.at, '/welcome');
       await app.close();
     });
 
@@ -676,234 +657,276 @@ void main() {
       ('en', _web, 1.0),
       ('ar', _web, 1.0),
     ]) {
-      testWidgets('review: approve, reject with a reason, undo ($lang ${size.width} x$scale)',
+      testWidgets('approvals: choose a mosque, approve, decline with a reason, undo ($lang ${size.width} x$scale)',
           (tester) async {
-        final app = await _open(tester, '/lessons/console/review',
-            persona: LessonsDemoPersona.coordinator,
-            lang: lang,
-            size: size,
-            scale: scale);
+        final app = await _open(tester, '/admin/lessons/approvals',
+            persona: LessonsDemoPersona.admin, lang: lang, size: size, scale: scale);
         final c = app.lessons;
         expect(c.pendingRequests, hasLength(5));
         final first = c.pendingRequests.first;
         expect(first.isSeries, isTrue);
+        expect(first.first.hasMosque, isFalse);
 
+        // Nothing is approved without a mosque.
+        await _tap(tester, find.text('lessons.review.approve'.tr()));
+        expect(find.text('lessons.approvals.choose_mosque'.tr()), findsOneWidget);
+        expect(c.pendingRequests, hasLength(5));
+
+        final mosque = await _pickMosque(tester, app, first.id);
         await _tap(tester, find.text('lessons.review.approve'.tr()));
         expect(c.pendingRequests, hasLength(4));
-        expect(
-            app.repo.lessons.values
-                .where((l) => l.requestId == first.id)
-                .every((l) => l.status == 'approved'),
-            isTrue);
-        expect(
-            find.text('lessons.review.approved'
-                .tr(args: [_plural('requests', 1)])),
+        final approved = app.repo.lessons.values.where((l) => l.requestId == first.id);
+        expect(approved.every((l) => l.status == 'approved' && l.mosqueId == mosque), isTrue);
+        expect(find.text('lessons.review.approved'.tr(args: [_plural('requests', 1)])),
             findsOneWidget);
 
         final second = c.pendingRequests.first;
         await _tap(tester, find.text('lessons.review.reject'.tr()));
         expect(find.text('lessons.review.reject_title'.tr()), findsOneWidget);
         await _tap(tester, _inModal(find.text('lessons.review.reject_sel'.tr())));
-        final rejected = app.repo.lessons.values
-            .firstWhere((l) => l.requestId == second.id);
+        final rejected = app.repo.lessons.values.firstWhere((l) => l.requestId == second.id);
         expect(rejected.status, 'rejected');
-        expect(rejected.rejectionReason,
-            startsWith('lessons.reject_reason.clash'.tr()));
+        expect(rejected.rejectionReason, startsWith('lessons.reject_reason.clash'.tr()));
         expect(c.pendingRequests, hasLength(3));
 
         await _tap(tester, find.text('lessons.review.undo'.tr()));
-        expect(
-            app.repo.lessons.values
-                .firstWhere((l) => l.requestId == second.id)
-                .status,
-            'pending');
+        expect(app.repo.lessons.values.firstWhere((l) => l.requestId == second.id).status, 'pending');
         expect(c.pendingRequests, hasLength(4));
         await app.close();
       });
     }
 
-    testWidgets('review: select all and approve together', (tester) async {
-      final app = await _open(tester, '/lessons/console/review',
-          persona: LessonsDemoPersona.coordinator, size: _web);
-      await _tap(tester, find.text('lessons.review.select_all'.tr()));
-      await _tap(tester,
-          find.text('lessons.review.approve_sel'.tr(args: ['5'])));
-      expect(app.lessons.pendingRequests, isEmpty);
-      expect(find.text('lessons.review.empty'.tr()), findsOneWidget);
+    testWidgets('approvals: approve several together, each with its mosque', (tester) async {
+      final app = await _open(tester, '/admin/lessons/approvals',
+          persona: LessonsDemoPersona.admin, size: _web);
+      final reqs = app.lessons.pendingRequests.take(2).toList();
+      for (final r in reqs) {
+        await _pickMosque(tester, app, r.id);
+      }
+      await _tap(tester, find.byType(Checkbox).at(0));
+      await _tap(tester, find.byType(Checkbox).at(1));
+      await _tap(tester, find.text('lessons.review.approve_sel'.tr(args: ['2'])));
+      expect(app.lessons.pendingRequests, hasLength(3));
+      for (final r in reqs) {
+        expect(app.repo.lessons.values.where((l) => l.requestId == r.id).every((l) => l.status == 'approved'), isTrue);
+      }
+      await app.close();
+    });
+
+    testWidgets("approvals: a preacher's card change is applied", (tester) async {
+      final app = await _open(tester, '/admin/lessons/approvals',
+          persona: LessonsDemoPersona.admin, size: _web);
+      final edit = app.repo.edits.single;
+      await _tap(tester, find.text('lessons.approvals.apply'.tr()));
+      expect(app.repo.preachers['p4']!.titleAr, edit.changes['title_ar']);
+      expect(app.lessons.pendingEdits, isEmpty);
+      expect(find.text('lessons.approvals.no_edits'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    for (final (lang, size, scale) in [
+      ('en', _phone, 1.0),
+      ('ar', _smallPhone, 2.0),
+      ('ar', _web, 1.0),
+    ]) {
+      testWidgets('add a lesson for a preacher: published at once ($lang ${size.width} x$scale)',
+          (tester) async {
+        final app = await _open(tester, '/admin/lessons/add?preacher=p3',
+            persona: LessonsDemoPersona.admin, lang: lang, size: size, scale: scale);
+        const title = 'درس تجريبي في فقه الصيام';
+        final next = find.text('lessons.next'.tr());
+
+        await tester.enterText(find.byKey(const ValueKey('add-title-ar')), title);
+        await _settle(tester);
+        await _tap(tester, next);
+        await _tap(tester, find.text(app.repo.mosques['m1']!.name(lang)));
+        await _tap(tester, next);
+        await _tap(tester, next);
+        expect(find.text('lessons.submit.summary'.tr()), findsOneWidget);
+        await _tap(tester, find.text('lessons.add.publish'.tr()));
+
+        final added = app.repo.lessons.values.where((l) => l.titleAr == title);
+        expect(added, hasLength(1));
+        expect(added.single.status, 'approved');
+        expect(added.single.preacherId, 'p3');
+        expect(added.single.mosqueId, 'm1');
+        expect(added.single.date, addDays(lessonsToday(), 2));
+        expect(app.at, '/admin/lessons/preachers/p3');
+        await app.close();
+      });
+    }
+
+    testWidgets('the add wizard holds Next until a preacher and a title are chosen',
+        (tester) async {
+      final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin);
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'عنوان كافٍ');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      // No preacher yet: still on the first step.
+      expect(find.text('lessons.submit.title_ar_hint'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('preachers: add one with no account', (tester) async {
+      final app = await _open(tester, '/admin/lessons/preachers',
+          persona: LessonsDemoPersona.admin, size: _web);
+      final before = app.repo.preachers.length;
+      await _tap(tester, find.text('lessons.roster.add'.tr()));
+      await tester.enterText(find.byKey(const ValueKey('preacher-name-ar')), 'الشيخ سعيد بن عمر');
+      await _tap(tester, find.byKey(const ValueKey('preacher-save')));
+      expect(app.repo.preachers.length, before + 1);
+      final p = app.repo.preachers.values.firstWhere((p) => p.nameAr == 'الشيخ سعيد بن عمر');
+      expect(p.linkedProfileId, isNull);
+      expect(find.text('lessons.roster.added'.tr()), findsOneWidget);
       await app.close();
     });
 
     for (final (lang, size) in [('en', _phone), ('ar', _web)]) {
-      testWidgets('roster: a phone is revealed on request and logged ($lang ${size.width})',
+      testWidgets("a preacher's phone is shown on request and logged ($lang ${size.width})",
           (tester) async {
-        final app = await _open(tester, '/lessons/console/preachers',
-            persona: LessonsDemoPersona.coordinator, lang: lang, size: size);
+        final app = await _open(tester, '/admin/lessons/preachers/p1',
+            persona: LessonsDemoPersona.admin, lang: lang, size: size);
         final masked = maskPhone('0500000101');
         expect(find.text(masked), findsOneWidget);
         expect(find.text('0500000101'), findsNothing);
-
-        await _tap(tester, find.text(masked));
+        await _tap(tester, find.text('lessons.roster.show_number'.tr()));
         expect(find.text('0500000101'), findsOneWidget);
         expect(find.text('lessons.roster.logged'.tr()), findsOneWidget);
         expect(app.repo.audit.first.action, 'phone');
-
-        await _tap(tester, find.text('0500000101'));
-        expect(find.text(masked), findsOneWidget);
         await app.close();
       });
     }
-
-    testWidgets('roster: an invitation link is created for an unlinked preacher',
-        (tester) async {
-      final app = await _open(tester, '/lessons/console/preachers',
-          persona: LessonsDemoPersona.coordinator, size: _web);
-      final before = app.repo.invites.length;
-      await _tap(tester, find.text('lessons.roster.invite'.tr()));
-      expect(find.text('lessons.roster.invite_title'.tr()), findsOneWidget);
-      expect(app.repo.invites.length, before + 1);
-      await _tap(tester, _inModal(find.text('lessons.roster.copy_msg'.tr())));
-      expect(clipboard, contains('/lessons/claim/'));
-      await app.close();
-    });
-  });
-
-  group('admins manage coordinators', () {
-    for (final (lang, size, scale) in [
-      ('en', _phone, 1.0),
-      ('ar', _smallPhone, 2.0),
-      ('en', _web, 1.0),
-      ('ar', _web, 1.0),
-    ]) {
-      testWidgets('add, edit and remove a coordinator ($lang ${size.width} x$scale)',
-          (tester) async {
-        final app = await _open(tester, '/lessons/console/team',
-            persona: LessonsDemoPersona.admin,
-            lang: lang,
-            size: size,
-            scale: scale);
-        const org = DemoLessonsRepository.org, org2 = DemoLessonsRepository.org2;
-        final repo = app.repo;
-        final reem = DemoLessonsRepository.accounts
-            .firstWhere((a) => a.id == 'demo-account-reem');
-        expect(find.text('lessons.coord.title'.tr()), findsOneWidget);
-        expect(app.lessons.coordinators, hasLength(1));
-
-        // Add: search an account, choose an organization, save.
-        await _tap(tester, find.text('lessons.coord.add'.tr()));
-        await tester.enterText(_inModal(find.byType(TextField)), lang == 'ar' ? 'ريم' : 'Reem');
-        await _tap(tester, _inModal(find.text('lessons.coord.search'.tr())));
-        await _tap(tester, _inModal(find.text(reem.name(lang))));
-        await _tap(tester, _inModal(find.text(repo.organizations[org]!.name(lang))));
-        await _tap(tester, _inModal(find.text('lessons.save'.tr())));
-        expect(repo.coordinatorGrants[reem.id], {org});
-        expect(find.text('lessons.coord.saved'.tr()), findsOneWidget);
-        expect(app.lessons.coordinators, hasLength(2));
-
-        // Edit: move them to the other organization.
-        await _tap(tester, find.text('lessons.coord.edit'.tr()).at(1));
-        expect(find.text('lessons.coord.edit_title'.tr()), findsOneWidget);
-        await _tap(tester, _inModal(find.text(repo.organizations[org2]!.name(lang))));
-        await _tap(tester, _inModal(find.text(repo.organizations[org]!.name(lang))));
-        await _tap(tester, _inModal(find.text('lessons.save'.tr())));
-        expect(repo.coordinatorGrants[reem.id], {org2});
-
-        // Remove, after confirming.
-        await _tap(tester, find.text('lessons.coord.remove'.tr()).at(1));
-        expect(
-            find.text('lessons.coord.remove_title'.tr(args: [reem.name(lang)])),
-            findsOneWidget);
-        await _tap(tester, _inModal(find.text('lessons.coord.remove'.tr())));
-        expect(repo.coordinatorGrants.containsKey(reem.id), isFalse);
-        expect(find.text('lessons.coord.removed'.tr()), findsOneWidget);
-        expect(app.lessons.coordinators, hasLength(1));
-        // Every change is in the action log.
-        expect(
-            repo.audit.where((a) => a.targetEn == '${reem.nameEn} → coordinator'),
-            hasLength(4));
-        await app.close();
-      });
-    }
-
-    testWidgets('saving needs at least one organization', (tester) async {
-      final app = await _open(tester, '/lessons/console/team',
-          persona: LessonsDemoPersona.admin);
-      await _tap(tester, find.text('lessons.coord.add'.tr()));
-      await tester.enterText(_inModal(find.byType(TextField)), 'Badr');
-      await _tap(tester, _inModal(find.text('lessons.coord.search'.tr())));
-      await _tap(tester, _inModal(find.text('Badr Al-Shammari')));
-      await _tap(tester, _inModal(find.text('lessons.save'.tr())));
-      expect(find.text('lessons.coord.pick_org'.tr()), findsOneWidget);
-      expect(app.repo.coordinatorGrants.containsKey('demo-member-u3'), isFalse);
-      await app.close();
-    });
-
-    testWidgets('a coordinator does not get the admins\' coordinator tools',
-        (tester) async {
-      final app = await _open(tester, '/lessons/console/team',
-          persona: LessonsDemoPersona.coordinator);
-      expect(find.text('lessons.coord.title'.tr()), findsNothing);
-      expect(find.text('lessons.team.view_only'.tr()), findsOneWidget);
-      await app.close();
-    });
-
-    testWidgets('with no organizations yet, admins are told to create one first',
-        (tester) async {
-      final app = await _open(tester, '/lessons/console',
-          persona: LessonsDemoPersona.admin,
-          setup: (repo) => repo.organizations.clear());
-      expect(find.text('lessons.coord.no_orgs'.tr()), findsOneWidget);
-      expect(
-          tester
-              .widget<TButton>(find.ancestor(
-                  of: find.text('lessons.coord.add'.tr()),
-                  matching: find.byType(TButton)))
-              .onPressed,
-          isNull);
-      await app.close();
-    });
-  });
-
-  group('invitation claim', () {
-    testWidgets('a guest is asked to sign in first', (tester) async {
-      final app = await _open(tester, '/lessons/claim/invite-p5');
-      final name = app.repo.preachers['p5']!.name('en');
-      expect(find.text('lessons.claim.welcome'.tr(args: [name])), findsOneWidget);
-      expect(find.text('lessons.claim.sign_in'.tr()), findsOneWidget);
-      await app.close();
-    });
 
     for (final (lang, size, scale) in [
       ('en', _phone, 1.0),
       ('ar', _smallPhone, 2.0),
       ('en', _web, 1.0),
     ]) {
-      testWidgets('a signed-in preacher links the card ($lang ${size.width} x$scale)',
+      testWidgets('links: a one-time link, a timed link, and revoking ($lang ${size.width} x$scale)',
           (tester) async {
-        final app = await _open(tester, '/lessons/claim/invite-p5',
-            persona: LessonsDemoPersona.viewer,
-            lang: lang,
-            size: size,
-            scale: scale);
-        final link = find.text('lessons.claim.link'.tr());
-        await _tap(tester, link);
-        // Nothing happens until the terms are accepted.
-        expect(app.repo.preachers['p5']!.linkedProfileId, isNull);
+        final app = await _open(tester, '/admin/lessons/preachers/p2',
+            persona: LessonsDemoPersona.admin, lang: lang, size: size, scale: scale);
+        expect(find.text('lessons.links.none_yet'.tr()), findsOneWidget);
 
-        await _tap(tester, find.text('lessons.claim.agree'.tr()));
-        await _tap(tester, link);
-        expect(app.repo.preachers['p5']!.linkedProfileId, 'demo-viewer');
-        expect(find.text('lessons.claim.done'.tr()), findsOneWidget);
-        expect(app.repo.invites.containsKey('invite-p5'), isFalse);
+        await _tap(tester, find.text('lessons.links.send'.tr()));
+        expect(find.text('lessons.links.new_title'.tr()), findsOneWidget);
+        await _tap(tester, _inModal(find.text('lessons.links.create'.tr())));
+        expect(find.text('lessons.links.ready_title'.tr()), findsOneWidget);
+        await _tap(tester, _inModal(find.text('lessons.roster.copy_msg'.tr())));
+        final token = RegExp(r'/preacher/([a-z0-9]+)').firstMatch(clipboard ?? '')?.group(1);
+        expect(token, isNotNull);
+        expect(app.repo.links[token]!.kind, 'once');
+        await _tap(tester, find.byTooltip('lessons.close'.tr()));
+        expect(find.text('lessons.links.state_waiting'.tr()), findsOneWidget);
+
+        await _tap(tester, find.text('lessons.links.send'.tr()));
+        await _tap(tester, _inModal(find.text('lessons.links.window'.tr())));
+        await _tap(tester, _inModal(find.text('lessons.links.create'.tr())));
+        await _tap(tester, find.byTooltip('lessons.close'.tr()));
+        expect(app.repo.links.values.where((k) => k.preacherId == 'p2' && k.kind == 'window'), hasLength(1));
+        // It starts in an hour.
+        expect(find.text('lessons.links.state_scheduled'.tr()), findsOneWidget);
+
+        await _tap(tester, find.text('lessons.links.revoke'.tr()));
+        expect(find.text('lessons.links.state_revoked'.tr()), findsOneWidget);
+        expect(find.text('lessons.links.revoke'.tr()), findsOneWidget);
         await app.close();
       });
     }
 
-    testWidgets('a used or unknown link says so', (tester) async {
-      final app = await _open(tester, '/lessons/claim/not-a-token',
-          persona: LessonsDemoPersona.viewer);
-      expect(find.text('lessons.claim.invalid'.tr()), findsOneWidget);
+    testWidgets('a preacher is removed with his lessons', (tester) async {
+      final app = await _open(tester, '/admin/lessons/preachers/p11',
+          persona: LessonsDemoPersona.admin, size: _web);
+      await _tap(tester, find.text('lessons.preacher_admin.remove'.tr()));
+      expect(find.text('lessons.preacher_admin.remove_title'.tr()), findsOneWidget);
+      await _tap(tester, _inModal(find.text('lessons.preacher_admin.remove'.tr())));
+      expect(app.repo.preachers.containsKey('p11'), isFalse);
+      expect(app.repo.lessons.values.where((l) => l.preacherId == 'p11'), isEmpty);
+      expect(app.at, '/admin/lessons/preachers');
       await app.close();
     });
+  });
+
+  // A preacher's page from his link: no account, no sign-in.
+  group('preacher link', () {
+    for (final (lang, size, scale) in [
+      ('ar', _phone, 1.0),
+      ('ar', _smallPhone, 2.0),
+      ('en', _web, 1.0),
+    ]) {
+      testWidgets('he asks for a lesson and it waits for the admins ($lang ${size.width} x$scale)',
+          (tester) async {
+        final app = await _open(tester, '/preacher/${DemoLessonsRepository.fahdLink}',
+            lang: lang, size: size, scale: scale);
+        final p = app.repo.preachers['p1']!;
+        expect(find.text('lessons.link.hello'.tr(args: [p.name(lang)])), findsOneWidget);
+        expect(app.repo.links[DemoLessonsRepository.fahdLink]!.device, isNotNull);
+
+        await _tap(tester, find.text('lessons.link.request'.tr()));
+        const title = 'فضل العلم وأهله';
+        await tester.enterText(find.byKey(const ValueKey('link-request-title')), title);
+        await _tap(tester, find.byKey(const ValueKey('link-request-send')));
+        expect(find.text('lessons.link.sent'.tr()), findsOneWidget);
+        final sent = app.repo.lessons.values.where((l) => l.titleAr == title).single;
+        expect(sent.status, 'pending');
+        expect(sent.fromPreacher, isTrue);
+        expect(sent.hasMosque, isFalse);
+        expect(find.text(title), findsOneWidget);
+        expect(find.text('lessons.link.mosque_later'.tr()), findsWidgets);
+        await app.close();
+      });
+    }
+
+    testWidgets('he suggests a card change; it waits for the admins', (tester) async {
+      final app = await _open(tester, '/preacher/${DemoLessonsRepository.fahdLink}', lang: 'ar');
+      await _tap(tester, find.text('lessons.link.edit_card'.tr()));
+      await tester.enterText(_inModal(find.byType(TextField)).at(1), 'إمام وخطيب جامع الهدى');
+      await _tap(tester, _inModal(find.text('lessons.link.send_edit'.tr())));
+      expect(find.text('lessons.link.edit_sent'.tr()), findsOneWidget);
+      expect(app.repo.edits.where((e) => e.preacherId == 'p1' && e.pending).single.changes['title_ar'], 'إمام وخطيب جامع الهدى');
+      expect(app.repo.preachers['p1']!.titleAr, isNot('إمام وخطيب جامع الهدى'));
+      expect(find.text('lessons.link.edit_waiting'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('he withdraws a request he sent', (tester) async {
+      final app = await _open(tester, '/preacher/${DemoLessonsRepository.fahdLink}');
+      final pending = app.repo.lessons.values.firstWhere((l) => l.preacherId == 'p1' && l.status == 'pending');
+      await _tap(tester, find.text('lessons.link.withdraw'.tr()));
+      expect(app.repo.lessons[pending.id]!.status, 'withdrawn');
+      expect(find.text('lessons.link.withdrawn'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('a one-time link does not open on a second phone', (tester) async {
+      final app = await _open(tester, '/preacher/${DemoLessonsRepository.fahdLink}');
+      expect(find.text('lessons.link.request'.tr()), findsOneWidget);
+      await (await SharedPreferences.getInstance())
+          .setString(PreacherLinkController.deviceKey, 'another-phone-0123456789abcdef');
+      await app.go('/lessons');
+      await app.go('/preacher/${DemoLessonsRepository.fahdLink}');
+      expect(find.text('lessons.link.closed_used'.tr()), findsOneWidget);
+      expect(find.text('lessons.link.request'.tr()), findsNothing);
+      await app.close();
+    });
+
+    testWidgets('opening another link shows that link, not the last one', (tester) async {
+      final app = await _open(tester, '/preacher/${DemoLessonsRepository.fahdLink}');
+      expect(find.text('lessons.link.hello'.tr(args: [app.repo.preachers['p1']!.name('en')])), findsOneWidget);
+      await app.go('/preacher/${DemoLessonsRepository.iqbalLink}');
+      expect(find.text('lessons.link.hello'.tr(args: [app.repo.preachers['p4']!.name('en')])), findsOneWidget);
+      await app.go('/preacher/not-a-link');
+      expect(find.text('lessons.link.closed_revoked'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    for (final token in ['demo-old', 'not-a-link']) {
+      testWidgets('a revoked or unknown link says so ($token)', (tester) async {
+        final app = await _open(tester, '/preacher/$token');
+        expect(find.text('lessons.link.closed_revoked'.tr()), findsOneWidget);
+        await app.close();
+      });
+    }
   });
 
   group('settings', () {
@@ -914,17 +937,19 @@ void main() {
       final lessons = LessonsController(DemoLessonsRepository(persona: persona));
       addTearDown(lessons.dispose);
       final opened = <String>[];
+      Widget page(GoRouterState state) {
+        opened.add(state.uri.toString());
+        return const Scaffold(body: Text('page'));
+      }
+
       final router = GoRouter(routes: [
         GoRoute(
             path: '/',
             builder: (_, __) => const Scaffold(
                 body: SingleChildScrollView(child: LessonsSettingsCard()))),
-        GoRoute(
-            path: '/lessons/:rest(.*)',
-            builder: (_, state) {
-              opened.add(state.uri.toString());
-              return const Scaffold(body: Text('page'));
-            }),
+        GoRoute(path: '/lessons/:rest(.*)', builder: (_, state) => page(state)),
+        GoRoute(path: '/admin/lessons', builder: (_, state) => page(state)),
+        GoRoute(path: '/preacher/:token', builder: (_, state) => page(state)),
       ]);
       addTearDown(router.dispose);
       await tester.pumpWidget(EasyLocalization(
@@ -956,46 +981,47 @@ void main() {
       final (lessons, opened) =
           await pumpCard(tester, LessonsDemoPersona.viewer);
       expect(find.text('lessons.programme'.tr()), findsOneWidget);
-      expect(find.text('lessons.me.console'.tr()), findsNothing);
-      expect(find.text('lessons.me.my_lessons'.tr()), findsNothing);
+      expect(find.text('lessons.admin.title'.tr()), findsNothing);
+      expect(find.text('lessons.link.my_page'.tr()), findsNothing);
       expect(find.text('${lessons.mine.unread}'), findsOneWidget);
       await _tap(tester, find.text('lessons.me.reminders'.tr()));
       expect(opened.last, '/lessons/me/saved?tab=reminders');
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('a coordinator also gets the console, with pending requests',
+    testWidgets('an admin also gets Preachers & lessons, with what is waiting',
         (tester) async {
-      final (lessons, opened) =
-          await pumpCard(tester, LessonsDemoPersona.coordinator);
-      expect(find.text('${lessons.pendingRequests.length}'), findsOneWidget);
-      await _tap(tester, find.text('lessons.me.console'.tr()));
-      expect(opened.last, '/lessons/console');
+      final (lessons, opened) = await pumpCard(tester, LessonsDemoPersona.admin);
+      expect(find.text('${lessons.waitingCount}'), findsOneWidget);
+      await _tap(tester, find.text('lessons.admin.title'.tr()));
+      expect(opened.last, '/admin/lessons');
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('a preacher also gets their lessons', (tester) async {
-      final (_, opened) = await pumpCard(tester, LessonsDemoPersona.preacher);
-      await _tap(tester, find.text('lessons.me.my_lessons'.tr()));
-      expect(opened.last, '/lessons/me/lessons');
+    testWidgets('a preacher whose link opened here gets his page back',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({PreacherLinkController.lastLinkKey: DemoLessonsRepository.fahdLink});
+      final (_, opened) = await pumpCard(tester, LessonsDemoPersona.guest);
+      await _tap(tester, find.text('lessons.link.my_page'.tr()));
+      expect(opened.last, '/preacher/${DemoLessonsRepository.fahdLink}');
       await tester.pumpWidget(const SizedBox());
     });
   });
 
   group('me', () {
     testWidgets('the sample persona switcher changes the view', (tester) async {
-      final app = await _open(tester, '/lessons/me');
+      final app = await _open(tester, '/lessons/me', signIn: true);
       expect(find.text('lessons.me.guest_title'.tr()), findsOneWidget);
-      await _tap(tester, find.text('lessons.me.p_coordinator'.tr()));
-      expect(app.lessons.canCoordinate, isTrue);
+      await _tap(tester, find.text('lessons.me.p_admin'.tr()));
+      expect(app.lessons.canManage, isTrue);
       expect(find.text('lessons.me.console'.tr()), findsOneWidget);
-      // Counted before the console was ever opened: 5 requests, 1 report.
+      // Five requests and one card change waiting, one report from a user.
       expect(
           find.text('lessons.me.console_body'.tr(
-              args: [_plural('requests', 5), _plural('reports', 1)])),
+              args: [_plural('requests', 6), _plural('reports', 1)])),
           findsOneWidget);
       await _tap(tester, find.text('lessons.me.open'.tr()));
-      expect(app.at, '/lessons/console');
+      expect(app.at, '/admin/lessons');
       await app.close();
     });
 
@@ -1022,7 +1048,6 @@ void main() {
           !repo.reports.containsKey(l.id));
       const g = LessonsDemoPersona.guest,
           v = LessonsDemoPersona.viewer,
-          p = LessonsDemoPersona.preacher,
           a = LessonsDemoPersona.admin;
       return [
         (g, '/lessons'),
@@ -1035,34 +1060,26 @@ void main() {
         (g, '/lessons/series/s1'),
         (g, '/lessons/preachers/p1'),
         (g, '/lessons/mosques/m1'),
-        (g, '/lessons/permissions'),
-        (g, '/lessons/claim/invite-p5'),
-        (g, '/lessons/console'),
         (g, '/lessons/me/saved'),
+        (g, '/preacher/${DemoLessonsRepository.fahdLink}'),
+        (g, '/preacher/${DemoLessonsRepository.iqbalLink}'),
+        (g, '/preacher/not-a-link'),
         (v, '/lessons/me'),
         (v, '/lessons/me/saved'),
         (v, '/lessons/me/saved?tab=log'),
         (v, '/lessons/me/saved?tab=mosques'),
         (v, '/lessons/me/notifications'),
         (v, '/lessons/lesson/${past.id}'),
-        (v, '/lessons/claim/invite-p8'),
-        (p, '/lessons'),
-        (p, '/lessons/me'),
-        (p, '/lessons/me/lessons'),
-        (p, '/lessons/me/lessons?tab=rejected'),
-        (p, '/lessons/me/lessons?tab=past'),
-        (p, '/lessons/submit'),
-        (p, '/lessons/report/${past.id}'),
-        (p, '/lessons/lesson/${next.id}'),
-        (a, '/lessons/console'),
-        (a, '/lessons/console/review'),
-        (a, '/lessons/console/review?filter=reports'),
-        (a, '/lessons/console/preachers'),
-        (a, '/lessons/console/mosques'),
-        (a, '/lessons/console/reports'),
-        (a, '/lessons/console/audit'),
-        (a, '/lessons/console/team'),
+        (a, '/lessons'),
+        (a, '/lessons/me'),
+        for (final t in lessonsAdminTabs) (a, '/admin/lessons/$t'),
+        (a, '/admin/lessons/preachers/p1'),
+        (a, '/admin/lessons/preachers/p4'),
+        (a, '/admin/lessons/add'),
+        (a, '/admin/lessons/add?from=${next.id}'),
+        (a, '/admin/lessons/report/${past.id}'),
         (a, '/lessons/lesson/${next.id}'),
+        (a, '/lessons/preachers/p1'),
       ];
     }
 
@@ -1082,7 +1099,7 @@ void main() {
               ];
               if (routes.isEmpty) continue;
               final app = await _open(tester, routes.first,
-                  persona: persona, lang: lang, size: size, scale: scale);
+                  persona: persona, platformAdmin: true, lang: lang, size: size, scale: scale);
               for (final route in routes) {
                 await app.go(route);
                 expect(tester.takeException(), isNull,

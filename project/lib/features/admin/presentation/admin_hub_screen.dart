@@ -28,6 +28,7 @@ import 'widgets/tag_moderation_view.dart';
 import 'widgets/banned_accounts_view.dart';
 import 'widgets/admin_user_directory_view.dart';
 import 'widgets/admin_safety_view.dart';
+import 'widgets/admin_area_switch.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 
@@ -479,6 +480,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 leading: const CaIcon(CaGlyph.back, color: Canopy.slate),
                 title: Text('common.back'.tr()),
                 onTap: () => context.go('/feed')),
+          const AdminAreaSwitch(current: AdminArea.platform),
           for (final group in _adminGroups) ...[
             Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,

@@ -56,7 +56,8 @@ class HidayahWebHeader extends StatelessWidget {
               p.unreadNotificationsCount,
               p.isLoggedInStreamer,
               p.isStreamerModeEnabled,
-              p.isAdminUser,
+              // Lessons-only admins land on their area (the router).
+              p.isLessonsAdmin,
               p.isPermittedAdmin,
             ));
     final ink = dark ? HidayahGold.g50 : HidayahGold.s900;

@@ -17,6 +17,7 @@ import '../../profile/models/streamer_models.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import '../domain/lessons_dates.dart';
 import '../state/lessons_controller.dart';
+import '../state/preacher_link_controller.dart';
 import 'lessons_kit.dart';
 import 'lessons_map.dart';
 import 'lessons_modals.dart';
@@ -263,8 +264,9 @@ class _LessonsRailState extends State<LessonsRail> {
 }
 
 /// Settings' card for a person's own programme pages: reminders,
-/// notifications, their lessons as a preacher, the console as a coordinator,
-/// and the full programme page (following, learning log, preferences, roles).
+/// notifications, Preachers & lessons for admins, a preacher's page when his
+/// link opened on this phone, and the full programme page (following,
+/// learning log, preferences).
 class LessonsSettingsCard extends StatefulWidget {
   const LessonsSettingsCard({super.key});
   @override
@@ -272,10 +274,15 @@ class LessonsSettingsCard extends StatefulWidget {
 }
 
 class _LessonsSettingsCardState extends State<LessonsSettingsCard> {
+  String? preacherLink;
+
   @override
   void initState() {
     super.initState();
     unawaited(context.read<LessonsController?>()?.ensureLoaded());
+    unawaited(PreacherLinkController.lastLink().then((t) {
+      if (mounted && t != null) setState(() => preacherLink = t);
+    }));
   }
 
   @override
@@ -284,8 +291,8 @@ class _LessonsSettingsCardState extends State<LessonsSettingsCard> {
     if (c == null) return const SizedBox.shrink();
     final rows = <(CaGlyph, String, String, String?, int)>[
       (CaGlyph.cal, 'lessons.programme'.tr(), '/lessons/me', 'settings.lessons_hint'.tr(), 0),
-      if (c.canCoordinate) (CaGlyph.shield, 'lessons.me.console'.tr(), '/lessons/console', null, c.pendingRequests.length),
-      if (c.canSubmitOwn) (CaGlyph.edit, 'lessons.me.my_lessons'.tr(), '/lessons/me/lessons', null, 0),
+      if (c.canManage) (CaGlyph.shield, 'lessons.admin.title'.tr(), '/admin/lessons', null, c.waitingCount),
+      if (preacherLink != null) (CaGlyph.user, 'lessons.link.my_page'.tr(), '/preacher/$preacherLink', 'lessons.link.my_page_hint'.tr(), 0),
       (CaGlyph.clock, 'lessons.me.reminders'.tr(), '/lessons/me/saved?tab=reminders', null, c.mine.reminders.length),
       (CaGlyph.bell, 'lessons.me.notifications'.tr(), '/lessons/me/notifications', null, c.mine.unread),
     ];
