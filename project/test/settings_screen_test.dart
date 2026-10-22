@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/core/providers/app_experience.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/broadcaster_application_sheet.dart';
@@ -47,7 +46,6 @@ Widget createTestWidget({
         return MultiProvider(
           providers: [
             ChangeNotifierProvider<AppProvider>.value(value: provider),
-            ChangeNotifierProvider<AppExperience>(create: (_) => AppExperience()),
           ],
           child: MaterialApp(
             localizationsDelegates: context.localizationDelegates,

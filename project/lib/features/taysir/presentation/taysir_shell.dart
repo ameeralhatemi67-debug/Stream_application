@@ -5,19 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/config/app_identity.dart';
 import '../../../core/providers/app_provider.dart';
-import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
+import '../../web/presentation/hidayah_web_header.dart';
 import '../data/taysir_repository.dart';
 import '../domain/taysir_models.dart';
 import '../state/taysir_controller.dart';
 import 'taysir_kit.dart';
-
-/// Sections of the Taysir website header.
-enum TaysirSection { discover, lessons, map, me, mine, console }
 
 /// The live channel of a preacher who also streams on Hadayah Live.
 StreamerModel? preacherChannel(BuildContext context, TaysirPreacher? p) {
@@ -30,49 +26,35 @@ StreamerModel? preacherChannel(BuildContext context, TaysirPreacher? p) {
   return null;
 }
 
-/// The four-tab Taysir shell: tabs on phones, a website header on wide
-/// screens. Each tab keeps its own navigation stack.
-class TaysirShell extends StatefulWidget {
-  const TaysirShell({super.key, required this.shell});
-  final StatefulNavigationShell shell;
+/// A page of Hadayah Live's Lessons tab (ADR-014). The tab shell owns the
+/// tab bar on phones and the website header on wide screens; this adds the
+/// phone app bar, the loading and failure states, and a preacher's submit
+/// button on the tab's home. [titleKey] is null on that home.
+class TaysirTab extends StatefulWidget {
+  const TaysirTab({super.key, required this.child, this.titleKey});
+  final Widget child;
+  final String? titleKey;
   @override
-  State<TaysirShell> createState() => _TaysirShellState();
+  State<TaysirTab> createState() => _TaysirTabState();
 }
 
-class _TaysirShellState extends State<TaysirShell> {
+class _TaysirTabState extends State<TaysirTab> {
   @override
   void initState() {
     super.initState();
     unawaited(context.read<TaysirController>().ensureLoaded());
   }
 
-  void _go(int i) => widget.shell.goBranch(i, initialLocation: i == widget.shell.currentIndex);
-
   @override
   Widget build(BuildContext context) {
-    final body = _TaysirGate(child: widget.shell);
-    if (context.wide) {
-      return Scaffold(
-        backgroundColor: TC.page,
-        body: SafeArea(
-          child: Column(children: [
-            TaysirWebHeader(
-              active: TaysirSection.values[widget.shell.currentIndex],
-              onBranch: _go,
-            ),
-            Expanded(child: body),
-          ]),
-        ),
-      );
-    }
-    final c = context.watch<TaysirController>();
-    final pending = c.canCoordinate ? c.pendingRequests.length : 0;
-    final i = widget.shell.currentIndex;
+    final body = _TaysirGate(child: widget.child);
+    if (context.wide) return Material(color: TC.page, child: body);
+    final submit = context.select<TaysirController, bool>((c) => c.canSubmitOwn);
     return Scaffold(
       backgroundColor: TC.page,
-      appBar: const TaysirPhoneBar(),
+      appBar: TaysirPhoneBar(title: widget.titleKey?.tr()),
       body: body,
-      floatingActionButton: c.canSubmitOwn && (i == 0 || i == 3)
+      floatingActionButton: submit && widget.titleKey == null
           ? FloatingActionButton(
               onPressed: () => context.push('/taysir/submit'),
               backgroundColor: HidayahGold.g400,
@@ -81,57 +63,6 @@ class _TaysirShellState extends State<TaysirShell> {
               child: const TIcon(TGlyph.plus, size: 24, color: TC.ink, stroke: 2.2),
             )
           : null,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          decoration: const BoxDecoration(color: TC.card, border: Border(top: BorderSide(color: TC.hair))),
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-          child: Row(children: [
-            for (final (n, glyph, key) in [
-              (0, TGlyph.compass, 'taysir.nav.discover'),
-              (1, TGlyph.book, 'taysir.nav.lessons'),
-              (2, TGlyph.map, 'taysir.nav.map'),
-              (3, TGlyph.user, 'taysir.nav.me'),
-            ])
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: i == n,
-                  child: InkWell(
-                    onTap: () => _go(n),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Stack(clipBehavior: Clip.none, children: [
-                        Container(
-                          width: 56,
-                          height: 30,
-                          alignment: Alignment.center,
-                          decoration: i == n ? BoxDecoration(gradient: HidayahGradients.selected, borderRadius: BorderRadius.circular(15)) : null,
-                          child: TIcon(glyph, size: 21, color: i == n ? HidayahGold.g200 : TC.muted),
-                        ),
-                        if (n == 3 && pending > 0)
-                          PositionedDirectional(
-                            top: -4,
-                            end: 2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5),
-                              constraints: const BoxConstraints(minWidth: 18),
-                              height: 18,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(color: TC.live, borderRadius: BorderRadius.circular(9)),
-                              child: Text('$pending', style: tBody(11, color: Colors.white, weight: FontWeight.w700, height: 1)),
-                            ),
-                          ),
-                      ]),
-                      const SizedBox(height: 3),
-                      Text(key.tr(), style: tBody(11.5, color: i == n ? TC.ink : TC.muted, weight: FontWeight.w700, height: 1.2)),
-                    ]),
-                  ),
-                ),
-              ),
-          ]),
-        ),
-      ),
     );
   }
 }
@@ -167,16 +98,19 @@ class _TaysirGate extends StatelessWidget {
   }
 }
 
+/// Language, and the programme's own alerts while any are unread (a
+/// cancelled lesson someone set a reminder for). Saved lessons, reminders
+/// and the rest of a person's programme pages are in Settings.
 class _Tools extends StatelessWidget {
   const _Tools();
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
+    final unread = context.select<TaysirController, int>((c) => c.mine.unread);
     final ar = context.ar;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       TIconButton(TGlyph.languages, tooltip: ar ? 'English' : 'العربية', onPressed: () => LanguageSwitcher.toggle(context)),
-      TIconButton(TGlyph.bookmark, tooltip: 'taysir.nav.saved'.tr(), onPressed: () => context.push('/taysir/me/saved')),
-      TIconButton(TGlyph.bell, tooltip: 'taysir.nav.notifications'.tr(), badge: c.mine.unread, onPressed: () => context.push('/taysir/me/notifications')),
+      if (unread > 0)
+        TIconButton(TGlyph.bell, tooltip: 'taysir.nav.notifications'.tr(), badge: unread, onPressed: () => context.push('/taysir/me/notifications')),
     ]);
   }
 }
@@ -213,165 +147,12 @@ class TaysirPhoneBar extends StatelessWidget implements PreferredSizeWidget {
       );
 }
 
-/// The Taysir website header.
-class TaysirWebHeader extends StatelessWidget {
-  const TaysirWebHeader({super.key, this.active, this.onBranch});
-  final TaysirSection? active;
-  final ValueChanged<int>? onBranch;
-
-  void _go(BuildContext context, TaysirSection s) {
-    final i = s.index;
-    if (i <= 3 && onBranch != null) return onBranch!(i);
-    context.go(switch (s) {
-      TaysirSection.discover => '/taysir',
-      TaysirSection.lessons => '/taysir/lessons',
-      TaysirSection.map => '/taysir/map',
-      TaysirSection.me => '/taysir/me',
-      TaysirSection.mine => '/taysir/me/lessons',
-      TaysirSection.console => '/taysir/console',
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.watch<TaysirController>();
-    final pending = c.canCoordinate ? c.pendingRequests.length : 0;
-    Widget link(TaysirSection s, String label, {Widget? trailing}) {
-      final on = s == active;
-      return InkWell(
-        onTap: () => _go(context, s),
-        child: SizedBox(
-          height: 72,
-          child: Stack(children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Center(
-                widthFactor: 1,
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(label, style: tBody(14.5, color: on ? TC.ink : TC.ink2, weight: on ? FontWeight.w700 : FontWeight.w600, height: 1.2)),
-                  if (trailing != null) ...[const SizedBox(width: 7), trailing],
-                ]),
-              ),
-            ),
-            if (on)
-              const Positioned(
-                  left: 6, right: 6, bottom: 0, child: SizedBox(height: 3, child: DecoratedBox(decoration: BoxDecoration(gradient: HidayahGradients.gilded)))),
-          ]),
-        ),
-      );
-    }
-
-    return Material(
-      color: TC.card,
-      child: Container(
-        height: 72,
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TC.hair))),
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Row(children: [
-          InkWell(
-            onTap: () => context.go('/taysir'),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const AppLogo(size: 40),
-              const SizedBox(width: 10),
-              MediaQuery.withClampedTextScaling(
-                maxScaleFactor: 1.4,
-                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('taysir.app_name'.tr(), style: tDisplay(19)),
-                  Text('taysir.brand_sub'.tr(), style: tBody(11, color: TC.muted, height: 1.3)),
-                ]),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                link(TaysirSection.discover, 'taysir.nav.discover'.tr()),
-                link(TaysirSection.lessons, 'taysir.nav.lessons'.tr()),
-                link(TaysirSection.map, 'taysir.nav.map'.tr()),
-                if (c.canSubmitOwn) link(TaysirSection.mine, 'taysir.nav.my_lessons'.tr()),
-                if (c.canCoordinate)
-                  link(TaysirSection.console, 'taysir.nav.console'.tr(),
-                      trailing: pending == 0
-                          ? null
-                          : Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                              decoration: BoxDecoration(gradient: HidayahGradients.minted, borderRadius: BorderRadius.circular(999)),
-                              child: Text('$pending', style: tBody(11.5, color: TC.ink, weight: FontWeight.w700, height: 1.3)),
-                            )),
-              ]),
-            ),
-          ),
-          const _Tools(),
-          TIconButton(TGlyph.gear, tooltip: 'taysir.nav.settings'.tr(), onPressed: () => context.push('/settings')),
-          const SizedBox(width: 6),
-          if (!c.signedIn)
-            TButton('taysir.sign_in'.tr(), kind: TBtn.minted, small: true, onPressed: () => openSignIn(context))
-          else
-            TButton('taysir.nav.me'.tr(), small: true, icon: TGlyph.user, onPressed: () => _go(context, TaysirSection.me)),
-          const SizedBox(width: 4),
-        ]),
-      ),
-    );
-  }
-}
-
-/// The Taysir website footer.
-class TaysirWebFooter extends StatelessWidget {
-  const TaysirWebFooter({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final lang = context.lang;
-    Widget col(String title, List<(String, String)> links) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: tStrong(14, color: TC.onNightGold)),
-          const SizedBox(height: 10),
-          for (final (label, path) in links)
-            InkWell(
-              onTap: () => context.go(path),
-              child: Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(label, style: tBody(14, color: TC.onNight2))),
-            ),
-        ]);
-    return TNight(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Wrap(spacing: 48, runSpacing: 24, children: [
-            SizedBox(
-              width: 360,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const AppLogo(size: 40),
-                const SizedBox(height: 10),
-                Text('taysir.app_name'.tr(), style: tDisplay(22, color: TC.onNight)),
-                const SizedBox(height: 8),
-                Text(AppIdentity.name(lang), style: tBody(14, color: TC.onNight2)),
-              ]),
-            ),
-            col('taysir.programme'.tr(), [
-              ('taysir.nav.discover'.tr(), '/taysir'),
-              ('taysir.nav.lessons'.tr(), '/taysir/lessons'),
-              ('taysir.nav.map'.tr(), '/taysir/map'),
-            ]),
-            col('taysir.perm.title'.tr(), [
-              ('taysir.perm.title'.tr(), '/taysir/permissions'),
-              ('taysir.nav.console'.tr(), '/taysir/console'),
-              ('taysir.switch_back'.tr(), '/settings'),
-            ]),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-/// A pushed Taysir page: back button and title on phones, the website
-/// header on wide screens. [children] scroll.
+/// A pushed Taysir page: back button and title on phones, Hadayah Live's
+/// website header and footer on wide screens. [children] scroll.
 class TaysirPage extends StatelessWidget {
-  const TaysirPage({super.key, required this.title, required this.children, this.active, this.narrow = false, this.header});
+  const TaysirPage({super.key, required this.title, required this.children, this.narrow = false, this.header});
   final String title;
   final List<Widget> children;
-  final TaysirSection? active;
   final bool narrow;
 
   /// Full-bleed content above the page column (detail heroes).
@@ -385,21 +166,25 @@ class TaysirPage extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (header != null) header!,
         TPage(narrow: narrow, children: children),
-        if (context.wide) const TaysirWebFooter(),
+        if (context.wide) const HidayahWebFooter(),
       ]),
     );
     final gated = _TaysirGate(child: scroll);
     if (context.wide) {
       return Scaffold(
         backgroundColor: TC.page,
-        body: SafeArea(child: Column(children: [TaysirWebHeader(active: active), Expanded(child: gated)])),
+        body: SafeArea(
+            child: Column(children: [
+          const HidayahWebHeader(active: HidayahWebSection.lessons),
+          Expanded(child: gated),
+        ])),
       );
     }
     return Scaffold(backgroundColor: TC.page, appBar: TaysirPhoneBar(title: title), body: gated);
   }
 }
 
-/// A root tab's scrolling body, with the footer on wide screens.
+/// A Lessons tab page's scrolling body, with the site footer on wide screens.
 class TaysirTabBody extends StatelessWidget {
   const TaysirTabBody({super.key, required this.children, this.header, this.narrow = false});
   final List<Widget> children;
@@ -416,7 +201,7 @@ class TaysirTabBody extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (header != null) header!,
           TPage(narrow: narrow, children: children),
-          if (context.wide) const TaysirWebFooter(),
+          if (context.wide) const HidayahWebFooter(),
         ]),
       ),
     );

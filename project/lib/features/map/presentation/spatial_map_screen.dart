@@ -12,6 +12,8 @@ import '../../discovery/models/academic_category_model.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
+import '../../taysir/presentation/taysir_in_hadayah.dart';
+import '../../taysir/state/taysir_controller.dart';
 import '../models/map_models.dart';
 import '../models/map_tricity_domain.dart';
 import '../services/map_offline_store.dart';
@@ -36,12 +38,16 @@ import 'widgets/tricity_basemap_layer.dart';
 /// Streets and labels come from the app-bundled vector pack
 /// ([MapPackController]); backend connectivity only decides whether venue
 /// pins are current or saved, never whether the map itself can be drawn.
-/// Every camera move goes through one [MapViewportPolicy].
+/// Every camera move goes through one [MapViewportPolicy]. Mosques with
+/// Taysir lessons in the coming week share the map with broadcasters.
 class SpatialMapScreen extends StatefulWidget {
-  const SpatialMapScreen({super.key, this.packController});
+  const SpatialMapScreen({super.key, this.packController, this.initialMosque});
 
   /// Tests inject a controller; the app uses [MapPackController.shared].
   final MapPackController? packController;
+
+  /// A mosque to select and frame once the lessons have loaded.
+  final String? initialMosque;
 
   @override
   State<SpatialMapScreen> createState() => _SpatialMapScreenState();
@@ -59,6 +65,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
   String _selectedCityId = kAllCitiesId;
   String? _selectedStreamerId;
+  String? _selectedMosqueId;
+  MapLayers _layers = MapLayers.all;
+
+  /// [SpatialMapScreen.initialMosque] until the map and the lessons are
+  /// ready; [_mosques] and [_lessonsLoaded] are the last build's.
+  String? _pendingMosqueId;
+  List<MapMosque> _mosques = const [];
+  bool _lessonsLoaded = true;
   late final ValueNotifier<double> _zoomNotifier;
   late final ValueNotifier<int> _cameraRevision;
   double? _lastClusterZoom;
@@ -99,6 +113,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     super.initState();
     _pack = widget.packController ?? MapPackController.shared;
     unawaited(_pack.ensureOpened());
+    _pendingMosqueId = widget.initialMosque;
+    unawaited(context.read<TaysirController?>()?.ensureLoaded());
     if (_pack.supportsWebOffline) unawaited(_loadWebHintState());
     _mapController = MapController();
     _zoomNotifier = ValueNotifier<double>(0);
@@ -128,7 +144,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!TickerMode.valuesOf(context).enabled) _selectedStreamerId = null;
+    if (!TickerMode.valuesOf(context).enabled) {
+      _selectedStreamerId = null;
+      _selectedMosqueId = null;
+    }
+  }
+
+  @override
+  void didUpdateWidget(SpatialMapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialMosque != null &&
+        widget.initialMosque != oldWidget.initialMosque) {
+      _pendingMosqueId = widget.initialMosque;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyPendingMosque();
+      });
+    }
   }
 
   @override
@@ -249,8 +280,32 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   void _selectStreamer(StreamerModel streamer) {
     setState(() {
       _selectedStreamerId = streamer.streamerId;
+      _selectedMosqueId = null;
     });
     _focusVenue(LatLng(streamer.latitude, streamer.longitude), kVenueFocusZoom);
+  }
+
+  void _selectMosque(MapMosque mosque) {
+    setState(() {
+      _selectedMosqueId = mosque.id;
+      _selectedStreamerId = null;
+      if (_layers == MapLayers.streamers) _layers = MapLayers.all;
+    });
+    _focusVenue(mosque.point, kVenueFocusZoom);
+  }
+
+  /// Opens [SpatialMapScreen.initialMosque] once the camera can move. An id
+  /// the loaded lessons do not have is dropped.
+  void _applyPendingMosque() {
+    final id = _pendingMosqueId;
+    if (id == null || !_mapReady || _canvas.isEmpty) return;
+    final mosque = _mosques.where((m) => m.id == id).firstOrNull;
+    if (mosque == null) {
+      if (_lessonsLoaded) _pendingMosqueId = null;
+      return;
+    }
+    _pendingMosqueId = null;
+    _selectMosque(mosque);
   }
 
   /// UI-08 "Retry and recover when connectivity returns": a manual nudge on
@@ -598,9 +653,31 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
     final venuesUpdatedAt =
         context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
+    // Taysir's mosques; none in builds and tests without the programme.
+    final mosques = context.select<TaysirController?, List<MapMosque>>(
+        (c) => c == null ? const [] : mapMosques(c, locale.languageCode));
+    _mosques = mosques;
+    _lessonsLoaded =
+        context.select<TaysirController?, bool>((c) => c?.loaded ?? true);
+    final showStreamers = _layers != MapLayers.lessons;
+    final shownMosques =
+        _layers == MapLayers.streamers ? const <MapMosque>[] : mosques;
+    if (!shownMosques.any((m) => m.id == _selectedMosqueId)) {
+      _selectedMosqueId = null;
+    }
+    final layerSwitch = mosques.isEmpty
+        ? null
+        : MapLayerSwitch(
+            value: _layers,
+            onChanged: (layers) => setState(() {
+                  _layers = layers;
+                  if (layers == MapLayers.lessons) _selectedStreamerId = null;
+                }));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _measureInsets();
+      if (!mounted) return;
+      _measureInsets();
+      _applyPendingMosque();
     });
 
     final searchBar = TopSpatialSearchBar(
@@ -658,6 +735,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               searchBar: searchBar,
               cityDropdown: cityDropdown,
               topicDropdown: topicDropdown,
+              layers: layerSwitch,
             ),
           // Main Map Canvas Viewport
           Expanded(
@@ -701,6 +779,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             _mapReady = true;
                             _enforceLegalCamera();
                             _reframeInitialOverview();
+                            _applyPendingMosque();
                           },
                           onPositionChanged: (camera, hasGesture) {
                             if (hasGesture) {
@@ -720,19 +799,25 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             }
                           },
                           onTap: (tapPosition, latLng) {
-                            if (_selectedStreamerId != null) {
+                            if (_selectedStreamerId != null ||
+                                _selectedMosqueId != null) {
                               setState(() {
                                 _selectedStreamerId = null;
+                                _selectedMosqueId = null;
                               });
                             }
                           },
                         ),
                         children: [
                           TricityBasemapLayer(controller: _pack),
-                          if (!isOnline)
+                          if (shownMosques.isNotEmpty)
+                            mosqueMarkerLayer(shownMosques,
+                                selected: _selectedMosqueId,
+                                onTap: _selectMosque),
+                          if (!isOnline && showStreamers)
                             _buildOfflineMarkerLayer(
                                 context, visibleCachedMarkers),
-                          if (isOnline)
+                          if (isOnline && showStreamers)
                             _buildLiveMarkerLayer(displayedStreamers,
                                 selectedStreamer, ownStreamerId),
                         ],
@@ -742,9 +827,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
                   // No eligible venues: a compact notice above the credit
                   // rail, so the map itself stays visible and usable.
-                  if (isOnline
-                      ? displayedStreamers.isEmpty
-                      : !hasOfflineMarkers)
+                  if (shownMosques.isEmpty &&
+                      (!showStreamers ||
+                          (isOnline
+                              ? displayedStreamers.isEmpty
+                              : !hasOfflineMarkers)))
                     PositionedDirectional(
                       key: ValueKey('map_empty_$locale'),
                       start: AppTheme.spaceMd,
@@ -901,6 +988,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 ],
                               ),
                             ],
+                            if (!web && layerSwitch != null)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    top: AppTheme.spaceSm),
+                                child: Align(
+                                    alignment:
+                                        AlignmentDirectional.centerStart,
+                                    child: layerSwitch),
+                              ),
                             ListenableBuilder(
                               listenable: _pack,
                               builder: (context, _) => _showWebOfflineHint
@@ -959,7 +1055,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        if (selectedStreamer != null)
+                        if (selectedStreamer != null ||
+                            _selectedMosqueId != null)
                           Flexible(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -972,12 +1069,19 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                     maxHeight: available.height * 0.55,
                                   ),
                                   child: SingleChildScrollView(
-                                    child: MarkerSummaryCard(
-                                      streamer: selectedStreamer,
-                                      onClose: () => setState(() {
-                                        _selectedStreamerId = null;
-                                      }),
-                                    ),
+                                    child: selectedStreamer != null
+                                        ? MarkerSummaryCard(
+                                            streamer: selectedStreamer,
+                                            onClose: () => setState(() {
+                                              _selectedStreamerId = null;
+                                            }),
+                                          )
+                                        : MapMosqueCard(
+                                            mosqueId: _selectedMosqueId!,
+                                            onClose: () => setState(() {
+                                              _selectedMosqueId = null;
+                                            }),
+                                          ),
                                   ),
                                 ),
                               ),

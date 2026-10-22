@@ -18,12 +18,16 @@ class MapWebPanel extends StatelessWidget {
       required this.searchBar,
       required this.cityDropdown,
       required this.topicDropdown,
-      this.notice});
+      this.notice,
+      this.layers});
   final List<StreamerModel> streamers;
   final String? selectedId;
   final ValueChanged<StreamerModel> onSelect;
   final Widget searchBar, cityDropdown, topicDropdown;
   final Widget? notice;
+
+  /// Broadcasters, mosque lessons or both, when there are lessons to show.
+  final Widget? layers;
   static const width = 400.0;
 
   @override
@@ -54,6 +58,10 @@ class MapWebPanel extends StatelessWidget {
                     cityDropdown,
                     const SizedBox(height: 10),
                     topicDropdown,
+                    if (layers != null) ...[
+                      const SizedBox(height: 10),
+                      layers!,
+                    ],
                     const SizedBox(height: 18),
                     Wrap(
                         spacing: 8,

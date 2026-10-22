@@ -116,7 +116,7 @@ class _TaysirLessonsScreenState extends State<TaysirLessonsScreen> {
               TSegOption(true, 'taysir.lessons.week'.tr(), icon: TGlyph.grid),
             ],
           ),
-          TButton('taysir.lessons.on_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/taysir/map')),
+          TButton('taysir.lessons.on_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map')),
         ],
       ),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

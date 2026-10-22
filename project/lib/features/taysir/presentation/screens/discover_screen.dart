@@ -218,7 +218,7 @@ class _HeroCopy extends StatelessWidget {
       const SizedBox(height: 22),
       Wrap(spacing: 10, runSpacing: 10, children: [
         TButton('taysir.discover.this_week'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.calendar, onPressed: () => context.go('/taysir/lessons')),
-        TButton('taysir.discover.open_map'.tr(), kind: TBtn.night, large: true, icon: TGlyph.map, onPressed: () => context.go('/taysir/map')),
+        TButton('taysir.discover.open_map'.tr(), kind: TBtn.night, large: true, icon: TGlyph.map, onPressed: () => context.go('/map')),
       ]),
       const SizedBox(height: 28),
       const Divider(color: TC.nightLine, height: 1),
@@ -332,7 +332,7 @@ class _MapTeaser extends StatelessWidget {
         const SizedBox(height: 8),
         Text('${tPlural('mosques', mosques)} · ${'taysir.discover.map_body'.tr()}', style: tBody(14, color: TC.muted)),
         const SizedBox(height: 14),
-        TButton('taysir.discover.open_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/taysir/map')),
+        TButton('taysir.discover.open_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map')),
       ]),
     );
     final map = SizedBox(height: 240, child: IgnorePointer(child: TaysirMap(pins: pins, interactive: false)));
@@ -340,7 +340,7 @@ class _MapTeaser extends StatelessWidget {
       borderRadius: BorderRadius.circular(TC.rLg),
       child: TCard(
         padding: EdgeInsets.zero,
-        onTap: () => context.go('/taysir/map'),
+        onTap: () => context.go('/map'),
         child: context.wide
             ? Row(children: [Expanded(flex: 3, child: map), Expanded(flex: 2, child: text)])
             : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [map, text]),

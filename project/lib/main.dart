@@ -9,8 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/reminder_push_service.dart';
+import 'core/services/retired_preferences.dart';
 import 'core/theme/app_theme.dart';
-import 'core/providers/app_experience.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/widgets/device_session_presenter.dart';
@@ -34,8 +34,7 @@ Future<void> main() async {
   }
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  final experience = AppExperience();
-  await experience.restore();
+  unawaited(forgetRetiredPreferences());
 
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
@@ -61,14 +60,13 @@ Future<void> main() async {
       // count above 2 to "other", which never selects Arabic's few/many forms
       // (audit 2026-10-21, section 5.3).
       ignorePluralRules: false,
-      child: StreamerApp(experience: experience),
+      child: const StreamerApp(),
     ),
   );
 }
 
 class StreamerApp extends StatefulWidget {
-  const StreamerApp({super.key, this.experience});
-  final AppExperience? experience;
+  const StreamerApp({super.key});
 
   @override
   State<StreamerApp> createState() => _StreamerAppState();
@@ -76,7 +74,6 @@ class StreamerApp extends StatefulWidget {
 
 class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppProvider _appProvider;
-  late final AppExperience _experience;
   late final GoRouter _router;
   late final DeviceSessionPresenter _deviceSessionPresenter;
 
@@ -85,8 +82,6 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _appProvider = AppProvider();
-    _experience = widget.experience ?? AppExperience();
-    if (widget.experience == null) unawaited(_experience.restore());
     // Start real-time live viewer polling now that the provider exists.
     // This is intentionally NOT done inside AppProvider's constructor so that
     // widget tests (which use their own AppProvider instances) stay free of
@@ -98,7 +93,7 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     // Built once and bound to _appProvider so its redirect (see
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.
-    _router = AppRouter.build(_appProvider, experience: _experience);
+    _router = AppRouter.build(_appProvider);
     _appProvider.attachReminderPush(onOpen: (streamerId) async {
       await _appProvider.loadVerifiedStreamersFromBackend();
       if (mounted) _router.go('/profile/$streamerId?tab=upcoming');
@@ -126,7 +121,6 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _deviceSessionPresenter.dispose();
     _appProvider.dispose();
-    _experience.dispose();
     super.dispose();
   }
 
@@ -135,7 +129,6 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
-        ChangeNotifierProvider<AppExperience>.value(value: _experience),
         // Taysir: created on first use; follows sign-in and sign-out. Without
         // a configured backend it shows sample data, marked as such.
         ChangeNotifierProxyProvider<AppProvider, TaysirController>(

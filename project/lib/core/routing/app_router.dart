@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
-import '../providers/app_experience.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/ds/ca_focus_ring.dart';
 import '../widgets/ds/ca_icon.dart';
@@ -45,7 +44,6 @@ import '../../features/taysir/presentation/screens/console_screen.dart';
 import '../../features/taysir/presentation/screens/detail_screens.dart';
 import '../../features/taysir/presentation/screens/discover_screen.dart';
 import '../../features/taysir/presentation/screens/lessons_screen.dart';
-import '../../features/taysir/presentation/screens/map_screen.dart';
 import '../../features/taysir/presentation/screens/preacher_screens.dart';
 import '../../features/taysir/presentation/taysir_shell.dart';
 import '../../features/taysir/state/taysir_controller.dart';
@@ -80,10 +78,8 @@ class AppRouter {
       GlobalKey<NavigatorState>(debugLabel: 'feedBranch');
   static final GlobalKey<NavigatorState> _mapNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'mapBranch');
-  static final _taysirKeys = [
-    for (final b in ['discover', 'lessons', 'map', 'me'])
-      GlobalKey<NavigatorState>(debugLabel: 'taysir-$b')
-  ];
+  static final GlobalKey<NavigatorState> _lessonsNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'lessonsBranch');
 
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
@@ -105,7 +101,7 @@ class AppRouter {
   /// Must be created once (e.g. in a State.initState), not per-build --
   /// GoRouter expects a stable instance so its internal navigation state
   /// survives widget rebuilds.
-  static GoRouter build(AppProvider provider, {AppExperience? experience}) {
+  static GoRouter build(AppProvider provider) {
     // Pages opened with push (channel, live, sign-in) show their own address
     // on the web, so a channel or live link can be copied, shared and
     // reloaded; it used to stay on #/feed (audit 2026-10-21, P0-5).
@@ -143,12 +139,6 @@ class AppRouter {
 
           if (path == '/splash' && state.uri.queryParameters['from'] != null) {
             return state.uri.queryParameters['from'];
-          }
-
-          // The Settings logo switches the whole shell to Taysir; its home
-          // replaces the Discovery feed as the landing page.
-          if (path == '/feed' && experience?.taysir == true) {
-            return Experience.taysir.home;
           }
 
           // Cluster 4 Task 16: a platform-banned account is locked out of the
@@ -308,46 +298,61 @@ class AppRouter {
                   GoRoute(
                     path: '/map',
                     name: 'map',
-                    builder: (context, state) => const SpatialMapScreen(),
+                    // ?mosque= opens on a mosque's lessons (links from
+                    // lesson and mosque pages).
+                    builder: (context, state) => SpatialMapScreen(
+                        initialMosque: state.uri.queryParameters['mosque']),
+                  ),
+                ],
+              ),
+              // Taysir, the mosque lessons programme, is a tab of Hadayah
+              // Live (ADR-014). Public pages need no sign-in; screens that
+              // act check roles themselves and the server enforces every
+              // write. Lesson pages and the console open above the tabs.
+              StatefulShellBranch(
+                navigatorKey: _lessonsNavigatorKey,
+                routes: [
+                  GoRoute(
+                    path: '/taysir',
+                    name: 'lessons',
+                    builder: (context, state) =>
+                        const TaysirTab(child: TaysirDiscoverScreen()),
+                    routes: [
+                      GoRoute(
+                          path: 'lessons',
+                          builder: (context, state) {
+                            final q = state.uri.queryParameters;
+                            return TaysirTab(
+                                titleKey: 'taysir.nav.lessons',
+                                child: TaysirLessonsScreen(
+                                    key: ValueKey(state.uri.query),
+                                    initial: TaysirFilter(
+                                        language: q['lang'],
+                                        topic: q['topic'],
+                                        mosqueId: q['mosque'],
+                                        preacherId: q['preacher'],
+                                        city: q['city'])));
+                          }),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-          // Taysir in Hadayah Live: the mosque lessons programme. Public
-          // pages need no sign-in; screens that act check roles themselves
-          // and the server enforces every write.
-          StatefulShellRoute.indexedStack(
-            builder: (context, state, shell) => TaysirShell(shell: shell),
-            branches: [
-              StatefulShellBranch(navigatorKey: _taysirKeys[0], routes: [
-                GoRoute(path: '/taysir', builder: (context, state) => const TaysirDiscoverScreen()),
-              ]),
-              StatefulShellBranch(navigatorKey: _taysirKeys[1], routes: [
-                GoRoute(
-                    path: '/taysir/lessons',
-                    builder: (context, state) {
-                      final q = state.uri.queryParameters;
-                      return TaysirLessonsScreen(
-                          key: ValueKey(state.uri.query),
-                          initial: TaysirFilter(
-                              language: q['lang'],
-                              topic: q['topic'],
-                              mosqueId: q['mosque'],
-                              preacherId: q['preacher'],
-                              city: q['city']));
-                    }),
-              ]),
-              StatefulShellBranch(navigatorKey: _taysirKeys[2], routes: [
-                GoRoute(
-                    path: '/taysir/map',
-                    builder: (context, state) => TaysirMapScreen(initialMosque: state.uri.queryParameters['mosque'])),
-              ]),
-              StatefulShellBranch(navigatorKey: _taysirKeys[3], routes: [
-                GoRoute(path: '/taysir/me', builder: (context, state) => const TaysirMeScreen()),
-              ]),
-            ],
-          ),
+          // Mosques and their lessons are on the one map now.
+          GoRoute(
+              path: '/taysir/map',
+              redirect: (context, state) => Uri(
+                      path: '/map',
+                      queryParameters: state.uri.queryParameters.isEmpty
+                          ? null
+                          : state.uri.queryParameters)
+                  .toString()),
+          // A person's programme pages, opened from Settings.
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/me',
+              builder: (context, state) => const TaysirMeScreen()),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/taysir/lessons/:id',
@@ -526,9 +531,11 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
             SafeArea(
                 child: Column(children: [
               HidayahWebHeader(
-                  active: navigationShell.currentIndex == 0
-                      ? HidayahWebSection.discover
-                      : HidayahWebSection.map,
+                  active: const [
+                    HidayahWebSection.discover,
+                    HidayahWebSection.map,
+                    HidayahWebSection.lessons,
+                  ][navigationShell.currentIndex],
                   onBranch: (index) => navigationShell.goBranch(index,
                       initialLocation: index == navigationShell.currentIndex)),
               Expanded(child: navigationShell),
@@ -602,6 +609,13 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                       isSelected:
                                           navigationShell.currentIndex == 1,
                                       onTap: () => navigationShell.goBranch(1),
+                                    ),
+                                    _DesktopNavItem(
+                                      icon: CaGlyph.cal,
+                                      label: 'nav.lessons'.tr(),
+                                      isSelected:
+                                          navigationShell.currentIndex == 2,
+                                      onTap: () => navigationShell.goBranch(2),
                                     ),
                                     if (isStreamerModeEnabled)
                                       _DesktopNavItem(

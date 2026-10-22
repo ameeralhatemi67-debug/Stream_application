@@ -1,7 +1,7 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
@@ -42,11 +42,34 @@ model (review: `brief/research/taysir/2026-10-21_TAYSIR_DNA_HEALTH_AND_INTEGRATI
   not part of it). The repository interface has a Supabase implementation
   and a sample-data `DemoTaysirRepository` used when Supabase is not
   configured and by widget tests; the sample build shows a banner and a
-  persona switcher on the Me tab. Taysir has its own `StatefulShellRoute`
-  (`/taysir`, lessons, map, me) and root routes for detail, submit, report,
-  claim and console pages; public pages need no sign-in.
-- **Switching:** Settings → About's logo switches between Hadayah Live and
-  Taysir (ADR-013). Shared `/taysir/...` links open for everyone.
+  persona switcher on the programme page (`/taysir/me`).
+- **Part of Hadayah Live, not a second app (amended 2026-10-22).** The first
+  build put Taysir behind the Settings logo as a separate shell that replaced
+  Discover and Map with its own tabs, so switching to it hid every streamer.
+  The owner's intent was a merge, so:
+  - **Lessons is the third tab** of Hadayah Live's shell (Discover, Map,
+    Lessons): `/taysir` (the programme's home) with `/taysir/lessons` inside
+    the tab. Phone pill, desktop rail and website header all list it.
+    Lesson, series, preacher, mosque, submit, report, claim and console
+    pages open above the tabs; on the website they carry Hadayah Live's
+    header and footer (`TaysirPage`).
+  - **One map.** Mosques with approved lessons in the next seven days are
+    gold coins on the Spatial Map beside broadcasters, with an
+    All / Broadcasters / Mosque lessons switch shown only when there are
+    lessons. A coin opens the mosque's card (next lessons, mosque page,
+    directions). `/map?mosque=<id>` opens on a mosque; the old
+    `/taysir/map` links redirect there. Taysir's own map screen is gone.
+  - **Discover** has a "Mosque lessons this week" row (phone and website),
+    hidden when there are none.
+  - **A person's programme pages are in Settings** (`TaysirSettingsCard`):
+    the programme page (following, learning log, preferences, roles),
+    reminders, notifications, "My lessons" for preachers and the console
+    for coordinators. The Lessons tab's phone bar keeps only the language
+    button and an alert bell while Taysir notifications are unread.
+  - No switch remains: `AppExperience` and the `/feed` → `/taysir` redirect
+    are deleted, and the saved `app_experience` choice is removed on start
+    (`forgetRetiredPreferences`). Shared `/taysir/...` links open for
+    everyone; public pages need no sign-in.
 
 Consequences: migration `20261021142359_taysir_lessons_programme.sql` is
 deployed to hosted (2026-10-21). Hosted has no organizations yet, so Taysir
@@ -56,21 +79,21 @@ sent yet (`dispatch-upcoming-reminders` does not read `taysir_reminders`).
 Taysir's real data (43 preachers with phone numbers) is not imported;
 coordinators import a CSV in the console.
 
-## ADR-013: Hidayah Gold is the only design; the logo switches applications (2026-10-21)
+## ADR-013: Hidayah Gold is the only design (2026-10-21)
 
 The green design and its runtime palette remap are removed. Gold is the
 source token set (`canopy_tokens.dart`, `app_theme.dart`); `AppPalette` holds
-plain gold constants. The Settings → About logo no longer toggles a palette:
-it switches the application between Hadayah Live (`/feed`) and Taysir
-(`/taysir`) through `AppExperience` (`lib/core/providers/app_experience.dart`),
-a per-device preference saved before it applies. When Taysir is chosen the
-router sends `/feed` to `/taysir`. The retired `hidayah_palette_enabled` key
-is deleted on first start. Website layouts are always on at 1024 px and wider.
-Both Android launcher aliases are kept so component state survives updates;
-the launcher icon is gold on Android, iOS and web.
+plain gold constants. The retired `hidayah_palette_enabled` key is deleted on
+start (`lib/core/services/retired_preferences.dart`). Website layouts are
+always on at 1024 px and wider. Both Android launcher aliases are kept so
+component state survives updates; the launcher icon is gold on Android, iOS
+and web.
 
-Consequences: guests cannot reach Settings, so the switch needs a signed-in
-account; anyone can open Taysir from a shared link.
+Superseded part (2026-10-22): the Settings → About logo briefly switched the
+whole app between Hadayah Live and Taysir (`AppExperience`). That hid
+Discover's streamers and the map whenever Taysir was on, and a guest in
+Taysir could not get back (Settings needs sign-in). The switch is removed;
+Taysir is a tab of Hadayah Live (ADR-014) and the logo is only the logo.
 
 ## ADR-012: Private saved recordings and upcoming announcements
 

@@ -16,12 +16,13 @@ import '../taysir_shell.dart';
 import '../taysir_widgets.dart';
 
 // -------------------------------------------------------------------- me
+/// A person's programme page (roles, reminders, preferences), opened from
+/// Settings.
 class TaysirMeScreen extends StatelessWidget {
   const TaysirMeScreen({super.key});
   @override
   Widget build(BuildContext context) {
     final c = context.watch<TaysirController>();
-    final lang = context.lang;
     final demo = c.demoPersona;
     final children = <Widget>[
       if (demo != null) _DemoPersonaCard(current: demo),
@@ -82,23 +83,9 @@ class TaysirMeScreen extends StatelessWidget {
         ),
         const _PrefsCard(),
       ],
-      TCard(
-        onTap: () => context.push('/settings'),
-        child: Row(children: [
-          const AppLogo(size: 40),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('taysir.me.settings'.tr(), style: tStrong(15)),
-              Text('settings.experience_hint_taysir'.tr(), style: tBody(13, color: TC.muted)),
-            ]),
-          ),
-          const TIcon(TGlyph.chevron, size: 18, color: TC.faint),
-        ]),
-      ),
     ];
-    return TaysirTabBody(narrow: true, children: [
-      if (c.signedIn && lang.isNotEmpty) Text('taysir.nav.me'.tr(), style: tDisplay(26)),
+    return TaysirPage(title: 'taysir.programme'.tr(), narrow: true, children: [
+      Text('taysir.programme'.tr(), style: tDisplay(26)),
       ...children,
     ]);
   }

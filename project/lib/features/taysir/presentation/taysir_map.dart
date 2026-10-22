@@ -86,7 +86,7 @@ class _TaysirMapState extends State<TaysirMap> {
                 point: LatLng(p.lat, p.lng),
                 width: p.id == widget.selected ? 46 : 38,
                 height: p.id == widget.selected ? 46 : 38,
-                child: _Coin(pin: p, selected: p.id == widget.selected, onTap: widget.onPin == null ? null : () => widget.onPin!(p.id)),
+                child: TaysirMosqueCoin(pin: p, selected: p.id == widget.selected, onTap: widget.onPin == null ? null : () => widget.onPin!(p.id)),
               ),
           ]),
         ],
@@ -95,8 +95,9 @@ class _TaysirMapState extends State<TaysirMap> {
   }
 }
 
-class _Coin extends StatelessWidget {
-  const _Coin({required this.pin, required this.selected, this.onTap});
+/// A mosque coin: its lesson count, ringed red while one is streamed live.
+class TaysirMosqueCoin extends StatelessWidget {
+  const TaysirMosqueCoin({super.key, required this.pin, this.selected = false, this.onTap});
   final TaysirPin pin;
   final bool selected;
   final VoidCallback? onTap;

@@ -1,12 +1,26 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-21
+updated: 2026-10-22
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Taysir merged into Hadayah Live: a Lessons tab, one map, no app switch, 2026-10-22
+
+The owner pushed the first Taysir build (Vercel production at `ddfb577`) and found no streamers in Discover or on the map. Nothing had been deleted (hosted still served all 5 verified streamers to guests through `streamer_public_profiles`, and the commits removed only the four palette theme files). The cause: the Settings logo switched the whole app to a separate Taysir shell, `/feed` redirected to `/taysir`, and Taysir's own Discover and Map tabs (lessons and mosques, empty on hosted with 0 organizations) replaced Hadayah's. A guest left in Taysir could not get back, because Settings needs sign-in. The owner's intent was a merge (ADR-014, amended):
+
+- **No switch.** `AppExperience` and the redirect are deleted; the Settings logo is only the logo. On start, `forgetRetiredPreferences()` removes the saved `app_experience` choice and the old `hidayah_palette_enabled` key, so every device opens on Discover.
+- **Lessons tab.** Hadayah Live's shell has three tabs: Discover, Map, Lessons (`/taysir`, with `/taysir/lessons` inside the tab). The phone pill (`CaNavBar`, now any number of destinations), the 900 to 1024 px rail and the website header (between Map and Organizations) and footer all list it. A preacher's submit button stays on the tab's home. Pushed Taysir pages (lesson, series, preacher, mosque, submit, report, claim, console, programme) carry Hadayah Live's website header and footer on wide screens instead of Taysir's own.
+- **One map.** Mosques with approved lessons in the next seven days are gold coins on the Spatial Map beside broadcasters, with an All / Broadcasters / Mosque lessons switch (only when there are lessons; in the website panel on laptops). A coin opens the mosque's card (next three lessons, mosque page, directions). `/map?mosque=<id>` opens on a mosque, the mosque page has an "On the map" button, and old `/taysir/map` links redirect. Taysir's separate map screen is deleted.
+- **Discover** shows "Mosque lessons this week" (a row of lesson cards on phones, a four-card grid on the website), hidden when there are none, with "See all" to the Lessons tab.
+- **Settings** has a programme card: the programme page (following, learning log, reminder preferences, roles; formerly the Me tab), reminders, notifications, "My lessons" for preachers and the console for coordinators, with counts. The Lessons tab's phone bar keeps the language button and shows an alert bell only while Taysir notifications are unread.
+
+Hosted is unchanged (no migration). Taysir is still empty there until the Hidayah organization exists and is switched on, so on hosted the Lessons tab shows its empty state and Discover and the map show no lessons yet.
+
+Verification: analyzer 0 issues. `taysir_screens_test.dart` 70 tests (new: the three tabs on phones in English and in Arabic at 2x text; the website header order and links; a lesson page keeping the site header; Discover's lessons row at 390 and 1280 px and its absence without lessons; mosque coins, the layer switch, the mosque card and its page link at 390 and 1280 px; an old `/taysir/map?mosque=` link; the mosque page's map button; no switch without lessons; the Settings card for a viewer, a coordinator and a preacher; the layout sweep now also covers `/feed`, `/map` and `/map?mosque=m1`). New `retired_switches_test.dart` (the retired keys are removed, gold theme, the logo is only the logo). Full suite 1,636 passed, 10 skipped, 0 failed. Browser check: see the ledger.
 
 ## Taysir deployed to hosted; admins manage coordinators, 2026-10-21
 

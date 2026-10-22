@@ -5,19 +5,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:streamer_app/core/providers/app_experience.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/routing/app_router.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/ds/ca_navigation.dart';
+import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
+import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/map/services/map_pack_controller.dart';
 import 'package:streamer_app/features/taysir/data/demo_taysir_repository.dart';
 import 'package:streamer_app/features/taysir/domain/taysir_dates.dart';
 import 'package:streamer_app/features/taysir/domain/taysir_models.dart';
 import 'package:streamer_app/features/taysir/domain/taysir_rules.dart';
 import 'package:streamer_app/features/taysir/presentation/screens/discover_screen.dart';
+import 'package:streamer_app/features/taysir/presentation/taysir_in_hadayah.dart';
 import 'package:streamer_app/features/taysir/presentation/taysir_kit.dart';
 import 'package:streamer_app/features/taysir/presentation/taysir_map.dart';
 import 'package:streamer_app/features/taysir/presentation/taysir_widgets.dart';
 import 'package:streamer_app/features/taysir/state/taysir_controller.dart';
+import 'package:streamer_app/features/web/presentation/hidayah_web_header.dart';
 
 import 'support/localized_app.dart';
 
@@ -25,16 +30,22 @@ const _phone = Size(390, 844);
 const _smallPhone = Size(360, 740);
 const _web = Size(1280, 800);
 
+/// No map files: the shared map settles on "unavailable" and draws its pins
+/// without tiles (tiles are covered on devices and in Chrome).
+class _NoPackBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async => throw StateError('no $key');
+}
+
 /// The real app router with Taysir's sample data, viewed as [persona].
 class _App {
   _App(this.tester, this.router, this.taysir, this.repo, this.provider,
-      this.experience, this.lang);
+      this.lang);
   final WidgetTester tester;
   final GoRouter router;
   final TaysirController taysir;
   final DemoTaysirRepository repo;
   final AppProvider provider;
-  final AppExperience experience;
   final String lang;
 
   String get at => router.routeInformationProvider.value.uri.toString();
@@ -49,7 +60,6 @@ class _App {
     router.dispose();
     taysir.dispose();
     provider.dispose();
-    experience.dispose();
   }
 }
 
@@ -67,11 +77,10 @@ Future<_App> _open(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final provider = AppProvider();
-  final experience = AppExperience();
   final repo = DemoTaysirRepository(persona: persona);
   setup?.call(repo);
   final taysir = TaysirController(repo);
-  final router = AppRouter.build(provider, experience: experience);
+  final router = AppRouter.build(provider);
   router.go(location);
   await tester.pumpWidget(EasyLocalization(
     key: UniqueKey(),
@@ -83,7 +92,6 @@ Future<_App> _open(
     child: MultiProvider(
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: provider),
-        ChangeNotifierProvider<AppExperience>.value(value: experience),
         ChangeNotifierProvider<TaysirController>.value(value: taysir),
       ],
       child: Builder(
@@ -103,7 +111,7 @@ Future<_App> _open(
     ),
   ));
   await _settle(tester);
-  return _App(tester, router, taysir, repo, provider, experience, lang);
+  return _App(tester, router, taysir, repo, provider, lang);
 }
 
 Future<void> _settle(WidgetTester tester) => tester.pumpAndSettle(
@@ -170,6 +178,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     TaysirMap.debugPlaceholder = true;
+    MapPackController.debugShared =
+        MapPackController(bundle: _NoPackBundle(), useWebStore: false);
     clipboard = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (call) async {
@@ -182,20 +192,153 @@ void main() {
 
   tearDown(() {
     TaysirMap.debugPlaceholder = false;
+    MapPackController.debugShared = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, null);
   });
 
-  group('settings switch', () {
-    testWidgets('choosing Taysir makes the home route open Taysir',
-        (tester) async {
-      final app = await _open(tester, '/taysir');
-      expect(find.byType(TaysirDiscoverScreen), findsOneWidget);
+  // Taysir is part of Hadayah Live (ADR-014): a Lessons tab beside Discover
+  // and Map, mosques on the one map, a lessons row on Discover, and a
+  // person's programme pages in Settings. Nothing switches the app.
+  group('inside Hadayah Live', () {
+    for (final (lang, size, scale) in [
+      ('en', _phone, 1.0),
+      ('ar', _smallPhone, 2.0),
+    ]) {
+      testWidgets('phone: Lessons is the third tab, after Discover and Map ($lang x$scale)',
+          (tester) async {
+        final app =
+            await _open(tester, '/feed', lang: lang, size: size, scale: scale);
+        expect(find.byType(DiscoveryFeedScreen), findsOneWidget);
+        expect(find.byType(CaNavBar), findsOneWidget);
 
-      await app.experience.set(Experience.taysir);
-      await app.go('/feed');
+        await _tap(tester, find.byTooltip('nav.lessons'.tr()));
+        expect(app.at, '/taysir');
+        expect(find.byType(TaysirDiscoverScreen), findsOneWidget);
+        expect(find.byType(CaNavBar), findsOneWidget);
+
+        await _tap(tester, find.byTooltip('nav.map'.tr()));
+        expect(app.at, '/map');
+        expect(find.byType(SpatialMapScreen), findsOneWidget);
+
+        await _tap(tester, find.byTooltip('nav.feed'.tr()));
+        expect(app.at, '/feed');
+        await app.close();
+      });
+    }
+
+    testWidgets('website: Lessons is in the site header, between Map and Organizations',
+        (tester) async {
+      final app = await _open(tester, '/taysir', size: _web);
+      expect(find.byType(HidayahWebHeader), findsOneWidget);
+      expect(find.byType(HidayahWebFooter), findsOneWidget);
+      final header = find.byType(HidayahWebHeader);
+      double x(String key) => tester
+          .getCenter(find.descendant(of: header, matching: find.text(key.tr())))
+          .dx;
+      expect(x('web.nav_map'), lessThan(x('web.nav_lessons')));
+      expect(x('web.nav_lessons'), lessThan(x('web.nav_orgs')));
+
+      await _tap(tester,
+          find.descendant(of: header, matching: find.text('web.nav_discover'.tr())));
+      expect(app.at, '/feed');
+      await _tap(tester,
+          find.descendant(of: header, matching: find.text('web.nav_lessons'.tr())));
       expect(app.at, '/taysir');
-      expect(find.byType(TaysirDiscoverScreen), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('a lesson page above the tabs keeps the site header on the website',
+        (tester) async {
+      final app = await _open(tester, '/taysir', size: _web);
+      final l = _nextTawhid(app.repo);
+      await app.go('/taysir/lessons/${l.id}');
+      expect(find.byType(HidayahWebHeader), findsOneWidget);
+      await app.close();
+    });
+
+    for (final size in [_phone, _web]) {
+      testWidgets('Discover shows this week\'s mosque lessons (${size.width})',
+          (tester) async {
+        final app = await _open(tester, '/feed', size: size);
+        final rail = find.byKey(const ValueKey('feed-lessons-rail'));
+        await tester.scrollUntilVisible(rail, 300,
+            scrollable: find.byType(Scrollable).first);
+        expect(find.descendant(of: rail, matching: find.byType(LessonCard)),
+            findsWidgets);
+        final seeAll = find.descendant(
+            of: rail, matching: find.text('taysir.see_all'.tr()));
+        await _tap(tester, seeAll);
+        expect(app.at, '/taysir');
+        await app.close();
+      });
+    }
+
+    testWidgets('Discover shows no lessons row when there are none',
+        (tester) async {
+      final app = await _open(tester, '/feed',
+          setup: (repo) => repo.lessons.clear());
+      expect(find.byKey(const ValueKey('feed-lessons-rail')), findsNothing);
+      await app.close();
+    });
+  });
+
+  group('the shared map', () {
+    for (final size in [_phone, _web]) {
+      testWidgets('mosques with lessons are pinned beside broadcasters (${size.width})',
+          (tester) async {
+        final app = await _open(tester, '/map', size: size);
+        final pins = mapMosques(app.taysir, 'en');
+        expect(pins, isNotEmpty);
+        // The marker layer draws the pins inside the visible map.
+        final shown = find.byType(TaysirMosqueCoin).evaluate().length;
+        expect(shown, inInclusiveRange(1, pins.length));
+
+        // Broadcasters only, then lessons back.
+        await _tap(tester, find.byKey(const ValueKey('map-layer-streamers')));
+        expect(find.byType(TaysirMosqueCoin), findsNothing);
+        await _tap(tester, find.byKey(const ValueKey('map-layer-lessons')));
+        expect(find.byType(TaysirMosqueCoin), findsNWidgets(shown));
+
+        // A coin opens the mosque's card, and its page from there. (Called
+        // directly: without map files the pack notice covers the centre.)
+        final m1 = pins.firstWhere((m) => m.id == 'm1');
+        tester
+            .widget<TaysirMosqueCoin>(find.byWidgetPredicate(
+                (w) => w is TaysirMosqueCoin && w.pin.id == m1.id))
+            .onTap!();
+        await _settle(tester);
+        expect(find.byKey(const ValueKey('map-mosque-card')), findsOneWidget);
+        expect(find.text(m1.label), findsWidgets);
+        await _tap(tester, find.text('taysir.map.mosque_page'.tr()));
+        expect(app.at, '/taysir/mosques/m1');
+        await app.close();
+      });
+    }
+
+    testWidgets('an old Taysir map link opens the shared map on that mosque',
+        (tester) async {
+      final app = await _open(tester, '/taysir/map?mosque=m1');
+      expect(app.at, '/map?mosque=m1');
+      expect(find.byKey(const ValueKey('map-mosque-card')), findsOneWidget);
+      expect(find.text(app.repo.mosques['m1']!.name('en')), findsWidgets);
+      await app.close();
+    });
+
+    testWidgets('a mosque page opens the shared map on its lessons',
+        (tester) async {
+      final app = await _open(tester, '/taysir/mosques/m1');
+      await _tap(tester, find.text('taysir.lessons.on_map'.tr()));
+      expect(app.at, '/map?mosque=m1');
+      expect(find.byKey(const ValueKey('map-mosque-card')), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('without lessons the map has no layer switch', (tester) async {
+      final app = await _open(tester, '/map',
+          setup: (repo) => repo.lessons.clear());
+      expect(find.byType(MapLayerSwitch), findsNothing);
+      expect(find.byType(TaysirMosqueCoin), findsNothing);
       await app.close();
     });
   });
@@ -205,16 +348,16 @@ void main() {
       ('en', _phone, 1.0),
       ('ar', _smallPhone, 2.0),
     ]) {
-      testWidgets('phone tabs, sample banner and lessons ($lang x$scale)',
+      testWidgets('phone: Hadayah tabs, sample banner and lessons ($lang x$scale)',
           (tester) async {
         final app =
             await _open(tester, '/taysir', lang: lang, size: size, scale: scale);
         expect(find.text('taysir.sample_banner'.tr()), findsOneWidget);
-        for (final tab in ['discover', 'lessons', 'map', 'me']) {
-          expect(find.text('taysir.nav.$tab'.tr()), findsWidgets);
+        for (final tab in ['feed', 'map', 'lessons']) {
+          expect(find.byTooltip('nav.$tab'.tr()), findsOneWidget);
         }
         // No website header on phones.
-        expect(find.text('taysir.brand_sub'.tr()), findsNothing);
+        expect(find.byType(HidayahWebHeader), findsNothing);
 
         final row = find.byType(LessonRow).first;
         final id = tester.widget<LessonRow>(row).lesson.id;
@@ -226,45 +369,48 @@ void main() {
     }
 
     for (final lang in ['en', 'ar']) {
-      testWidgets('website header and hero at 1280 ($lang)', (tester) async {
+      testWidgets('website: site header and hero at 1280 ($lang)', (tester) async {
         final app = await _open(tester, '/taysir', lang: lang, size: _web);
-        expect(find.text('taysir.brand_sub'.tr()), findsOneWidget);
+        expect(find.byType(HidayahWebHeader), findsOneWidget);
         expect(find.text('taysir.discover.hero_title'.tr()), findsOneWidget);
-        expect(find.text('taysir.sign_in'.tr()), findsOneWidget);
-        // A small button keeps its height inside the 72 px header.
-        expect(
-            tester
-                .getSize(find.ancestor(
-                    of: find.text('taysir.sign_in'.tr()),
-                    matching: find.byType(TButton)))
-                .height,
-            lessThan(48));
+        expect(find.text('web.sign_in'.tr()), findsOneWidget);
         expect(find.byType(LessonCard), findsWidgets);
-        await _tap(tester, find.text('taysir.nav.lessons'.tr()));
+        await _tap(tester, find.text('taysir.see_all'.tr()));
         expect(app.at, '/taysir/lessons');
         expect(find.text('taysir.lessons.title'.tr()), findsOneWidget);
         await app.close();
       });
     }
 
+    testWidgets('phone: all lessons opens inside the tab and goes back',
+        (tester) async {
+      final app = await _open(tester, '/taysir');
+      await _tap(tester, find.text('taysir.see_all'.tr()));
+      expect(app.at, '/taysir/lessons');
+      expect(find.byType(CaNavBar), findsOneWidget);
+      await _tap(tester, find.byTooltip('taysir.back'.tr()));
+      expect(app.at, '/taysir');
+      await app.close();
+    });
+
     for (final size in [_phone, _web]) {
-      testWidgets('the header language button switches every label (${size.width})',
+      testWidgets('the language button switches every label (${size.width})',
           (tester) async {
         final app = await _open(tester, '/taysir', size: size);
-        final english = [
-          'taysir.app_name'.tr(),
-          'taysir.nav.discover'.tr(),
-          'taysir.nav.lessons'.tr(),
-          'taysir.sample_banner'.tr(),
+        final keys = [
+          size == _web ? 'web.nav_lessons' : 'taysir.app_name',
+          'taysir.discover.upcoming',
+          'taysir.sample_banner',
         ];
-        await _tap(tester, find.byTooltip('العربية'));
+        final english = [for (final key in keys) key.tr()];
+        await _tap(
+            tester,
+            find.byTooltip(
+                size == _web ? 'language.switch_lang'.tr() : 'العربية'));
         expect(app.tester.element(find.byType(TaysirDiscoverScreen)).locale,
             const Locale('ar'));
         for (final (key, en) in [
-          ('taysir.app_name', english[0]),
-          ('taysir.nav.discover', english[1]),
-          ('taysir.nav.lessons', english[2]),
-          ('taysir.sample_banner', english[3]),
+          for (var i = 0; i < keys.length; i++) (keys[i], english[i])
         ]) {
           expect(find.text(en), findsNothing, reason: key);
           expect(find.text(key.tr()), findsWidgets, reason: key);
@@ -743,6 +889,82 @@ void main() {
     });
   });
 
+  group('settings', () {
+    /// Settings needs a signed-in account; the card is checked on its own,
+    /// with the programme's routes stubbed.
+    Future<(TaysirController, List<String>)> pumpCard(
+        WidgetTester tester, TaysirDemoPersona persona) async {
+      final taysir = TaysirController(DemoTaysirRepository(persona: persona));
+      addTearDown(taysir.dispose);
+      final opened = <String>[];
+      final router = GoRouter(routes: [
+        GoRoute(
+            path: '/',
+            builder: (_, __) => const Scaffold(
+                body: SingleChildScrollView(child: TaysirSettingsCard()))),
+        GoRoute(
+            path: '/taysir/:rest(.*)',
+            builder: (_, state) {
+              opened.add(state.uri.toString());
+              return const Scaffold(body: Text('page'));
+            }),
+      ]);
+      addTearDown(router.dispose);
+      await tester.pumpWidget(EasyLocalization(
+        key: UniqueKey(),
+        supportedLocales: const [Locale('en'), Locale('ar')],
+        startLocale: const Locale('en'),
+        saveLocale: false,
+        path: 'assets/i18n',
+        assetLoader: const DirectJsonAssetLoader(),
+        child: ChangeNotifierProvider<TaysirController>.value(
+          value: taysir,
+          child: Builder(
+            builder: (context) => MaterialApp.router(
+              routerConfig: router,
+              theme: AppTheme.forLocale(context.locale),
+              locale: context.locale,
+              supportedLocales: context.supportedLocales,
+              localizationsDelegates: context.localizationDelegates,
+            ),
+          ),
+        ),
+      ));
+      await _settle(tester);
+      return (taysir, opened);
+    }
+
+    testWidgets('a viewer reaches the programme page, reminders and alerts',
+        (tester) async {
+      final (taysir, opened) =
+          await pumpCard(tester, TaysirDemoPersona.viewer);
+      expect(find.text('taysir.programme'.tr()), findsOneWidget);
+      expect(find.text('taysir.me.console'.tr()), findsNothing);
+      expect(find.text('taysir.me.my_lessons'.tr()), findsNothing);
+      expect(find.text('${taysir.mine.unread}'), findsOneWidget);
+      await _tap(tester, find.text('taysir.me.reminders'.tr()));
+      expect(opened.last, '/taysir/me/saved?tab=reminders');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a coordinator also gets the console, with pending requests',
+        (tester) async {
+      final (taysir, opened) =
+          await pumpCard(tester, TaysirDemoPersona.coordinator);
+      expect(find.text('${taysir.pendingRequests.length}'), findsOneWidget);
+      await _tap(tester, find.text('taysir.me.console'.tr()));
+      expect(opened.last, '/taysir/console');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a preacher also gets their lessons', (tester) async {
+      final (_, opened) = await pumpCard(tester, TaysirDemoPersona.preacher);
+      await _tap(tester, find.text('taysir.me.my_lessons'.tr()));
+      expect(opened.last, '/taysir/me/lessons');
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
   group('me', () {
     testWidgets('the sample persona switcher changes the view', (tester) async {
       final app = await _open(tester, '/taysir/me');
@@ -788,8 +1010,9 @@ void main() {
       return [
         (g, '/taysir'),
         (g, '/taysir/lessons'),
-        (g, '/taysir/map'),
-        (g, '/taysir/map?mosque=m1'),
+        (g, '/feed'),
+        (g, '/map'),
+        (g, '/map?mosque=m1'),
         (g, '/taysir/me'),
         (g, '/taysir/lessons/${next.id}'),
         (g, '/taysir/series/s1'),

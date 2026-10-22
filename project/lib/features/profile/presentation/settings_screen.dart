@@ -15,6 +15,7 @@ import 'settings/application_settings_section.dart';
 import 'settings/broadcasting_settings_section.dart';
 import 'settings/privacy_settings_section.dart';
 import 'settings/about_settings_section.dart';
+import '../../taysir/presentation/taysir_in_hadayah.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -241,6 +242,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ])),
           const SizedBox(height: AppTheme.spaceLg),
         ];
+        // Taysir, the mosque lessons programme: a person's own pages.
+        final lessons = <Widget>[
+          const TaysirSettingsCard(),
+          const SizedBox(height: AppTheme.spaceLg),
+        ];
         final privacy = <Widget>[
           if (appProvider.isLoggedInStreamer) ...[
             const PrivacySettingsSection(privacyOnly: true),
@@ -324,6 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: CaGlyph.bell,
               children: preferences
             ),
+            (label: 'nav.lessons'.tr(), icon: CaGlyph.cal, children: lessons),
             if (appProvider.isLoggedInStreamer)
               (
                 label: 'settings.desktop_privacy'.tr(),
@@ -399,6 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       ...personal,
                       ...preferences,
+                      ...lessons,
                       ...privacy,
                       ...governance,
                       ...about,

@@ -15,7 +15,7 @@ import '../../profile/presentation/widgets/legal_document_reader_screen.dart';
 import 'hidayah_web_kit.dart';
 
 /// Top-level sections reachable from the website navigation bar.
-enum HidayahWebSection { discover, map, organizations, channel }
+enum HidayahWebSection { discover, map, lessons, organizations, channel }
 
 /// The website's top navigation bar: brand, section links and account tools.
 /// [dark] is the cinema variant used above the live page and the studio.
@@ -24,8 +24,8 @@ class HidayahWebHeader extends StatelessWidget {
       {super.key, this.active, this.onBranch, this.dark = false});
   final HidayahWebSection? active;
 
-  /// Inside the tab shell, Discover and Map switch branches so each keeps its
-  /// own navigation stack; elsewhere they navigate.
+  /// Inside the tab shell, Discover, Map and Lessons switch branches so each
+  /// keeps its own navigation stack; elsewhere they navigate.
   final ValueChanged<int>? onBranch;
   final bool dark;
 
@@ -35,6 +35,8 @@ class HidayahWebHeader extends StatelessWidget {
         onBranch != null ? onBranch!(0) : context.go('/feed');
       case HidayahWebSection.map:
         onBranch != null ? onBranch!(1) : context.go('/map');
+      case HidayahWebSection.lessons:
+        onBranch != null ? onBranch!(2) : context.go('/taysir');
       case HidayahWebSection.organizations:
         context.push('/organizations');
       case HidayahWebSection.channel:
@@ -191,6 +193,7 @@ class HidayahWebHeader extends StatelessWidget {
                                   weight: FontWeight.w700,
                                   height: 1.3)))),
               link(HidayahWebSection.map, 'web.nav_map'.tr()),
+              link(HidayahWebSection.lessons, 'web.nav_lessons'.tr()),
               link(HidayahWebSection.organizations, 'web.nav_orgs'.tr()),
               if (streamer)
                 link(HidayahWebSection.channel, 'web.nav_channel'.tr()),
@@ -282,6 +285,7 @@ class HidayahWebFooter extends StatelessWidget {
                         child: column('web.footer_platform'.tr(), [
                       ('web.nav_discover'.tr(), () => context.go('/feed')),
                       ('web.nav_map'.tr(), () => context.go('/map')),
+                      ('web.nav_lessons'.tr(), () => context.go('/taysir')),
                       ('web.nav_orgs'.tr(),
                           () => context.push('/organizations')),
                       ('web.footer_become'.tr(),

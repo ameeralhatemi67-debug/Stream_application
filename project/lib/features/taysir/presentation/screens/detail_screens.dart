@@ -300,7 +300,6 @@ class TaysirLessonScreen extends StatelessWidget {
         ]);
     return TaysirPage(
       title: 'taysir.nav.lesson'.tr(),
-      active: TaysirSection.lessons,
       header: hero,
       children: [
         if (wide)
@@ -344,7 +343,7 @@ class TaysirSeriesScreen extends StatelessWidget {
     if (s == null) return TaysirPage(title: 'taysir.nav.series'.tr(), children: [TEmpty(title: 'taysir.lesson.not_found'.tr())]);
     final sessions = c.sessionsOf(s.id);
     final next = sessions.where((x) => !x.date.isBefore(c.today) && x.isPublic).firstOrNull;
-    return TaysirPage(title: 'taysir.nav.series'.tr(), active: TaysirSection.lessons, children: [
+    return TaysirPage(title: 'taysir.nav.series'.tr(), children: [
       TPageHead(
         eyebrow: 'taysir.lesson.series'.tr(),
         title: s.title(lang),
@@ -410,7 +409,7 @@ class _TaysirPreacherScreenState extends State<TaysirPreacherScreen> {
         ]),
       ]),
     );
-    return TaysirPage(title: 'taysir.nav.preacher'.tr(), active: TaysirSection.discover, children: [
+    return TaysirPage(title: 'taysir.nav.preacher'.tr(), children: [
       header,
       TStatTiles([
         ('${up.length}', 'taysir.preacher.s_upcoming'.tr()),
@@ -459,13 +458,16 @@ class TaysirMosqueScreen extends StatelessWidget {
     final d = c.district(m.districtId);
     final items = c.upcomingWhere((l) => l.mosqueId == m.id);
     final week = [for (var i = 0; i < 7; i++) addDays(c.today, i)];
-    return TaysirPage(title: 'taysir.nav.mosque'.tr(), active: TaysirSection.map, children: [
+    return TaysirPage(title: 'taysir.nav.mosque'.tr(), children: [
       TPageHead(
         eyebrow: d == null ? null : '${d.name(lang)} · ${cityLabel(d.city)}',
         title: m.name(lang),
         actions: [
           FollowButton(kind: 'mosque', id: m.id),
           if (m.directions != null) TButton('taysir.lesson.directions'.tr(), kind: TBtn.minted, icon: TGlyph.nav, onPressed: () => openExternal(m.directions!)),
+          // Hadayah Live's map, with this mosque's lessons open.
+          if (m.verified && m.hasPin && TaysirMap.covers(m.latitude!, m.longitude!))
+            TButton('taysir.lessons.on_map'.tr(), icon: TGlyph.map, onPressed: () => context.go('/map?mosque=${m.id}')),
         ],
       ),
       FacilityList(m.facilities),

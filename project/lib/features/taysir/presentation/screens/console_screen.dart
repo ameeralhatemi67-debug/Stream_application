@@ -64,7 +64,7 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
       return TaysirPage(title: 'taysir.console.title'.tr(), children: const [Center(child: CircularProgressIndicator(color: TC.gold))]);
     }
     if (!c.canCoordinate) {
-      return TaysirPage(title: 'taysir.console.title'.tr(), active: TaysirSection.console, children: [
+      return TaysirPage(title: 'taysir.console.title'.tr(), children: [
         TEmpty(
           icon: TGlyph.lock,
           title: 'taysir.console.locked'.tr(),
@@ -155,7 +155,7 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
         TButton('taysir.console.submit_for'.tr(), icon: TGlyph.plus, onPressed: () => context.push('/taysir/submit')),
       ]),
     ]);
-    return TaysirPage(title: 'taysir.console.title'.tr(), active: TaysirSection.console, children: [
+    return TaysirPage(title: 'taysir.console.title'.tr(), children: [
       head,
       if (context.wide)
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -43,7 +43,7 @@ class _TaysirMyLessonsScreenState extends State<TaysirMyLessonsScreen> {
     final c = context.watch<TaysirController>();
     final lang = context.lang;
     if (!c.canSubmitOwn) {
-      return TaysirPage(title: 'taysir.nav.my_lessons'.tr(), active: TaysirSection.mine, children: [
+      return TaysirPage(title: 'taysir.nav.my_lessons'.tr(), children: [
         _locked(context, 'taysir.mine.not_preacher'.tr(), 'taysir.mine.not_preacher_body'.tr()),
       ]);
     }
@@ -96,7 +96,7 @@ class _TaysirMyLessonsScreenState extends State<TaysirMyLessonsScreen> {
       );
     }
 
-    return TaysirPage(title: 'taysir.nav.my_lessons'.tr(), active: TaysirSection.mine, children: [
+    return TaysirPage(title: 'taysir.nav.my_lessons'.tr(), children: [
       TPageHead(
         eyebrow: 'taysir.mine.eyebrow'.tr(),
         title: 'taysir.mine.title'.tr(),
@@ -623,7 +623,7 @@ class _TaysirSubmitScreenState extends State<TaysirSubmitScreen> {
       streamed: streamed,
       status: 'pending',
     );
-    return TaysirPage(title: 'taysir.nav.submit'.tr(), active: c.canSubmitOwn ? TaysirSection.mine : TaysirSection.console, children: [
+    return TaysirPage(title: 'taysir.nav.submit'.tr(), children: [
       TPageHead(
         eyebrow: widget.replaces != null ? 'taysir.submit.eyebrow_edit'.tr() : 'taysir.submit.eyebrow_new'.tr(),
         title: 'taysir.submit.title'.tr(),
@@ -673,7 +673,7 @@ class _TaysirReportScreenState extends State<TaysirReportScreen> {
           SizedBox(width: 56, child: Text('$v', textAlign: TextAlign.center, style: tDisplay(22))),
           TIconButton(TGlyph.plus, tooltip: '+5', onPressed: () => set(v + 5)),
         ]);
-    return TaysirPage(title: 'taysir.nav.report'.tr(), narrow: true, active: TaysirSection.mine, children: [
+    return TaysirPage(title: 'taysir.nav.report'.tr(), narrow: true, children: [
       TPageHead(
           eyebrow: 'taysir.report.eyebrow'.tr(),
           title: l.title(lang),

@@ -44,6 +44,7 @@
   },
   "nav": {
     "map": "Spatial Map",
+    "lessons": "Lessons",
     "feed": "Discovery Feed",
     "profile": "Profile",
     "live": "Live Broadcast",
@@ -101,6 +102,10 @@
     "marker_accessibility": "{name}, {venue}. Tap for details.",
     "my_channel": "Your channel",
     "broadcasters_list": "Broadcasters list",
+    "layer_all": "All",
+    "layer_streamers": "Broadcasters",
+    "layer_lessons": "Mosque lessons",
+    "layers_label": "Show on the map",
     "empty_title": "No verified venues on the map",
     "empty_body": "Try another topic or refresh the map.",
     "offline_empty_body": "No saved verified venues are available here. Reconnect to refresh.",
@@ -209,6 +214,7 @@
     "academic_fields": "Academic Categories",
     "lecture_archive": "Streamers",
     "streamers": "Streamers",
+    "lessons_week": "Mosque lessons this week",
     "streamers_count": "Broadcasters",
     "lectures_count": "Lectures",
     "watch_live": "Watch Live",
@@ -821,12 +827,7 @@
     "profile_media": "Profile photo & banner",
     "upload_failed": "The image could not be uploaded. Check your connection and try again.",
     "image_pick_failed": "That image could not be opened. Try another one.",
-    "experience_label": "Switch application",
-    "experience_hint_hadayah": "Tap the logo to open Taysir, the mosque lessons programme.",
-    "experience_hint_taysir": "Tap the logo to return to Hadayah Live.",
-    "experience_now_hadayah": "Hadayah Live",
-    "experience_now_taysir": "Taysir in Hadayah Live",
-    "experience_save_error": "Could not switch the application. Please try again."
+    "lessons_hint": "Following, learning log, preferences and roles"
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",
@@ -2091,6 +2092,7 @@
     "brand_sub": "Hidayah Society · Eastern Province",
     "nav_discover": "Discover",
     "nav_map": "Map",
+    "nav_lessons": "Lessons",
     "nav_orgs": "Organizations",
     "nav_channel": "My channel",
     "live_count": {
@@ -2229,7 +2231,6 @@
     "sign_in_flag": "To report a problem with a lesson.",
     "sign_in_note": "Google or Apple, the same sign-in the app uses. No passwords.",
     "copied": "Copied",
-    "switch_back": "Back to Hadayah Live",
     "illustrative": "",
     "error": {
       "forbidden": "This role can't do that.",
@@ -2733,7 +2734,6 @@
       "t_changes": "Need changes",
       "t_reports": "Reports due",
       "manage": "Manage my lessons",
-      "settings": "Settings and switching apps",
       "demo_title": "View the sample as",
       "demo_note": "Sample data only. With the backend connected, roles come from your account.",
       "p_guest": "Guest",

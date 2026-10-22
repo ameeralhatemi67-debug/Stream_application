@@ -52,9 +52,17 @@ class CaAppBar extends AppBar {
       (w is Container && w.child != null && _hasLanguage(w.child!));
 }
 
+/// The tab shell's destinations in branch order: Discovery, Map, and the
+/// mosque lessons programme (Taysir, ADR-014).
+const List<(CaGlyph, String)> caTabDestinations = [
+  (CaGlyph.list, 'nav.feed'),
+  (CaGlyph.map, 'nav.map'),
+  (CaGlyph.cal, 'nav.lessons'),
+];
+
 class CaNavBar extends StatelessWidget {
   const CaNavBar({super.key, required this.index, required this.onChanged})
-      : assert(index == 0 || index == 1);
+      : assert(index >= 0 && index < 3);
   final int index;
   final ValueChanged<int> onChanged;
   @override
@@ -73,11 +81,13 @@ class CaNavBar extends StatelessWidget {
                       color: Canopy.paper
                           .withValues(alpha: CanopySize.navPaperAlpha),
                       child: LayoutBuilder(builder: (context, bounds) {
-                        // The active item takes whatever the other folds away:
+                        // The active item takes whatever the others fold away:
                         // widths trade places over the pill's own duration.
                         const gap = AppTheme.spaceSm;
                         const folded = CanopySize.target;
-                        final open = bounds.maxWidth - folded - gap;
+                        final others = caTabDestinations.length - 1;
+                        final open =
+                            bounds.maxWidth - others * (folded + gap);
                         return TweenAnimationBuilder<double>(
                             tween: Tween(end: index.toDouble()),
                             duration: CanopyMotion.reduced(context)
@@ -85,20 +95,23 @@ class CaNavBar extends StatelessWidget {
                                 : CanopyMotion.navPill,
                             curve: CanopyMotion.easeOut,
                             builder: (context, t, _) => Row(children: [
-                                  _PillDestination(
-                                      index: 0,
-                                      width: ui.lerpDouble(open, folded, t)!,
-                                      selectedness: 1 - t,
-                                      onTap: () => onChanged(0)),
-                                  const SizedBox(width: gap),
-                                  _PillDestination(
-                                      index: 1,
-                                      width: ui.lerpDouble(folded, open, t)!,
-                                      selectedness: t,
-                                      onTap: () => onChanged(1)),
+                                  for (var i = 0;
+                                      i < caTabDestinations.length;
+                                      i++) ...[
+                                    if (i > 0) const SizedBox(width: gap),
+                                    _PillDestination(
+                                        index: i,
+                                        width: ui.lerpDouble(
+                                            folded, open, _share(t, i))!,
+                                        selectedness: _share(t, i),
+                                        onTap: () => onChanged(i)),
+                                  ],
                                 ]));
                       }))))));
 }
+
+/// How selected item [i] is while the pill animates to position [t].
+double _share(double t, int i) => (1 - (t - i).abs()).clamp(0.0, 1.0);
 
 /// One item of the bottom pill. [selectedness] runs 0 to 1 as the item
 /// becomes the active one: its gradient fades in, its icon turns white and its
@@ -114,7 +127,8 @@ class _PillDestination extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
+    final (glyph, key) = caTabDestinations[index];
+    final label = key.tr();
     final color =
         Color.lerp(Canopy.brandGreen, HidayahGold.g200, selectedness.clamp(0, 1))!;
     return Semantics(
@@ -155,11 +169,7 @@ class _PillDestination extends StatelessWidget {
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                CaIcon(
-                                                    index == 0
-                                                        ? CaGlyph.list
-                                                        : CaGlyph.map,
-                                                    color: color),
+                                                CaIcon(glyph, color: color),
                                                 if (selectedness > 0) ...[
                                                   const SizedBox(
                                                       width: AppTheme.spaceSm),
@@ -196,9 +206,10 @@ class _Destination extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
+    final (glyph, key) = caTabDestinations[index];
+    final label = key.tr();
     final color = selected ? HidayahGold.g200 : Canopy.brandGreen;
-    final icon = CaIcon(index == 0 ? CaGlyph.list : CaGlyph.map, color: color);
+    final icon = CaIcon(glyph, color: color);
     final text = Text(label,
         textAlign: stacked ? TextAlign.center : TextAlign.start,
         style: Theme.of(context)
@@ -289,7 +300,9 @@ class CaRail extends StatelessWidget {
                                     const SizedBox(height: AppTheme.spaceLg),
                                     const AppLogo(size: CanopySize.railLogo),
                                     const SizedBox(height: AppTheme.spaceXl),
-                                    for (var i = 0; i < 2; i++)
+                                    for (var i = 0;
+                                        i < caTabDestinations.length;
+                                        i++)
                                       Padding(
                                           padding: const EdgeInsets.only(
                                               bottom: AppTheme.spaceSm),

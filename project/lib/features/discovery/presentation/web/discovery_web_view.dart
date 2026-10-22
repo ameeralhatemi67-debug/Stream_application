@@ -11,6 +11,7 @@ import '../../../../core/widgets/ds/ca_feedback.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/app_logo.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../../taysir/presentation/taysir_in_hadayah.dart';
 import '../../../web/presentation/hidayah_web_header.dart';
 import '../../../web/presentation/hidayah_web_kit.dart';
 import '../../models/academic_category_model.dart';
@@ -104,6 +105,8 @@ class DiscoveryWebView extends StatelessWidget {
                                   _ScholarCard(
                                       streamer: s, categories: categories)
                               ]),
+                            // Mosque lessons this week (Taysir), when any.
+                            const TaysirLessonsRail(web: true),
                             const SizedBox(height: 44),
                             const _MapBand(),
                           ])))),
