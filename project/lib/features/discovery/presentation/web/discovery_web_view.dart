@@ -67,6 +67,7 @@ class DiscoveryWebView extends StatelessWidget {
                   lang: lang)),
           SliverToBoxAdapter(
               child: HidayahWebWidth(
+                  wide: true,
                   child: Padding(
                       padding: const EdgeInsets.only(top: 44, bottom: 56),
                       child: Column(
@@ -100,8 +101,7 @@ class DiscoveryWebView extends StatelessWidget {
                                           variant: CaButtonVariant.text,
                                           onPressed: onClearSearch)))
                             else
-                              // Three per row: wider channel cards on laptops.
-                              _Grid(columns: 3, children: [
+                              _Grid(columns: 4, children: [
                                 for (final s in displayed)
                                   _ScholarCard(
                                       streamer: s, categories: categories)
@@ -188,6 +188,7 @@ class _Hero extends StatelessWidget {
             ]);
     return HidayahNightBand(
         child: HidayahWebWidth(
+            wide: true,
             child: Padding(
                 padding: const EdgeInsets.only(top: 56, bottom: 52),
                 child: Row(
@@ -503,6 +504,7 @@ class _CategoryBar extends StatelessWidget {
           color: HidayahGold.card,
           border: Border(bottom: BorderSide(color: HidayahGold.hairline))),
       child: HidayahWebWidth(
+          wide: true,
           child: SizedBox(
               height: 64,
               child: Row(children: [

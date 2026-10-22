@@ -129,25 +129,29 @@ void main() {
   }
 
   testWidgets(
-      'website discovery: three wider channel cards per row, verified on the '
-      'avatar, and the map preview', (tester) async {
+      'website discovery: four channel cards per row in the header-wide '
+      'column, verified on the avatar, and the map preview', (tester) async {
     await _pump(tester, const DiscoveryFeedScreen(),
-        size: const Size(1440, 900));
+        size: const Size(1920, 1000));
     final scroll = find
         .descendant(
             of: find.byType(DiscoveryWebView), matching: find.byType(Scrollable))
         .first;
-    final ids = [for (final s in mockStreamers.take(4)) s.streamerId];
+    final ids = [for (final s in mockStreamers.take(5)) s.streamerId];
     Finder card(String id) => find.byKey(ValueKey('channel-card-$id'));
     await tester.scrollUntilVisible(card(ids[0]), 300, scrollable: scroll);
-    final rects = [for (final id in ids.take(3)) tester.getRect(card(id))];
-    // One row of three, each wider than the old four-up cards (about 285 px).
+    final rects = [for (final id in ids.take(4)) tester.getRect(card(id))];
+    // One row of four in the 1640 px column the header uses: about 395 px
+    // each, where the 1200 px column gave about 285.
     expect(rects.map((r) => r.top).toSet(), hasLength(1));
     for (final r in rects) {
-      expect(r.width, greaterThan(360));
+      expect(r.width, greaterThan(380));
     }
-    await tester.scrollUntilVisible(card(ids[3]), 300, scrollable: scroll);
-    expect(tester.getRect(card(ids[3])).top,
+    expect(rects.map((r) => r.right).reduce((a, b) => a > b ? a : b) -
+            rects.map((r) => r.left).reduce((a, b) => a < b ? a : b),
+        greaterThan(1600));
+    await tester.scrollUntilVisible(card(ids[4]), 300, scrollable: scroll);
+    expect(tester.getRect(card(ids[4])).top,
         greaterThan(tester.getRect(card(ids[0])).top));
 
     // The verified mark is on the picture, not beside the name.

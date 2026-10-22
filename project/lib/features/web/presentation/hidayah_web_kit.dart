@@ -66,17 +66,24 @@ abstract final class HidayahText {
 
 /// Centres page content in the 1200 px column with the site gutter.
 class HidayahWebWidth extends StatelessWidget {
-  const HidayahWebWidth({super.key, required this.child});
+  const HidayahWebWidth({super.key, required this.child, this.wide = false});
   final Widget child;
+
+  /// The navigation bar's wider column (Discover, owner request
+  /// 2026-10-22): its edges line up with the header's brand and tools, so
+  /// four channel cards a row use the window instead of side margins.
+  final bool wide;
   @override
-  Widget build(BuildContext context) => Center(
-      child: ConstrainedBox(
-          constraints: const BoxConstraints(
-              maxWidth: HidayahWeb.maxContent + HidayahWeb.gutter * 2),
-          child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: HidayahWeb.gutter),
-              child: child)));
+  Widget build(BuildContext context) {
+    final max = wide ? HidayahWeb.headerMax : HidayahWeb.maxContent;
+    final gutter = wide ? HidayahWeb.headerGutter : HidayahWeb.gutter;
+    return Center(
+        child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: max + gutter * 2),
+            child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                child: child)));
+  }
 }
 
 /// The logo's eight-point star, repeated as a gilt lattice that fades away
