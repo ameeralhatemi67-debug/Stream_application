@@ -42,7 +42,7 @@ abstract final class HedayahSkin {
 
   /// The lattice over gold bands, as the website lays it (white, about a
   /// fifth).
-  static const patternOnGold = Color(0x40FFFFFF);
+  static const patternOnGold = Color(0x33FFFFFF);
 
   /// The lattice on mist and white grounds.
   static const patternOnMist = Color(0x0F151D24);

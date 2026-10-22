@@ -78,14 +78,17 @@ class ApplicationSettingsSection extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-              ),
+              // Hedayah skin: the theme's gold pill with ink (ADR-016).
+              style: context.isHedayahSkin
+                  ? null
+                  : ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      ),
+                    ),
               icon: const Icon(Icons.assignment_turned_in_rounded, size: 16),
               label: Text(
                 'application.apply_btn'.tr(),

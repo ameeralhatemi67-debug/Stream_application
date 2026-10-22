@@ -234,7 +234,9 @@ class TChip extends StatelessWidget {
   final int? count;
   @override
   Widget build(BuildContext context) {
-    final fg = selected ? HidayahGold.g200 : TC.ink2;
+    // Hedayah skin (ADR-016): the chosen chip is a gold pill with ink.
+    final hedayah = context.isHedayahSkin;
+    final fg = selected ? (hedayah ? HedayahSkin.ink : HidayahGold.g200) : TC.ink2;
     return Semantics(
       button: true,
       selected: selected,
@@ -242,10 +244,10 @@ class TChip extends StatelessWidget {
         color: Colors.transparent,
         child: Ink(
           decoration: BoxDecoration(
-            color: selected ? null : TC.card,
-            gradient: selected ? HidayahGradients.selected : null,
+            color: selected ? (hedayah ? HedayahSkin.gold : null) : TC.card,
+            gradient: selected && !hedayah ? HidayahGradients.selected : null,
             borderRadius: BorderRadius.circular(999),
-            border: selected ? null : Border.all(color: TC.hair2),
+            border: selected ? null : Border.all(color: hedayah ? HedayahSkin.line : TC.hair2),
           ),
           child: InkWell(
             onTap: onTap,
@@ -422,7 +424,11 @@ class TNight extends StatelessWidget {
             ? ColoredBox(
                 color: HedayahSkin.ink,
                 child: Stack(children: [
-                  const Positioned.fill(child: HedayahPattern(color: Color(0x1FE2C389), step: 28)),
+                  Positioned.fill(
+                      child: HedayahPattern(
+                          color: const Color(0x1AE2C389),
+                          step: 28,
+                          fadeFrom: AlignmentDirectional.topEnd.resolve(Directionality.of(context)))),
                   Padding(padding: padding, child: child),
                 ]),
               )
@@ -469,6 +475,12 @@ class TSectionHead extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (eyebrow != null) ...[TEyebrow(eyebrow!), const SizedBox(height: 4)],
               Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 10, children: [
+                // Hedayah skin: the gold bar its headings carry elsewhere.
+                if (context.isHedayahSkin)
+                  Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(color: HedayahSkin.gold, borderRadius: BorderRadius.circular(2))),
                 Text(title, style: tDisplay(context.wide ? 24 : 19)),
                 if (count != null) Text('$count', style: tBody(13, color: TC.muted, weight: FontWeight.w600)),
               ]),
@@ -751,7 +763,10 @@ class TSearchBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         height: 46,
-        decoration: BoxDecoration(color: TC.tint, borderRadius: BorderRadius.circular(999), border: Border.all(color: TC.hair)),
+        decoration: BoxDecoration(
+            color: context.isHedayahSkin ? HedayahSkin.paper : TC.tint,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: context.isHedayahSkin ? HedayahSkin.line : TC.hair)),
         padding: const EdgeInsetsDirectional.only(start: 14, end: 4),
         child: Row(children: [
           const TIcon(TGlyph.search, size: 17, color: TC.muted),

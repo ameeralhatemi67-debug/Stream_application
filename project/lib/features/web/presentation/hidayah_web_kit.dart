@@ -187,8 +187,12 @@ class HidayahNightBand extends StatelessWidget {
               color: HedayahSkin.ink,
               child: Stack(children: [
                 if (lattice)
-                  const Positioned.fill(
-                      child: HedayahPattern(color: Color(0x1FE2C389), step: 34)),
+                  Positioned.fill(
+                      child: HedayahPattern(
+                          color: const Color(0x1FE2C389),
+                          step: 34,
+                          fadeFrom: AlignmentDirectional.topEnd
+                              .resolve(Directionality.of(context)))),
                 child,
               ]))
           : DecoratedBox(

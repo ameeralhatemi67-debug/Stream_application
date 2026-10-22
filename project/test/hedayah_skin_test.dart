@@ -162,6 +162,22 @@ void main() {
     });
   });
 
+  group('the lattice stays light to draw', () {
+    testWidgets('a whole band is one repeating image, not motif by motif',
+        (tester) async {
+      await tester.pumpWidget(const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(width: 1440, height: 900, child: HedayahPattern())));
+      final paint = find.descendant(
+          of: find.byType(HedayahPattern), matching: find.byType(CustomPaint));
+      // Replaying every motif drew ~1,000 pictures (67 paths each) a frame on
+      // a laptop-sized band; scrolling lagged on the web.
+      expect(paint, paintsExactlyCountTimes(#drawPicture, 0));
+      expect(paint, paintsExactlyCountTimes(#drawPath, 0));
+      expect(paint, paintsExactlyCountTimes(#drawRect, 1));
+    });
+  });
+
   group('screens', () {
     testWidgets('icons come from the skin\'s set', (tester) async {
       final provider = AppProvider();

@@ -40,8 +40,9 @@ class HedayahWelcomeView extends StatelessWidget {
   Widget _phoneLayout(BuildContext context) => SingleChildScrollView(
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const HedayahGoldBand(
-            child: SafeArea(
+        HedayahGoldBand(
+            veil: HedayahVeil.centre(at: const Alignment(0, .35)),
+            child: const SafeArea(
                 bottom: false,
                 child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 12, 20, 60),
@@ -73,6 +74,7 @@ class HedayahWelcomeView extends StatelessWidget {
             flex: 11,
             child: HedayahGoldBand(
                 step: 36,
+                veil: HedayahVeil.centre(radius: .9),
                 child: SafeArea(
                     child: Center(
                         child: SingleChildScrollView(

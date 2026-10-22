@@ -10,20 +10,26 @@ export 'hedayah_pattern.dart';
 export 'hedayah_rosette.dart';
 
 /// A flat gold band carrying the white lattice, the way the website opens and
-/// closes its pages. Text on it is [HedayahSkin.ink].
+/// closes its pages. Text on it is [HedayahSkin.ink], and sits on a [veil]:
+/// lines running behind letters made them hard to read.
 class HedayahGoldBand extends StatelessWidget {
   const HedayahGoldBand(
       {super.key,
       required this.child,
       this.radius = BorderRadius.zero,
       this.step = 30,
-      this.weight = .8,
-      this.fadeFrom});
+      this.weight = .7,
+      this.fadeFrom,
+      this.veil});
 
   final Widget child;
   final BorderRadius radius;
   final double step, weight;
   final Alignment? fadeFrom;
+
+  /// Solid gold laid between the lattice and the content where text sits;
+  /// see [HedayahVeil].
+  final Gradient? veil;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
@@ -34,8 +40,66 @@ class HedayahGoldBand extends StatelessWidget {
             Positioned.fill(
                 child: HedayahPattern(
                     step: step, weight: weight, fadeFrom: fadeFrom)),
+            if (veil != null)
+              Positioned.fill(
+                  child: IgnorePointer(
+                      child: DecoratedBox(
+                          decoration: BoxDecoration(gradient: veil)))),
             child,
           ])));
+}
+
+/// Calm areas on a gold band: plain gold behind the text, the lattice kept
+/// where nothing is written.
+abstract final class HedayahVeil {
+  static const _solid = HedayahSkin.gold, _clear = Color(0x00BD933F);
+
+  /// An oval of plain gold behind centred content (splash, welcome).
+  static RadialGradient centre(
+          {Alignment at = Alignment.center, double radius = 1.0}) =>
+      RadialGradient(
+          center: at,
+          radius: radius,
+          colors: const [_solid, _solid, _clear],
+          stops: const [0, .5, 1]);
+
+  /// Plain gold on the reading side, the lattice kept at the far end (bands
+  /// with text at the start and art at the end).
+  static LinearGradient fromStart(TextDirection direction) => LinearGradient(
+      begin: AlignmentDirectional.centerStart.resolve(direction),
+      end: AlignmentDirectional.centerEnd.resolve(direction),
+      colors: const [_solid, _solid, _clear],
+      stops: const [0, .55, 1]);
+
+  /// The lattice faint everywhere, for bands with text all over (the footer,
+  /// the account card).
+  static const even = LinearGradient(colors: [Color(0xD9BD933F), Color(0xD9BD933F)]);
+}
+
+/// Plain gold behind a small piece of content on the lattice (a rosette, a
+/// caption), so lines do not run through it.
+class HedayahCalm extends StatelessWidget {
+  const HedayahCalm(
+      {super.key,
+      required this.child,
+      this.padding = const EdgeInsets.all(8),
+      this.circle = false});
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final bool circle;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: BoxDecoration(
+          color: HedayahSkin.gold,
+          shape: circle ? BoxShape.circle : BoxShape.rectangle,
+          borderRadius:
+              circle ? null : BorderRadius.circular(HedayahSkin.radiusPill),
+          boxShadow: const [
+            BoxShadow(color: HedayahSkin.gold, blurRadius: 12, spreadRadius: 4)
+          ]),
+      child: Padding(padding: padding, child: child));
 }
 
 /// The association's wordmark, هداية, in gold or reversed to white.
@@ -302,6 +366,8 @@ class HedayahCard extends StatelessWidget {
         decoration: BoxDecoration(
             color: HedayahSkin.paper,
             borderRadius: BorderRadius.circular(HedayahSkin.radiusCard),
+            // A hairline keeps the card visible on white pages too.
+            border: Border.all(color: HedayahSkin.lineSoft),
             boxShadow: HedayahSkin.ambient),
         child: Material(
             type: MaterialType.transparency,
@@ -438,8 +504,7 @@ class HedayahHeroBand extends StatelessWidget {
   Widget build(BuildContext context) => HedayahGoldBand(
       radius: BorderRadius.circular(HedayahSkin.radiusCard),
       step: 24,
-      fadeFrom: AlignmentDirectional.centerEnd
-          .resolve(Directionality.of(context)),
+      veil: HedayahVeil.fromStart(Directionality.of(context)),
       child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(children: [
@@ -459,7 +524,10 @@ class HedayahHeroBand extends StatelessWidget {
                   if (badge != null) ...[const SizedBox(height: 12), badge!],
                 ])),
             const SizedBox(width: 12),
-            const HedayahRosette(size: 58, color: HedayahSkin.paper),
+            const HedayahCalm(
+                circle: true,
+                padding: EdgeInsets.all(6),
+                child: HedayahRosette(size: 58, color: HedayahSkin.paper)),
           ])));
 }
 

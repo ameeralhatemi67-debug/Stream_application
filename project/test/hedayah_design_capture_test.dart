@@ -17,6 +17,7 @@ import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart'
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'package:streamer_app/features/profile/presentation/settings/appearance_settings_section.dart';
+import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
@@ -161,6 +162,12 @@ void main() {
                   child: SingleChildScrollView(
                       padding: EdgeInsets.all(16),
                       child: AppearanceSettingsSection()))));
+      await _shot(tester, '09-settings-$tag',
+          skin: skin, size: const Size(390, 1400), screen: const SettingsScreen());
+      await _shot(tester, '10-role-select-$tag',
+          skin: skin, size: phone, location: '/role-select');
+      await _shot(tester, '11-map-$tag',
+          skin: skin, size: phone, location: '/map');
     });
   }
 }

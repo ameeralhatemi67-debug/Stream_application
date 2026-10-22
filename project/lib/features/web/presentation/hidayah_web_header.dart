@@ -270,6 +270,7 @@ class HidayahWebHeader extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       HedayahGoldBand(
           step: 20,
+          veil: HedayahVeil.fromStart(Directionality.of(context)),
           child: SizedBox(
               height: 30,
               child: HidayahWebWidth(
@@ -395,7 +396,7 @@ class HidayahWebFooter extends StatelessWidget {
                   ]),
                 ])));
     return hedayah
-        ? HedayahGoldBand(step: 34, child: content)
+        ? HedayahGoldBand(step: 34, veil: HedayahVeil.even, child: content)
         : HidayahNightBand(child: content);
   }
 }

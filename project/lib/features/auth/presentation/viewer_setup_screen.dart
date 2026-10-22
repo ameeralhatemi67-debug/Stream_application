@@ -105,6 +105,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
       body: SingleChildScrollView(
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         HedayahGoldBand(
+            veil: HedayahVeil.centre(at: const Alignment(0, .1), radius: .8),
             child: SafeArea(
                 bottom: false,
                 child: Padding(
@@ -115,6 +116,8 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                           child: IconButton(
                               tooltip: MaterialLocalizations.of(context)
                                   .backButtonTooltip,
+                              style: IconButton.styleFrom(
+                                  backgroundColor: HedayahSkin.paper),
                               onPressed: () => context.go('/welcome'),
                               icon: const CaIcon(CaGlyph.back,
                                   color: HedayahSkin.ink))),

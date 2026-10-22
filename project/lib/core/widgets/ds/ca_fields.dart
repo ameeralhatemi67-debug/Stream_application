@@ -475,7 +475,15 @@ class CaSwitch extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           activeThumbColor: Canopy.paper,
-          activeTrackColor: Canopy.brandGreen,
-          inactiveThumbColor: Canopy.slate,
-          inactiveTrackColor: Canopy.mist));
+          // Hedayah skin: a gold track when on, a light one when off, the
+          // thumb always white (ADR-016).
+          activeTrackColor:
+              context.isHedayahSkin ? HedayahSkin.gold : Canopy.brandGreen,
+          inactiveThumbColor:
+              context.isHedayahSkin ? HedayahSkin.paper : Canopy.slate,
+          inactiveTrackColor:
+              context.isHedayahSkin ? HedayahSkin.track : Canopy.mist,
+          trackOutlineColor: context.isHedayahSkin
+              ? const WidgetStatePropertyAll(HedayahSkin.line)
+              : null));
 }

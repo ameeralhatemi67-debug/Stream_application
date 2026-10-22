@@ -376,11 +376,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               key: ValueKey(
                                                   'settings-category-$i'),
                                               selected: selected == i,
-                                              selectedTileColor: Canopy.mint,
+                                              selectedTileColor:
+                                                  context.isHedayahSkin
+                                                      ? HedayahSkin.chip
+                                                      : Canopy.mint,
+                                              selectedColor:
+                                                  context.isHedayahSkin
+                                                      ? HedayahSkin.chipInk
+                                                      : null,
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                          CanopyRadius.input)),
+                                                          context.isHedayahSkin
+                                                              ? HedayahSkin
+                                                                  .radiusPill
+                                                              : CanopyRadius
+                                                                  .input)),
                                               leading: CaIcon(sections[i].icon),
                                               title: Text(sections[i].label),
                                               onTap: () => setState(
@@ -494,7 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
     Widget backdrop(Widget child) => onGold
-        ? HedayahGoldBand(child: child)
+        ? HedayahGoldBand(veil: HedayahVeil.even, child: child)
         : banner.isEmpty
         ? DecoratedBox(
             decoration: const BoxDecoration(gradient: CanopyGradients.panel),

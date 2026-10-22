@@ -183,6 +183,7 @@ class _HedayahSplash extends StatelessWidget {
       backgroundColor: HedayahSkin.gold,
       body: HedayahGoldBand(
         step: wide ? 36 : 30,
+        veil: HedayahVeil.centre(at: const Alignment(0, -.1), radius: 1.1),
         child: SafeArea(
           child: Center(
             child: Padding(
@@ -211,25 +212,31 @@ class _HedayahSplash extends StatelessWidget {
                     ),
                   ),
                   const Spacer(flex: 3),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: SizedBox(
-                      width: 128,
-                      height: 4,
-                      child: LinearProgressIndicator(
-                        color: HedayahSkin.ink,
-                        backgroundColor:
-                            HedayahSkin.paper.withValues(alpha: .45),
+                  HedayahCalm(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: SizedBox(
+                          width: 128,
+                          height: 4,
+                          child: LinearProgressIndicator(
+                            color: HedayahSkin.ink,
+                            backgroundColor:
+                                HedayahSkin.paper.withValues(alpha: .45),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'design_copy.initializing_platform_map_assets'.tr(),
-                    textAlign: TextAlign.center,
-                    style: HedayahSkin.textStyle(12,
-                        color: HedayahSkin.ink.withValues(alpha: .9),
-                        height: 1.5),
+                      const SizedBox(height: 10),
+                      Text(
+                        'design_copy.initializing_platform_map_assets'.tr(),
+                        textAlign: TextAlign.center,
+                        style: HedayahSkin.textStyle(12,
+                            color: HedayahSkin.ink.withValues(alpha: .9),
+                            height: 1.5),
+                      ),
+                    ]),
                   ),
                   const Spacer(),
                 ],
