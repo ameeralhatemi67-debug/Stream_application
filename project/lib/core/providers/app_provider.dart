@@ -225,6 +225,9 @@ class AppProvider extends ChangeNotifier {
   // master_admin-only surfaces (e.g. Checkpoint 2's role/permission
   // management tab) on top of the existing isAdminUser check.
   bool _isMasterAdminFromRoles = false;
+  // Admins, master admins and lessons-only admins (is_lessons_admin()): who
+  // manages preachers and lessons.
+  bool _isLessonsAdminFromRoles = false;
   // organization_id(s) this user is org_owner/org_co_owner for -- the
   // roadmap's "Permitted Admin"tier (see ADR-007). Disjoint from
   // isAdminUser: a Permitted Admin is not admin-tier, so AdminHubScreen's
@@ -961,15 +964,18 @@ class AppProvider extends ChangeNotifier {
       final results = await Future.wait([
         Supabase.instance.client.rpc('is_admin_tier'),
         Supabase.instance.client.rpc('is_master_admin'),
+        Supabase.instance.client.rpc('is_lessons_admin'),
       ]);
       if (_authGeneration != generation) return;
       _isAdminFromRoles = results[0] == true;
       _isMasterAdminFromRoles = results[1] == true;
+      _isLessonsAdminFromRoles = results[2] == true;
     } catch (e) {
       if (_authGeneration != generation) return;
       debugPrint('Admin role check failed: $e');
       _isAdminFromRoles = false;
       _isMasterAdminFromRoles = false;
+      _isLessonsAdminFromRoles = false;
     }
   }
 
@@ -2718,6 +2724,8 @@ class AppProvider extends ChangeNotifier {
     _googleUserAvatar = null;
     _isAdminFromRoles = false;
     _isMasterAdminFromRoles = false;
+    _isLessonsAdminFromRoles = false;
+    _adminEmailGrants = const [];
     _permittedAdminOrgIds = [];
     _isCurrentUserBanned = false;
     _currentUserBanReason = null;
@@ -2755,6 +2763,7 @@ class AppProvider extends ChangeNotifier {
     String? name,
     bool isAdmin = false,
     bool isMasterAdmin = false,
+    bool isLessonsAdmin = false,
     bool isStreamer = true,
     List<String> permittedAdminOrgIds = const [],
     String? ownedStreamerId,
@@ -2776,6 +2785,7 @@ class AppProvider extends ChangeNotifier {
     _googleUserName = name ?? email;
     _isAdminFromRoles = isAdmin || isMasterAdmin;
     _isMasterAdminFromRoles = isMasterAdmin;
+    _isLessonsAdminFromRoles = isLessonsAdmin || isAdmin || isMasterAdmin;
     _permittedAdminOrgIds = permittedAdminOrgIds;
     _myApplication = ownedStreamerId == null
         ? null
@@ -3186,6 +3196,10 @@ class AppProvider extends ChangeNotifier {
   // Admin & Governance Getters
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
   bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;
+  /// Manages preachers and lessons: every admin, plus lessons-only admins
+  /// (who see only that part of the admin page).
+  bool get isLessonsAdmin => _isLoggedInStreamer && _isLessonsAdminFromRoles;
+  bool get isLessonsOnlyAdmin => isLessonsAdmin && !isAdminUser;
   List<String> get permittedAdminOrgIds =>
       _isLoggedInStreamer ? List.unmodifiable({
         ..._permittedAdminOrgIds,
@@ -5835,6 +5849,47 @@ class AppProvider extends ChangeNotifier {
     _userPermissionsByProfile =
         await _adminDbService!.loadUserPermissionsByProfile();
     notifyListeners();
+  }
+
+  // Email addresses that become admins at their first sign-in (master admin).
+  List<AdminEmailGrant> _adminEmailGrants = const [];
+  List<AdminEmailGrant> get adminEmailGrants => _adminEmailGrants;
+
+  @visibleForTesting
+  void debugSetRoleDataForTests(
+      {List<AdminRoleAssignmentModel> assignments = const [],
+      List<AdminEmailGrant> emailGrants = const []}) {
+    _roleAssignments = assignments;
+    _adminEmailGrants = emailGrants;
+    _roleManagementLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> refreshAdminEmailGrants() async {
+    if (!isMasterAdmin) return;
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _adminEmailGrants = await _adminDbService!.loadAdminEmailGrants();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshAdminEmailGrants failed: $e');
+    }
+  }
+
+  /// Makes [email] an admin: now when that account exists (returns true),
+  /// otherwise at its first sign-in. Throws on failure.
+  Future<bool> addAdminEmail(String email) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    final granted = await _adminDbService!.addAdminEmailGrant(email);
+    await Future.wait(
+        [refreshAdminEmailGrants(), if (granted) _refreshRoleManagementData()]);
+    return granted;
+  }
+
+  Future<void> removeAdminEmail(String email) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.removeAdminEmailGrant(email);
+    await refreshAdminEmailGrants();
   }
 
   /// Looks up a profile by exact email, for the "grant a role"search field.

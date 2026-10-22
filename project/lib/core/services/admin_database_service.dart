@@ -1708,6 +1708,34 @@ class AdminDatabaseService {
         .maybeSingle();
   }
 
+  /// Email addresses that become admins when that account signs in
+  /// (admin_email_grants, master admin only), newest first.
+  Future<List<AdminEmailGrant>> loadAdminEmailGrants() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('admin_email_grants')
+        .select()
+        .order('created_at', ascending: false);
+    return [
+      for (final r in rows as List)
+        AdminEmailGrant.fromRow(Map<String, dynamic>.from(r as Map))
+    ];
+  }
+
+  /// Returns true when the account already existed and is an admin now,
+  /// false when the address waits for its first sign-in.
+  Future<bool> addAdminEmailGrant(String email) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final result = await _client
+        .rpc('admin_add_email_grant', params: {'p_email': email});
+    return result == 'granted';
+  }
+
+  Future<void> removeAdminEmailGrant(String email) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.rpc('admin_remove_email_grant', params: {'p_email': email});
+  }
+
   Future<Map<String, Map<String, dynamic>>> _resolveProfileSummaries(
     Iterable<String?> ids,
   ) async {

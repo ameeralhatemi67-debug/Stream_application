@@ -33,6 +33,14 @@ class _RolePermissionManagementViewState
   bool _isGranting = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AppProvider>().refreshAdminEmailGrants();
+    });
+  }
+
+  @override
   void dispose() {
     _grantEmailController.dispose();
     super.dispose();
@@ -54,6 +62,14 @@ class _RolePermissionManagementViewState
 
     setState(() => _isGranting = true);
     try {
+      // An admin can be named by email before the account exists: it
+      // becomes an admin at its first sign-in.
+      if (_grantRole == 'admin') {
+        final granted = await provider.addAdminEmail(email);
+        _grantEmailController.clear();
+        _showToast((granted ? 'roles.granted' : 'roles.email_saved_waiting').tr());
+        return;
+      }
       final profile = await provider.findProfileByEmail(email);
       if (profile == null) {
         _showToast(
@@ -114,6 +130,8 @@ class _RolePermissionManagementViewState
         return 'roles.master_admin'.tr();
       case 'admin':
         return 'roles.admin'.tr();
+      case 'lessons_admin':
+        return 'roles.lessons_admin'.tr();
       case 'org_owner':
         return 'roles.org_owner'.tr();
       case 'org_co_owner':
@@ -144,6 +162,7 @@ class _RolePermissionManagementViewState
     final masterAdmins =
         assignments.where((a) => a.role == 'master_admin').toList();
     final admins = assignments.where((a) => a.role == 'admin').toList();
+    final lessonsAdmins = assignments.where((a) => a.isLessonsAdmin).toList();
     final permittedAdmins =
         assignments.where((a) => a.isPermittedAdmin).toList();
 
@@ -192,6 +211,18 @@ class _RolePermissionManagementViewState
             _buildEmptyRow('roles.no_admins'.tr())
           else
             ...admins.map((a) => _buildAssignmentCard(provider, a)),
+          const SizedBox(height: AppTheme.spaceXl),
+          _buildSectionHeader('roles.lessons_admins'.tr(), lessonsAdmins.length),
+          const SizedBox(height: AppTheme.spaceSm),
+          Text('roles.lessons_admin_hint'.tr(),
+              style: const TextStyle(color: Canopy.slate, fontSize: 12)),
+          const SizedBox(height: AppTheme.spaceMd),
+          if (lessonsAdmins.isEmpty)
+            _buildEmptyRow('roles.no_lessons_admins'.tr())
+          else
+            ...lessonsAdmins.map((a) => _buildAssignmentCard(provider, a)),
+          const SizedBox(height: AppTheme.spaceXl),
+          _buildAdminEmailsSection(provider),
           const SizedBox(height: AppTheme.spaceXl),
           _buildSectionHeader('roles.owners'.tr(), permittedAdmins.length),
           const SizedBox(height: AppTheme.spaceMd),
@@ -300,6 +331,70 @@ class _RolePermissionManagementViewState
     );
   }
 
+  /// Addresses that become admins at their first sign-in, with their state.
+  Widget _buildAdminEmailsSection(AppProvider provider) {
+    final grants =
+        context.select<AppProvider, List<AdminEmailGrant>>((p) => p.adminEmailGrants);
+    return Column(
+      key: const ValueKey('roles-admin-emails'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('roles.emails_title'.tr(), grants.length),
+        const SizedBox(height: AppTheme.spaceSm),
+        Text('roles.emails_hint'.tr(),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12)),
+        const SizedBox(height: AppTheme.spaceMd),
+        if (grants.isEmpty)
+          _buildEmptyRow('roles.no_emails'.tr())
+        else
+          for (final g in grants)
+            AdminCard(
+                margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+                child: Row(children: [
+                  Icon(g.waiting ? Icons.hourglass_empty_rounded : Icons.verified_user_rounded,
+                      size: 18, color: g.waiting ? Canopy.slate : Canopy.leaf),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text(g.email,
+                            style: const TextStyle(
+                                color: Canopy.ink,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
+                        Text(
+                            [
+                              _roleLabel(g.role),
+                              g.waiting
+                                  ? 'roles.email_waiting'.tr()
+                                  : 'roles.email_applied'.tr(args: [
+                                      DateFormat('yyyy-MM-dd').format(g.appliedAt!)
+                                    ]),
+                            ].join(' · '),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12)),
+                      ])),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline_rounded,
+                        size: 18, color: Canopy.liveCrimson),
+                    tooltip: 'roles.email_remove'.tr(),
+                    onPressed: () async {
+                      try {
+                        await provider.removeAdminEmail(g.email);
+                        _showToast('roles.email_removed'.tr());
+                      } catch (e) {
+                        _showToast('roles.revoke_failed'.tr(), isError: true);
+                      }
+                    },
+                  ),
+                ])),
+      ],
+    );
+  }
+
   Widget _buildSectionHeader(String title, int count) {
     return Wrap(
       spacing: AppTheme.spaceSm,
@@ -393,7 +488,11 @@ class _RolePermissionManagementViewState
                       color: Canopy.ink, fontSize: 13),
                   items: [
                     DropdownMenuItem(
-                        value: 'admin', child: Text('design_ui.admin'.tr())),
+                        value: 'admin',
+                        child: Text('roles.admin_by_email'.tr())),
+                    DropdownMenuItem(
+                        value: 'lessons_admin',
+                        child: Text('roles.lessons_admin'.tr())),
                     DropdownMenuItem(
                         value: 'master_admin',
                         child: Text('design_ui.master_admin'.tr())),

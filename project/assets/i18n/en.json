@@ -1750,7 +1750,20 @@
     "manage_admins": "Manage administrators",
     "stream": "Stream",
     "organization": "Organization",
-    "global": "Platform-wide"
+    "global": "Platform-wide",
+    "lessons_admin": "Lessons admin",
+    "lessons_admins": "Lessons admins",
+    "no_lessons_admins": "No lessons admins yet.",
+    "lessons_admin_hint": "Lessons admins see only Preachers & lessons in the admin page.",
+    "emails_title": "Admin emails",
+    "emails_hint": "Whoever signs in with one of these Google or Apple addresses becomes an admin. Apple's \"Hide my email\" addresses won't match.",
+    "no_emails": "No admin emails yet.",
+    "email_waiting": "Waiting for the first sign-in",
+    "email_applied": "Admin since {}",
+    "email_saved_waiting": "Saved. This address becomes an admin at its first sign-in.",
+    "email_remove": "Remove address",
+    "email_removed": "Address removed. A role already given stays until you revoke it.",
+    "admin_by_email": "Admin: the account doesn't need to exist yet"
   },
   "moderation": {
     "failed": "Could not complete this action.",
