@@ -47,6 +47,8 @@ create table public.admin_email_grants (
 comment on table public.admin_email_grants is
   'Email addresses that become admins (or, for the original bootstrap list, master admins) when that verified account signs in. Written only through admin_add_email_grant / admin_remove_email_grant.';
 alter table public.admin_email_grants enable row level security;
+revoke all on public.admin_email_grants from public, anon, authenticated;
+grant select on public.admin_email_grants to authenticated;
 create policy admin_email_grants_select_master on public.admin_email_grants
   for select to authenticated using (public.is_master_admin());
 
