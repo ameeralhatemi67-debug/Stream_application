@@ -231,7 +231,7 @@ void main() {
     db.rows['bl60n6uuvWE'] = BookmarkEntry.fromRow(
         {'vod_id': 'vod_pl_bl60n6uuvWE', 'streamer_id': _vod.streamerId});
     final youtube = YouTubeApiService(
-        useWebProxy: true,
+        useProxy: true,
         apiKey: '',
         client: MockClient((request) async {
           expect(request.url.path, '/api/youtube');

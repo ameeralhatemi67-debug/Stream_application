@@ -1,12 +1,55 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-22
+updated: 2026-10-26
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-017: The Android APK from the website, and how installs are updated (2026-10-26)
+
+Owner plan 2026-10-26: while Google's verification is pending, Android users
+download the APK from the website; the same app moves to Google Play later.
+
+- **One build, two distributions.** `--dart-define=DISTRIBUTION=apk` (the
+  website APK) or `play` (Google Play). The Android release build refuses
+  anything else, and refuses an app bundle built as `apk`
+  (`android/app/build.gradle.kts`). Debug runs, tests and the web have no
+  distribution and never look for updates (`AppDistribution`).
+- **Updates: offer, and require only through a floor.** `public.app_releases`
+  (`20261026120000`) holds each published release per channel with
+  `min_supported_code`. On start and on return (at most every six hours)
+  `AppUpdateController` reads the newest published row of its channel:
+  newer → a "Later / Download" dialog once per release, on a main tab, never
+  during a phone broadcast (`AppUpdatePresenter`), plus a row in Settings →
+  About; below the floor → `UpdateRequiredPage` over the app (kept mounted
+  underneath, held back while broadcasting). A failed check changes nothing,
+  so being offline never blocks. Forcing every release was rejected: each
+  update is a large download through the unknown-sources screens and a host
+  outage would lock everyone out. The floor exists from the first APK because
+  an install without a checker can never be told to update.
+- **No self-install.** Download opens the release link in the browser and
+  Android's installer does the rest. `REQUEST_INSTALL_PACKAGES` is not
+  requested: Play restricts it, so the same app could not ship there. The
+  Play build only ever opens its own Play listing (Play forbids updating an
+  app any other way); the database and the app both enforce that.
+- **Where the file lives.** The public Storage bucket `app-releases`; the
+  website's `/download` page and `/download/android` short link read the
+  newest row through `api/app-release.mjs`. The APK opens release links only
+  on the website or the Supabase project.
+- **Signing.** The APK is signed with the key that becomes the Play app
+  signing key ("use my own key" in Play Console), so Play can later install
+  over APK installs; a different key would force every APK user to uninstall.
+  The same key is registered for Android developer verification (enforced
+  globally from 2027).
+- **Backend changes stay compatible** with installs still in use: add before
+  removing, and raise `min_supported_code` before a migration that breaks old
+  versions (the `taysir_*` drop of 2026-10-22 would have broken every older
+  APK).
+- **YouTube on phones goes through the website** (`/api/youtube`, ADR-011
+  extended): a public APK can be unpacked, so it carries no YouTube key.
 
 ## ADR-016: A second design, the Hedayah skin, beside gold & black (2026-10-22)
 

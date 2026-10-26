@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Download for Android — Hadayah Live</title>
+<meta name="description" content="Download Hadayah Live (منصة هدايه) for Android while it is on its way to Google Play: the newest version, its checksum and how to install it.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #121214;
+    --surface-1: #1A1A1E;
+    --surface-2: #24242A;
+    --border-subtle: #27272F;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+    --accent-red: #FF8080;
+    --accent-green: #6FCF97;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg-base); color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  html[dir="rtl"] body { font-family: 'Tajawal', 'Inter', sans-serif; }
+  .page { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  .lang-toggle { display: flex; border: 1px solid var(--border-subtle); border-radius: 999px; overflow: hidden; }
+  .lang-toggle button { appearance: none; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 14px; cursor: pointer; }
+  .lang-toggle button.active { background: var(--surface-2); color: var(--text-primary); }
+  h1 { font-size: 28px; font-weight: 800; margin: 0 0 10px; }
+  p.lede { color: var(--text-secondary); font-size: 15px; margin: 0 0 24px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+  .card p, .card li { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 6px; }
+  .card ol { margin: 6px 0 0; padding-inline-start: 20px; }
+  .card li { margin-bottom: 10px; }
+  a { color: var(--accent-green); }
+  .cta { display: block; width: 100%; text-align: center; margin: 4px 0 12px; padding: 16px 18px; border-radius: var(--radius-md); background: var(--accent-green); color: #12211A; font-weight: 800; font-size: 16px; text-decoration: none; }
+  .cta[hidden] { display: none; }
+  .meta { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 6px; }
+  .checksum { margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+  .checksum code { display: block; margin-top: 4px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); color: var(--text-secondary); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; overflow-wrap: anywhere; direction: ltr; text-align: left; }
+  .notes { white-space: pre-line; }
+  .status { color: var(--text-secondary); font-size: 13.5px; }
+  .page-url { direction: ltr; unicode-bidi: embed; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+  footer { margin-top: 28px; font-size: 12px; color: var(--text-muted); text-align: center; }
+  footer a { color: inherit; }
+  .ar { display: none; }
+  html[dir="rtl"] .en { display: none; }
+  html[dir="rtl"] .ar { display: block; }
+  html[dir="rtl"] footer .ar, html[dir="rtl"] .meta .ar { display: inline; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand"><img src="icons/Icon-192.png" alt="">
+      <span class="en">Hadayah Live</span>
+      <span class="ar">منصة هدايه</span>
+    </div>
+    <div class="lang-toggle">
+      <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+      <button type="button" id="btn-ar" onclick="setLang('ar')">AR</button>
+    </div>
+  </header>
+
+  <h1><span class="en">Hadayah Live for Android</span><span class="ar">منصة هدايه لأجهزة أندرويد</span></h1>
+  <p class="lede">
+    <span class="en">Hadayah Live is on its way to Google Play. Until then, download the app here. It is the same app, signed by us, and it tells you when a new version is ready.</span>
+    <span class="ar">منصة هدايه في طريقها إلى Google Play. وإلى ذلك الحين حمّل التطبيق من هنا. إنه التطبيق نفسه موقّعًا منّا، وسيخبرك حين يتوفر إصدار جديد.</span>
+  </p>
+
+  <div class="card" id="release">
+    <h2><span class="en">Download</span><span class="ar">التنزيل</span></h2>
+    <p class="status" id="status-loading">
+      <span class="en">Looking for the newest version…</span>
+      <span class="ar">جارٍ البحث عن أحدث إصدار…</span>
+    </p>
+    <p class="status" id="status-missing" hidden>
+      <span class="en">The download is not ready yet. Please check back soon, or use the <a href="/">web app</a> meanwhile.</span>
+      <span class="ar">التنزيل غير جاهز بعد. يرجى العودة قريبًا، أو استخدم <a href="/">تطبيق الويب</a> في هذه الأثناء.</span>
+    </p>
+    <a class="cta" id="download" href="/download/android" hidden>
+      <span id="label-apk"><span class="en">Download for Android</span><span class="ar">تنزيل لأجهزة أندرويد</span></span>
+      <span id="label-play" hidden><span class="en">Get it on Google Play</span><span class="ar">احصل عليه من Google Play</span></span>
+    </a>
+    <p class="status" id="status-play" hidden>
+      <span class="en">Hadayah Live is now on Google Play, which keeps it up to date. If you installed the downloaded version, installing from Play replaces it and keeps your sign-in.</span>
+      <span class="ar">منصة هدايه متاحة الآن على Google Play التي تتولى تحديثها. إذا ثبّتّ النسخة المنزّلة فإن التثبيت من Play يحلّ محلها ويحتفظ بتسجيل دخولك.</span>
+    </p>
+    <p class="meta" id="meta" hidden>
+      <span class="en">Version</span><span class="ar">الإصدار</span> <span id="version"></span>
+      <span id="size-wrap"> · <span id="size"></span> <span class="en">MB</span><span class="ar">ميغابايت</span></span>
+      <span id="date-wrap"> · <span id="date"></span></span>
+    </p>
+    <div id="notes-wrap" hidden>
+      <p class="meta"><strong><span class="en">What's new</span><span class="ar">ما الجديد</span></strong></p>
+      <p class="meta notes" id="notes"></p>
+    </div>
+    <div class="checksum" id="checksum-wrap" hidden>
+      <span class="en">SHA-256 checksum, to check the file you downloaded:</span>
+      <span class="ar">بصمة SHA-256 للتحقق من الملف الذي نزّلته:</span>
+      <code id="checksum"></code>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="en">Install in three steps</span><span class="ar">التثبيت في ثلاث خطوات</span></h2>
+    <ol class="en">
+      <li><strong>Download.</strong> If your browser says the file may be harmful, choose <em>Download anyway</em>. Phones warn about every app that does not come from a store.</li>
+      <li><strong>Open the file.</strong> The first time, Android asks to allow installs from your browser: tap <em>Settings</em>, turn on <em>Allow from this source</em>, then go back.</li>
+      <li><strong>Install.</strong> If Google Play Protect says the developer is unknown or offers to scan the app, choose <em>Install anyway</em> (sometimes under <em>More details</em>).</li>
+    </ol>
+    <ol class="ar">
+      <li><strong>نزّل الملف.</strong> إذا قال المتصفح إن الملف قد يكون ضارًا فاختر <em>التنزيل على أي حال</em>. تُظهر الهواتف هذا التحذير لكل تطبيق لا يأتي من متجر.</li>
+      <li><strong>افتح الملف.</strong> في المرة الأولى يطلب أندرويد السماح بالتثبيت من المتصفح: اضغط <em>الإعدادات</em>، وفعّل <em>السماح من هذا المصدر</em>، ثم ارجع.</li>
+      <li><strong>ثبّت التطبيق.</strong> إذا قالت حماية Google Play إن المطوّر غير معروف أو عرضت فحص التطبيق، فاختر <em>التثبيت على أي حال</em> (وقد يكون تحت <em>مزيد من التفاصيل</em>).</li>
+    </ol>
+    <p><span class="en">Needs Android 7.0 or newer.</span><span class="ar">يحتاج إلى أندرويد 7.0 أو أحدث.</span></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="en">Updates</span><span class="ar">التحديثات</span></h2>
+    <p class="en">When a new version is published, the app tells you and opens its download. Install it the same way: it replaces the old version and keeps your sign-in and settings. Once Hadayah Live is on Google Play, the app will tell you, and Play will take over the updates.</p>
+    <p class="ar">عند نشر إصدار جديد يخبرك التطبيق ويفتح رابط تنزيله. ثبّته بالطريقة نفسها: سيحلّ محل الإصدار القديم ويحتفظ بتسجيل دخولك وإعداداتك. وحين يصل تطبيق منصة هدايه إلى Google Play سيخبرك التطبيق، وستتولى Play التحديثات بعد ذلك.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="en">On a computer or an iPhone?</span><span class="ar">على حاسوب أو آيفون؟</span></h2>
+    <p class="en">Open this page on your Android phone: <span class="page-url" data-page-url></span></p>
+    <p class="ar">افتح هذه الصفحة على هاتف أندرويد: <span class="page-url" data-page-url></span></p>
+    <p class="en">An iPhone app is coming later. Until then, use the <a href="/">web app</a>.</p>
+    <p class="ar">تطبيق آيفون قادم لاحقًا. وإلى ذلك الحين استخدم <a href="/">تطبيق الويب</a>.</p>
+  </div>
+
+  <footer>
+    <a href="/about.html"><span class="en">About</span><span class="ar">عن المنصة</span></a> &middot;
+    <a href="/privacy.html"><span class="en">Privacy Policy</span><span class="ar">سياسة الخصوصية</span></a> &middot;
+    <a href="/delete-account.html"><span class="en">Delete account &amp; data</span><span class="ar">حذف الحساب والبيانات</span></a> &middot;
+    <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a>
+  </footer>
+</div>
+
+<script>
+  var release = null;
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+    try { localStorage.setItem('download-lang', lang); } catch (e) {}
+    showRelease();
+  }
+  function show(id, visible) { document.getElementById(id).hidden = !visible; }
+  function showRelease() {
+    if (!release) return;
+    var ar = document.documentElement.lang === 'ar';
+    document.getElementById('version').textContent = release.versionName;
+    show('size-wrap', release.sizeBytes != null);
+    if (release.sizeBytes != null) {
+      document.getElementById('size').textContent = (release.sizeBytes / 1048576).toFixed(1);
+    }
+    var date = release.publishedAt ? new Date(release.publishedAt) : null;
+    show('date-wrap', !!date && !isNaN(date));
+    if (date && !isNaN(date)) {
+      document.getElementById('date').textContent = new Intl.DateTimeFormat(ar ? 'ar' : 'en',
+        { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+    }
+    var notes = (ar ? release.notesAr : release.notesEn) || (ar ? release.notesEn : release.notesAr) || '';
+    document.getElementById('notes').textContent = notes.trim();
+    show('notes-wrap', notes.trim() !== '');
+    document.getElementById('checksum').textContent = release.sha256 || '';
+    show('checksum-wrap', !!release.sha256);
+  }
+  (function initLang() {
+    var saved = null;
+    try { saved = localStorage.getItem('download-lang'); } catch (e) {}
+    if (saved === 'ar' || saved === 'en') { setLang(saved); }
+    else if ((navigator.language || '').toLowerCase().startsWith('ar')) { setLang('ar'); }
+  })();
+  document.querySelectorAll('[data-page-url]').forEach(function (el) {
+    el.textContent = location.host + '/download';
+  });
+  fetch('/api/app-release', { headers: { Accept: 'application/json' } })
+    .then(function (response) { return response.ok ? response.json() : null; })
+    .catch(function () { return null; })
+    .then(function (data) {
+      show('status-loading', false);
+      if (!data || !data.downloadUrl || !/^https:\/\//.test(data.downloadUrl)) {
+        show('status-missing', true);
+        return;
+      }
+      release = data;
+      var link = document.getElementById('download');
+      link.href = data.downloadUrl;
+      show('download', true);
+      show('label-apk', !data.onGooglePlay);
+      show('label-play', !!data.onGooglePlay);
+      show('status-play', !!data.onGooglePlay);
+      show('meta', !data.onGooglePlay);
+      showRelease();
+    });
+</script>
+</body>
+</html>

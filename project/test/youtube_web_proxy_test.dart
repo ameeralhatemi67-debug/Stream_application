@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:streamer_app/core/config/app_identity.dart';
 import 'package:streamer_app/core/services/youtube_api_service.dart';
 
 void main() {
@@ -50,7 +51,7 @@ void main() {
       return http.Response(jsonEncode({'items': items}), 200);
     });
     final service =
-        YouTubeApiService(apiKey: '', client: client, useWebProxy: true);
+        YouTubeApiService(apiKey: '', client: client, useProxy: true);
     final vods = await service.fetchChannelVideos(
         streamerId: 'streamer', handle: '@ahmedamercaller');
     expect(vods.single.youtubeVideoId, 'bl60n6uuvWE');
@@ -69,7 +70,7 @@ void main() {
       () async {
     final service = YouTubeApiService(
         apiKey: 'must-not-leave-browser',
-        useWebProxy: true,
+        useProxy: true,
         client: MockClient((request) async {
           expect(request.url.toString(),
               isNot(contains('must-not-leave-browser')));
@@ -78,12 +79,31 @@ void main() {
     await service.fetchChannelDetails('@somehandle');
   });
 
-  test('native still sends its configured key directly to Google', () async {
+  test('phones read through the public site, with no key in the request',
+      () async {
+    final requests = <Uri>[];
+    final service = YouTubeApiService(client: MockClient((request) async {
+      requests.add(request.url);
+      return http.Response('{"items":[]}', 200);
+    }));
+    await service.fetchChannelDetails('@somehandle');
+    await service.fetchWatchStatus('abcdefghijk');
+    expect(requests, hasLength(2));
+    for (final url in requests) {
+      expect(
+          '${url.origin}${url.path}', '${AppIdentity.websiteUrl}/api/youtube');
+      expect(url.queryParameters.containsKey('key'), isFalse);
+    }
+    expect(requests.map((u) => u.queryParameters['resource']),
+        ['channels', 'videos']);
+  });
+
+  test('a key passed in explicitly still calls Google directly', () async {
     final service = YouTubeApiService(
-        apiKey: 'native-test-key',
+        apiKey: 'tool-test-key',
         client: MockClient((request) async {
           expect(request.url.host, 'www.googleapis.com');
-          expect(request.url.queryParameters['key'], 'native-test-key');
+          expect(request.url.queryParameters['key'], 'tool-test-key');
           return http.Response('{"items":[]}', 200);
         }));
     await service.fetchChannelDetails('@somehandle');

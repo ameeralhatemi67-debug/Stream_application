@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -108,14 +109,50 @@ if (flutter.targetSdkVersion < playTargetSdkFloor) {
     )
 }
 
+// --- Distribution (ADR-017) ------------------------------------------------------------------
+// One codebase ships two ways: the APK downloaded from the website (DISTRIBUTION=apk), which
+// tells people when a newer APK is published, and Google Play (DISTRIBUTION=play), which must
+// never update itself outside Play (Play's Device and Network Abuse policy). Flutter hands every
+// --dart-define, including those from --dart-define-from-file, to Gradle as the "dart-defines"
+// property: base64 entries joined by commas.
+val dartDefines: Map<String, String> =
+    (project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.filter { it.isNotBlank() }
+        ?.map { String(Base64.getDecoder().decode(it), Charsets.UTF_8) }
+        ?.mapNotNull { entry ->
+            entry.split("=", limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
+        }
+        ?.toMap()
+        ?: emptyMap()
+val distribution = dartDefines["DISTRIBUTION"]
+
 // Refuses a release assembly that has no upload keystore, at configuration time, with the
-// instructions rather than a Gradle null-pointer.
+// instructions rather than a Gradle null-pointer. The same goes for a release build that does
+// not say where it will be installed from: without DISTRIBUTION an APK could never be told to
+// update, and an app bundle (Play only) built as "apk" would offer Play users a website
+// download.
 gradle.taskGraph.whenReady {
-    val assemblingRelease = allTasks.any { task ->
+    val releaseTasks = allTasks.filter { task ->
         task.project == project &&
             (task.name.contains("Release") &&
                 (task.name.startsWith("assemble") || task.name.startsWith("bundle") ||
                     task.name.startsWith("package")))
+    }
+    val assemblingRelease = releaseTasks.isNotEmpty()
+    if (assemblingRelease && distribution != "apk" && distribution != "play") {
+        throw GradleException(
+            "Release builds must say where they are installed from: add " +
+                "--dart-define=DISTRIBUTION=apk for the APK downloaded from the website, or " +
+                "--dart-define=DISTRIBUTION=play for Google Play " +
+                "(brief/launch/05_APK_RELEASE.md)."
+        )
+    }
+    if (distribution == "apk" && releaseTasks.any { it.name.startsWith("bundle") }) {
+        throw GradleException(
+            "An app bundle (.aab) is for Google Play only: build it with " +
+                "--dart-define=DISTRIBUTION=play. The website APK uses `flutter build apk`."
+        )
     }
     if (assemblingRelease && !hasReleaseSigning) {
         throw GradleException(

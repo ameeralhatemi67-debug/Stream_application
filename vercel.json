@@ -3,7 +3,7 @@
   "outputDirectory": "project/build/web",
   "headers": [
     {
-      "source": "/(index.html|flutter_bootstrap.js|flutter_service_worker.js|streamer_offline_sw.js|firebase-messaging-sw.js|version.json|manifest.json)",
+      "source": "/(index.html|flutter_bootstrap.js|flutter_service_worker.js|streamer_offline_sw.js|firebase-messaging-sw.js|version.json|manifest.json|download.html)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -49,6 +49,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/download",
+      "destination": "/download.html"
+    },
+    {
+      "source": "/download/android",
+      "destination": "/api/app-release?download=1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

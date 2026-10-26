@@ -18,6 +18,18 @@
 -keep class org.chromium.** { *; }
 -dontwarn org.chromium.**
 
+# Flutter's engine carries code for Play Store deferred components (Play Core). This app uses
+# none and does not bundle Play Core, so R8 stopped the first real release build (2026-10-26)
+# with "Missing class com.google.android.play.core..." for exactly these packages.
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
+
+# RootEncoder (phone broadcasting, RtmpPublisherBridge). It ships no consumer rules and no
+# native code, and R8 finds no missing classes in it; it is kept whole anyway because a
+# release-only fault would surface only once a broadcaster is going live.
+-keep class com.pedro.** { *; }
+
 # flutter_vlc_player native bindings
 -keep class software.solid.fluttervlcplayer.** { *; }
 -keep class org.videolan.libvlc.** { *; }

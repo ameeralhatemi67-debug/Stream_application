@@ -115,6 +115,12 @@ networkMode = 'hanging';
 assert.equal(await (await fetchPage(`${origin}/`, 'cold-tab', true)).text(), html('build-new'));
 assert.equal(fetchPage(`${origin}/main.dart.js`, 'new-tab', false, 'reload'), undefined);
 assert.equal(fetchPage('https://private-backend.test/rest/v1/profiles', 'new-tab'), undefined);
+for (const path of ['download', 'download/android', 'download.html', 'api/app-release', 'api/youtube?resource=videos']) {
+  assert.equal(fetchPage(`${origin}/${path}`, 'download-tab', true), undefined,
+    `${path} is left to the network, so the APK redirect is never replaced by the app`);
+}
+assert.notEqual(fetchPage(`${origin}/downloads-feature`, 'download-tab', true), undefined,
+  'only the download page and link are excluded');
 await Promise.all(pending);
 pruneWorker();
 await Promise.all(pending);

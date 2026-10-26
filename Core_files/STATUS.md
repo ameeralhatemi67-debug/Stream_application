@@ -1,12 +1,24 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-22
+updated: 2026-10-26
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Android APK from the website, phase 1, 2026-10-26 (local; migration not on hosted)
+
+Owner plan: share the Android app as an APK from the website while Google's verification is pending, with a safe way to update it (ADR-017; how-to in `brief/launch/05_APK_RELEASE.md`). Phase 1, the engineering, is done:
+
+- **YouTube on phones goes through the website.** `YouTubeApiService` with no key now calls `AppIdentity.websiteUrl/api/youtube` on phones (the web keeps its own origin). No build reads `YOUTUBE_API_KEY` any more; it is gone from `dart_define.example.json`. Before this, the key was compiled into every Android build (the 2026-10-22 debug APK has it), and a phone key restricted to Android apps, as 01 §3b planned, would have failed because the app does not send the headers Google checks. `brief/tools/scan_build_secrets.mjs` now fails on any Google API key other than the Firebase one.
+- **Update check.** `public.app_releases` (migration `20261026120000_app_releases.sql`, with the public Storage bucket `app-releases`), `AppReleaseService`, `AppUpdateController` (on start and on return, at most every six hours; a failed check changes nothing), `AppUpdatePresenter` (a Later/Download dialog once per release on a main tab, never during a phone broadcast; any way of closing it counts as Later), `AppUpdateGate` + `UpdateRequiredPage` (below `min_supported_code`: a full page over the app, which stays mounted underneath; held back while broadcasting), and Settings → About showing the real installed version (it was a fixed "1.0.0 (1)" string) with an update row. Links: the APK opens only HTTPS links on the website, the Supabase project or its own Play listing; the Play build only its Play listing.
+- **Distribution switch.** `--dart-define=DISTRIBUTION=apk|play` (`AppDistribution`). Android release builds refuse anything else, and refuse an app bundle built as `apk`.
+- **R8.** The first release build ever made stopped in R8 on Flutter's Play Core (deferred components) references. `proguard-rules.pro` now ignores those three packages and keeps RootEncoder whole.
+- **Website.** `/download` (`project/web/download.html`, Arabic/English: version, size, date, notes, SHA-256, three install steps, updates, Android 7.0+), `/download/android` → the newest APK, both from `api/app-release.mjs` (reads the newest published `apk` row with the anon key; follows only HTTPS links on Supabase, the site, or the Play listing). The offline service worker now leaves `/api/` and `/download` to the network: it treated the redirect as a failure and would have opened the cached web app instead of the APK.
+
+Verification: see the ledger's RESUME block of the same day. In short: analyzer 0; `app_update_test.dart` 22; SQL 25/25 new, whole suite unchanged apart from them; a throwaway-signed release APK started on an Android 16 emulator against hosted (welcome, guest, Discover with the 5 channels, a channel's YouTube archive through the proxy, the bundled map, Lessons; no crash) and scanned clean. Not done: the hosted migration (waiting for the owner's yes), a real signing key, a physical phone, the update path end to end (needs the table on hosted and two signed builds).
 
 ## Second design: the Hedayah skin, 2026-10-22 (local, not committed)
 

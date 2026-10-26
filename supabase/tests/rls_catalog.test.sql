@@ -44,7 +44,8 @@ insert into expected_anon_select values
   ('broadcast_sessions'),            -- public sessions only, via broadcast_is_public (20261001111022)
   -- Mosque lessons (20261022125222): districts, visible mosques, listed
   -- preachers (no phone) and approved/cancelled sessions.
-  ('mosque_districts'), ('mosques'), ('preachers'), ('lesson_series'), ('lessons');
+  ('mosque_districts'), ('mosques'), ('preachers'), ('lesson_series'), ('lessons'),
+  ('app_releases');                  -- published phone releases for the update check (20261026120000)
 
 create temporary table expected_anon_execute(proname text) on commit drop;
 insert into expected_anon_execute values
@@ -222,10 +223,12 @@ select is(
 -- ---------------------------------------------------------------------------
 -- R7 — storage.
 -- ---------------------------------------------------------------------------
+-- app-releases holds the published Android APKs, downloaded without signing in
+-- (20261026120000); it has no storage.objects policy, so it cannot be listed.
 select is(
   (select coalesce(string_agg(id, ',' order by id), '')
-     from storage.buckets where public and id <> 'streamer-assets'),
-  '', 'R7a streamer-assets is the only public bucket');
+     from storage.buckets where public and id not in ('streamer-assets', 'app-releases')),
+  '', 'R7a streamer-assets and app-releases are the only public buckets');
 
 select is(
   (select count(distinct cmd)::int from pg_policies

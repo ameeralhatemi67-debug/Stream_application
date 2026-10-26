@@ -22,6 +22,9 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
   connectivity_plus: ^6.0.5
+  # The installed version, for the update check (ADR-017). Already in the
+  # lock file through another plugin; listed because the app imports it.
+  package_info_plus: ^9.0.1
 
   # Localization (English LTR & Arabic RTL)
   easy_localization: ^3.0.7

@@ -86,12 +86,11 @@ The app asks for `https://www.googleapis.com/auth/youtube.force-ssl`. Google cla
 
 The old key is still in git history, so treat it as leaked.
 
-- [ ] APIs & Services → Credentials → **create a new API key**. Then delete the old one, or restrict it to nothing.
-- [ ] Make it a **phone key**:
-  - Application restrictions → **Android apps** → package `sa.hadayah.streamer_app` + SHA-1 of the **upload key** (section 6) + SHA-1 of the **Play app signing key** (shown after the first upload, section 7).
-  - API restrictions → **YouTube Data API v3** only.
-- [ ] Make a **separate web key** for the Vercel server function (no Android restriction; API restriction = YouTube Data API v3) and store it only in Vercel's Production environment variables.
-- [ ] Put the new phone key into `project/dart_define.local.json` yourself (`YOUTUBE_API_KEY`). Don't send it in chat.
+*Changed 2026-10-26 (ADR-017):* phones no longer carry a YouTube key. They read YouTube through the website's `/api/youtube`, like the web. A downloadable APK can be unpacked, and a phone key restricted to Android apps would not have worked anyway: the app does not send the headers Google checks.
+
+- [ ] APIs & Services → Credentials → delete the old phone key, or restrict it to nothing.
+- [ ] Keep one **server key** for the Vercel function (API restriction = YouTube Data API v3, no application restriction), stored only in Vercel's Production environment variables as `YOUTUBE_API_KEY`.
+- [ ] Remove `YOUTUBE_API_KEY` from `project/dart_define.local.json`. The build no longer reads it, and the secret scan fails if a second Google key ever appears in a build.
 
 ### 3c. YouTube quota and terms
 
@@ -160,6 +159,8 @@ Checked by Claude on 2026-10-10:
 ## 6. App signing key (upload key)
 
 Release builds refuse to run until this exists.
+
+*2026-10-26:* if the app is first shared as an APK from the website ([05_APK_RELEASE.md](05_APK_RELEASE.md)), this key signs every APK install, so it must also become the **Play app signing key**: in Play Console choose "use my own key" and upload it, or APK users will have to uninstall to move to Play.
 
 **Easiest way (2026-10-16):** run `powershell -ExecutionPolicy Bypass -File brief\launch\make_upload_key.ps1` from the repo root in your own terminal. It asks for the password (never typed into chat), creates `%USERPROFILE%\hadayah-keys\upload-keystore.jks` and `project\android\key.properties`, and prints the SHA-1 for section 3b. The manual steps below do the same thing.
 

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../features/profile/models/vod_models.dart';
+import '../config/app_identity.dart';
 
 /// What YouTube's public Data API says about one watch ID. This is a
 /// snapshot read with the app's API key, not channel authorization: it can
@@ -40,11 +41,12 @@ class YouTubeLookupUnavailable implements Exception {
 
 /// Service for communicating with YouTube Data API v3 REST endpoints.
 class YouTubeApiService {
-  /// Native-only build setting. Web uses the same-origin server endpoint,
-  /// whose key is never compiled into the browser bundle. Never hardcode a key
-  /// here -- see doc/Audit/01_Security_Data_Protection_Audit.md VULN-DATA-01.
-  static const String _defaultApiKey =
-      kIsWeb ? '' : String.fromEnvironment('YOUTUBE_API_KEY');
+  /// Every build reads YouTube through the website's server function
+  /// (api/youtube.mjs), whose key lives only in Vercel's environment: the web
+  /// on its own origin, phones on the public site. No key is compiled into the
+  /// browser bundle or the APK, which anyone who downloads it can unpack.
+  /// Never hardcode a key here -- see
+  /// doc/Audit/01_Security_Data_Protection_Audit.md VULN-DATA-01.
   static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
 
   /// Studio lookups wait at most this long; after that the studio treats
@@ -54,8 +56,8 @@ class YouTubeApiService {
 
   final String apiKey;
   final http.Client _client;
-  final bool _useWebProxy;
-  bool get _canRead => _useWebProxy || apiKey.isNotEmpty;
+  final bool _useProxy;
+  bool get _canRead => _useProxy || apiKey.isNotEmpty;
 
   // In-memory caching to optimize API quota usage
   final Map<String, List<VodModel>> _cachedVods = {};
@@ -67,22 +69,30 @@ class YouTubeApiService {
   /// unit and a round-trip each; audit CA-04). Failures are not cached.
   final Map<String, Map<String, String>> _cachedChannelDetails = {};
 
+  /// Without arguments the service reads through the proxy. A key passed in
+  /// explicitly (tests and tools) calls Google directly instead; an empty one
+  /// means YouTube cannot be asked at all.
   YouTubeApiService({
     String? apiKey,
     http.Client? client,
-    bool? useWebProxy,
+    bool? useProxy,
     this.lookupTimeout = defaultLookupTimeout,
-  })  : apiKey = apiKey ?? _defaultApiKey,
-        _useWebProxy = useWebProxy ?? (kIsWeb && apiKey == null),
+  })  : apiKey = apiKey ?? '',
+        _useProxy = useProxy ?? apiKey == null,
         _client = client ?? http.Client();
 
+  /// The web calls its own origin, which also serves preview deployments;
+  /// phones have no origin of their own and call the public site.
+  static Uri get proxyEndpoint => kIsWeb
+      ? Uri.base.resolve('/api/youtube')
+      : Uri.parse('${AppIdentity.websiteUrl}/api/youtube');
+
   Future<http.Response> _get(Uri url) {
-    if (_useWebProxy) {
+    if (_useProxy) {
       final parameters = Map<String, String>.of(url.queryParameters)
         ..remove('key')
         ..['resource'] = url.pathSegments.last;
-      url =
-          Uri.base.resolve('/api/youtube').replace(queryParameters: parameters);
+      url = proxyEndpoint.replace(queryParameters: parameters);
     }
     return _client.get(url).timeout(lookupTimeout);
   }

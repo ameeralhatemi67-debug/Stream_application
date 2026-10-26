@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Scans a BUILT artifact (.aab / .apk / .zip / an unpacked folder) for leaked Supabase secrets.
+// Scans a BUILT artifact (.aab / .apk / .zip / an unpacked folder) for leaked Supabase secrets and
+// for any Google API key other than the public Firebase one.
 //   node brief/tools/scan_build_secrets.mjs path/to/app-release.aab
 // Prints counts and inner file names only, NEVER the secret values. Exit code 1 when a service-role key,
 // sb_secret key, private key or DB URL with password is found. Anon keys are expected (they ship in every client).
@@ -43,6 +44,15 @@ const roleOf = (b64) => {
 const hits = { service_role_jwt: new Map(), other_secret: new Map() };
 let anon = 0;
 let scanned = 0;
+// Since 2026-10-26 phones read YouTube through the website's /api/youtube (ADR-017), so the only
+// Google API key a build may carry is the public Firebase one from dart_define.local.json.
+const googleKeyRe = /AIza[0-9A-Za-z_-]{35}/g;
+const googleKeys = new Map(); // key -> first file; values are compared, never printed
+let allowedGoogleKey = null;
+try {
+  const defines = JSON.parse(fs.readFileSync(new URL('../../project/dart_define.local.json', import.meta.url), 'utf8'));
+  allowedGoogleKey = defines.FIREBASE_API_KEY || null;
+} catch { /* no local define file: report the count only */ }
 (function walk(d) {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     const p = path.join(d, e.name);
@@ -59,13 +69,18 @@ let scanned = 0;
     }
     const other = (t.match(/sb_secret_[A-Za-z0-9_-]{10,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|postgres(?:ql)?:\/\/[^:\s\/]+:[^@\s]+@/g) || []).length;
     if (other) hits.other_secret.set(rel, other);
+    for (const m of t.matchAll(googleKeyRe)) if (!googleKeys.has(m[0])) googleKeys.set(m[0], rel);
   }
 })(dir);
 if (tmp) fs.rmSync(tmp, { recursive: true, force: true });
 
 const svc = [...hits.service_role_jwt.values()].reduce((a, b) => a + b, 0);
 const oth = [...hits.other_secret.values()].reduce((a, b) => a + b, 0);
-console.log(`SCAN files=${scanned} anon_keys_found=${anon} service_role_jwts=${svc} other_secrets=${oth}`);
+const extraGoogle = [...googleKeys].filter(([key]) => key !== allowedGoogleKey);
+const googleLeak = allowedGoogleKey ? extraGoogle.length : 0;
+console.log(`SCAN files=${scanned} anon_keys_found=${anon} service_role_jwts=${svc} other_secrets=${oth} google_api_keys=${googleKeys.size} unexpected_google_api_keys=${allowedGoogleKey ? extraGoogle.length : 'unknown (no dart_define.local.json)'}`);
 for (const [k, m] of [...hits.service_role_jwt, ...hits.other_secret]) console.log(`  LEAK in ${k} (x${m})`);
-console.log(svc + oth === 0 ? 'RESULT: clean (no service-role key or private secret in the build)' : 'RESULT: LEAK. Do not publish. Rotate the key in the Supabase dashboard, rebuild, re-scan.');
-process.exit(svc + oth === 0 ? 0 : 1);
+if (allowedGoogleKey) for (const [, file] of extraGoogle) console.log(`  LEAK: a Google API key other than FIREBASE_API_KEY in ${file} (a YouTube key? phones must use /api/youtube)`);
+const leaks = svc + oth + googleLeak;
+console.log(leaks === 0 ? 'RESULT: clean (no service-role key, private secret or extra Google API key in the build)' : 'RESULT: LEAK. Do not publish. Remove or rotate the key, rebuild, re-scan.');
+process.exit(leaks === 0 ? 0 : 1);

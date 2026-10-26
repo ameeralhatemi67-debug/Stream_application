@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'core/config/app_distribution.dart';
 import 'core/config/app_identity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,10 @@ import 'core/services/reminder_push_service.dart';
 import 'core/services/retired_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
+import 'core/providers/app_update_controller.dart';
 import 'core/routing/app_router.dart';
+import 'core/widgets/app_update_gate.dart';
+import 'core/widgets/app_update_presenter.dart';
 import 'core/widgets/device_session_presenter.dart';
 import 'features/lessons/data/demo_lessons_repository.dart';
 import 'features/lessons/data/supabase_lessons_repository.dart';
@@ -81,6 +85,8 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppProvider _appProvider;
   late final GoRouter _router;
   late final DeviceSessionPresenter _deviceSessionPresenter;
+  late final AppUpdateController _appUpdates;
+  late final AppUpdatePresenter _appUpdatePresenter;
 
   @override
   void initState() {
@@ -108,6 +114,14 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     _deviceSessionPresenter =
         DeviceSessionPresenter(provider: _appProvider, router: _router)
           ..attach();
+    // ADR-017: the downloaded APK (and later the Play build) asks for the
+    // newest published release on start and on return; other builds only
+    // read their own version for Settings.
+    _appUpdates = AppUpdateController(distribution: AppDistribution.current);
+    _appUpdatePresenter = AppUpdatePresenter(
+        updates: _appUpdates, provider: _appProvider, router: _router)
+      ..attach();
+    unawaited(_appUpdates.loadInstalled().then((_) => _appUpdates.check()));
   }
 
   @override
@@ -118,6 +132,7 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     // heartbeats; re-check ownership, approval and ban state on return.
     if (state == AppLifecycleState.resumed) {
       unawaited(_appProvider.onAppResumed());
+      unawaited(_appUpdates.check());
     }
   }
 
@@ -125,6 +140,8 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _deviceSessionPresenter.dispose();
+    _appUpdatePresenter.dispose();
+    _appUpdates.dispose();
     _appProvider.dispose();
     super.dispose();
   }
@@ -134,6 +151,7 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
+        ChangeNotifierProvider<AppUpdateController>.value(value: _appUpdates),
         // Lessons: created on first use; follows sign-in and sign-out. Without
         // a configured backend it shows sample data, marked as such.
         ChangeNotifierProxyProvider<AppProvider, LessonsController>(
@@ -156,12 +174,13 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             routerConfig: _router,
-            builder: (context, child) =>
-                !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-                    ? child ?? const SizedBox.shrink()
-                    : MediaQuery.withClampedTextScaling(
-                        maxScaleFactor: 1.3,
-                        child: child ?? const SizedBox.shrink()),
+            builder: (context, child) {
+              final app = AppUpdateGate(child: child ?? const SizedBox.shrink());
+              return !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                  ? app
+                  : MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.3, child: app);
+            },
           );
         },
       ),

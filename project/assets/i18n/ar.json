@@ -796,7 +796,7 @@
     "select_stream_dialog_title": "اختر بثاً",
     "select_stream_dialog_empty": "لم ترسل رسائل في أي بث بعد.",
     "delete_messages_by_stream_success_toast": "تم حذف رسائلك في ذلك البث.",
-    "build_version": "الإصدار 1.0.0 (1)",
+    "build_version": "الإصدار {version} ({build})",
     "release_pending": "الإصدار قيد الاختبار. مراجعة النشر لم تكتمل بعد.",
     "view_guidelines_subtitle": "النزاهة الأكاديمية ومعايير البث",
     "view_privacy_subtitle": "كيف نستخدم بياناتك",
@@ -3158,5 +3158,20 @@
     "changed": "تغيّر التصميم إلى {}",
     "tagline": "هداية.. دعوةٌ ببصيرة، ورسالةٌ برحمة، وأثرٌ يمتد للجميع.",
     "association": "جمعية هداية · المنطقة الشرقية"
+  },
+  "update": {
+    "available_title": "يتوفر تحديث",
+    "available_body": "الإصدار {version} جاهز للتنزيل.",
+    "required_title": "التحديث مطلوب",
+    "required_body": "هذا الإصدار لم يعد يعمل مع منصة هدايه. نزّل الإصدار الجديد للمتابعة.",
+    "versions": "إصدارك: {current} · الإصدار الجديد: {latest}",
+    "whats_new": "ما الجديد",
+    "download": "تنزيل التحديث",
+    "open_play": "التحديث من Google Play",
+    "later": "لاحقًا",
+    "check_again": "تحقّق مرة أخرى",
+    "open_failed": "تعذّر فتح رابط التنزيل. حاول مرة أخرى، أو افتح صفحة التنزيل من الموقع.",
+    "settings_available": "الإصدار {version} متاح",
+    "settings_latest": "لديك أحدث إصدار"
   }
 }

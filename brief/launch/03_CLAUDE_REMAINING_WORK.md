@@ -7,7 +7,7 @@ Written 2026-10-10 from:
 - the git log
 - a read-only check of the hosted Supabase project `zkkmfjsjouqzibvnzkau`
 
-Owner steps: [01_OWNER_STEPS.md](01_OWNER_STEPS.md). Testing: [02_TESTING_PLAN.md](02_TESTING_PLAN.md).
+Owner steps: [01_OWNER_STEPS.md](01_OWNER_STEPS.md). Testing: [02_TESTING_PLAN.md](02_TESTING_PLAN.md). The website APK while Google's review is pending (2026-10-26): [05_APK_RELEASE.md](05_APK_RELEASE.md).
 
 Rules that still apply:
 - commit to `master` locally; the owner pushes
@@ -142,9 +142,9 @@ Blocked by: the signing key (01 §6), the new API key and Firebase values (01 §
 - [ ] Bump `version:` in `pubspec.yaml` (`1.0.0+N`; N goes up for every upload).
 - [ ] Run:
   ```bash
-  flutter build appbundle --release --dart-define-from-file=dart_define.local.json
+  flutter build appbundle --release --dart-define-from-file=dart_define.local.json --dart-define=DISTRIBUTION=play
   ```
-  The build must use the real upload key; it fails closed without `key.properties`.
+  The build must use the real upload key; it fails closed without `key.properties`, and without `DISTRIBUTION` (`apk` for the website APK, `play` here; a bundle built as `apk` is refused). *(2026-10-26: R8 now passes. The first release build stopped on Flutter's Play Core references; `proguard-rules.pro` covers them and keeps RootEncoder. Checked with a throwaway key: arm64 APK 40.7 MB, x86_64 42.2 MB.)*
 - [ ] Run `node brief/tools/scan_build_secrets.mjs <aab>`: it must print `RESULT: clean`. Record the AAB size.
 - [ ] Check 16 KB page alignment of the native `.so` files (RootEncoder, Flutter) inside the AAB.
 - [ ] Install a universal APK from the AAB (bundletool) on an emulator and a phone. Smoke-test: launch, sign-in screen, feed, map, live room, studio open. Check R8 keep rules (RootEncoder, Supabase, WebView, Firebase) if anything crashes.

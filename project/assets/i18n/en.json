@@ -796,7 +796,7 @@
     "select_stream_dialog_title": "Select a Broadcast",
     "select_stream_dialog_empty": "You haven't sent messages in any broadcast yet.",
     "delete_messages_by_stream_success_toast": "Your messages in that broadcast have been deleted.",
-    "build_version": "Version 1.0.0 (1)",
+    "build_version": "Version {version} ({build})",
     "release_pending": "Testing build. Release review is still pending.",
     "view_guidelines_subtitle": "Academic integrity and broadcast standards",
     "view_privacy_subtitle": "How your data is used",
@@ -3158,5 +3158,20 @@
     "changed": "Design changed to {}",
     "tagline": "Hedayah: a call made with insight, a message carried with mercy, an impact that reaches everyone.",
     "association": "Hedayah Association · Eastern Province"
+  },
+  "update": {
+    "available_title": "Update available",
+    "available_body": "Version {version} is ready to download.",
+    "required_title": "Update required",
+    "required_body": "This version no longer works with Hadayah Live. Download the new version to continue.",
+    "versions": "Your version: {current} · New version: {latest}",
+    "whats_new": "What's new",
+    "download": "Download update",
+    "open_play": "Update on Google Play",
+    "later": "Later",
+    "check_again": "Check again",
+    "open_failed": "The download link could not be opened. Try again, or open the download page from the website.",
+    "settings_available": "Version {version} is available",
+    "settings_latest": "You have the latest version"
   }
 }
