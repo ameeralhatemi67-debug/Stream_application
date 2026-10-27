@@ -234,7 +234,7 @@ Play Console → **Create app**: name *منصة هدايه* (max 30 characters),
 1. [ ] **Internal testing** track → create a release → upload the `.aab` Claude built → add yourself and your testers' emails → install from the Play link on your phones. This is the first time the real Play-signed app runs.
 2. [ ] Play Console → Test and release → **App integrity** → copy the **app signing key SHA-1**. Add it to the API key in section 3b.
 3. [ ] **Closed testing** (required for a new personal account):
-   - Create a closed track and a Google Group or email list with **at least 12 real testers**, people who will actually open and use the app.
+   - Create a closed track and a Google Group or email list with **at least 12 real testers**, people who will actually open and use the app. Messages, opt-in steps and the 14-day task list: [06_CLOSED_TEST_TESTERS.md](06_CLOSED_TEST_TESTERS.md).
    - Keep at least 12 opted in for **14 days in a row**. If the number drops below 12, the count starts again.
    - Collect their feedback. Google asks what you learned and changed when you apply for production.
 4. [ ] **Apply for production** (Dashboard → Production access) and answer the questions about the test.

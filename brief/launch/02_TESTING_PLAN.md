@@ -208,6 +208,8 @@ The release build is minified and Play-signed, which can break things that worke
 
 ## F. Closed test (12 testers × 14 days, only for a new personal account)
 
+The invite, opt-in steps, day-by-day tasks and feedback form, in Arabic and English: [06_CLOSED_TEST_TESTERS.md](06_CLOSED_TEST_TESTERS.md).
+
 1. Recruit at least **15** people (a buffer in case some drop) who will really use it: a mix of viewers and 2–3 broadcasters.
 2. Send them the opt-in link. Each must accept it with the Google account their phone uses, then install from Play.
 3. Give them a short task list: sign in, watch a live stream, chat, follow a channel, set a reminder, report a message, try Arabic.
