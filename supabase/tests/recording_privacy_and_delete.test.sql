@@ -1,5 +1,5 @@
 -- Recordings private on YouTube while hidden, deleted on request, taken down
--- by admins (20261027120000_recording_privacy_and_delete.sql). Fixtures roll back.
+-- by admins (20261027193159_recording_privacy_and_delete.sql). Fixtures roll back.
 begin;
 set local search_path=public,extensions;
 select no_plan();
