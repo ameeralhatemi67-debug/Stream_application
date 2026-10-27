@@ -301,7 +301,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                         child: Text(
                                             'organization_v1.cancel_series'
                                                 .tr())),
-                                  if (s.live || s.replayStatus == 'available')
+                                  if (s.live || s.replayWatchable)
                                     CaButton(
                                         onPressed: () =>
                                             context.push('/live/${s.id}'),

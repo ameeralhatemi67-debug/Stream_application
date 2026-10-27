@@ -267,7 +267,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     if (provider == null) return;
     final session = provider.roomSession(widget.streamId);
     if (session != null && !session.live) {
-      if (session.replayStatus != 'available') {
+      if (!session.replayWatchable) {
         _stopRoom();
         _liveStateTimer?.cancel();
         _liveStateTimer = null;
@@ -860,7 +860,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final session = appProvider.roomSession(widget.streamId);
     if (session != null &&
         !session.live &&
-        session.replayStatus != 'available') {
+        !session.replayWatchable) {
       final key = ['scheduled', 'preparing'].contains(session.state)
           ? 'scheduled_room'
           : session.replayStatus == 'processing' ||
@@ -880,7 +880,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         child: Text('organization_v1.refresh'.tr()))
                   ]))));
     }
-    if (_roomEnded && session?.replayStatus != 'available') {
+    if (_roomEnded && session?.replayWatchable != true) {
       return const _RoomStatusScaffold(
         key: Key('live-room-ended'),
         icon: Icons.stop_circle_outlined,

@@ -4,9 +4,12 @@ type Rpc = (name:string,params:Record<string,unknown>) => Promise<any>;
 type Api = typeof youtube;
 type Context = {
   session:{id:string;owner_id:string;org_id:string|null;device_id:string;state:string;title_en:string;title_ar:string;
-    description:string;scheduled_start_at:string;expected_end_at:string;ended_at:string|null;replay_status:string;stream_id:string|null},
+    description:string;scheduled_start_at:string;expected_end_at:string;ended_at:string|null;replay_status:string;stream_id:string|null;
+    started_at:string|null;hide_replay:boolean;replay_taken_down:boolean;recording_delete_requested_at:string|null;
+    recording_deleted_at:string|null},
   resource:{operation:string;step:string|null;needs_reconciliation:boolean;provider_stream_id:string|null;
-    provider_broadcast_id:string|null;ingest_url:string|null;bound:boolean;feed_retired:boolean;broadcast_deleted:boolean},
+    provider_broadcast_id:string|null;ingest_url:string|null;bound:boolean;feed_retired:boolean;broadcast_deleted:boolean;
+    replay_privacy:'public'|'private'|null},
   channel_id:string;refresh_token:string;ingest_key:string|null;
 };
 
@@ -128,6 +131,12 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
       const matches=await find('liveBroadcasts');
       if(matches.length!==1) throw new ProviderError(409,'broadcast_creation_unresolved',true);
       await result('broadcast_create',broadcast(matches[0]));
+    } else if(c.resource.step==='recording_privacy') {
+      // settle() reads the video again and writes only what still differs.
+      await result('reconcile',{});
+    } else if(c.resource.step==='recording_delete') {
+      const left=await call('videos',{part:'id',id:c.session.stream_id!});
+      await result((left.items as any[])?.length?'reconcile':'recording_delete',{});
     } else if(c.resource.provider_broadcast_id) {
       const observed=await call('liveBroadcasts',{part:'id,status,contentDetails,snippet',id:c.resource.provider_broadcast_id});
       const item=(observed.items as any[])?.[0];
@@ -214,7 +223,45 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
   if(c.resource.operation==='end' && !c.resource.provider_broadcast_id) {
     await result('observe',{status:'complete'});c=await context();
   }
+  // After the live the recording follows the owner: deleted when asked, and
+  // private on YouTube while hidden in the app (public again when shown).
+  async function recording() {
+    const video=c.session.stream_id;
+    if(!['processing_replay','completed'].includes(c.session.state) || !c.session.started_at || !video
+      || c.resource.broadcast_deleted || c.session.recording_deleted_at) return;
+    if(c.session.recording_delete_requested_at) {
+      await write('recording_delete','videos',{id:video},'DELETE',undefined,()=>({}),
+        ()=>call('videos',{id:video},'DELETE').catch(error=>{
+          if(error instanceof ProviderError && error.status===404) return {};
+          throw error;
+        }));
+      return;
+    }
+    const wanted=c.session.hide_replay||c.session.replay_taken_down?'private':'public';
+    if((c.resource.replay_privacy??'public')===wanted) return;
+    const item=((await call('videos',{part:'id,status',id:video})).items as any[])?.[0];
+    if(!item || item.status?.privacyStatus===wanted) {
+      // Gone from YouTube, or already as wanted: nothing to write.
+      await result('recording_privacy',{privacy:wanted});c=await context();
+      return;
+    }
+    // A status update erases the status fields it is not sent, so the current
+    // ones go back unchanged with the new privacy.
+    const {embeddable,license,publicStatsViewable}=item.status;
+    const body={id:video,status:{privacyStatus:wanted,embeddable,license,publicStatsViewable}};
+    await write('recording_privacy','videos',{part:'status'},'PUT',body,data=>{
+      if(data.refused) return {refused:wanted};
+      if(data.status?.privacyStatus!==wanted) throw new ProviderError(409,'privacy_unconfirmed',true);
+      return {privacy:wanted};
+    },()=>call('videos',{part:'status'},'PUT',body).catch(error=>{
+      // YouTube will not change this video. Each attempt costs 50 quota units,
+      // so it is tried again only every few hours (the claim's rule).
+      if(error instanceof ProviderError && !error.ambiguous && [400,403].includes(error.status)) return {refused:true};
+      throw error;
+    }));
+  }
   async function settle() {
+    await recording();
     if(['processing_replay','completed','cancelled'].includes(c.session.state) && c.resource.provider_stream_id && !c.resource.feed_retired) {
       // A feed already gone from YouTube is retired, not deleted again on every check.
       await write('feed_delete','liveStreams',{id:c.resource.provider_stream_id},'DELETE',undefined,()=>({}),

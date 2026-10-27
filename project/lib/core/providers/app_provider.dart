@@ -340,6 +340,9 @@ class AppProvider extends ChangeNotifier {
   // Entries are `video:<youtube id>` / `playlist:<youtube id>`.
   final Map<String, Set<String>> _hiddenContent = {};
   int _hiddenContentVersion = 0;
+  // Recordings of lives made in the app, per channel and video id, for the
+  // channel owner or an admin.
+  final Map<String, Map<String, RecordingControl>> _recordingControls = {};
   final Map<String, ({List<VodModel> source, int version, List<VodModel> visible})>
       _visibleVodsCache = {};
   final Map<String,
@@ -1247,7 +1250,7 @@ class AppProvider extends ChangeNotifier {
     return base.copyWith(streamerId:session.id,contentOwnerId:session.organizationId??session.presenterId,
       titleEn:session.titleEn,titleAr:session.titleAr.isEmpty?session.titleEn:session.titleAr,
       isCurrentlyLive:session.live,isHiddenLiveSession:false,broadcastType:session.broadcastType=='liveAudio'?BroadcastType.liveAudio:BroadcastType.liveVideo,
-      clearLiveState:true,youtubeVideoId:session.live || session.replayStatus=='available'?session.watchId??'':'',fallbackYoutubeVideoIds:const [],activeViewerCount:0,
+      clearLiveState:true,youtubeVideoId:session.live || session.replayWatchable?session.watchId??'':'',fallbackYoutubeVideoIds:const [],activeViewerCount:0,
       latitude:venue?.latitude,longitude:venue?.longitude,venueNameEn:venue?.nameEn,venueNameAr:venue?.nameAr,
     ).copyWith(activeStreamId:session.live?session.watchId:null,liveSessionId:session.live?session.id:null);
   }
@@ -3599,7 +3602,7 @@ class AppProvider extends ChangeNotifier {
   List<VodModel> getVodsForStreamer(String streamerId) {
     final all = _streamerVods[streamerId] ?? const <VodModel>[];
     final hidden = _hiddenContent[streamerId];
-    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+    if (hidden == null || hidden.isEmpty || seesHiddenContent(streamerId)) {
       return all;
     }
     // Screens select on this list, so keep returning the same instance until
@@ -3619,7 +3622,7 @@ class AppProvider extends ChangeNotifier {
   List<PlaylistModel> getPlaylistsForStreamer(String streamerId) {
     final all = _streamerPlaylists[streamerId] ?? const <PlaylistModel>[];
     final hidden = _hiddenContent[streamerId];
-    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+    if (hidden == null || hidden.isEmpty || seesHiddenContent(streamerId)) {
       return all;
     }
     final cached = _visiblePlaylistsCache[streamerId];
@@ -3644,7 +3647,7 @@ class AppProvider extends ChangeNotifier {
   /// owner. Returns the same list when nothing is hidden.
   List<VodModel> visibleVideosFor(String streamerId, List<VodModel> videos) {
     final hidden = _hiddenContent[streamerId];
-    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+    if (hidden == null || hidden.isEmpty || seesHiddenContent(streamerId)) {
       return videos;
     }
     return videos
@@ -3661,23 +3664,84 @@ class AppProvider extends ChangeNotifier {
       isStreamerModeEnabled &&
       isOwnStreamerProfile(streamerId);
 
+  /// The channel owner and admins (who may take a recording down and need to
+  /// find it again to restore it) see hidden items, blurred.
+  bool seesHiddenContent(String streamerId) =>
+      canManageChannelContent(streamerId) || isAdminUser;
+
   bool isContentHidden(
           String streamerId, HiddenContentKind kind, String itemId) =>
       _hiddenContent[streamerId]
           ?.contains(HiddenContentService.key(kind, itemId)) ??
       false;
 
-  /// Hides or shows one video or playlist inside the app only. Throws when the
-  /// change could not be saved, leaving the visible state as it was.
+  /// The app-made recording behind this video, when the viewer is its channel
+  /// owner or an admin; null for any other video or viewer.
+  RecordingControl? recordingControl(String streamerId, String videoId) =>
+      _recordingControls[streamerId]?[videoId];
+
+  /// Hides or shows one video or playlist. A recording of a live made in the
+  /// app also turns private on YouTube (public when shown); the server does
+  /// that within about a minute. Throws when the change could not be saved,
+  /// leaving the visible state as it was.
   Future<void> setContentHidden(String streamerId, HiddenContentKind kind,
       String itemId, bool hidden) async {
     if (!canManageChannelContent(streamerId)) {
       throw StateError('Only the channel owner can hide content');
     }
+    final control = kind == HiddenContentKind.video
+        ? recordingControl(streamerId, itemId)
+        : null;
+    // The server keeps a taken-down recording hidden whatever the owner asks.
+    if (!hidden && control != null && control.takenDown) {
+      throw StateError('Taken down by an admin');
+    }
     await _hiddenContentService.setHidden(streamerId, kind, itemId, hidden);
     final set = _hiddenContent.putIfAbsent(streamerId, () => <String>{});
     final key = HiddenContentService.key(kind, itemId);
     hidden ? set.add(key) : set.remove(key);
+    if (control != null) {
+      _recordingControls[streamerId]![itemId] =
+          control.copyWith(privateWanted: hidden);
+    }
+    _hiddenContentVersion++;
+    notifyListeners();
+  }
+
+  /// Asks the server to delete an app-made recording from YouTube (the
+  /// streamer on their own channel, or an organization's owner). It is hidden
+  /// at once.
+  Future<void> deleteRecording(String streamerId, String videoId) async {
+    final control = recordingControl(streamerId, videoId);
+    if (control == null || !control.canDelete) {
+      throw StateError('Only the channel owner can delete a recording');
+    }
+    await _hiddenContentService.deleteRecording(videoId);
+    _hiddenContent
+        .putIfAbsent(streamerId, () => <String>{})
+        .add(HiddenContentService.key(HiddenContentKind.video, videoId));
+    _recordingControls[streamerId]![videoId] =
+        control.copyWith(deletePending: true);
+    _hiddenContentVersion++;
+    notifyListeners();
+  }
+
+  /// Admins: take an app-made recording down (private on YouTube, hidden in
+  /// the app) or hand it back to its owner, who decides whether to show it.
+  Future<void> takeDownRecording(
+      String streamerId, String videoId, bool down, String reason) async {
+    final control = recordingControl(streamerId, videoId);
+    if (!isAdminUser || control == null) {
+      throw StateError('Only admins can take a recording down');
+    }
+    await _hiddenContentService.takeDownRecording(videoId, down, reason);
+    if (down) {
+      _hiddenContent
+          .putIfAbsent(streamerId, () => <String>{})
+          .add(HiddenContentService.key(HiddenContentKind.video, videoId));
+    }
+    _recordingControls[streamerId]![videoId] = control.copyWith(
+        takenDown: down, privateWanted: down ? true : control.privateWanted);
     _hiddenContentVersion++;
     notifyListeners();
   }
@@ -3685,6 +3749,14 @@ class AppProvider extends ChangeNotifier {
   @visibleForTesting
   void setHiddenContentForTests(String streamerId, Set<String> keys) {
     _hiddenContent[streamerId] = keys;
+    _hiddenContentVersion++;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void setRecordingControlsForTests(
+      String streamerId, Map<String, RecordingControl> controls) {
+    _recordingControls[streamerId] = controls;
     _hiddenContentVersion++;
     notifyListeners();
   }
@@ -3731,6 +3803,16 @@ class AppProvider extends ChangeNotifier {
         _hiddenContentVersion++;
       } catch (e) {
         debugPrint('Hidden content could not be loaded: $e');
+      }
+      if (seesHiddenContent(streamerId)) {
+        try {
+          _recordingControls[streamerId] =
+              await _hiddenContentService.loadRecordings(streamerId);
+          _hiddenContentVersion++;
+        } catch (e) {
+          // The menu then offers only what it did before: hide, show, share.
+          debugPrint('Recording controls could not be loaded: $e');
+        }
       }
       _syncedYouTubeStreamers.add(streamerId);
       _channelArchiveKnown.add(streamerId);

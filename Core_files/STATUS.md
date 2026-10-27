@@ -1,12 +1,27 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-26
+updated: 2026-10-27
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Recordings private on YouTube, delete, admin takedown, 2026-10-27 (local; migration not on hosted)
+
+Found while checking the go-live work: "hide the video when the live ends" only took the recording off the app's lists. Every live is created **public** on YouTube with recording on, so the recording stayed public on the channel and at its link. Owner decisions and the design: ADR-018.
+
+- **Hidden = private on YouTube** for recordings of lives made in the app, whichever way it was hidden: the studio/live-screen switch (now "Make the recording private when the live ends"), or Hide on the channel page later. Show makes it public again. The server writes it right after End, or within about a minute when changed later.
+- **Delete from YouTube** on the channel page's long-press menu, with a confirmation that it can't be undone. The streamer on their own channel or an organization's owner only. Gone from the app at once, deleted on YouTube within about a minute, audited.
+- **Admin takedown**: admins get "Take down recording" / "Restore recording" (reason required, audited). A taken-down recording is private and hidden; the owner can't show it again (the database refuses), but can delete it. Admins now see hidden items on channel pages, blurred, so they can find one again.
+- **Status in the menu**: Public / Private on YouTube, Updating YouTube…, Deleting…, Deleted, "YouTube hasn't accepted the change yet", and "Taken down by an admin".
+- **Replays**: a hidden or taken-down replay is no longer offered for playing in the live room or the organization shows list (it would only show YouTube's error).
+- Other videos on a channel (uploads made outside the app) keep the old app-only hide.
+
+Changed: migration `20261027120000_recording_privacy_and_delete.sql` (columns, trigger, delete policy, `recording_delete`, `admin_recording_takedown`, `recording_controls`, `recording_taken_down`, three audit actions, `broadcast_provider_step` and `broadcast_reconcile_claim` extended); `_shared/broadcast_control.ts` (recording step in `settle()`, reconciliation of an ambiguous privacy write or delete); `HiddenContentService` (`RecordingControl`, load/delete/take down), `AppProvider` (`recordingControl`, `deleteRecording`, `takeDownRecording`, `seesHiddenContent`), `ChannelContentItem` (menu, status row, delete confirmation, admin reason dialog), `BroadcastSession.replayWatchable`, admin audit filter, EN/AR strings (31 new keys each, 2 changed; 2,952 keys each, symmetric).
+
+Verification: see the ledger's RESUME block of the same day. Not done: the hosted migration and the redeploy of `broadcast-control` and `reconcile-broadcasts` (waiting for the owner's yes); a real live on YouTube to see the privacy change and the deletion happen.
 
 ## Android APK from the website, phase 1, 2026-10-26 (local; migration not on hosted)
 

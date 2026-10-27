@@ -1,12 +1,53 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-26
+updated: 2026-10-27
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-018: Recordings: hidden means private on YouTube; owners delete, admins take down (2026-10-27)
+
+Owner request 2026-10-27, after finding that "hide the video" only took a
+recording off the app's lists while it stayed public on YouTube. Owner
+answers: hide and show also change YouTube; deletion only for recordings of
+lives made in the app; on an organization's channel only its owner deletes;
+admins can make a recording private, not delete it.
+
+- **Scope: lives made in the app.** Only a recording with a session
+  (`broadcast_sessions.stream_id`, `started_at` set) is touched on YouTube.
+  Other videos on a channel keep the app-only hide; the owner manages them
+  in YouTube Studio.
+- **Hidden = private.** `hide_replay` is the owner's wish for the
+  recording. The end-of-live switch sets it before or during the live; after
+  the live a trigger on `hidden_channel_content` keeps it in step with the
+  channel page's hide and show, so every path (including older app builds)
+  drives YouTube. `broadcast_provider.replay_privacy` records what was last
+  written. `broadcast-control` writes the difference right after End (in the
+  background) and the reconcile job claims unfinished work every 30 seconds.
+  The write reads the video's status first and sends it back with only
+  `privacyStatus` changed, because a status update erases the fields it is
+  not sent.
+- **Delete.** `recording_delete()` (the streamer on their own channel, an
+  organization's owner; not a co-owner or presenter) hides it at once and
+  audits `recordingDeleted`; the server calls `videos.delete` (404 counts as
+  done) and marks `replay_status='deleted'`.
+- **Takedown.** `admin_recording_takedown()` (admin tier, reason required,
+  audited `recordingTakenDown`/`recordingRestored`) sets `replay_taken_down`
+  and hides it. The delete policy on `hidden_channel_content` then deletes
+  nothing for the owner, so only an admin can restore it; restoring hands it
+  back still hidden. The owner can still delete it. Admins see hidden items
+  on channel pages so they can find a taken-down one again.
+- **Quota.** A privacy change costs 51 units (read + update), a deletion 50.
+  A failed attempt is retried after 15 minutes; a privacy change YouTube
+  refuses (400/403) only every 6 hours, so one stuck video cannot use up the
+  daily 10,000 units.
+- **Not covered.** Anything viewers saw live or recorded themselves.
+  Replays that are hidden or taken down are not offered for playing in the
+  app (`BroadcastSession.replayWatchable`), since a private video only shows
+  an error in the player.
 
 ## ADR-017: The Android APK from the website, and how installs are updated (2026-10-26)
 
