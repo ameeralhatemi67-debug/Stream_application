@@ -13,7 +13,7 @@ health: release_blocked
 From the pre-test check (`brief/audit/2026-10-28_PRE_TEST_FEATURE_CHECK.md`), owner: "start fixing the 'before testers start' list here; ask me before anything goes to the live server". ADR-019.
 
 - **Reapply works.** A rejected applicant's Reapply was refused by the database and shown as the offline message. The same row now returns to the queue (`20261028132919_application_resubmission.sql`). Approved streamers are sent from the form to Settings, whose card now opens the profile editor ("Edit channel"); the form had written an approved application back to pending (a master admin's, 2026-10-19). A failed send says why.
-- **No stand-in photos.** The form started with the owner's personal photos as avatar and banner; three real accounts on hosted carry them (data fix waiting for the owner).
+- **No stand-in photos.** The form started with the owner's personal photos as avatar and banner; three real accounts on hosted carried them; cleared 2026-10-28 (owner's request).
 - **Follows save.** A repeat follow was refused (upsert updated on conflict without an update grant or policy) and a refused follow looked saved until restart. Now: do nothing on conflict, undo and say so, one write at a time. The website's live card followed the session id instead of the channel.
 - **Applicants hear the decision.** Approve/reject wrote a notice on the admin's own device. A trigger now writes it as a server event for the applicant, with the note (`20261028132950_decision_and_live_notifications.sql`); the app opens Settings from it. Decisions are never switched off.
 - **Live alerts reach followers.** `dispatch-organization-events` (written in v1 but never deployed) now accepts the Vault reminder key and has a `cron.sql`; a first follow asks for push permission. Personal live alerts name the presenter instead of "Your organization". The bell keeps unread server notices past 12 hours, stops throttling them, counts each item once, shows reminders that arrive while open, and pushes use the saved language.
@@ -23,7 +23,9 @@ Verification: see the ledger's RESUME block of the same day.
 
 **Deployed 2026-10-28 (owner: "yes, apply the three migrations, deploy dispatch-organization-events and set up its cron job")**: migrations stamped `20261028132919`, `20261028132950`, `20261028133020` (local files renamed); `dispatch-organization-events` v1 (`verify_jwt=false`); cron job `dispatch-organization-events` (id 3, every minute, Vault URL `organization_events_function_url` plus the existing reminder key). Function bodies hash-match the tested copy; guests and signed-in accounts cannot call the claim functions; the function refuses calls without the key; the job's calls return 200; security advisors unchanged (124); no old live alert was pushed.
 
-Not done: the data fixes (the master admin's application `9279020a`, the owner's photos on three accounts: owner's choice), releasing the app changes (push master for the website, a new APK), a phone receiving a push.
+Owner's photos cleared the same day (owner: "yes, clear my photos from the three other accounts"): banner of application `b4aef414` and its profile `8709d29b`, banner of pending application `f362af24`, avatar and banner of viewer profile `7a5f2ba8`; set to empty, which the app shows as its neutral placeholder. Only the owner's own account (`c4e7e1a0`, applications `7926a0ef`, `9279020a`) keeps them.
+
+Not done: the master admin's application `9279020a` (still pending; owner to inspect and approve), releasing the app changes (push master for the website, a new APK), a phone receiving a push.
 
 ## Recordings private on YouTube, delete, admin takedown, 2026-10-27 (local; migration not on hosted)
 
