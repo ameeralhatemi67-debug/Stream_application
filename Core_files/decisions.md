@@ -1,12 +1,41 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-27
+updated: 2026-10-28
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-019: Account notices are server events; one dispatcher sends events and lesson reminders (2026-10-28)
+
+Pre-test check (brief/audit/2026-10-28_PRE_TEST_FEATURE_CHECK.md): the
+applicant never heard the admin's decision (the notice was added on the
+reviewing admin's device), live alerts for followed channels were written
+but never pushed, and lesson reminders were stored but never sent. Owner:
+"start fixing the 'before testers start' list; ask me before anything goes
+to the live server".
+
+- **One inbox table for account notices.** Decisions on the account's own
+  application (`application_approved`/`application_rejected`, with the
+  reviewer's note and whether it was an edit) join the Organization V1 kinds
+  in `org_v1_events`, written by a trigger on `broadcaster_applications`. The
+  client already loads that table into the bell and marks rows read. Lessons
+  keep their own inbox (`lesson_notifications`).
+- **One dispatcher.** `dispatch-organization-events` sends `org_v1_events`
+  pushes and, in the same run, the due lesson reminders
+  (`claim_due_lesson_reminders`: inbox row once, then the viewer's devices).
+  It authenticates with the Vault-held reminder dispatch key, so deploying it
+  needs no new function secret. Decision pushes ignore the notification
+  switches: they are account notices.
+- **Asking for push.** A first follow and a lesson reminder ask for
+  permission, as channel reminders did; live alerts arrive only by push.
+- **Lesson reminder times stay the app's.** Only the app knows prayer times,
+  so the server sends at the stored `remind_at` and the app moves a reminder
+  to a moved lesson's new time on load; a new `remind_at` re-arms it.
+- **The bell keeps unread server notices** past the 12-hour window (a stale
+  "live now" alert still drops out) and never throttles them.
 
 ## ADR-018: Recordings: hidden means private on YouTube; owners delete, admins take down (2026-10-27)
 
