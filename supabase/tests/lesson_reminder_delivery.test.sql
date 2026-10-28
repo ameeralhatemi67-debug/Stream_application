@@ -1,5 +1,5 @@
 -- Due lesson reminders reach the Lessons inbox and the push devices
--- (20261028120000). Run as supabase_admin.
+-- (20261028133020). Run as supabase_admin.
 begin;
 set local search_path = public, extensions;
 select plan(11);

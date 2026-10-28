@@ -2290,7 +2290,7 @@ class AppProvider extends ChangeNotifier {
       if (isStreamer) {
         _isApprovedStreamer = true;
 
-        // The decision itself is a server event (20261028110000); fetch it
+        // The decision itself is a server event (20261028132950); fetch it
         // now rather than writing a second, local copy.
         if (previousApp != null &&
             previousApp.status == ApplicationStatus.pending &&
@@ -5684,7 +5684,7 @@ class AppProvider extends ChangeNotifier {
     }
 
     // Stage 4: Plot on Spatial Map. The applicant's notice is a server event
-    // written with the approval (20261028110000), not a toast on this
+    // written with the approval (20261028132950), not a toast on this
     // admin's device.
     onProgress?.call(4,
         'Plotting venue location on Spatial Map & dispatching notification...');
@@ -5721,7 +5721,7 @@ class AppProvider extends ChangeNotifier {
         await loadVerifiedStreamersFromBackend();
       }
       // The applicant's notice is a server event written with the rejection
-      // (20261028110000), not a toast on this admin's device.
+      // (20261028132950), not a toast on this admin's device.
       notifyListeners();
       return true;
     }

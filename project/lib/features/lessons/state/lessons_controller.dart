@@ -68,7 +68,7 @@ class LessonsController extends ChangeNotifier {
   /// The server sends a reminder at its stored time, but only this app knows
   /// the prayer times, so a lesson an admin moved keeps its reminders at the
   /// old time. Each load puts them on the lesson's current time; the server
-  /// makes a moved reminder due again (20261028120000).
+  /// makes a moved reminder due again (20261028133020).
   Future<void> _realignReminders() async {
     if (!signedIn || isDemo) return;
     final now = DateTime.now();

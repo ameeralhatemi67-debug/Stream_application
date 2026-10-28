@@ -1,4 +1,4 @@
--- A rejected application is resubmitted in place (20261028100000).
+-- A rejected application is resubmitted in place (20261028132919).
 begin;
 select plan(12);
 insert into auth.users (id, email) values

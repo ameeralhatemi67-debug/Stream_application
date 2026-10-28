@@ -1,6 +1,7 @@
--- Run after deploying the function and applying 20261028110000. It sends
--- the pushes for org_v1_events: "live now" for followed channels, the
--- admins' decisions on applications, and the organization events. It reuses
+-- Run after deploying the function and applying 20261028132950 and
+-- 20261028133020 (done on hosted 2026-10-28, job id 3). It sends the pushes
+-- for org_v1_events ("live now" for followed channels, the admins' decisions
+-- on applications, the organization events) and the due lesson reminders. It reuses
 -- the Vault-held key of dispatch-upcoming-reminders (that cron.sql creates
 -- it), so no key is copied anywhere. Re-running is safe: existing secrets are
 -- kept and the job is replaced by name.
