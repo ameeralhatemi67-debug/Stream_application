@@ -5179,6 +5179,13 @@ class AppProvider extends ChangeNotifier {
         if (route != null && onOpenRoute != null) unawaited(onOpenRoute(route));
         return;
       }
+      if (data['type'] == 'lesson_reminder') {
+        final lesson = data['lesson_id']?.toString() ?? '';
+        if (_uuidPattern.hasMatch(lesson) && onOpenRoute != null) {
+          unawaited(onOpenRoute('/lessons/lesson/$lesson'));
+        }
+        return;
+      }
       final id = data['streamer_id']?.toString() ?? '';
       if (_uuidPattern.hasMatch(id)) unawaited(onOpen(id));
     });
@@ -5192,6 +5199,28 @@ class AppProvider extends ChangeNotifier {
         unawaited(refreshOrganizationEvents().catchError(
             (Object e) => debugPrint('Organization event refresh failed: $e')));
       }
+      return;
+    }
+    if (data['type'] == 'lesson_reminder') {
+      final lesson = data['lesson_id']?.toString() ?? '';
+      if (!_isLoggedInStreamer ||
+          data['viewer_id'] != currentUserId ||
+          !_uuidPattern.hasMatch(lesson)) {
+        return;
+      }
+      // Also in the Lessons inbox (the server wrote it there).
+      addEnhancedNotification(AppNotificationModel(
+        id: 'lesson:$lesson',
+        type: NotificationType.scheduleReminder,
+        streamerId: '',
+        streamerName: '',
+        titleEn: data['title_en']?.toString() ?? '',
+        titleAr: data['title_ar']?.toString() ?? '',
+        bodyEn: data['body_en']?.toString() ?? '',
+        bodyAr: data['body_ar']?.toString() ?? '',
+        timestamp: DateTime.now(),
+        actionUrl: '/lessons/lesson/$lesson',
+      ));
       return;
     }
     if (data['type'] != 'upcoming_reminder') return;

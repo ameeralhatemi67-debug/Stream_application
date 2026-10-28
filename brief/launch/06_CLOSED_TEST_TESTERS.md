@@ -139,7 +139,7 @@ Send it all at once, or one line a day (§6 has the reminders). Each task takes 
 | 9 | شارك درسًا عبر واتساب («مشاركة الدرس»)، وافتح الرابط بعد ذلك. | Share a lesson to WhatsApp (**Share this lesson**), then open the link. |
 | 10 | أطفئ الإنترنت (الواي فاي والبيانات) وافتح التطبيق، ثم أعد تشغيل الإنترنت. ماذا رأيت؟ | Turn off the internet (Wi-Fi and data), open the app, then turn it back on. What did you see? |
 | 11 | 🔴 **البث المباشر الثاني** ([الموعد]): اضغط مطوّلًا على رسالة «اختبار البلاغ» التي يكتبها المقدّم، ثم «الإبلاغ عن الرسالة». | 🔴 **Second live session** ([time]): press and hold the "report test" message the host writes, then tap **Report Message**. |
-| 12 | افتح «التنبيهات»: هل وصلتك تذكيرات الأيام الماضية في وقتها؟ | Open **Notifications**: did the reminders from earlier days arrive on time? |
+| 12 | في «الدروس» افتح «التنبيهات»: هل وصل تذكير الدرس (اليوم 3) في وقته؟ وهل وصل تذكير القناة (اليوم 5) إلى هاتفك؟ | In **Lessons**, open **Notifications**: did the lesson reminder from day 3 arrive on time? Did the channel reminder from day 5 reach your phone? |
 | 13 | الإعدادات ← «تنزيل بياناتي»: اطّلع على البيانات التي يحفظها التطبيق عنك. | Settings → **Download My Data**: see what the app keeps about you. |
 | 14 | املأ النموذج الأخير. **لا تحذف التطبيق** حتى أخبرك بانتهاء التجربة. | Fill in the final form. **Keep the app installed** until I tell you the test is over. |
 

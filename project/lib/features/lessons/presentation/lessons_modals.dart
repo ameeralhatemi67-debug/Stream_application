@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/app_identity.dart';
+import '../../../core/providers/app_provider.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
@@ -27,6 +30,13 @@ Future<void> showRemindSheet(BuildContext context, Lesson l) {
   Future<void> set(BuildContext ctx, String? lead) async {
     Navigator.of(ctx).pop();
     await tRun(context, () => c.setReminder(l, lead), success: lead == null ? 'lessons.remind.removed'.tr() : 'lessons.remind.saved'.tr());
+    // The reminder also arrives by push: ask for it, as channel reminders do.
+    if (lead != null && context.mounted && c.hasReminder(l.id)) {
+      final app = context.read<AppProvider>();
+      if (app.remindersAvailable && app.currentUserId != null) {
+        unawaited(app.syncReminderPush(requestPermission: true, language: lang));
+      }
+    }
   }
 
   String detail(String lead) => switch (lead) {

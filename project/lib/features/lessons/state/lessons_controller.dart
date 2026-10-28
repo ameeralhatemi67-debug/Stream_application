@@ -56,11 +56,35 @@ class LessonsController extends ChangeNotifier {
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
+      unawaited(_realignReminders());
     } on LessonsException catch (e) {
       failure = e.failure;
     } finally {
       loading = false;
       _notify();
+    }
+  }
+
+  /// The server sends a reminder at its stored time, but only this app knows
+  /// the prayer times, so a lesson an admin moved keeps its reminders at the
+  /// old time. Each load puts them on the lesson's current time; the server
+  /// makes a moved reminder due again (20261028120000).
+  Future<void> _realignReminders() async {
+    if (!signedIn || isDemo) return;
+    final now = DateTime.now();
+    for (final r in mine.reminders.values) {
+      final l = catalog.lessons[r.lessonId];
+      if (l == null || l.status != 'approved') continue;
+      final due = reminderInstant(l, r.lead, catalog);
+      if (due.difference(r.remindAt).abs() < const Duration(minutes: 1) ||
+          due.isBefore(now)) {
+        continue;
+      }
+      try {
+        await repository.setReminder(l.id, r.lead, due);
+      } catch (e) {
+        debugPrint('Lesson reminder realign failed: $e');
+      }
     }
   }
 

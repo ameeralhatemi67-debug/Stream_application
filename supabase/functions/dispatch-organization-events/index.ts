@@ -14,6 +14,19 @@ type Claim = {
   payload: Record<string, unknown>;
 };
 
+// A due lesson reminder (claim_due_lesson_reminders): already in the Lessons
+// inbox when it is claimed, so a failed push is not retried.
+type LessonClaim = {
+  token: string;
+  profile_id: string;
+  language_code: string;
+  lesson_id: string;
+  title_ar: string;
+  title_en: string;
+  body_ar: string;
+  body_en: string;
+};
+
 const env = (name: string) => Deno.env.get(name) ?? '';
 
 Deno.serve(async (request) => {
@@ -35,7 +48,9 @@ Deno.serve(async (request) => {
   const { data, error } = await db.rpc('claim_org_v1_event_pushes');
   if (error) return new Response('Event claim failed', { status: 503 });
   const claims = (data ?? []) as Claim[];
-  if (claims.length === 0) return Response.json({ claimed: 0, sent: 0 });
+  const { data: lessonData, error: lessonError } = await db.rpc('claim_due_lesson_reminders');
+  const lessons = lessonError ? [] : (lessonData ?? []) as LessonClaim[];
+  if (claims.length === 0 && lessons.length === 0) return Response.json({ claimed: 0, sent: 0 });
 
   const accountJson = env('FIREBASE_SERVICE_ACCOUNT_JSON');
   const projectId = env('FIREBASE_PROJECT_ID');
@@ -81,5 +96,27 @@ Deno.serve(async (request) => {
       // The lease expires after two minutes; the next run retries (at most five attempts).
     }
   }
-  return Response.json({ claimed: claims.length, sent }, { headers: { 'cache-control': 'no-store' } });
+  for (const lesson of lessons) {
+    const ar = lesson.language_code === 'ar';
+    const message = {
+      token: lesson.token,
+      notification: { title: ar ? lesson.title_ar : lesson.title_en, body: ar ? lesson.body_ar : lesson.body_en },
+      android: { notification: { tag: `lesson-${lesson.lesson_id}` } },
+      data: {
+        type: 'lesson_reminder',
+        lesson_id: lesson.lesson_id,
+        viewer_id: lesson.profile_id,
+        title_en: lesson.title_en, body_en: lesson.body_en, title_ar: lesson.title_ar, body_ar: lesson.body_ar,
+      },
+    };
+    try {
+      const result = await sendFcm(projectId, accessToken, message);
+      if (result === 'sent') sent++;
+      else if (result === 'unregistered') await db.from('schedule_push_devices').delete().eq('token', lesson.token);
+    } catch (_) {
+      // The reminder is already in the Lessons inbox.
+    }
+  }
+  return Response.json({ claimed: claims.length + lessons.length, sent },
+    { headers: { 'cache-control': 'no-store' } });
 });
