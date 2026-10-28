@@ -2904,9 +2904,13 @@ class AdminDatabaseService {
     final uid = _client.auth.currentUser?.id;
     if (uid == null || targetId.isEmpty) return false;
     try {
+      // Do nothing on a repeat: follows has no update grant or policy, so an
+      // upsert that updates on conflict is refused (and, on a database built
+      // from the migrations, refused even for a first follow).
       await _client.from('follows').upsert(
         {'follower_profile_id': uid, 'target_id': targetId},
         onConflict: 'follower_profile_id,target_id',
+        ignoreDuplicates: true,
       );
       return true;
     } catch (e) {

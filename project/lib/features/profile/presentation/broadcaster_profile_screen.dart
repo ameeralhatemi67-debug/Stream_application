@@ -1,3 +1,4 @@
+import '../../../core/widgets/follow_action.dart';
 import '../../../core/widgets/ds/canopy_content_motion.dart';
 import '../../../core/widgets/ds/ca_feedback.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
@@ -233,7 +234,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                 streamer.isCurrentlyLive &&
                                 streamer.activeStreamId != null
                             ? context.push('/live/${streamer.activeStreamId}')
-                            : appProvider.toggleFollow(streamer.streamerId))))
+                            : toggleFollowWithFeedback(context, streamer.streamerId))))
             : null,
         body: SafeArea(
             bottom: false,
@@ -524,9 +525,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                       ? CaButtonVariant
                                                           .secondary
                                                       : CaButtonVariant.primary,
-                                                  onPressed: () => provider
-                                                      .toggleFollow(streamer
-                                                          .streamerId)))),
+                                                  onPressed: () =>
+                                                      toggleFollowWithFeedback(
+                                                          context,
+                                                          streamer
+                                                              .streamerId)))),
                                     if (provider.remindersAvailable) ...[
                                       const SizedBox(width: AppTheme.spaceSm),
                                       CanopyConfirmMotion(
@@ -611,7 +614,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           recordings: archiveKnown ? allVods.length : null,
                           playlists: archiveKnown ? allPlaylists.length : null,
                           onFollow: () =>
-                              provider.toggleFollow(streamer.streamerId),
+                              toggleFollowWithFeedback(context, streamer.streamerId),
                           onWatch: () => context
                               .push('/live/${streamer.activeStreamId}'),
                           onReminder: () => _toggleChannelReminder(

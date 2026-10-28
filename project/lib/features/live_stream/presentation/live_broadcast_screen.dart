@@ -1,3 +1,4 @@
+import '../../../core/widgets/follow_action.dart';
 import '../../../core/layout/window_class.dart';
 import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/widgets/ds/ca_layout.dart';
@@ -981,8 +982,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               panel: panel,
               viewerCount: viewerCount,
               following: appProvider.isFollowing(streamer.channelProfileId),
-              onFollow: () =>
-                  appProvider.toggleFollow(streamer.channelProfileId),
+              onFollow: () => toggleFollowWithFeedback(
+                  context, streamer.channelProfileId),
               onMinimize: () =>
                   _minimizeToMiniPlayer(appProvider, streamer, langCode),
               onStudio: appProvider.isLoggedInStreamer &&
@@ -1414,7 +1415,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         label:
             (following ? 'profile.following_btn' : 'profile.follow_btn').tr(),
         variant: CaButtonVariant.secondary,
-        onPressed: () => appProvider.toggleFollow(streamer.channelProfileId));
+        onPressed: () =>
+            toggleFollowWithFeedback(context, streamer.channelProfileId));
     return Padding(
         padding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),

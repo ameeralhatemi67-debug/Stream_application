@@ -5116,27 +5116,41 @@ class AppProvider extends ChangeNotifier {
       _followedStreamerIds.contains(streamerId);
 
   /// Persisted per account for signed-in viewers, on this device for guests
-  /// (05 D-07). Optimistic locally, then written through.
-  Future<void> toggleFollow(String streamerId) async {
-    if (streamerId.isEmpty) return;
-    final wasFollowing = _followedStreamerIds.contains(streamerId);
-    if (wasFollowing) {
-      _followedStreamerIds.remove(streamerId);
-    } else {
-      _followedStreamerIds.add(streamerId);
+  /// (05 D-07). Optimistic locally, then written through. Returns false when
+  /// the server refused the change; the button has gone back by then, so the
+  /// caller only has to say so. A second tap while a server write is in
+  /// flight is ignored so two writes cannot reach the server out of order.
+  Future<bool> toggleFollow(String streamerId) async {
+    if (streamerId.isEmpty || _followsInFlight.contains(streamerId)) {
+      return true;
     }
+    final wasFollowing = _followedStreamerIds.contains(streamerId);
+    void apply(bool follow) => follow
+        ? _followedStreamerIds.add(streamerId)
+        : _followedStreamerIds.remove(streamerId);
+    apply(!wasFollowing);
     notifyListeners();
     if (_authService.currentSession == null) {
       if (!_isLoggedInStreamer) await _saveGuestFollows();
-      return;
+      return true;
     }
-    _adminDbService ??= await AdminDatabaseService.create();
-    if (wasFollowing) {
-      await _adminDbService!.removeFollow(streamerId);
-    } else {
-      await _adminDbService!.addFollow(streamerId);
+    _followsInFlight.add(streamerId);
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      final saved = wasFollowing
+          ? await _adminDbService!.removeFollow(streamerId)
+          : await _adminDbService!.addFollow(streamerId);
+      if (!saved) {
+        apply(wasFollowing);
+        notifyListeners();
+      }
+      return saved;
+    } finally {
+      _followsInFlight.remove(streamerId);
     }
   }
+
+  final Set<String> _followsInFlight = {};
 
   bool hasReminder(String streamerId) =>
       _reminderStreamerIds.contains(streamerId);

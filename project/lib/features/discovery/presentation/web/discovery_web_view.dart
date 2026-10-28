@@ -1,3 +1,4 @@
+import '../../../../core/widgets/follow_action.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -673,7 +674,7 @@ class _ScholarCard extends StatelessWidget {
     final s = streamer;
     final live = _isLiveNow(context, s);
     final following =
-        context.select<AppProvider, bool>((p) => p.isFollowing(s.streamerId));
+        context.select<AppProvider, bool>((p) => p.isFollowing(s.channelProfileId));
     final tags =
         s.tags.where((t) => t.trim().isNotEmpty).toSet().take(2).toList();
     return HidayahCard(
@@ -776,9 +777,9 @@ class _ScholarCard extends StatelessWidget {
                             kind: HidayahButtonKind.ghost,
                             compact: true,
                             expand: true,
-                            onPressed: () => context
-                                .read<AppProvider>()
-                                .toggleFollow(s.streamerId))),
+                            // A live card's id is the session's; follow the channel.
+                            onPressed: () => toggleFollowWithFeedback(
+                                context, s.channelProfileId))),
                   ])),
             ]));
   }

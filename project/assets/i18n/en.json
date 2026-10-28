@@ -250,6 +250,7 @@
     "tab_vods": "VOD Archive",
     "follow_btn": "Follow Channel",
     "following_btn": "Following",
+    "follow_failed": "Your follow could not be saved. Check your connection and try again.",
     "reminder_btn": "Set Reminder",
     "share_btn": "Share Profile",
     "save_lecture": "Save lecture",
