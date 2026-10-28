@@ -1,5 +1,7 @@
-/// A server-written Organization V1 event addressed to the signed-in account
-/// (`public.org_v1_events`). The kind decides where it navigates.
+/// A server-written event addressed to the signed-in account
+/// (`public.org_v1_events`): Organization V1 events, live alerts for followed
+/// channels and the admins' decisions on the account's own applications. The
+/// kind decides where it navigates.
 class OrgEvent {
   const OrgEvent({
     required this.id,
@@ -26,6 +28,7 @@ class OrgEvent {
     'assignment', 'assignment_changed', 'assignment_cancelled', 'assignment_answered',
     'assignment_reminder', 'membership_changed', 'show_live', 'show_ending',
     'transfer_proposed', 'transfer_cancelled', 'transfer_completed',
+    'application_approved', 'application_rejected',
   };
 
   bool get read => readAt != null;
@@ -49,6 +52,8 @@ class OrgEvent {
         'show_live' => sessionId == null ? '/organizations' : '/live/$sessionId',
         'assignment' || 'assignment_changed' || 'assignment_cancelled' ||
         'assignment_answered' || 'assignment_reminder' || 'show_ending' => '/shows',
+        // Settings holds the application status, its note and Reapply.
+        'application_approved' || 'application_rejected' => '/settings',
         _ => '/organizations',
       };
 

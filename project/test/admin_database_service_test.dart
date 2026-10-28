@@ -211,10 +211,11 @@ void main() {
       expect(newStreamer.latitude, equals(26.3050));
       expect(newStreamer.longitude, equals(50.1450));
 
-      // Check notification created
+      // The applicant's notice is a server event (20261028110000); nothing
+      // lands in the reviewing admin's own inbox.
       expect(
           provider.notifications.any((n) => n.id.contains('app_kfupm_ai_01')),
-          isTrue);
+          isFalse);
     });
 
     test('TC-DB-06: AppProvider Rejection Workflow and Reason Retention',

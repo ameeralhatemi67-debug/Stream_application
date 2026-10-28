@@ -21,10 +21,20 @@ const roles: Record<string, [string, string]> = {
   owner: ['owner', 'مالك'],
 };
 
+// A reviewer's note ends the sentence it is quoted in.
+function note(payload: Record<string, unknown>): string {
+  return String(payload.reason ?? '').trim().replace(/[.!?؟。]+$/u, '');
+}
+
 export function orgEventText(event: OrgEvent, language: string): Text {
   const ar = language === 'ar';
   const p = event.payload ?? {};
-  const org = pick(p, 'organization_name_en', 'organization_name_ar', language) || (ar ? 'المؤسسة' : 'Your organization');
+  const orgName = pick(p, 'organization_name_en', 'organization_name_ar', language);
+  const org = orgName || (ar ? 'المؤسسة' : 'Your organization');
+  const presenter = pick(p, 'presenter_name_en', 'presenter_name_ar', language);
+  const name = pick(p, 'name_en', 'name_ar', language);
+  const channel = p.organization === true ? (ar ? 'مؤسستك' : 'Your organization') : (ar ? 'قناتك' : 'Your channel');
+  const reason = note(p);
   const title = pick(p, 'title_en', 'title_ar', language) || (ar ? 'برنامج' : 'Show');
   const role = roles[String(p.role ?? '')]?.[ar ? 1 : 0] ?? (ar ? 'عضو' : 'member');
   const accepted = p.accepted === true;
@@ -59,9 +69,26 @@ export function orgEventText(event: OrgEvent, language: string): Text {
     case 'membership_changed':
       return ar ? { title: 'تحديث صلاحياتك', body: `تغيّر دورك أو صلاحياتك في ${org}.` }
         : { title: 'Your access changed', body: `Your role or grants in ${org} changed.` };
-    case 'show_live':
-      return ar ? { title: 'بث مباشر الآن', body: `${title} — ${org}` }
-        : { title: 'Live now', body: `${title} — ${org}` };
+    case 'show_live': {
+      // A personal live has no organization; name the presenter instead.
+      const by = orgName || presenter;
+      const body = by ? `${title} — ${by}` : title;
+      return ar ? { title: 'بث مباشر الآن', body } : { title: 'Live now', body };
+    }
+    case 'application_approved':
+      if (p.edit === true) {
+        return ar ? { title: 'اعتُمدت تعديلاتك', body: `${channel} تظهر الآن بالبيانات الجديدة.` }
+          : { title: 'Your changes were approved', body: `${channel} now shows the new details.` };
+      }
+      return ar ? { title: 'تمت الموافقة على طلبك', body: `${name ? `أهلاً ${name}، ` : ''}${channel} موثّقة ويمكنك البث الآن.` }
+        : { title: 'Your application was approved', body: `${name ? `Welcome, ${name}. ` : ''}${channel} is verified and you can go live.` };
+    case 'application_rejected':
+      if (p.edit === true) {
+        return ar ? { title: 'لم تُعتمد تعديلاتك', body: `${reason ? `ملاحظة المراجع: ${reason}. ` : ''}${channel} تبقى ببياناتها المعتمدة.` }
+          : { title: 'Your changes were not approved', body: `${reason ? `Reviewer's note: ${reason}. ` : ''}${channel} keeps its approved details.` };
+      }
+      return ar ? { title: 'طلبك يحتاج إلى تعديل', body: `${reason ? `ملاحظة المراجع: ${reason}. ` : ''}عدّله من الإعدادات وأعد التقديم.` }
+        : { title: 'Your application needs changes', body: `${reason ? `Reviewer's note: ${reason}. ` : ''}Update it in Settings and apply again.` };
     case 'show_ending':
       return ar ? { title: 'يجري إنهاء برنامجك', body: `${title}: أوقف البث من جهازك.` }
         : { title: 'Your show is being ended', body: `${title}: stop sending from your device.` };

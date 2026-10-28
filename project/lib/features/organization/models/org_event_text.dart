@@ -5,9 +5,20 @@ import 'org_event.dart';
 /// the same whether it arrived by push or was loaded from the event list.
 ({String title, String body}) orgEventText(OrgEvent event, String language) {
   final ar = language == 'ar';
-  final org = event.organizationName(language).isNotEmpty
-      ? event.organizationName(language)
-      : (ar ? 'المؤسسة' : 'Your organization');
+  final orgName = event.organizationName(language);
+  final org = orgName.isNotEmpty ? orgName : (ar ? 'المؤسسة' : 'Your organization');
+  final presenter = event.text('presenter_name', language);
+  final name = event.text('name', language);
+  final channel = event.payload['organization'] == true
+      ? (ar ? 'مؤسستك' : 'Your organization')
+      : (ar ? 'قناتك' : 'Your channel');
+  // A reviewer's note ends the sentence it is quoted in.
+  final reason = (event.payload['reason'] as String? ?? '')
+      .trim()
+      .replaceFirst(RegExp(r'[.!?؟。]+$'), '');
+  final edit = event.payload['edit'] == true;
+  // A personal live has no organization; name the presenter instead.
+  final liveBy = orgName.isNotEmpty ? orgName : presenter;
   final title = event.title(language).isNotEmpty ? event.title(language) : (ar ? 'برنامج' : 'Show');
   const roles = {
     'co_owner': ('co-owner', 'مالك مشارك'),
@@ -51,9 +62,29 @@ import 'org_event.dart';
     'membership_changed' => ar
         ? (title: 'تحديث صلاحياتك', body: 'تغيّر دورك أو صلاحياتك في $org.')
         : (title: 'Your access changed', body: 'Your role or grants in $org changed.'),
-    'show_live' => ar
-        ? (title: 'بث مباشر الآن', body: '$title — $org')
-        : (title: 'Live now', body: '$title — $org'),
+    'show_live' => (
+        title: ar ? 'بث مباشر الآن' : 'Live now',
+        body: liveBy.isEmpty ? title : '$title — $liveBy'),
+    'application_approved' => edit
+        ? (ar
+            ? (title: 'اعتُمدت تعديلاتك', body: '$channel تظهر الآن بالبيانات الجديدة.')
+            : (title: 'Your changes were approved', body: '$channel now shows the new details.'))
+        : (ar
+            ? (title: 'تمت الموافقة على طلبك',
+                body: '${name.isEmpty ? '' : 'أهلاً $name، '}$channel موثّقة ويمكنك البث الآن.')
+            : (title: 'Your application was approved',
+                body: '${name.isEmpty ? '' : 'Welcome, $name. '}$channel is verified and you can go live.')),
+    'application_rejected' => edit
+        ? (ar
+            ? (title: 'لم تُعتمد تعديلاتك',
+                body: '${reason.isEmpty ? '' : 'ملاحظة المراجع: $reason. '}$channel تبقى ببياناتها المعتمدة.')
+            : (title: 'Your changes were not approved',
+                body: "${reason.isEmpty ? '' : "Reviewer's note: $reason. "}$channel keeps its approved details."))
+        : (ar
+            ? (title: 'طلبك يحتاج إلى تعديل',
+                body: '${reason.isEmpty ? '' : 'ملاحظة المراجع: $reason. '}عدّله من الإعدادات وأعد التقديم.')
+            : (title: 'Your application needs changes',
+                body: "${reason.isEmpty ? '' : "Reviewer's note: $reason. "}Update it in Settings and apply again.")),
     'show_ending' => ar
         ? (title: 'يجري إنهاء برنامجك', body: '$title: أوقف البث من جهازك.')
         : (title: 'Your show is being ended', body: '$title: stop sending from your device.'),

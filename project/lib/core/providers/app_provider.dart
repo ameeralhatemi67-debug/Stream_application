@@ -1340,9 +1340,14 @@ class AppProvider extends ChangeNotifier {
             'assignment' || 'assignment_changed' || 'assignment_cancelled' ||
             'assignment_answered' || 'assignment_reminder' || 'show_ending' =>
               NotificationType.orgLiveGuestInvite,
+            'application_approved' => NotificationType.streamerApplicationApproved,
+            'application_rejected' => NotificationType.streamerApplicationRejected,
             _ => NotificationType.orgAffiliationInvite,
           },
-          streamerId: event.organizationId ?? '',
+          // A personal live has no organization: mute by its presenter.
+          streamerId: event.organizationId ??
+              (event.liveAlert ? event.payload['presenter_id'] as String? : null) ??
+              '',
           streamerName: event.organizationName('en'),
           titleEn: en.title, titleAr: ar.title, bodyEn: en.body, bodyAr: ar.body,
           timestamp: event.createdAt.toLocal(),
@@ -2284,24 +2289,13 @@ class AppProvider extends ChangeNotifier {
       if (isStreamer) {
         _isApprovedStreamer = true;
 
+        // The decision itself is a server event (20261028110000); fetch it
+        // now rather than writing a second, local copy.
         if (previousApp != null &&
             previousApp.status == ApplicationStatus.pending &&
             myApp?.status == ApplicationStatus.approved) {
-          addEnhancedNotification(
-            AppNotificationModel(
-              id: 'notif_app_approved_${DateTime.now().millisecondsSinceEpoch}',
-              type: NotificationType.streamerApplicationApproved,
-              streamerId: user.id,
-              streamerName: _googleUserName ?? 'Broadcaster',
-              titleEn: 'Broadcaster Application Approved!',
-              titleAr: 'تم قبول طلب توثيق البث!',
-              bodyEn:
-                  'Congratulations! Your broadcaster application was approved by the administration. Streamer Studio is now unlocked!',
-              bodyAr:
-                  'تهانينا! تمت الموافقة على طلب التوثيق من قبل الإدارة. تم تفعيل استوديو البث المباشر لحسابك!',
-              timestamp: DateTime.now(),
-            ),
-          );
+          unawaited(refreshOrganizationEvents().catchError(
+              (Object e) => debugPrint('Decision notice refresh failed: $e')));
         }
       } else {
         _isApprovedStreamer = false;
@@ -2328,23 +2322,8 @@ class AppProvider extends ChangeNotifier {
         } else if (previousApp != null &&
             previousApp.status != ApplicationStatus.rejected &&
             myApp?.status == ApplicationStatus.rejected) {
-          final reason =
-              myApp?.adminReviewNotes ?? 'Incomplete application requirements.';
-          addEnhancedNotification(
-            AppNotificationModel(
-              id: 'notif_app_rejected_${DateTime.now().millisecondsSinceEpoch}',
-              type: NotificationType.streamerApplicationRejected,
-              streamerId: user.id,
-              streamerName: _googleUserName ?? 'User',
-              titleEn: 'Broadcaster Application Status Update',
-              titleAr: 'تحديث بخصوص طلب التوثيق الأكاديمي',
-              bodyEn:
-                  'We could not approve your application at this time: "$reason". You are welcome to re-apply!',
-              bodyAr:
-                  'تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
-              timestamp: DateTime.now(),
-            ),
-          );
+          unawaited(refreshOrganizationEvents().catchError(
+              (Object e) => debugPrint('Decision notice refresh failed: $e')));
         }
       }
       // Hydration applies its own mode and device claim; afterwards an
@@ -5636,26 +5615,11 @@ class AppProvider extends ChangeNotifier {
       debugPrint('Background YouTube bootstrap failed gracefully: $e');
     }
 
-    // Stage 4: Plot on Spatial Map & Send Realtime Notification
+    // Stage 4: Plot on Spatial Map. The applicant's notice is a server event
+    // written with the approval (20261028110000), not a toast on this
+    // admin's device.
     onProgress?.call(4,
         'Plotting venue location on Spatial Map & dispatching notification...');
-    addEnhancedNotification(
-      AppNotificationModel(
-        id: 'notif_verified_${app.id}',
-        type: NotificationType.streamerApplicationApproved,
-        streamerId: newStreamer.streamerId,
-        streamerName: app.applicantNameEn,
-        titleEn: 'Broadcaster Application Approved!',
-        titleAr: 'أهلاً بك في نخبة المذيعين!',
-        bodyEn:
-            'Congratulations ${app.applicantNameEn}! Your broadcaster application has been approved and verified on the map.',
-        bodyAr:
-            'تهانينا ${app.applicantNameAr}! تم اعتماد طلبك بنجاح. أصبحت قناتك وموقعك موثقين على الخريطة التفاعلية.',
-        timestamp: DateTime.now(),
-        actionUrl: '/profile/${newStreamer.streamerId}',
-      ),
-      context: context != null && context.mounted ? context : null,
-    );
 
     // Stage 5: Finalization
     onProgress?.call(5, 'Verification pipeline completed successfully!');
@@ -5688,30 +5652,8 @@ class AppProvider extends ChangeNotifier {
       if (app.status == ApplicationStatus.approved) {
         await loadVerifiedStreamersFromBackend();
       }
-
-      addEnhancedNotification(
-        AppNotificationModel(
-          id: 'notif_rejected_${applicationId}_${DateTime.now().millisecondsSinceEpoch}',
-          type: NotificationType.streamerApplicationRejected,
-          streamerId: applicationId,
-          streamerName: app.applicantNameEn,
-          titleEn: app.revisionOf == null
-              ? 'Broadcaster Application Status Update'
-              : 'Profile Edit Review',
-          titleAr: app.revisionOf == null
-              ? 'تحديث بخصوص طلب التوثيق الأكاديمي'
-              : 'مراجعة تعديل الملف الشخصي',
-          bodyEn: app.revisionOf == null
-              ? 'Your broadcaster application was rejected: "$reason".'
-              : 'Your proposed profile edit was rejected: "$reason". Your approved profile remains active.',
-          bodyAr: app.revisionOf == null
-              ? 'تم رفض طلب التوثيق: «$reason».'
-              : 'تم رفض تعديل ملفك الشخصي المقترح: «$reason». يبقى ملفك المعتمد نشطاً.',
-          timestamp: DateTime.now(),
-        ),
-        context: context != null && context.mounted ? context : null,
-      );
-
+      // The applicant's notice is a server event written with the rejection
+      // (20261028110000), not a toast on this admin's device.
       notifyListeners();
       return true;
     }
