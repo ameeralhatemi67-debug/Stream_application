@@ -17,13 +17,21 @@ type Claim = {
 const env = (name: string) => Deno.env.get(name) ?? '';
 
 Deno.serve(async (request) => {
-  // Dedicated scheduler key, never a user token. No secret in URL or logs.
-  const key = env('ORG_EVENTS_DISPATCH_KEY');
-  if (request.method !== 'POST' || !key || request.headers.get('authorization') !== `Bearer ${key}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // A scheduler key, never a user token. No secret in URL or logs. The cron
+  // job presents the Vault-held reminder dispatch key (cron.sql), so no
+  // function secret has to be set; ORG_EVENTS_DISPATCH_KEY still works.
+  if (request.method !== 'POST') return new Response('Unauthorized', { status: 401 });
+  const presented = (request.headers.get('authorization') ?? '').replace(/^Bearer /, '');
+  if (!presented) return new Response('Unauthorized', { status: 401 });
   const db = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'),
     { auth: { persistSession: false, autoRefreshToken: false } });
+  const key = env('ORG_EVENTS_DISPATCH_KEY');
+  let authorized = key !== '' && presented === key;
+  if (!authorized) {
+    const { data } = await db.rpc('verify_reminder_dispatch_key', { p_key: presented });
+    authorized = data === true;
+  }
+  if (!authorized) return new Response('Unauthorized', { status: 401 });
   const { data, error } = await db.rpc('claim_org_v1_event_pushes');
   if (error) return new Response('Event claim failed', { status: 503 });
   const claims = (data ?? []) as Claim[];

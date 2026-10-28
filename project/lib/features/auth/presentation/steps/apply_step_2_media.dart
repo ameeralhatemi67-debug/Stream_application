@@ -148,14 +148,18 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
     final bytes = widget.bannerBytes;
 
     if (path == null && (bytes == null || bytes.isEmpty)) {
+      // Grows with the text: at 2x on a small phone 140 px is not enough.
       return Container(
-        height: 140,
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 140),
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(color: Canopy.hairline, width: 1.5),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.add_photo_alternate_outlined,

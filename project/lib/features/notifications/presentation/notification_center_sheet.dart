@@ -389,6 +389,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         return Icons.edit_note_rounded;
       case NotificationType.newVodUpload:
         return Icons.video_library_rounded;
+      case NotificationType.scheduleReminder:
+        return Icons.alarm_rounded;
       case NotificationType.systemAlert:
         return Icons.info_outline_rounded;
     }
@@ -419,6 +421,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       case NotificationType.adminCardEditRequestOrg:
         return AppTheme.warning;
       case NotificationType.newVodUpload:
+      case NotificationType.scheduleReminder:
         return AppTheme.primary;
       case NotificationType.systemAlert:
         return Canopy.slate;

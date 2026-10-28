@@ -654,7 +654,8 @@ class AppProvider extends ChangeNotifier {
       if (_authGeneration != generation) return;
       try {
         await refreshScheduleReminders();
-        unawaited(syncReminderPush(requestPermission: false, language: 'en'));
+        unawaited(_savedAppLanguage().then((language) =>
+            syncReminderPush(requestPermission: false, language: language)));
       } catch (e) {
         // An older backend may not have the new migration yet. Sign-in must
         // remain usable while Upcoming Live reports its own unavailable state.
@@ -3344,15 +3345,23 @@ class AppProvider extends ChangeNotifier {
 
   int get unreadNotificationsCount {
     _cleanupOldNotifications();
+    // Every enhanced item also has a legacy copy with the same id; count it
+    // once.
+    final enhancedIds = {for (final n in _enhancedNotifications) n.id};
     return _enhancedNotifications.where((n) => !n.isRead).length +
-        _notifications.where((n) => !n.isRead).length;
+        _notifications
+            .where((n) => !n.isRead && !enhancedIds.contains(n.id))
+            .length;
   }
 
   void _cleanupOldNotifications() {
     final now = DateTime.now();
     _notifications.removeWhere((n) => now.difference(n.timestamp).inHours >= 6);
-    _enhancedNotifications
-        .removeWhere((n) => now.difference(n.timestamp).inHours >= 12);
+    // An unread server event (a decision, an invitation) stays until it is
+    // read; only a "live now" alert goes stale after the usual 12 hours.
+    _enhancedNotifications.removeWhere((n) =>
+        now.difference(n.timestamp).inHours >= 12 &&
+        !(n.id.startsWith('org:') && !n.isRead && !n.isLiveAlert));
   }
 
   void updateNotificationPreferences(NotificationPreferencesModel preferences) {
@@ -3443,7 +3452,10 @@ class AppProvider extends ChangeNotifier {
         .where((n) => now.difference(n.timestamp).inMinutes <= 10)
         .length;
 
-    if (recentNotificationsCount >= _notificationPreferences.maxPer10Min) {
+    // Server events are each a durable row the server already deduplicates;
+    // throttling one here would hide it for good (it is marked announced).
+    if (!item.id.startsWith('org:') &&
+        recentNotificationsCount >= _notificationPreferences.maxPer10Min) {
       // Throttle notification when rate limit is exceeded
       return false;
     }
@@ -5122,6 +5134,13 @@ class AppProvider extends ChangeNotifier {
       if (!saved) {
         apply(wasFollowing);
         notifyListeners();
+      } else if (!wasFollowing &&
+          remindersAvailable &&
+          _reminderPushStatus != ReminderPushStatus.granted) {
+        // "Live now" alerts for followed channels arrive by push, so a first
+        // follow is when to ask (until now only reminders asked).
+        unawaited(_savedAppLanguage().then((language) =>
+            syncReminderPush(requestPermission: true, language: language)));
       }
       return saved;
     } finally {
@@ -5154,32 +5173,7 @@ class AppProvider extends ChangeNotifier {
 
   void attachReminderPush({required Future<void> Function(String) onOpen,
       Future<void> Function(String route)? onOpenRoute}) {
-    _reminderPush.attach(onMessage: (data) {
-      if (data['type'] == 'org_event') {
-        if (_isLoggedInStreamer && data['viewer_id'] == currentUserId) {
-          unawaited(refreshOrganizationEvents().catchError(
-              (Object e) => debugPrint('Organization event refresh failed: $e')));
-        }
-        return;
-      }
-      if (data['type'] != 'upcoming_reminder') return;
-      if (!_isLoggedInStreamer || data['viewer_id'] != currentUserId) return;
-      final streamerId = data['streamer_id']?.toString() ?? '';
-      final scheduleId = data['schedule_id']?.toString() ?? '';
-      if (!_uuidPattern.hasMatch(streamerId) ||
-          !_uuidPattern.hasMatch(scheduleId)) {
-        return;
-      }
-      addNotification(AppNotificationItem(
-        id: 'upcoming:$scheduleId:${data['occurrence_at']}',
-        streamerId: streamerId,
-        titleEn: data['title_en']?.toString() ?? '',
-        titleAr: data['title_ar']?.toString() ?? '',
-        bodyEn: data['body_en']?.toString() ?? '',
-        bodyAr: data['body_ar']?.toString() ?? '',
-        timestamp: DateTime.now(),
-      ));
-    }, onOpen: (data) {
+    _reminderPush.attach(onMessage: handlePushWhileOpen, onOpen: (data) {
       if (data['type'] == 'org_event') {
         final route = organizationEventRoute(data);
         if (route != null && onOpenRoute != null) unawaited(onOpenRoute(route));
@@ -5188,6 +5182,39 @@ class AppProvider extends ChangeNotifier {
       final id = data['streamer_id']?.toString() ?? '';
       if (_uuidPattern.hasMatch(id)) unawaited(onOpen(id));
     });
+  }
+
+  /// A push that arrives while the app is open (Firebase shows nothing then).
+  @visibleForTesting
+  void handlePushWhileOpen(Map<String, dynamic> data) {
+    if (data['type'] == 'org_event') {
+      if (_isLoggedInStreamer && data['viewer_id'] == currentUserId) {
+        unawaited(refreshOrganizationEvents().catchError(
+            (Object e) => debugPrint('Organization event refresh failed: $e')));
+      }
+      return;
+    }
+    if (data['type'] != 'upcoming_reminder') return;
+    if (!_isLoggedInStreamer || data['viewer_id'] != currentUserId) return;
+    final streamerId = data['streamer_id']?.toString() ?? '';
+    final scheduleId = data['schedule_id']?.toString() ?? '';
+    if (!_uuidPattern.hasMatch(streamerId) ||
+        !_uuidPattern.hasMatch(scheduleId)) {
+      return;
+    }
+    // Into the notification centre, not only the badge's legacy list.
+    addEnhancedNotification(AppNotificationModel(
+      id: 'upcoming:$scheduleId:${data['occurrence_at']}',
+      type: NotificationType.scheduleReminder,
+      streamerId: streamerId,
+      streamerName: '',
+      titleEn: data['title_en']?.toString() ?? '',
+      titleAr: data['title_ar']?.toString() ?? '',
+      bodyEn: data['body_en']?.toString() ?? '',
+      bodyAr: data['body_ar']?.toString() ?? '',
+      timestamp: DateTime.now(),
+      actionUrl: '/profile/$streamerId?tab=upcoming',
+    ));
   }
 
   /// The in-app route for an organization push, from validated identifiers
@@ -5220,6 +5247,18 @@ class AppProvider extends ChangeNotifier {
       _reminderPushStatus = ReminderPushStatus.unavailable;
     }
     notifyListeners();
+  }
+
+  /// The language easy_localization saved (its 'locale' key; the app starts
+  /// in Arabic). Pushes written outside a screen use it instead of English.
+  Future<String> _savedAppLanguage() async {
+    try {
+      final saved =
+          (await SharedPreferences.getInstance()).getString('locale') ?? '';
+      return saved.startsWith('en') ? 'en' : 'ar';
+    } catch (_) {
+      return 'ar';
+    }
   }
 
   List<UpcomingSchedule>? upcomingSchedulesFor(String streamerId) =>

@@ -16,6 +16,8 @@ enum NotificationType {
   adminCardEditRequestOrg,
   orgStreamerLiveStatus,
   newVodUpload,
+  /// "Starts in N minutes" for a schedule the viewer asked to be reminded of.
+  scheduleReminder,
   systemAlert,
 }
 
@@ -71,6 +73,7 @@ class AppNotificationModel {
       case NotificationType.streamerLiveAudio:
       case NotificationType.watchMilestoneOneHour:
       case NotificationType.orgStreamerLiveStatus:
+      case NotificationType.scheduleReminder:
         return NotificationCategory.live;
       case NotificationType.streamerApplicationApproved:
       case NotificationType.streamerApplicationRejected:
@@ -225,13 +228,16 @@ class NotificationPreferencesModel {
       case NotificationType.orgAffiliationInvite:
       case NotificationType.streamerRemovedFromOrg:
         return orgInvitesEnabled;
-      case NotificationType.streamerApplicationApproved:
-      case NotificationType.streamerApplicationRejected:
       case NotificationType.adminNoteToStreamer:
       case NotificationType.adminCardEditRequestStreamer:
       case NotificationType.adminNoteToOrg:
       case NotificationType.adminCardEditRequestOrg:
         return adminNotesEnabled;
+      // A decision on the account's own application and a reminder the
+      // viewer asked for are never switched off.
+      case NotificationType.streamerApplicationApproved:
+      case NotificationType.streamerApplicationRejected:
+      case NotificationType.scheduleReminder:
       case NotificationType.systemAlert:
         return true;
     }
