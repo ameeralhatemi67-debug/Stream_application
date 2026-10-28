@@ -45,9 +45,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   final TextEditingController _handleController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
 
-  // Step 2 Media
-  String? _avatarPath = 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
-  String? _bannerPath = 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+  // Step 2 Media. No stand-in pictures: step 2 asks for both (the Google
+  // photo fills the avatar when there is one).
+  String? _avatarPath;
+  String? _bannerPath;
   Uint8List? _avatarBytes;
   Uint8List? _bannerBytes;
 
@@ -320,8 +321,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       return;
     }
     if (!_agreedToTerms) {
-      _showValidationToast(
-          'You must agree to the Terms & Conditions before submitting.');
+      _showValidationToast('application.terms_required'.tr());
       return;
     }
 
@@ -332,8 +332,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       final email = provider.currentUserEmail ?? 'applicant@streamer.app';
 
       // 1. Upload custom avatar / banner to Supabase Storage if available
-      String finalAvatarUrl =
-          _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
+      String finalAvatarUrl = _avatarPath ?? '';
       if (_avatarBytes != null) {
         final uploaded = await provider.uploadStreamerMediaAsset(
           fileName:
@@ -345,8 +344,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         }
       }
 
-      String finalBannerUrl =
-          _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+      String finalBannerUrl = _bannerPath ?? '';
       if (_bannerBytes != null) {
         final uploaded = await provider.uploadStreamerMediaAsset(
           fileName:
@@ -421,7 +419,13 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       context.go('/application-pending');
     } catch (e) {
       if (!mounted) return;
-      _showValidationToast('offline_experience.form_preserved'.tr());
+      // The form keeps its answers in every case; say why it did not send.
+      final provider = context.read<AppProvider>();
+      _showValidationToast(e is FormatException
+          ? e.message.tr()
+          : !provider.isOnline
+              ? 'offline_experience.form_preserved'.tr()
+              : 'application.submit_failed'.tr());
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

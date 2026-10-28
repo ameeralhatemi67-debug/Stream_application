@@ -178,7 +178,6 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
     final imgProvider = buildSafeImageProvider(
       path: path,
       bytes: bytes,
-      defaultAsset: 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
     );
 
     return Stack(
@@ -246,7 +245,6 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
     final avatarProvider = buildSafeImageProvider(
       path: widget.avatarPath,
       bytes: widget.avatarBytes,
-      defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
     );
 
     return SingleChildScrollView(

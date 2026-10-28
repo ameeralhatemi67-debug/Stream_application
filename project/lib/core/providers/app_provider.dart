@@ -2775,8 +2775,9 @@ class AppProvider extends ChangeNotifier {
   /// exclusively from _applySessionUser/_refreshAdminRoleFromBackend above.
   @visibleForTesting
 
-  /// [ownedStreamerId] attaches an approved broadcaster application for that
-  /// channel, which is one of the three real ownership sources
+  /// [ownedStreamerId] attaches a broadcaster application for that channel,
+  /// approved unless [ownedApplicationStatus] says otherwise. An approved one
+  /// is one of the three real ownership sources
   /// (see [primaryOwnedStreamerId]). Tests must use it instead of relying on a
   /// particular email: no email grants ownership of a channel (P1.6).
   void debugSetSignedInForTests({
@@ -2789,6 +2790,7 @@ class AppProvider extends ChangeNotifier {
     List<String> permittedAdminOrgIds = const [],
     String? ownedStreamerId,
     String ownedYoutubeHandle = '',
+    ApplicationStatus ownedApplicationStatus = ApplicationStatus.approved,
     bool personalBroadcastApproved = false,
     bool organizationBroadcastApproved = false,
     String? userId,
@@ -2829,7 +2831,7 @@ class AppProvider extends ChangeNotifier {
             bioAr: '',
             avatarUrl: '',
             bannerUrl: '',
-            status: ApplicationStatus.approved,
+            status: ownedApplicationStatus,
             submittedAt: DateTime.now(),
           );
     notifyListeners();

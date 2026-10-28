@@ -181,9 +181,6 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
     final provider = buildSafeImageProvider(
       path: widget.imagePath,
       bytes: widget.imageBytes,
-      defaultAsset: widget.arrangeType == ImageArrangeType.avatarCircle
-          ? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg'
-          : 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
     );
 
     // Anti-Black-Bar Invariant: Always size the underlying image using BoxFit.cover

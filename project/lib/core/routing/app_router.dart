@@ -194,6 +194,14 @@ class AppRouter {
             if (path == '/org-admin' && !provider.isPermittedAdmin) {
               return '/feed';
             }
+            // An approved channel is edited from Settings, where reviewed
+            // fields go to the admins; the application form would write over
+            // the approved application (it did, 2026-10-19).
+            if (path == '/streamer-apply' &&
+                (provider.isApprovedStreamer ||
+                    provider.myApplication?.isApproved == true)) {
+              return '/settings';
+            }
             return null;
           }
 
@@ -958,7 +966,8 @@ class _RouteGate extends ChangeNotifier {
         _provider.isApprovedStreamer,
         _provider.isAdminUser,
         _provider.isLessonsAdmin,
-        _provider.myApplication != null,
+        // Null without an application; a status change re-runs the gates.
+        _provider.myApplication?.status,
         _provider.adminRoleLoading,
         _provider.isPermittedAdmin,
       ];

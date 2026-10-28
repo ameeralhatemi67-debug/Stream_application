@@ -321,10 +321,8 @@ class BroadcasterApplicationModel {
         youtubeHandle: json['youtubeHandle'] as String? ?? '',
         bioEn: json['bioEn'] as String? ?? '',
         bioAr: json['bioAr'] as String? ?? '',
-        avatarUrl: json['avatarUrl'] as String? ??
-            'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-        bannerUrl: json['bannerUrl'] as String? ??
-            'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
+        avatarUrl: json['avatarUrl'] as String? ?? '',
+        bannerUrl: json['bannerUrl'] as String? ?? '',
         status: ApplicationStatus.values
             .byName(json['status'] as String? ?? 'pending'),
         adminReviewNotes: json['adminReviewNotes'] as String?,

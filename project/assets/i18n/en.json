@@ -892,7 +892,10 @@
     "apply_btn": "Apply for Verification",
     "admin_feedback": "Reviewer feedback",
     "reapply_btn": "Reapply",
-    "edit_btn": "Edit Application"
+    "edit_btn": "Edit Application",
+    "edit_channel_btn": "Edit channel",
+    "submit_failed": "Your application could not be sent. Your answers are still here, so try again in a moment.",
+    "terms_required": "Agree to the terms and conditions to send your application."
   },
   "admin": {
     "queue_tab": "Applications",

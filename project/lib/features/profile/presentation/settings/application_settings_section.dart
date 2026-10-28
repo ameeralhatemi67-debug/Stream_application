@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
+import '../widgets/broadcaster_application_sheet.dart';
 
 /// The broadcaster and organization verification application: the promo card
 /// for a viewer who has not applied, and the live status card once they have.
@@ -17,7 +18,8 @@ class ApplicationSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.select<AppProvider, Object?>((p) => p.myApplication);
+    context.select<AppProvider, Object?>(
+        (p) => (p.myApplication, p.isApprovedStreamer));
     return _buildApplicationSection(context, context.read<AppProvider>());
   }
 
@@ -256,26 +258,37 @@ class ApplicationSettingsSection extends StatelessWidget {
           // A single "Edit"/"Reapply"action only -- no parallel "New
           // Application"button. An account is strictly limited to one
           // personal broadcaster channel (issue_log.md: "I should not have
-          // the ability to own two channels"); an existing application
-          // (pending, approved, or rejected) is always edited in place.
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: Canopy.hairline),
-                padding: const EdgeInsets.symmetric(vertical: 9),
+          // the ability to own two channels"); a pending or rejected
+          // application is edited in place. An approved channel opens the
+          // profile editor instead: the form would write over the approved
+          // application.
+          if (provider.isApprovedStreamer || !app.isApproved)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primary,
+                  side: const BorderSide(color: Canopy.hairline),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                ),
+                icon: const Icon(Icons.edit_note_rounded, size: 16),
+                label: Text(
+                  provider.isApprovedStreamer
+                      ? 'application.edit_channel_btn'.tr()
+                      : app.status == ApplicationStatus.rejected
+                          ? 'application.reapply_btn'.tr()
+                          : 'application.edit_btn'.tr(),
+                  style: const TextStyle(fontSize: AppTheme.captionFont),
+                ),
+                onPressed: () => provider.isApprovedStreamer
+                    ? BroadcasterApplicationSheet.show(
+                        context,
+                        application: provider.myApplication,
+                        editingProfile: true,
+                      )
+                    : context.push('/streamer-apply'),
               ),
-              icon: const Icon(Icons.edit_note_rounded, size: 16),
-              label: Text(
-                app.status == ApplicationStatus.rejected
-                    ? 'application.reapply_btn'.tr()
-                    : 'application.edit_btn'.tr(),
-                style: const TextStyle(fontSize: AppTheme.captionFont),
-              ),
-              onPressed: () => context.push('/streamer-apply'),
             ),
-          ),
         ],
       ),
     );

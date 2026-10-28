@@ -131,13 +131,11 @@ class ApplyStep5Review extends StatelessWidget {
     final bannerProvider = buildSafeImageProvider(
       path: bannerPath,
       bytes: bannerBytes,
-      defaultAsset: 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
     );
 
     final avatarProvider = buildSafeImageProvider(
       path: avatarPath,
       bytes: avatarBytes,
-      defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
     );
 
     return SingleChildScrollView(
