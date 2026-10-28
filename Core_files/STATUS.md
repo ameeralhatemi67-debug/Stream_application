@@ -8,7 +8,7 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## Pre-test fixes, 2026-10-28 (server side deployed; app changes not released yet)
+## Pre-test fixes, 2026-10-28 (deployed: server and website; APK not rebuilt)
 
 From the pre-test check (`brief/audit/2026-10-28_PRE_TEST_FEATURE_CHECK.md`), owner: "start fixing the 'before testers start' list here; ask me before anything goes to the live server". ADR-019.
 
@@ -25,7 +25,9 @@ Verification: see the ledger's RESUME block of the same day.
 
 Owner's photos cleared the same day (owner: "yes, clear my photos from the three other accounts"): banner of application `b4aef414` and its profile `8709d29b`, banner of pending application `f362af24`, avatar and banner of viewer profile `7a5f2ba8`; set to empty, which the app shows as its neutral placeholder. Only the owner's own account (`c4e7e1a0`, applications `7926a0ef`, `9279020a`) keeps them.
 
-Not done: the master admin's application `9279020a` (still pending; owner to inspect and approve), releasing the app changes (push master for the website, a new APK), a phone receiving a push.
+**Website released the same day** (owner: "please push to github, and deploy, I give you permission"): master pushed `06bf508..63ed7d1` (13 commits, including the 2026-10-26/27 work), Vercel production deployment `dpl_FSNoxypK1BRUTzMYW8jEN8y1t6e5` READY in under 2 minutes and serving build `63ed7d1…-20261028144313` at stream-application-ten.vercel.app; both language files carry the new keys; `/download` shows "not ready yet" because `/api/app-release` answers `release_unavailable` (the `app_releases` migration of 2026-10-26 is still not on hosted).
+
+Not done: the master admin's application `9279020a` (still pending; owner to inspect and approve), a new APK with these changes (needs the owner's signing key, then `app_releases` on hosted for the update check), a phone receiving a push.
 
 ## Recordings private on YouTube, delete, admin takedown, 2026-10-27 (local; migration not on hosted)
 
