@@ -279,7 +279,8 @@ void main() {
       expect(provider.appSkin, AppSkin.gold);
     });
 
-    testWidgets('the Hedayah tab bar marks the chosen tab', (tester) async {
+    testWidgets('the Hedayah tab bar is the floating pill with a gold tab',
+        (tester) async {
       final provider = AppProvider()..restoreAppSkin(AppSkin.hedayah);
       addTearDown(provider.dispose);
       var chosen = -1;
@@ -294,7 +295,16 @@ void main() {
               w is Semantics && w.properties.selected == true &&
               w.properties.label == 'nav.map'.tr()),
           findsOneWidget);
-      await tester.tap(find.text('nav.lessons'.tr()));
+      // Only the chosen tab spells its name, as in gold & black.
+      expect(find.text('nav.map'.tr()), findsOneWidget);
+      expect(find.text('nav.lessons'.tr()), findsNothing);
+      expect(
+          find.byWidgetPredicate((w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == HedayahSkin.gold),
+          findsWidgets);
+      await tester.tap(find.byTooltip('nav.lessons'.tr()));
       expect(chosen, 2);
     });
   });

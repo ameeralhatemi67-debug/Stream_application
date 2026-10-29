@@ -66,142 +66,67 @@ class CaNavBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
   @override
-  Widget build(BuildContext context) => context.isHedayahSkin
-      ? _HedayahNavBar(index: index, onChanged: onChanged)
-      : SafeArea(
-      top: false,
-      child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(
-              AppTheme.spaceMd, 0, AppTheme.spaceMd, AppTheme.spaceMd),
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(CanopyRadius.pill),
-              child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                      sigmaX: CanopySize.navBlur, sigmaY: CanopySize.navBlur),
-                  child: Container(
-                      padding: const EdgeInsets.all(AppTheme.spaceSm),
-                      color: Canopy.paper
-                          .withValues(alpha: CanopySize.navPaperAlpha),
-                      child: LayoutBuilder(builder: (context, bounds) {
-                        // The active item takes whatever the others fold away:
-                        // widths trade places over the pill's own duration.
-                        const gap = AppTheme.spaceSm;
-                        const folded = CanopySize.target;
-                        final others = caTabDestinations.length - 1;
-                        final open =
-                            bounds.maxWidth - others * (folded + gap);
-                        return TweenAnimationBuilder<double>(
-                            tween: Tween(end: index.toDouble()),
-                            duration: CanopyMotion.reduced(context)
-                                ? CanopyMotion.none
-                                : CanopyMotion.navPill,
-                            curve: CanopyMotion.easeOut,
-                            builder: (context, t, _) => Row(children: [
-                                  for (var i = 0;
-                                      i < caTabDestinations.length;
-                                      i++) ...[
-                                    if (i > 0) const SizedBox(width: gap),
-                                    _PillDestination(
-                                        index: i,
-                                        width: ui.lerpDouble(
-                                            folded, open, _share(t, i))!,
-                                        selectedness: _share(t, i),
-                                        onTap: () => onChanged(i)),
-                                  ],
-                                ]));
-                      }))))));
-}
-
-/// The Hedayah skin's tab bar (ADR-016): white and docked, the chosen tab
-/// marked with the website's short gold rule above a bronze icon.
-class _HedayahNavBar extends StatelessWidget {
-  const _HedayahNavBar({required this.index, required this.onChanged});
-  final int index;
-  final ValueChanged<int> onChanged;
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-      decoration: const BoxDecoration(
-          color: HedayahSkin.paper,
-          border: Border(top: BorderSide(color: HedayahSkin.line)),
-          boxShadow: [
-            BoxShadow(
-                color: Color(0x0D000000), blurRadius: 18, offset: Offset(0, -4))
-          ]),
-      child: SafeArea(
-          top: false,
-          child: SizedBox(
-              height: 66,
-              child: Row(children: [
-                for (var i = 0; i < caTabDestinations.length; i++)
-                  Expanded(
-                      child: _HedayahTab(
-                          index: i,
-                          selected: i == index,
-                          onTap: () => onChanged(i))),
-              ]))));
-}
-
-class _HedayahTab extends StatelessWidget {
-  const _HedayahTab(
-      {required this.index, required this.selected, required this.onTap});
-  final int index;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
   Widget build(BuildContext context) {
-    final (glyph, key) = caTabDestinations[index];
-    final label = key.tr();
-    final duration = CanopyMotion.reduced(context)
-        ? CanopyMotion.none
-        : CanopyMotion.navPill;
-    return Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: CaFocusRing(
-            radius: HedayahSkin.radiusCard,
-            child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                    onTap: onTap,
-                    child: ExcludeSemantics(
-                        child: Stack(children: [
-                      Align(
-                          alignment: Alignment.topCenter,
-                          child: AnimatedContainer(
-                              duration: duration,
-                              curve: CanopyMotion.easeOut,
-                              width: selected ? 32 : 0,
-                              height: 3,
-                              decoration: const BoxDecoration(
-                                  color: HedayahSkin.gold,
-                                  borderRadius: BorderRadius.vertical(
-                                      bottom: Radius.circular(3))))),
-                      Center(
-                          child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CaIcon(glyph,
-                                        color: selected
-                                            ? HedayahSkin.bronze
-                                            : HedayahSkin.slate),
-                                    const SizedBox(height: 4),
-                                    Text(label,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: HedayahSkin.displayStyle(12,
-                                            weight: selected
-                                                ? FontWeight.w600
-                                                : FontWeight.w400,
-                                            color: selected
-                                                ? HedayahSkin.ink
-                                                : HedayahSkin.bodyGrey,
-                                            height: 1.3)),
-                                  ]))),
-                    ]))))));
+    // Both designs float the same pill (ADR-016); the Hedayah skin draws it
+    // white with a hairline, and the chosen tab is a gold pill with ink.
+    final hedayah = context.isHedayahSkin;
+    return SafeArea(
+        top: false,
+        child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+                AppTheme.spaceMd, 0, AppTheme.spaceMd, AppTheme.spaceMd),
+            child: DecoratedBox(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                    boxShadow: hedayah ? HedayahSkin.lifted : null),
+                child: ClipRRect(
+                    borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                    child: BackdropFilter(
+                        filter: ImageFilter.blur(
+                            sigmaX: CanopySize.navBlur,
+                            sigmaY: CanopySize.navBlur),
+                        child: Container(
+                            padding: const EdgeInsets.all(AppTheme.spaceSm),
+                            decoration: BoxDecoration(
+                                color: hedayah
+                                    ? HedayahSkin.paper
+                                    : Canopy.paper.withValues(
+                                        alpha: CanopySize.navPaperAlpha),
+                                border: hedayah
+                                    ? Border.all(color: HedayahSkin.line)
+                                    : null,
+                                borderRadius:
+                                    BorderRadius.circular(CanopyRadius.pill)),
+                            child: LayoutBuilder(builder: (context, bounds) {
+                              // The active item takes whatever the others fold
+                              // away: widths trade places over the pill's own
+                              // duration.
+                              const gap = AppTheme.spaceSm;
+                              const folded = CanopySize.target;
+                              final others = caTabDestinations.length - 1;
+                              final open =
+                                  bounds.maxWidth - others * (folded + gap);
+                              return TweenAnimationBuilder<double>(
+                                  tween: Tween(end: index.toDouble()),
+                                  duration: CanopyMotion.reduced(context)
+                                      ? CanopyMotion.none
+                                      : CanopyMotion.navPill,
+                                  curve: CanopyMotion.easeOut,
+                                  builder: (context, t, _) => Row(children: [
+                                        for (var i = 0;
+                                            i < caTabDestinations.length;
+                                            i++) ...[
+                                          if (i > 0) const SizedBox(width: gap),
+                                          _PillDestination(
+                                              index: i,
+                                              hedayah: hedayah,
+                                              width: ui.lerpDouble(folded,
+                                                  open, _share(t, i))!,
+                                              selectedness: _share(t, i),
+                                              onTap: () => onChanged(i)),
+                                        ],
+                                      ]));
+                            })))))));
   }
 }
 
@@ -214,24 +139,28 @@ double _share(double t, int i) => (1 - (t - i).abs()).clamp(0.0, 1.0);
 class _PillDestination extends StatelessWidget {
   const _PillDestination(
       {required this.index,
+      required this.hedayah,
       required this.width,
       required this.selectedness,
       required this.onTap});
   final int index;
+  final bool hedayah;
   final double width, selectedness;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
     final (glyph, key) = caTabDestinations[index];
     final label = key.tr();
-    final color =
-        Color.lerp(Canopy.brandGreen, HidayahGold.g200, selectedness.clamp(0, 1))!;
+    final color = Color.lerp(
+        hedayah ? HedayahSkin.gold600 : Canopy.brandGreen,
+        hedayah ? HedayahSkin.ink : HidayahGold.g200,
+        selectedness.clamp(0, 1))!;
     return Semantics(
         button: true,
         selected: selectedness > .5,
         label: label,
         child: CaFocusRing(
-            onDark: selectedness > .5,
+            onDark: !hedayah && selectedness > .5,
             child: Tooltip(
                 message: label,
                 excludeFromSemantics: true,
@@ -248,10 +177,16 @@ class _PillDestination extends StatelessWidget {
                                   Positioned.fill(
                                       child: Opacity(
                                           opacity: selectedness.clamp(0, 1),
-                                          child: const DecoratedBox(
+                                          child: DecoratedBox(
                                               decoration: BoxDecoration(
-                                                  gradient: HidayahGradients.selected,
-                                                  borderRadius:
+                                                  color: hedayah
+                                                      ? HedayahSkin.gold
+                                                      : null,
+                                                  gradient: hedayah
+                                                      ? null
+                                                      : HidayahGradients
+                                                          .selected,
+                                                  borderRadius: const
                                                       BorderRadius.all(
                                                           Radius.circular(
                                                               CanopyRadius

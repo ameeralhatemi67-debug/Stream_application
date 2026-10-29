@@ -329,26 +329,6 @@ class _FeaturedLive extends StatelessWidget {
                                           label:
                                               '${viewers ?? '—'} ${(s.isAudioLive ? 'web.listening' : 'web.watching').tr()}'),
                                     ])),
-                                Center(
-                                    child: Container(
-                                        width: 68,
-                                        height: 68,
-                                        decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: HidayahGradients.minted,
-                                            boxShadow: [
-                                              ...HidayahShadow.minted,
-                                              BoxShadow(
-                                                  color: HidayahGold.g300
-                                                      .withValues(alpha: .18),
-                                                  spreadRadius: 8),
-                                            ]),
-                                        child: CaIcon(
-                                            s.isAudioLive
-                                                ? CaGlyph.mic
-                                                : CaGlyph.play,
-                                            color: HidayahGold.s900,
-                                            size: 28))),
                                 PositionedDirectional(
                                     start: 20,
                                     end: 20,

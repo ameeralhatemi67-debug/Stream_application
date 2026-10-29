@@ -125,6 +125,12 @@ abstract final class HedayahSkin {
   static ThemeData theme(Locale locale) {
     final text = textTheme(locale.languageCode);
     const pill = StadiumBorder();
+    // Styles that stand in for a default the gold theme takes from its text
+    // theme. Flutter hands those out with inherit: false, and a button or
+    // chip animates its label from the old design's style to the new one on
+    // a skin change; TextStyle.lerp throws when the two disagree on inherit,
+    // which broke the whole tree (red screen, endless Settings page).
+    TextStyle settled(TextStyle style) => style.copyWith(inherit: false);
     final field = OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusField),
         borderSide: const BorderSide(color: line));
@@ -163,7 +169,7 @@ abstract final class HedayahSkin {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        titleTextStyle: displayStyle(18),
+        titleTextStyle: settled(displayStyle(18)),
         iconTheme: const IconThemeData(color: ink, size: 22),
       ),
       cardTheme: CardThemeData(
@@ -175,7 +181,7 @@ abstract final class HedayahSkin {
       dialogTheme: DialogThemeData(
           backgroundColor: paper,
           surfaceTintColor: Colors.transparent,
-          titleTextStyle: displayStyle(19),
+          titleTextStyle: settled(displayStyle(19)),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radiusSheet))),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -199,12 +205,13 @@ abstract final class HedayahSkin {
           unselectedLabelColor: bodyGrey,
           indicatorColor: gold,
           dividerColor: line,
-          labelStyle: displayStyle(14, weight: FontWeight.w500),
-          unselectedLabelStyle: textStyle(14)),
+          labelStyle: settled(displayStyle(14, weight: FontWeight.w500)),
+          unselectedLabelStyle: settled(textStyle(14))),
       chipTheme: ChipThemeData(
           backgroundColor: chip,
           selectedColor: gold,
-          labelStyle: textStyle(13, color: chipInk, weight: FontWeight.w700),
+          labelStyle: settled(
+              textStyle(13, color: chipInk, weight: FontWeight.w700)),
           side: BorderSide.none,
           shape: pill),
       switchTheme: SwitchThemeData(
@@ -228,27 +235,27 @@ abstract final class HedayahSkin {
               disabledBackgroundColor: disabled,
               disabledForegroundColor: bodyGrey,
               elevation: 0,
-              textStyle: displayStyle(15, weight: FontWeight.w500),
+              textStyle: settled(displayStyle(15, weight: FontWeight.w500)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
               shape: pill)),
       filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
               foregroundColor: paper,
               backgroundColor: bronze,
-              textStyle: displayStyle(15, weight: FontWeight.w500),
+              textStyle: settled(displayStyle(15, weight: FontWeight.w500)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
               shape: pill)),
       outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
               foregroundColor: ink,
               side: const BorderSide(color: ink, width: 1.5),
-              textStyle: displayStyle(15, weight: FontWeight.w500),
+              textStyle: settled(displayStyle(15, weight: FontWeight.w500)),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               shape: pill)),
       textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
               foregroundColor: bronze,
-              textStyle: displayStyle(14, weight: FontWeight.w500),
+              textStyle: settled(displayStyle(14, weight: FontWeight.w500)),
               shape: pill)),
       inputDecorationTheme: InputDecorationTheme(
           filled: true,
