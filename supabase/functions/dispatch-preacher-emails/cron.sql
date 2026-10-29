@@ -1,4 +1,4 @@
--- Run after deploying the function and applying 20261029120000. It sends the
+-- Run after deploying the function and applying 20261029103349. It sends the
 -- preachers' emails (invitations, decisions, lesson changes, day-before
 -- reminders) every minute. It reuses the Vault-held key of
 -- dispatch-upcoming-reminders (that cron.sql creates it), so no key is copied

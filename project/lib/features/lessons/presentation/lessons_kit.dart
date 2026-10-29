@@ -65,7 +65,7 @@ String lessonsError(Object e) => e is LessonsException && _hints.contains(e.deta
     ? 'lessons.error.hint_${e.detail}'.tr()
     : 'lessons.error.${e is LessonsException ? e.failure.name : 'unknown'}'.tr();
 
-/// Cases the server names in its error hint (20261029120000).
+/// Cases the server names in its error hint (20261029103349).
 const _hints = {'no_email', 'already_preacher', 'pending', 'not_preacher'};
 
 void tToast(BuildContext context, String message, {bool warn = false, String? actionLabel, VoidCallback? onAction}) {

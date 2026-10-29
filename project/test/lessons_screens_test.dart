@@ -189,7 +189,7 @@ Future<void> _chooseCity(WidgetTester tester, Finder picker, String city) async 
   await _settle(tester);
 }
 
-/// [p] without an initial mosque (a card from before 20261029120000).
+/// [p] without an initial mosque (a card from before 20261029103349).
 Preacher _withoutHome(Preacher p) => Preacher(
     id: p.id, nameAr: p.nameAr, nameEn: p.nameEn, titleAr: p.titleAr, titleEn: p.titleEn, city: p.city,
     affiliation: p.affiliation, languages: p.languages);

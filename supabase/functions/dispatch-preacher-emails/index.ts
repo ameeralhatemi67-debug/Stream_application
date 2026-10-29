@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { preacherEmail, type PreacherEmailData } from '../_shared/preacher_email_text.ts';
 
-// An email the outbox hands over (claim_preacher_emails, 20261029120000).
+// An email the outbox hands over (claim_preacher_emails, 20261029103349).
 // The claim leases it for five minutes; the result call settles it.
 type Claim = { id: string; kind: string; to_email: string; data: PreacherEmailData };
 

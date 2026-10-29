@@ -16,7 +16,7 @@ to apply as a preacher (on the welcome page and in Settings), "a preacher can
 be either invited or accepted"; one initial mosque to start, any mosque
 later; emails when invited, approved, declined, assigned a lesson and more;
 a log of every action and who took it. Migration
-`20261029120000_preacher_onboarding_and_emails.sql`.
+`20261029103349_preacher_onboarding_and_emails.sql`.
 
 - **Two ways in.** *Invited*: an admin adds the preacher (photo, email,
   initial mosque) and can email him a one-time link at once; preachers

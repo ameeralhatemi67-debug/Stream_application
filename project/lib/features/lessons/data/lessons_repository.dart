@@ -16,7 +16,7 @@ class LessonsException implements Exception {
 }
 
 /// Every Lessons read and write. Writes go through server functions that check
-/// the caller (migrations 20261022125222, 20261029120000): admins manage
+/// the caller (migrations 20261022125222, 20261029103349): admins manage
 /// everything, viewers keep their own reminders and follows and may apply to
 /// give lessons, and a preacher acts through his link or, when his card is
 /// linked to his account, through that account. The client never decides

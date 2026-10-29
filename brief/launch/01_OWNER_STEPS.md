@@ -166,7 +166,7 @@ Preachers get emails for their invitation, their application's decision, lessons
   - `EMAIL_FROM` = for example `Hadayah <lessons@your-domain>`
   - optional `EMAIL_REPLY_TO` = the support email from section 1, so preachers can reply
   - optional `PUBLIC_SITE_URL` = your final web address (default: the current Vercel address)
-- [ ] **Approve Claude** to apply migration `20261029120000`, deploy `dispatch-preacher-emails` and run its `cron.sql`.
+- [ ] **Approve Claude** to apply migration `20261029103349`, deploy `dispatch-preacher-emails` and run its `cron.sql`.
 - [ ] Test: add yourself as a preacher with your own email, tick "Email him his link now", and check your inbox (and spam folder).
 
 ---

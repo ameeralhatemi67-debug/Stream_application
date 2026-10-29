@@ -8,7 +8,7 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## Preachers invited or accepted, emails, named log, 2026-10-29 (local; migration and function not on hosted)
+## Preachers invited or accepted, emails, named log, 2026-10-29 (deployed: server, email sender, website)
 
 Owner request: email and photo upload on "add preacher", city-filtered mosques, an explanation of Affiliation, applying as a preacher from the welcome page and Settings, one initial mosque then any mosque, emails to preachers, and a log of every action with who took it. ADR-020.
 
@@ -20,6 +20,8 @@ Owner request: email and photo upload on "add preacher", city-filtered mosques, 
 - **Log:** every entry names the admin (name and email as they were) or "via link" or "System", with exact time and the reason; filter by kind, search, and an Emails view with state and retry.
 
 Verification: see the ledger's RESUME block of the same day.
+
+**Deployed 2026-10-29 (owner: "fix this, then deploy")**: migration stamped `20261029103349` (all 64 lessons functions hash-match the tested copy); `dispatch-preacher-emails` v1 (`verify_jwt=false`); cron job `dispatch-preacher-emails` (id 4, every minute; answers 503 "Email sender not configured" until the owner adds `RESEND_API_KEY` and `EMAIL_FROM`). Also fixed: Settings had no way out when it was the only page (leaving the streamer application from its first step after choosing apply on the welcome page); it now shows a back button to the app.
 
 ## Pre-test fixes, 2026-10-28 (deployed: server and website; APK not rebuilt)
 

@@ -1,4 +1,4 @@
-// Email text for preachers (20261029120000). Arabic first, then English, in
+// Email text for preachers (20261029103349). Arabic first, then English, in
 // one message: a preacher has no saved language. Written for older readers:
 // short sentences, the lesson's day, prayer and mosque spelled out. Kept free
 // of Deno APIs so the wording can be checked with Node.

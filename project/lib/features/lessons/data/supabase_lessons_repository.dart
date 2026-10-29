@@ -8,7 +8,7 @@ import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import 'lessons_repository.dart';
 
-/// Lessons on our Supabase project (migrations 20261022125222, 20261029120000).
+/// Lessons on our Supabase project (migrations 20261022125222, 20261029103349).
 class SupabaseLessonsRepository implements LessonsRepository {
   SupabaseLessonsRepository([SupabaseClient? client]) : _injected = client;
   final SupabaseClient? _injected;
@@ -302,7 +302,7 @@ class SupabaseLessonsRepository implements LessonsRepository {
         'p_valid_until': _instant(validUntil),
         'p_note': note,
         // Sent only when asked, so the function as it was before
-        // 20261029120000 still matches the call.
+        // 20261029103349 still matches the call.
         if (email) 'p_email': true,
       })) as Map));
 
