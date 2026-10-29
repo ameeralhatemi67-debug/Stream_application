@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
@@ -383,6 +384,61 @@ void main() {
         await tester.pumpAndSettle();
       }
       expect(find.text('Delete My Account'), findsWidgets);
+    });
+  });
+
+  // Leaving the application form from its first step opens Settings with
+  // nothing behind it; it had no way out (owner report 2026-10-29).
+  group('SettingsScreen: a way out', () {
+    Future<GoRouter> pumpAt(WidgetTester tester, void Function(GoRouter) open) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final provider = AppProvider()..debugSetSignedInForTests(email: 'viewer@test.com', isStreamer: false);
+      final router = GoRouter(initialLocation: '/feed', routes: [
+        GoRoute(path: '/feed', builder: (_, __) => const Scaffold(body: Text('feed page'))),
+        GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      ]);
+      addTearDown(router.dispose);
+      await tester.pumpWidget(EasyLocalization(
+        supportedLocales: const [Locale('en'), Locale('ar')],
+        path: 'assets/i18n',
+        assetLoader: DirectJsonAssetLoader(enData: globalEnData, arData: globalArData),
+        startLocale: const Locale('en'),
+        saveLocale: false,
+        child: Builder(
+          builder: (context) => ChangeNotifierProvider<AppProvider>.value(
+            value: provider,
+            child: MaterialApp.router(
+              routerConfig: router,
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(disableAnimations: true), child: child!),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      open(router);
+      await tester.pumpAndSettle();
+      return router;
+    }
+
+    testWidgets('opened with nothing behind it, back leads to the app', (tester) async {
+      final router = await pumpAt(tester, (r) => r.go('/settings'));
+      await tester.tap(find.byKey(const Key('settings-back')));
+      await tester.pumpAndSettle();
+      expect(router.routeInformationProvider.value.uri.path, '/feed');
+      expect(find.text('feed page'), findsOneWidget);
+    });
+
+    testWidgets('opened from a page, the usual back returns to it', (tester) async {
+      await pumpAt(tester, (r) => r.push('/settings'));
+      expect(find.byKey(const Key('settings-back')), findsNothing);
+      expect(find.byType(BackButton), findsOneWidget);
     });
   });
 

@@ -136,6 +136,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('settings.title'.tr()),
         backgroundColor: context.pageGround,
         elevation: 0,
+        // Settings can be the only page in the history (leaving the
+        // application form from its first step goes here, 2026-10-29: "I
+        // can't exit"). Then back opens the app instead of nothing.
+        leading: GoRouter.maybeOf(context)?.canPop() ?? true
+            ? null
+            : CaIconButton(
+                key: const Key('settings-back'),
+                bare: true,
+                icon: CaGlyph.back,
+                label: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => context.go('/feed')),
         actions: const [
           // Icon only, without a pill or circle behind it.
           LanguageSwitcher(showLabel: false, canopy: true, bare: true),
