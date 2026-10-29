@@ -217,3 +217,11 @@ String excelSafeCsv(List<List<Object?>> rows) => rows
 /// Masks a phone for display: "05•• ••• 101".
 String maskPhone(String? phone) =>
     phone == null || phone.length < 5 ? '—' : '${phone.substring(0, 2)}•• ••• ${phone.substring(phone.length - 3)}';
+
+/// fa•••@example.com, as the server masks an email (private.mask_email).
+String maskEmail(String email) {
+  final at = email.indexOf('@');
+  if (at < 0) return '•••';
+  final local = email.substring(0, at);
+  return '${local.length <= 2 ? local : local.substring(0, 2)}•••${email.substring(at)}';
+}

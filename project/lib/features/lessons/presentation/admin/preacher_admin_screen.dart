@@ -4,20 +4,22 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/providers/app_provider.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../domain/lessons_models.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
 import '../lessons_modals.dart';
 import '../lessons_widgets.dart';
+import '../preacher_form_kit.dart';
 import 'lessons_admin_modals.dart';
+import 'lessons_admin_log.dart';
 import 'lessons_admin_screen.dart' show PreacherEditCard;
 import 'lessons_admin_shell.dart';
 
-/// One preacher, as admins manage him: his card, his private number, the
-/// links he can use, changes he proposed, and his lessons. Everything here
-/// works whether or not he ever opens a link.
+/// One preacher, as admins manage him: his card, his private number and
+/// email, the links he can use, changes he proposed, his lessons, the emails
+/// sent to him and what was done about him. Everything here works whether or
+/// not he ever opens a link.
 class LessonsAdminPreacherScreen extends StatefulWidget {
   const LessonsAdminPreacherScreen({super.key, required this.id});
   final String id;
@@ -27,15 +29,22 @@ class LessonsAdminPreacherScreen extends StatefulWidget {
 
 class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen> {
   late Future<List<PreacherKey>> keys = _loadKeys();
-  String? phone;
+  late Future<List<PreacherEmailEntry>> emails = _loadEmails();
+  String? phone, email;
 
   Future<List<PreacherKey>> _loadKeys() =>
       context.read<LessonsController>().loadKeys(widget.id).catchError((Object _) => <PreacherKey>[]);
+
+  Future<List<PreacherEmailEntry>> _loadEmails() => context
+      .read<LessonsController>()
+      .loadEmails(preacherId: widget.id)
+      .catchError((Object _) => <PreacherEmailEntry>[]);
 
   void _reloadKeys() {
     if (!mounted) return;
     setState(() {
       keys = _loadKeys();
+      emails = _loadEmails();
     });
   }
 
@@ -58,9 +67,7 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
     final card = TCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          p.photoUrl == null
-              ? TAvatar(name: p.name(lang), size: 64)
-              : CircleAvatar(radius: 32, backgroundColor: TC.tint, backgroundImage: resolveImageProviderOrNull(p.photoUrl)),
+          PreacherPhoto(name: p.name(lang), url: p.photoUrl, size: 64),
           const SizedBox(width: 14),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -68,12 +75,16 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
               if (p.title(lang).isNotEmpty) Text(p.title(lang), style: tBody(14, color: TC.bronze, weight: FontWeight.w600)),
               Text('${cityLabel(p.city)} · ${'lessons.affiliation.${p.affiliation}'.tr()} · ${p.languages.map((x) => LessonsVocab.languageNative[x] ?? x).join(' · ')}',
                   style: tBody(13, color: TC.muted)),
+              if (c.mosque(p.homeMosqueId) case final m?)
+                Text('${'lessons.roster.home_mosque'.tr()}: ${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}',
+                    style: tBody(13, color: TC.ink2, weight: FontWeight.w600)),
               const SizedBox(height: 6),
               Wrap(spacing: 6, runSpacing: 6, children: [
                 p.listed
                     ? TTag('lessons.preacher_admin.public'.tr(), tone: TTone.success, icon: TGlyph.eye)
                     : TTag('lessons.preacher_admin.hidden'.tr(), tone: TTone.slate, icon: TGlyph.lock),
                 if (p.linkedProfileId != null) TTag('lessons.preacher_admin.has_account'.tr(), tone: TTone.info, icon: TGlyph.radio),
+                TTag('lessons.preacher_admin.joined_${p.joinedVia}'.tr(), tone: TTone.slate, icon: TGlyph.user),
               ]),
             ]),
           ),
@@ -85,7 +96,7 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
         const SizedBox(height: 14),
         Wrap(spacing: 8, runSpacing: 8, children: [
           TButton('lessons.preacher_admin.edit_card'.tr(), icon: TGlyph.edit,
-              onPressed: () => showPreacherEditSheet(context, preacher: p, phoneMask: entry?.phoneMask)),
+              onPressed: () => showPreacherEditSheet(context, preacher: p, phoneMask: entry?.phoneMask, emailMask: entry?.emailMask)),
           TButton('lessons.admin.add_lesson'.tr(), kind: TBtn.minted, icon: TGlyph.plus,
               onPressed: () => context.push('/admin/lessons/add?preacher=${p.id}')),
           TButton('lessons.preacher_admin.public_page'.tr(), kind: TBtn.ghost, icon: TGlyph.eye,
@@ -94,23 +105,55 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
       ]),
     );
 
+    Widget contactRow(TGlyph glyph, String? shown, String? mask, String none, String revealLabel, Future<String?> Function() reveal,
+            ValueChanged<String> onShown) =>
+        Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            TIcon(glyph, size: 18, color: TC.goldIcon),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(shown ?? mask ?? none,
+                  textDirection: (shown ?? mask) != null ? TextDirection.ltr : null, style: tStrong(15)),
+            ),
+          ]),
+          if (mask != null && shown == null)
+            TButton(revealLabel, small: true, kind: TBtn.ghost, icon: TGlyph.eye, onPressed: () async {
+              final v = await tRun(context, reveal, success: 'lessons.roster.logged'.tr());
+              if (mounted && v != null) onShown(v);
+            }),
+        ]);
     final contact = TCard(
-      child: Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          const TIcon(TGlyph.phone, size: 18, color: TC.goldIcon),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(phone ?? entry?.phoneMask ?? 'lessons.preacher_admin.no_phone'.tr(),
-                textDirection: (phone ?? entry?.phoneMask) != null ? TextDirection.ltr : null, style: tStrong(15)),
-          ),
-        ]),
-        if (entry?.phoneMask != null && phone == null)
-          TButton('lessons.roster.show_number'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.eye, onPressed: () async {
-            final n = await tRun(context, () => c.revealPhone(p.id), success: 'lessons.roster.logged'.tr());
-            if (mounted && n != null) setState(() => phone = n);
-          }),
+      key: const ValueKey('preacher-contact'),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        contactRow(TGlyph.phone, phone, entry?.phoneMask, 'lessons.preacher_admin.no_phone'.tr(), 'lessons.roster.show_number'.tr(),
+            () => c.revealPhone(p.id), (v) => setState(() => phone = v)),
+        const SizedBox(height: 10),
+        contactRow(TGlyph.send, email, entry?.emailMask, 'lessons.preacher_admin.no_email'.tr(), 'lessons.roster.show_email'.tr(),
+            () => c.revealEmail(p.id), (v) => setState(() => email = v)),
       ]),
     );
+
+    final mail = TCard(
+      key: const ValueKey('preacher-emails'),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('lessons.emails.title'.tr(), style: tStrong(17)),
+        const SizedBox(height: 4),
+        Text(entry?.emailMask == null ? 'lessons.emails.none_address'.tr() : 'lessons.emails.body'.tr(),
+            style: tBody(13.5, color: TC.muted)),
+        FutureBuilder<List<PreacherEmailEntry>>(
+          future: emails,
+          builder: (context, snap) {
+            final list = snap.data ?? const <PreacherEmailEntry>[];
+            if (list.isEmpty) return const SizedBox.shrink();
+            return Column(children: [
+              for (final e in list.take(20))
+                EmailStatusRow(e, showName: false, onRetried: _reloadKeys),
+            ]);
+          },
+        ),
+      ]),
+    );
+    final history = c.admin.audit.where((a) => a.preacherId == p.id).toList();
 
     final links = TCard(
       key: const ValueKey('preacher-links'),
@@ -169,6 +212,7 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
       card,
       contact,
       links,
+      mail,
       if (edit != null) ...[
         TSectionHead('lessons.approvals.edits'.tr(), count: 1),
         PreacherEditCard(edit: edit),
@@ -205,6 +249,11 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
                 TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
                 TButton('lessons.mine.cancel_this'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
               ])),
+      TSectionHead('lessons.preacher_admin.history'.tr(), count: history.length),
+      if (history.isEmpty)
+        Text('lessons.auditlog.empty'.tr(), style: tBody(13.5, color: TC.muted))
+      else
+        LessonsLogList(entries: history.take(40).toList()),
       _AccountLink(preacher: p),
       Align(
         alignment: AlignmentDirectional.centerStart,

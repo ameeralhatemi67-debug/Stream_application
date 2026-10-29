@@ -159,6 +159,23 @@ class LessonsController extends ChangeNotifier {
 
   List<Mosque> get verifiedMosques => catalog.mosques.values.where((m) => m.verified).toList();
 
+  /// A city's areas, in the programme's order.
+  List<District> districtsOf(String city) =>
+      catalog.districts.values.where((d) => d.city == city).toList()..sort((a, b) => a.sort.compareTo(b.sort));
+
+  /// The mosques of [city] (of one [district] when given), by area then
+  /// name. Hidden mosques only with [hidden] (admins).
+  List<Mosque> mosquesIn(String city, String lang, {String? district, bool hidden = false}) {
+    final order = {for (final (i, d) in districtsOf(city).indexed) d.id: i};
+    return catalog.mosques.values
+        .where((m) => (hidden || m.verified) && cityOfMosque(m.id) == city && (district == null || m.districtId == district))
+        .toList()
+      ..sort((a, b) {
+        final byArea = (order[a.districtId] ?? 999).compareTo(order[b.districtId] ?? 999);
+        return byArea != 0 ? byArea : a.name(lang).compareTo(b.name(lang));
+      });
+  }
+
   double startHours(Lesson l) => lessonStartHours(l, catalog);
   bool isLiveNow(Lesson l) {
     if (!l.streamed || !l.isPublic || !sameDay(l.date, today)) return false;
@@ -178,8 +195,13 @@ class LessonsController extends ChangeNotifier {
 
   List<LessonsFlag> get openFlags => admin.flags.where((f) => f.status == 'open').toList();
 
-  /// Everything an admin should look at: requests, card changes, reports.
-  int get waitingCount => pendingRequests.length + pendingEdits.length + openFlags.length;
+  /// Applications to give lessons, waiting.
+  List<PreacherApplication> get pendingApplications =>
+      canManage ? admin.applications.where((a) => a.pending).toList() : const [];
+
+  /// Everything an admin should look at: applications, requests, card
+  /// changes, reports.
+  int get waitingCount => pendingApplications.length + pendingRequests.length + pendingEdits.length + openFlags.length;
 
   LessonsRosterEntry? rosterEntry(String preacherId) =>
       admin.roster.where((r) => r.preacher.id == preacherId).firstOrNull;
@@ -189,6 +211,21 @@ class LessonsController extends ChangeNotifier {
       requestsOf(catalog.lessons.values.where((l) => l.preacherId == preacherId), statuses: statuses);
 
   List<Lesson> clashes(Lesson l) => clashesOfLesson(l, catalog.lessons.values);
+
+  // ------------------------------------------------ preacher by account
+  /// The preacher card linked to this account, if any.
+  String? get myPreacherId => roles.preacherId;
+
+  /// This account's latest application to give lessons.
+  MyPreacherApplication? get myApplication => roles.application;
+
+  Future<String> apply(PreacherApplicationDraft d) => _write(() => repository.apply(d));
+  Future<void> withdrawApplication() => _write(repository.withdrawApplication);
+
+  /// Uploads a photo and returns its address (nothing is saved until the
+  /// form is sent).
+  Future<String> uploadPhoto(Uint8List bytes, {bool application = false}) =>
+      repository.uploadPhoto(bytes, application: application);
 
   // --------------------------------------------------------- viewer data
   bool hasReminder(String lessonId) => mine.reminders.containsKey(lessonId);
@@ -229,13 +266,20 @@ class LessonsController extends ChangeNotifier {
   Future<int> removePreacher(String preacherId) => _write(() => repository.removePreacher(preacherId));
   Future<int> importPreachers(List<Map<String, dynamic>> rows) => _write(() => repository.importPreachers(rows));
   Future<String?> revealPhone(String preacherId) => _write(() => repository.revealPhone(preacherId));
+  Future<String?> revealEmail(String preacherId) => _write(() => repository.revealEmail(preacherId));
+  Future<String?> decideApplication(String id, bool approve, {String? reason, String? mosqueId, String? affiliation}) =>
+      _write(() => repository.decideApplication(id, approve, reason: reason, mosqueId: mosqueId, affiliation: affiliation));
+  Future<void> undoApplication(String id) => _write(() => repository.undoApplication(id));
+  Future<List<PreacherEmailEntry>> loadEmails({String? preacherId}) => repository.loadEmails(preacherId: preacherId);
+  Future<void> retryEmail(String id) => _write(() => repository.retryEmail(id));
   Future<void> decideEdit(String editId, bool approve, {String? reason}) =>
       _write(() => repository.decideEdit(editId, approve, reason: reason));
   Future<List<LessonsAccount>> searchAccounts(String query) => repository.searchAccounts(query);
 
   Future<NewPreacherKey> createKey(String preacherId, String kind,
-          {DateTime? validFrom, DateTime? validUntil, String note = ''}) =>
-      _write(() => repository.createKey(preacherId, kind, validFrom: validFrom, validUntil: validUntil, note: note));
+          {DateTime? validFrom, DateTime? validUntil, String note = '', bool email = false}) =>
+      _write(() => repository.createKey(preacherId, kind,
+          validFrom: validFrom, validUntil: validUntil, note: note, email: email));
   Future<List<PreacherKey>> loadKeys(String preacherId) => repository.loadKeys(preacherId);
   Future<void> revokeKey(String keyId) => _write(() => repository.revokeKey(keyId));
 

@@ -1,12 +1,68 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-28
+updated: 2026-10-29
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-020: Preachers are invited or accepted; emails reach them; the lessons log names who acted (2026-10-29)
+
+Owner request 2026-10-29: the add-preacher form lacked an email and a photo
+upload, and its city and mosque were not connected; a person should be able
+to apply as a preacher (on the welcome page and in Settings), "a preacher can
+be either invited or accepted"; one initial mosque to start, any mosque
+later; emails when invited, approved, declined, assigned a lesson and more;
+a log of every action and who took it. Migration
+`20261029120000_preacher_onboarding_and_emails.sql`.
+
+- **Two ways in.** *Invited*: an admin adds the preacher (photo, email,
+  initial mosque) and can email him a one-time link at once; preachers
+  without an account keep using links (ADR-015). *Accepted*: a signed-in
+  person applies (`preacher_applications`, one waiting at a time, three a
+  month); an admin approves (a card linked to that account, his contacts kept
+  privately, the mosque he named added to the directory if it was not
+  listed) or declines with a reason. Either decision can be undone for 15
+  minutes. This replaces "no preacher accounts" for applicants only: a
+  preacher with a linked account opens his page from Settings
+  (`/lessons/me/preacher`, `lessons_me_*`), the same page a link opens.
+- **City, then area, then mosque** everywhere a mosque is chosen (add
+  preacher, approvals, edit lesson, the application, a preacher's request).
+  Every new preacher has an initial mosque (`preachers.home_mosque_id`). A
+  request starts at the mosque the preacher suggests, else his initial one,
+  and the admin can choose any other; he may also leave it to the admins.
+- **Emails through a private outbox** (`private.preacher_emails`), sent each
+  minute by `dispatch-preacher-emails` through Resend (secrets
+  `RESEND_API_KEY`, `EMAIL_FROM`; a verified sending domain is needed).
+  Kinds: invitation (with the link), application received / approved /
+  declined, lesson assigned, request approved / declined, session cancelled,
+  lesson moved, card change approved / declined, and the day before each
+  lesson. Triggers on `lessons` and `preacher_edits` queue them, so every
+  path is covered. Repeats collapse into one queued email; decisions wait 15
+  minutes and an undo cancels them; the content is read at sending time; an
+  invitation's key is the only stored secret and is removed once sent or
+  given up. Emails are Arabic then English (a preacher has no saved
+  language). Linked accounts also get the Lessons inbox notice.
+- **Emails are private** like phones: masked in the list, shown on request,
+  each showing logged.
+- **The log keeps names.** `lesson_audit` stores the actor's name and email
+  as they were, and the reason given (declines, cancellations, card
+  decisions). Account deletion replaces them with "Deleted account", as
+  `delete_my_account` does for `audit_logs`. The admin log filters by kind,
+  searches by person or lesson, and has an Emails view with each email's
+  state and a retry.
+- **Photos.** Admins upload to the public bucket `preacher-photos`
+  (`preachers/`), which no account owns. Applicants upload to their own
+  `streamer-assets` folder, which account deletion already cleans; a card
+  whose photo came from a deleted account loses it and shows the initial.
+- **Affiliation stays** (cooperating preacher or Ministry branch), now with
+  a hint; it is admin-only and nothing else depends on it. Applicants do not
+  choose it; the approving admin does.
+- **Compatibility.** Every function the app built before this migration
+  calls keeps its name and arguments (`lessons_create_key` gained a trailing
+  `p_email` default false), so the database can go first.
 
 ## ADR-019: Account notices are server events; one dispatcher sends events and lesson reminders (2026-10-28)
 

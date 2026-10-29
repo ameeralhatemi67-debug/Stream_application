@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/language_switcher.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../data/lessons_repository.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
@@ -15,17 +17,24 @@ import '../../state/preacher_link_controller.dart';
 import '../admin/lessons_admin_modals.dart' show dateTimeLabel;
 import '../lessons_kit.dart';
 import '../lessons_widgets.dart';
+import '../preacher_form_kit.dart';
 
-/// The page a preacher's link opens: no account, no sign-in. He sees his
-/// lessons, asks for a new one and suggests changes to his card; admins
-/// approve each one (owner decisions 2026-10-22). Written for older,
-/// non-technical readers: large text, few choices per screen, plain words.
+/// A preacher's page: opened from his link (no account, no sign-in), or with
+/// no [token] from Settings by a preacher whose card is linked to his
+/// account (ADR-020). He sees his lessons, asks for a new one at any mosque
+/// and suggests changes to his card; admins approve each one. Written for
+/// older, non-technical readers: large text, few choices per screen, plain
+/// words.
 class PreacherLinkScreen extends StatelessWidget {
-  const PreacherLinkScreen({super.key, required this.token});
-  final String token;
+  const PreacherLinkScreen({super.key, this.token});
+  final String? token;
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (ctx) => PreacherLinkController(ctx.read<LessonsController>().repository, token)..open(),
+        create: (ctx) {
+          // The mosque picker of a request needs the public directory.
+          unawaited(ctx.read<LessonsController>().ensureLoaded());
+          return PreacherLinkController(ctx.read<LessonsController>().repository, token)..open();
+        },
         child: const _LinkPage(),
       );
 }
@@ -41,13 +50,22 @@ class _LinkPage extends StatelessWidget {
       body = const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator(color: TC.gold)));
     } else if (s.view == null) {
       final e = s.failure!;
-      final why = e.failure == LessonsFailure.expired ? e.detail : (e.failure == LessonsFailure.unavailable ? 'offline' : 'revoked');
+      final why = e.failure == LessonsFailure.unavailable
+          ? 'offline'
+          : s.viaAccount
+              ? 'not_preacher'
+              : (e.failure == LessonsFailure.expired ? e.detail : 'revoked');
       body = TCard(
         child: TEmpty(
           icon: why == 'offline' ? TGlyph.refresh : TGlyph.lock,
           title: 'lessons.link.closed_$why'.tr(),
           body: 'lessons.link.closed_body_$why'.tr(),
-          action: why == 'offline' ? TButton('lessons.retry'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.refresh, onPressed: s.open) : null,
+          action: why == 'offline'
+              ? TButton('lessons.retry'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.refresh, onPressed: s.open)
+              : why == 'not_preacher'
+                  ? TButton('lessons.apply.title'.tr(), kind: TBtn.minted, large: true, icon: TGlyph.user,
+                      onPressed: () => context.go('/lessons/apply'))
+                  : null,
         ),
       );
     } else {
@@ -59,7 +77,8 @@ class _LinkPage extends StatelessWidget {
         backgroundColor: TC.page,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        // From Settings he can go back; a link opens the page on its own.
+        automaticallyImplyLeading: s.viaAccount,
         shape: const Border(bottom: BorderSide(color: TC.hair)),
         title: Row(mainAxisSize: MainAxisSize.min, children: [
           const AppLogo(size: 30),
@@ -101,14 +120,15 @@ class _Home extends StatelessWidget {
     final today = lessonsToday();
     final coming = view.lessons.where((l) => !l.date.isBefore(today)).toList();
     final past = view.lessons.where((l) => l.date.isBefore(today) && l.status == 'approved').toList().reversed.toList();
-    final lasts = view.kind == 'once'
-        ? (view.validUntil == null ? 'lessons.link.this_phone'.tr() : 'lessons.link.this_phone_until'.tr(args: [dateTimeLabel(view.validUntil!, lang)]))
-        : 'lessons.link.until'.tr(args: [dateTimeLabel(view.validUntil!, lang)]);
+    final lasts = view.viaAccount
+        ? 'lessons.link.via_account'.tr()
+        : view.kind == 'once'
+            ? (view.validUntil == null ? 'lessons.link.this_phone'.tr() : 'lessons.link.this_phone_until'.tr(args: [dateTimeLabel(view.validUntil!, lang)]))
+            : 'lessons.link.until'.tr(args: [dateTimeLabel(view.validUntil!, lang)]);
+    final home = context.select<LessonsController, String?>((c) => c.mosque(p.homeMosqueId)?.name(lang));
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
-        p.photoUrl == null
-            ? TAvatar(name: p.name(lang), size: 64)
-            : CircleAvatar(radius: 32, backgroundColor: TC.tint, backgroundImage: resolveImageProviderOrNull(p.photoUrl)),
+        PreacherPhoto(name: p.name(lang), url: p.photoUrl, size: 64),
         const SizedBox(width: 14),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -123,6 +143,21 @@ class _Home extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(child: Text(lasts, style: tBody(14, color: TC.muted))),
       ]),
+      if (home != null) ...[
+        const SizedBox(height: 6),
+        Row(children: [
+          const TIcon(TGlyph.mosque, size: 15, color: TC.muted),
+          const SizedBox(width: 6),
+          Expanded(child: Text('lessons.link.home'.tr(args: [home]), style: tBody(14, color: TC.muted))),
+        ]),
+      ],
+      if (!view.emailSet) ...[
+        const SizedBox(height: 12),
+        TCallout(
+            tone: TTone.info,
+            icon: TGlyph.send,
+            child: Text('lessons.link.add_email'.tr(), style: tBody(15))),
+      ],
       const SizedBox(height: 18),
       TButton('lessons.link.request'.tr(), kind: TBtn.minted, large: true, expand: true, icon: TGlyph.plus,
           onPressed: () => _showRequestSheet(context, view)),
@@ -221,6 +256,9 @@ Future<void> _showRequestSheet(BuildContext context, PreacherLinkView view) {
   var date = addDays(today, 3);
   var weekly = false;
   var count = 4;
+  final c = context.read<LessonsController>();
+  String? mosque = c.mosque(view.preacher.homeMosqueId)?.verified == true ? view.preacher.homeMosqueId : null;
+  var city = cityOr(c, mosque, view.preacher.city);
   final title = TextEditingController(), note = TextEditingController();
   List<DateTime> dates() => weekly ? seriesDates(date, {date.weekday}, count) : [date];
   Widget label(String t) => Padding(padding: const EdgeInsets.only(top: 18, bottom: 8), child: Text(t, style: tStrong(17)));
@@ -272,6 +310,21 @@ Future<void> _showRequestSheet(BuildContext context, PreacherLinkView view) {
               ]),
               label('lessons.link.q_audience'.tr()),
               TChips([for (final a in LessonsVocab.audiences) TChip(audienceLabel(a), selected: audience == a, onTap: () => set(() => audience = a))]),
+              label('lessons.link.q_mosque'.tr()),
+              Text('lessons.link.q_mosque_note'.tr(), style: tBody(15, color: TC.muted)),
+              const SizedBox(height: 10),
+              CityMosquePicker(
+                key: const ValueKey('link-request-mosque'),
+                city: city,
+                mosqueId: mosque,
+                required: false,
+                large: true,
+                noneLabel: 'lessons.place.any'.tr(),
+                onChanged: (ci, m) => set(() {
+                  city = ci;
+                  mosque = m;
+                }),
+              ),
               label('lessons.link.q_note'.tr()),
               TextField(
                 controller: note,
@@ -291,7 +344,7 @@ Future<void> _showRequestSheet(BuildContext context, PreacherLinkView view) {
               }
               final draft = LessonRequestDraft(
                   type: type, topic: topic, titleAr: title.text.trim(), language: language, audience: audience, slot: slot,
-                  dates: dates(), note: note.text.trim());
+                  dates: dates(), note: note.text.trim(), mosqueId: mosque);
               final r = await tRun(ctx, () => s.requestLesson(draft));
               if (r == null || !ctx.mounted) return;
               Navigator.of(ctx).pop();
@@ -311,6 +364,7 @@ Future<void> _showCardSheet(BuildContext context, PreacherLinkView view) {
   final nameEn = TextEditingController(text: start('name_en', p.nameEn)), titleEn = TextEditingController(text: start('title_en', p.titleEn));
   final bioEn = TextEditingController(text: start('bio_en', p.bioEn));
   final langs = {...((pending['languages'] as List?)?.cast<String>() ?? p.languages)};
+  final email = TextEditingController(text: pending['email'] as String? ?? '');
   var english = nameEn.text.isNotEmpty || titleEn.text.isNotEmpty || bioEn.text.isNotEmpty;
   Widget label(String t) => Padding(padding: const EdgeInsets.only(top: 16, bottom: 8), child: Text(t, style: tStrong(17)));
   return showTModal<void>(context,
@@ -330,6 +384,14 @@ Future<void> _showCardSheet(BuildContext context, PreacherLinkView view) {
                   TChip(LessonsVocab.languageNative[x]!, selected: langs.contains(x),
                       onTap: () => set(() => langs.contains(x) && langs.length > 1 ? langs.remove(x) : langs.add(x))),
               ]),
+              label('lessons.link.f_email'.tr()),
+              TextField(
+                  key: const ValueKey('link-card-email'),
+                  controller: email,
+                  keyboardType: TextInputType.emailAddress,
+                  textDirection: TextDirection.ltr,
+                  style: tBody(17, color: TC.ink),
+                  decoration: tInput(hint: view.emailSet ? 'lessons.link.email_keep'.tr() : 'name@example.com')),
               TToggleRow(label: 'lessons.link.english'.tr(), icon: TGlyph.globe, value: english, onChanged: (v) => set(() => english = v)),
               if (english) ...[
                 label('lessons.roster.name_en'.tr()),
@@ -348,6 +410,11 @@ Future<void> _showCardSheet(BuildContext context, PreacherLinkView view) {
                 tToast(ctx, 'lessons.preacher_admin.name_needed'.tr(), warn: true);
                 return;
               }
+              final mail = email.text.trim();
+              if (mail.isNotEmpty && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(mail)) {
+                tToast(ctx, 'lessons.preacher_admin.email_bad'.tr(), warn: true);
+                return;
+              }
               final changes = <String, dynamic>{
                 'name_ar': nameAr.text.trim(),
                 'title_ar': titleAr.text.trim(),
@@ -356,6 +423,7 @@ Future<void> _showCardSheet(BuildContext context, PreacherLinkView view) {
                 'title_en': titleEn.text.trim(),
                 'bio_en': bioEn.text.trim(),
                 'languages': langs.toList(),
+                if (mail.isNotEmpty) 'email': mail,
               };
               final done = await tRun(ctx, () async {
                 await s.proposeCardEdit(changes);

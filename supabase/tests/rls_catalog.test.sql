@@ -225,10 +225,12 @@ select is(
 -- ---------------------------------------------------------------------------
 -- app-releases holds the published Android APKs, downloaded without signing in
 -- (20261026120000); it has no storage.objects policy, so it cannot be listed.
+-- preacher-photos holds the photos on public preacher cards; only lessons
+-- admins write it and nobody can list it (20261029120000).
 select is(
   (select coalesce(string_agg(id, ',' order by id), '')
-     from storage.buckets where public and id not in ('streamer-assets', 'app-releases')),
-  '', 'R7a streamer-assets and app-releases are the only public buckets');
+     from storage.buckets where public and id not in ('streamer-assets', 'app-releases', 'preacher-photos')),
+  '', 'R7a streamer-assets, app-releases and preacher-photos are the only public buckets');
 
 select is(
   (select count(distinct cmd)::int from pg_policies

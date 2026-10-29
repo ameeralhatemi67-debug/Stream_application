@@ -61,8 +61,12 @@ TextStyle tBody(double size, {Color color = TC.ink2, FontWeight weight = FontWei
 TextStyle tStrong(double size, {Color color = TC.ink}) => tBody(size, color: color, weight: FontWeight.w700, height: 1.4);
 
 /// Localized message for a failed write.
-String lessonsError(Object e) =>
-    'lessons.error.${e is LessonsException ? e.failure.name : 'unknown'}'.tr();
+String lessonsError(Object e) => e is LessonsException && _hints.contains(e.detail)
+    ? 'lessons.error.hint_${e.detail}'.tr()
+    : 'lessons.error.${e is LessonsException ? e.failure.name : 'unknown'}'.tr();
+
+/// Cases the server names in its error hint (20261029120000).
+const _hints = {'no_email', 'already_preacher', 'pending', 'not_preacher'};
 
 void tToast(BuildContext context, String message, {bool warn = false, String? actionLabel, VoidCallback? onAction}) {
   final m = ScaffoldMessenger.maybeOf(context);

@@ -1228,7 +1228,10 @@
     "streamer_title": "I want to become a Streamer",
     "streamer_badge": "Verification Required",
     "streamer_desc": "Host live video & audio streams, connect your YouTube channel, manage multi-campus auditoriums, and broadcast to students across the region.",
-    "streamer_btn": "Apply to Stream (5-Step Form)"
+    "streamer_btn": "Apply to Stream (5-Step Form)",
+    "preacher_title": "I give lessons in mosques",
+    "preacher_desc": "Apply to join the mosque lessons programme as a preacher. The admins review your application and email you their decision.",
+    "preacher_btn": "Apply as a preacher"
   },
   "wizard_steps": {
     "step_progress": "Step {} of {}",
@@ -2286,7 +2289,11 @@
       "expired": "This link has expired or was already used.",
       "unavailable": "We couldn't reach the server. Try again.",
       "unknown": "Something went wrong. Try again.",
-      "busy": "Too many requests are waiting. Try again after the admins review them."
+      "busy": "Too many requests are waiting. Try again after the admins review them.",
+      "hint_no_email": "This preacher has no email address. Add one to his card first.",
+      "hint_already_preacher": "This account is already a preacher in the programme.",
+      "hint_pending": "An application from this account is already waiting.",
+      "hint_not_preacher": "This account has no preacher page."
     },
     "nav": {
       "lessons": "Lessons",
@@ -2415,7 +2422,7 @@
       "addPreacher": "Added a preacher",
       "import": "Imported",
       "editPreacher": "Edited a preacher",
-      "invite": "Sent an invitation",
+      "invite": "Emailed an invitation",
       "grantSubmit": "Granted verified preacher",
       "revokeSubmit": "Revoked verified preacher",
       "phone": "Viewed a phone number",
@@ -2439,7 +2446,14 @@
       "removeMosque": "Removed a mosque",
       "keyOnce": "Made a one-time link",
       "keyWindow": "Made a timed link",
-      "keyRevoke": "Revoked a link"
+      "keyRevoke": "Revoked a link",
+      "email": "Viewed an email",
+      "applicationReceived": "Applied to give lessons",
+      "applicationApproved": "Approved an application",
+      "applicationRejected": "Declined an application",
+      "applicationWithdrawn": "Withdrew an application",
+      "emailFailed": "An email failed",
+      "emailRetry": "Sent an email again"
     },
     "n": {
       "lessons": {
@@ -2761,7 +2775,9 @@
       "p_preacher": "Preacher",
       "p_coordinator": "Coordinator",
       "p_owner": "Organization owner",
-      "p_admin": "Admin"
+      "p_admin": "Admin",
+      "preacher_page": "My preacher page",
+      "preacher_page_hint": "Your lessons, requests and card"
     },
     "notifications": {
       "title": "Notifications",
@@ -2871,7 +2887,8 @@
       "a_due": "Lesson reports overdue (last 2 weeks)",
       "all_clear": "Nothing needs attention",
       "a_edits": "Card changes from preachers",
-      "a_hidden": "Hidden mosques"
+      "a_hidden": "Hidden mosques",
+      "a_applications": "Preacher applications to review"
     },
     "review": {
       "clash": "With a clash",
@@ -2939,8 +2956,23 @@
       "title_en": "Title in English",
       "bio_ar": "About (Arabic)",
       "bio_en": "About (English)",
-      "photo": "Photo link",
-      "photo_hint": "An https link to his photo (optional)."
+      "photo": "Photo",
+      "photo_hint": "A clear photo of his face. It shows on his public card.",
+      "contact": "Contact (only admins see it)",
+      "email": "Email",
+      "email_hint": "For his invitation and notices about his lessons. It is never public.",
+      "email_keep": "Leave empty to keep the email on file. Type a new one to replace it.",
+      "home_mosque": "Initial mosque",
+      "home_mosque_note": "Where he starts. His lessons can be at any mosque later.",
+      "affiliation_hint": "Who he teaches under: a preacher cooperating with the association, or one assigned by the Ministry of Islamic Affairs branch. Admins only; used to tell the two apart in the list.",
+      "invite": "Email him his link now",
+      "invite_desc": "A one-time link: the first phone that opens it keeps it.",
+      "invite_needs_email": "Type his email to send the invitation.",
+      "added_invited": "Preacher added and his invitation emailed.",
+      "show_email": "Show email",
+      "no_email": "No email",
+      "f_account": "Has an account",
+      "f_noemail": "No email"
     },
     "mosques": {
       "add": "Add mosque",
@@ -2988,11 +3020,22 @@
       "csv_note": "The copy is Excel-safe: cells starting with = + - or @ are neutralized."
     },
     "auditlog": {
-      "note": "Every lessons action is recorded: who, when and on what. The log is read-only.",
+      "note": "Every action in the lessons programme, with who took it, when and on what. The log is read-only.",
       "empty": "No actions yet",
       "you": "You",
       "an_admin": "An admin",
-      "via_link": "{} (his link)"
+      "via_link": "{} (his link)",
+      "system": "System",
+      "reason": "Reason",
+      "actions": "Actions",
+      "emails": "Emails",
+      "search": "Search by name, email or lesson",
+      "g_applications": "Applications",
+      "g_preachers": "Preachers",
+      "g_lessons": "Lessons",
+      "g_links": "Links and invitations",
+      "g_mosques": "Mosques",
+      "g_emails": "Emails"
     },
     "admin": {
       "title": "Preachers & lessons",
@@ -3014,7 +3057,7 @@
       "locked_body": "Admins, master admins and lessons admins manage preachers and lessons."
     },
     "approvals": {
-      "body": "Preachers send requests and card changes through their links. Nothing becomes public until you approve it.",
+      "body": "Applications from people who want to give lessons, and requests and card changes from preachers. Nothing becomes public until you approve it.",
       "requests": "Lesson requests",
       "edits": "Card changes",
       "via_link": "From his link",
@@ -3028,7 +3071,8 @@
       "apply": "Apply change",
       "applied": "The card is updated",
       "decline": "Decline",
-      "declined": "Change declined"
+      "declined": "Change declined",
+      "suggested": "Mosque suggested by him"
     },
     "card_field": {
       "name_ar": "Name (Arabic)",
@@ -3065,7 +3109,13 @@
       "remove": "Remove preacher",
       "remove_title": "Remove this preacher?",
       "remove_body": "His card, his links and {} are removed for good. This cannot be undone.",
-      "removed": "Preacher removed"
+      "removed": "Preacher removed",
+      "email_bad": "Check the email address.",
+      "mosque_needed": "Choose his initial mosque.",
+      "no_email": "No email on file",
+      "joined_admin": "Added by an admin",
+      "joined_application": "Applied",
+      "history": "History"
     },
     "links": {
       "title": "His links",
@@ -3105,7 +3155,11 @@
       "bound": "on his phone",
       "unopened": "no phone yet",
       "revoke": "Revoke",
-      "revoked": "Link revoked. It no longer opens."
+      "revoked": "Link revoked. It no longer opens.",
+      "by_email": "Also email it to him",
+      "by_email_desc": "To {}",
+      "no_email": "Add his email to his card to send links by email.",
+      "emailed": "The link is on its way to his email."
     },
     "link": {
       "hello": "Assalamu alaikum, {}",
@@ -3114,7 +3168,7 @@
       "this_phone_until": "This link works on this phone only, until {}.",
       "until": "This link works until {}.",
       "request": "Ask for a lesson",
-      "request_sub": "The admins approve it and choose the mosque.",
+      "request_sub": "The admins confirm the mosque and time, then announce it.",
       "edit_card": "Edit my card",
       "edit_sub": "Your changes show after the admins approve them.",
       "coming": "Your coming lessons",
@@ -3140,8 +3194,8 @@
       "q_language": "Language",
       "q_audience": "For whom?",
       "q_note": "Anything else? (optional)",
-      "note_hint": "For example: the mosque you prefer",
-      "mosque_note": "You do not need to choose a mosque. The admins choose it when they approve.",
+      "note_hint": "For example: a nearby time that also suits you",
+      "mosque_note": "The admins confirm the mosque and time before the lesson is announced.",
       "title_needed": "Write the title of the lesson.",
       "send": "Send request",
       "sent": "Your request was sent. The admins will review it.",
@@ -3166,7 +3220,16 @@
       "closed_offline": "We could not reach the server",
       "closed_body_offline": "Check the internet and try again.",
       "my_page": "My preacher page",
-      "my_page_hint": "Opened from your link on this device"
+      "my_page_hint": "Opened from your link on this device",
+      "closed_not_preacher": "No preacher page for this account",
+      "closed_body_not_preacher": "If you give lessons in mosques, apply and the admins will review it.",
+      "via_account": "Your page, from your account.",
+      "home": "Your first mosque: {}",
+      "add_email": "Add your email in «Edit my card» to get notices about your lessons by email.",
+      "q_mosque": "Which mosque?",
+      "q_mosque_note": "Suggest any mosque. The admins confirm it.",
+      "f_email": "Your email (for notices)",
+      "email_keep": "We have your email. Type a new one to change it."
     },
     "add": {
       "title": "Add a lesson",
@@ -3180,6 +3243,117 @@
       "preview_note": "This is how the lesson card looks to the public.",
       "publish": "Publish",
       "published": "Published. It is on the calendar and the map."
+    },
+    "photo": {
+      "upload": "Upload a photo",
+      "change": "Change photo",
+      "remove": "Remove",
+      "cannot_read": "That picture could not be read. Try another one."
+    },
+    "place": {
+      "city": "City",
+      "area": "Area (optional)",
+      "mosque": "Mosque",
+      "choose": "Choose a mosque",
+      "none_listed": "No mosques are listed in {} yet.",
+      "not_listed": "My mosque is not in the list",
+      "pick_listed": "Choose from the list instead",
+      "new_name": "Mosque name",
+      "new_name_hint": "As people know it",
+      "new_area": "Its area",
+      "choose_area": "Choose the area",
+      "add_mosque": "Add a mosque to the list",
+      "any": "No preference: the admins choose"
+    },
+    "emails": {
+      "title": "Emails to him",
+      "body": "What the programme emailed him, and what is waiting.",
+      "none_address": "He has no email on file, so nothing is emailed to him.",
+      "due": "due ",
+      "why_no_address": "not sent: no address",
+      "why_error": "last error: {}",
+      "retry": "Send again",
+      "retried": "It will be sent again.",
+      "log_body": "Every email to preachers and applicants. Addresses are shortened. Decisions wait 15 minutes, the time in which they can be undone.",
+      "stuck": "{} emails are waiting longer than they should. The email sender may not be set up yet.",
+      "empty": "No emails yet."
+    },
+    "email_kind": {
+      "invite": "Invitation with his link",
+      "application_received": "Application received",
+      "application_approved": "Application approved",
+      "application_rejected": "Application declined",
+      "lesson_assigned": "Lesson added for him",
+      "request_approved": "Request approved",
+      "request_rejected": "Request declined",
+      "lesson_cancelled": "Session cancelled",
+      "lesson_changed": "Lesson moved",
+      "lesson_tomorrow": "Reminder the day before",
+      "card_approved": "Card change approved",
+      "card_rejected": "Card change declined"
+    },
+    "email_status": {
+      "queued": "Waiting",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Not sent",
+      "cancelled": "Cancelled"
+    },
+    "applications": {
+      "title": "Preacher applications",
+      "none": "No applications waiting",
+      "none_body": "People can apply from the welcome page or from Settings.",
+      "named": "{} in {} (not listed yet)",
+      "via_account": "Applied from his account",
+      "new_mosque": "New mosque",
+      "first_mosque": "Initial mosque",
+      "sample": "Open his sample",
+      "approve": "Approve",
+      "decline": "Decline",
+      "approve_title": "Approve this preacher",
+      "approve_body": "His preacher card is created and linked to his account. He opens his page from Settings, and we email him.",
+      "will_add": "He named «{}» in {}. Choose a listed mosque instead, or leave it empty and that mosque is added to the list.",
+      "approved": "{} is now a preacher.",
+      "decline_title": "Decline this application",
+      "reason": "Reason",
+      "reason_hint": "He reads this in the email and in the app. Be kind and clear.",
+      "reason_needed": "Write a short reason.",
+      "declined": "Application declined.",
+      "use_named": "Add «{}» to the list"
+    },
+    "apply": {
+      "title": "Apply to give lessons",
+      "intro_title": "Join the mosque lessons programme",
+      "intro": "Tell us about yourself and the mosque where you start. The admins review your application and email you their decision.",
+      "any_mosque": "You start at one mosque. Once approved, you can ask for lessons at any mosque.",
+      "q_photo": "Your photo",
+      "q_mosque": "Your first mosque",
+      "q_mosque_note": "Choose the city first: only its mosques are shown.",
+      "contact_note": "Only the admins see your mobile number and email.",
+      "experience": "Qualifications and experience",
+      "experience_hint": "Your studies, licences (ijazah), and where you have taught.",
+      "sample": "A link to a lesson of yours (optional)",
+      "agree": "I agree that the admins may see my contact details and contact me about my application.",
+      "send": "Send my application",
+      "sent": "Your application was sent. We will email you the decision.",
+      "mosque_needed": "Choose your mosque, or name it and its area.",
+      "phone_needed": "Type your mobile number.",
+      "link_https": "The link must start with https://",
+      "agree_needed": "Tick the box to agree first.",
+      "is_preacher": "You are a preacher in the programme",
+      "is_preacher_body": "Your page shows your lessons. From it you can ask for a new lesson at any mosque.",
+      "pending": "Your application is waiting",
+      "pending_body": "Sent {}. The admins will review it and email you their decision.",
+      "withdraw": "Withdraw my application",
+      "withdrawn": "Application withdrawn.",
+      "rejected": "Your last application was not accepted",
+      "rejected_body": "You can apply again.",
+      "again": "Apply again",
+      "settings_row": "Apply to give lessons",
+      "settings_hint": "For preachers who teach in mosques",
+      "settings_waiting": "Your preacher application",
+      "settings_waiting_hint": "Waiting for the admins",
+      "settings_rejected_hint": "Not accepted last time. You can apply again."
     }
   },
   "skin": {

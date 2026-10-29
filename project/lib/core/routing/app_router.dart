@@ -47,6 +47,7 @@ import '../../features/lessons/presentation/screens/account_screens.dart';
 import '../../features/lessons/presentation/screens/detail_screens.dart';
 import '../../features/lessons/presentation/screens/discover_screen.dart';
 import '../../features/lessons/presentation/screens/lessons_screen.dart';
+import '../../features/lessons/presentation/screens/preacher_apply_screen.dart';
 import '../../features/lessons/presentation/screens/preacher_link_screen.dart';
 import '../../features/lessons/presentation/lessons_shell.dart';
 import '../../features/lessons/state/lessons_controller.dart';
@@ -108,6 +109,9 @@ class AppRouter {
     '/settings',
     '/streamer-apply',
     '/application-pending',
+    // Applying to give lessons and a preacher's own page need the account.
+    '/lessons/apply',
+    '/lessons/me/preacher',
   };
 
   /// Builds the app's router bound to a single [AppProvider] instance.
@@ -449,6 +453,17 @@ class AppRouter {
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me/saved',
               builder: (context, state) => LessonsSavedScreen(tab: state.uri.queryParameters['tab'])),
+          // Applying to give lessons (from the welcome page or Settings), and
+          // the page of a preacher whose card is linked to this account
+          // (ADR-020).
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/lessons/apply',
+              builder: (context, state) => const PreacherApplyScreen()),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/lessons/me/preacher',
+              builder: (context, state) => const PreacherLinkScreen(key: ValueKey('preacher-account'))),
           // A preacher's page from the link an admin sent him: no account.
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,

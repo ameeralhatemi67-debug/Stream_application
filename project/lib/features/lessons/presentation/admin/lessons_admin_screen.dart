@@ -13,8 +13,11 @@ import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
 import '../lessons_modals.dart';
 import '../lessons_widgets.dart';
+import '../preacher_form_kit.dart';
+import 'lessons_admin_log.dart';
 import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
+import 'preacher_applications.dart';
 
 /// The Preachers & lessons area of the admin page: admins (and lessons-only
 /// admins) run the whole programme here, whether or not a preacher ever
@@ -45,7 +48,7 @@ class LessonsAdminScreen extends StatelessWidget {
         'mosques' => const _Mosques(),
         'reports' => const _Reports(),
         'stats' => const _Stats(),
-        'log' => const _Log(),
+        'log' => const LessonsLogView(),
         _ => const _Overview(),
       },
     ]);
@@ -66,6 +69,7 @@ class _Overview extends StatelessWidget {
         .where((l) => l.isPublic && l.date.isBefore(c.today) && !l.date.isBefore(addDays(c.today, -14)) && !c.admin.reports.containsKey(l.id))
         .length;
     final attention = [
+      (c.pendingApplications.length, TGlyph.user, 'lessons.overview.a_applications', 'approvals', TTone.warning),
       (reqs.length, TGlyph.inbox, 'lessons.overview.a_requests', 'approvals', TTone.warning),
       (clashN, TGlyph.alert, 'lessons.overview.a_clash', 'approvals', TTone.danger),
       (c.pendingEdits.length, TGlyph.user, 'lessons.overview.a_edits', 'approvals', TTone.warning),
@@ -75,7 +79,7 @@ class _Overview extends StatelessWidget {
     ].where((a) => a.$1 > 0).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       TStatTiles(big: true, [
-        ('${reqs.length + c.pendingEdits.length}', 'lessons.overview.waiting'.tr()),
+        ('${reqs.length + c.pendingEdits.length + c.pendingApplications.length}', 'lessons.overview.waiting'.tr()),
         ('${week.length}', 'lessons.overview.week'.tr()),
         ('$active', 'lessons.overview.active'.tr()),
         ('${week.map((l) => l.mosqueId).toSet().length}', 'lessons.overview.covered'.tr()),
@@ -190,8 +194,10 @@ class _WeeklyChart extends StatelessWidget {
 }
 
 // -------------------------------------------------------------- approvals
-/// Requests preachers sent through their links, and card changes they
-/// proposed. Approving a request needs a mosque: the admin chooses it.
+/// People applying to give lessons, requests preachers sent (through a link
+/// or their account) and card changes they proposed. Approving a request
+/// needs a mosque: the one the preacher suggested, else his first mosque,
+/// and the admin can choose any other, city by city.
 class _Approvals extends StatefulWidget {
   const _Approvals();
   @override
@@ -201,6 +207,7 @@ class _Approvals extends StatefulWidget {
 class _ApprovalsState extends State<_Approvals> {
   final selected = <String>{};
   final mosqueOf = <String, String>{};
+  final cityOf = <String, String>{};
   String? open;
 
   @override
@@ -210,7 +217,16 @@ class _ApprovalsState extends State<_Approvals> {
     final reqs = c.pendingRequests;
     final edits = c.pendingEdits;
     bool isClash(LessonRequest r) => r.items.any((l) => c.clashes(l).isNotEmpty);
-    String? chosen(LessonRequest r) => mosqueOf[r.id] ?? (r.first.hasMosque ? r.first.mosqueId : null);
+    String? home(LessonRequest r) {
+      final h = c.preacher(r.first.preacherId)?.homeMosqueId;
+      return c.mosque(h) == null ? null : h;
+    }
+
+    String? chosen(LessonRequest r) => mosqueOf.containsKey(r.id)
+        ? (mosqueOf[r.id]!.isEmpty ? null : mosqueOf[r.id])
+        : (r.first.hasMosque ? r.first.mosqueId : home(r));
+    String cityFor(LessonRequest r) =>
+        cityOf[r.id] ?? cityOr(c, chosen(r), c.preacher(r.first.preacherId)?.city ?? 'khobar');
 
     Future<void> approve(List<LessonRequest> rs) async {
       if (rs.any((r) => chosen(r) == null)) {
@@ -241,12 +257,6 @@ class _ApprovalsState extends State<_Approvals> {
       if (done == true) setState(selected.clear);
     }
 
-    final mosques = c.catalog.mosques.values.toList()
-      ..sort((a, b) {
-        final city = c.cityOfMosque(a.id).compareTo(c.cityOfMosque(b.id));
-        return city != 0 ? city : a.name(lang).compareTo(b.name(lang));
-      });
-
     Widget card(LessonRequest r) {
       final l = r.first;
       return TCard(
@@ -272,6 +282,7 @@ class _ApprovalsState extends State<_Approvals> {
             if (isClash(r)) TTag('lessons.review.clash'.tr(), tone: TTone.danger, icon: TGlyph.alert),
             if (r.isSeries) TTag(tPlural('sessions', r.items.length), tone: TTone.slate, icon: TGlyph.repeat),
             if (l.language != 'ar') TTag(languageLabel(l.language), tone: TTone.info, icon: TGlyph.globe),
+            if (l.fromPreacher && l.hasMosque) TTag('lessons.approvals.suggested'.tr(), tone: TTone.gold, icon: TGlyph.mosque),
           ]),
           const SizedBox(height: 6),
           Text(l.title(lang), style: tStrong(16)),
@@ -281,23 +292,16 @@ class _ApprovalsState extends State<_Approvals> {
             TCallout(tone: TTone.info, icon: TGlyph.chat, child: Text('${'lessons.approvals.note'.tr()}: ${l.preacherNote}')),
           ],
           const SizedBox(height: 10),
-          TField(
-            label: 'lessons.approvals.mosque'.tr(),
-            required: true,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey('approval-mosque-${r.id}'),
-              initialValue: chosen(r),
-              isExpanded: true,
-              hint: Text('lessons.approvals.mosque_hint'.tr()),
-              decoration: tInput(),
-              items: [
-                for (final m in mosques)
-                  DropdownMenuItem(
-                      value: m.id,
-                      child: Text('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}', overflow: TextOverflow.ellipsis)),
-              ],
-              onChanged: (v) => setState(() => v == null ? mosqueOf.remove(r.id) : mosqueOf[r.id] = v),
-            ),
+          CityMosquePicker(
+            key: ValueKey('approval-mosque-${r.id}'),
+            city: cityFor(r),
+            mosqueId: chosen(r),
+            hidden: true,
+            mosqueLabel: 'lessons.approvals.mosque'.tr(),
+            onChanged: (ci, m) => setState(() {
+              cityOf[r.id] = ci;
+              mosqueOf[r.id] = m ?? '';
+            }),
           ),
           if (open == r.id) ...[
             const SizedBox(height: 8),
@@ -337,6 +341,8 @@ class _ApprovalsState extends State<_Approvals> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text('lessons.approvals.body'.tr(), style: tBody(14, color: TC.muted)),
       const SizedBox(height: 14),
+      const ApplicationsSection(),
+      const SizedBox(height: 18),
       TSectionHead('lessons.approvals.requests'.tr(), count: reqs.length),
       if (reqs.isNotEmpty) ...[
         Wrap(spacing: 8, runSpacing: 8, children: [
@@ -435,6 +441,8 @@ class _RosterState extends State<_Roster> {
     bool keep(LessonsRosterEntry r) => switch (filter) {
           'link' => r.activeKeys > 0,
           'nolink' => r.activeKeys == 0,
+          'noemail' => r.emailMask == null,
+          'account' => r.preacher.linkedProfileId != null,
           'hidden' => !r.preacher.listed,
           _ => true,
         };
@@ -450,7 +458,7 @@ class _RosterState extends State<_Roster> {
         onTap: () => context.push('/admin/lessons/preachers/${p.id}'),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
-            TAvatar(name: p.name(lang), size: 40),
+            PreacherPhoto(name: p.name(lang), url: p.photoUrl, size: 40),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -466,6 +474,8 @@ class _RosterState extends State<_Roster> {
             r.activeKeys > 0
                 ? TTag(tPlural('active_links', r.activeKeys), tone: TTone.success, icon: TGlyph.link)
                 : TTag('lessons.links.none'.tr(), tone: TTone.slate, icon: TGlyph.link),
+            if (p.linkedProfileId != null) TTag('lessons.preacher_admin.has_account'.tr(), tone: TTone.info, icon: TGlyph.user),
+            if (r.emailMask == null) TTag('lessons.roster.no_email'.tr(), tone: TTone.warning, icon: TGlyph.send),
             if (r.lastSeen != null) TTag('lessons.links.seen'.tr(args: [agoText(r.lastSeen!)]), tone: TTone.slate, icon: TGlyph.eye),
             if (r.pendingEdits > 0) TTag('lessons.links.edit_waiting'.tr(), tone: TTone.warning, icon: TGlyph.edit),
             if (!p.listed) TTag('lessons.preacher_admin.hidden'.tr(), tone: TTone.slate, icon: TGlyph.lock),
@@ -487,7 +497,7 @@ class _RosterState extends State<_Roster> {
         SizedBox(width: 260, child: TSearchBox(hint: 'lessons.roster.search'.tr(), onChanged: (v) => setState(() => q = v.trim()))),
         TChips([
           TChip('lessons.all'.tr(), small: true, selected: filter == null, onTap: () => setState(() => filter = null)),
-          for (final f in ['link', 'nolink', 'hidden'])
+          for (final f in ['link', 'nolink', 'account', 'noemail', 'hidden'])
             TChip('lessons.roster.f_$f'.tr(), small: true, selected: filter == f, onTap: () => setState(() => filter = f)),
         ]),
         Wrap(spacing: 8, children: [
@@ -813,54 +823,6 @@ class _StatsState extends State<_Stats> {
           Text('lessons.stats.csv_note'.tr(), style: tBody(12.5, color: TC.muted)),
         ]),
       ),
-    ]);
-  }
-}
-
-// -------------------------------------------------------------------- log
-class _Log extends StatelessWidget {
-  const _Log();
-  @override
-  Widget build(BuildContext context) {
-    final c = context.watch<LessonsController>();
-    final lang = context.lang;
-    String who(LessonsAuditEntry a) {
-      if (a.actorId == null && a.preacherId != null) {
-        return 'lessons.auditlog.via_link'.tr(args: [c.preacher(a.preacherId)?.name(lang) ?? '—']);
-      }
-      if (a.actorName.isNotEmpty) return a.actorName;
-      if (a.actorId != null && a.actorId == c.repository.currentUserId) return 'lessons.auditlog.you'.tr();
-      return a.actorId == null ? '—' : 'lessons.auditlog.an_admin'.tr();
-    }
-
-    TTone tone(String action) => const {'reject', 'cancel', 'removePreacher', 'removeMosque', 'keyRevoke', 'editRejected'}.contains(action)
-        ? TTone.danger
-        : action == 'phone'
-            ? TTone.warning
-            : TTone.slate;
-    final list = c.admin.audit;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text('lessons.auditlog.note'.tr(), style: tBody(14, color: TC.muted)),
-      const SizedBox(height: 12),
-      if (list.isEmpty)
-        TEmpty(icon: TGlyph.history, title: 'lessons.auditlog.empty'.tr())
-      else
-        TCard(
-          padding: EdgeInsets.zero,
-          child: Column(children: [
-            for (final a in list)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TC.hair))),
-                child: Wrap(spacing: 12, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                  SizedBox(width: 90, child: Text(agoText(a.createdAt), style: tBody(12.5, color: TC.faint))),
-                  SizedBox(width: 190, child: Text(who(a), maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(13.5, color: TC.ink, weight: FontWeight.w600))),
-                  TTag('lessons.audit.${a.action}'.tr(), tone: tone(a.action)),
-                  Text(a.target(lang), style: tBody(13.5, color: TC.ink2)),
-                ]),
-              ),
-          ]),
-        ),
     ]);
   }
 }

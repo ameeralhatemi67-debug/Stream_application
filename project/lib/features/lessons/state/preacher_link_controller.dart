@@ -7,14 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/lessons_repository.dart';
 import '../domain/lessons_models.dart';
 
-/// A preacher's page, opened from the link an admin sent him. He needs no
+/// A preacher's page. Opened from the link an admin sent him, he needs no
 /// account: the link's key and this phone's id are checked by the server on
 /// every call (a one-time link binds to the first phone that opens it).
+/// Without a [token] it is the page of the preacher card linked to the
+/// signed-in account (a preacher who applied, ADR-020).
 class PreacherLinkController extends ChangeNotifier {
   PreacherLinkController(this.repository, this.token);
 
   final LessonsRepository repository;
-  final String token;
+  final String? token;
+  bool get viaAccount => token == null;
 
   /// Kept on this phone so a one-time link keeps working here.
   static const deviceKey = 'preacher_link_device';
@@ -47,14 +50,19 @@ class PreacherLinkController extends ChangeNotifier {
     loading = true;
     _notify();
     try {
-      _device ??= await deviceId();
-      view = await repository.openLink(token, _device!);
+      final t = token;
+      if (t == null) {
+        view = await repository.openMyPage();
+      } else {
+        _device ??= await deviceId();
+        view = await repository.openLink(t, _device!);
+        await (await SharedPreferences.getInstance()).setString(lastLinkKey, t);
+      }
       failure = null;
-      await (await SharedPreferences.getInstance()).setString(lastLinkKey, token);
     } on LessonsException catch (e) {
       failure = e;
       view = null;
-      if (e.failure == LessonsFailure.expired) {
+      if (e.failure == LessonsFailure.expired && token != null) {
         final prefs = await SharedPreferences.getInstance();
         if (prefs.getString(lastLinkKey) == token) await prefs.remove(lastLinkKey);
       }
@@ -65,16 +73,22 @@ class PreacherLinkController extends ChangeNotifier {
   }
 
   /// Sends card changes for an admin to approve.
-  Future<void> proposeCardEdit(Map<String, dynamic> changes) => _write(() => repository.proposeCardEdit(token, _device!, changes));
+  Future<void> proposeCardEdit(Map<String, dynamic> changes) => _write(() => token == null
+      ? repository.proposeMyCardEdit(changes)
+      : repository.proposeCardEdit(token!, _device!, changes));
 
-  /// Requests a lesson or a weekly series. An admin approves it and chooses
-  /// the mosque.
-  Future<String> requestLesson(LessonRequestDraft draft) => _write(() => repository.requestLesson(token, _device!, draft));
+  /// Requests a lesson or a weekly series at the mosque he suggests (or
+  /// none). An admin approves it and confirms or chooses the mosque.
+  Future<String> requestLesson(LessonRequestDraft draft) => _write(() => token == null
+      ? repository.requestMyLesson(draft)
+      : repository.requestLesson(token!, _device!, draft));
 
-  Future<void> withdraw(String requestId) => _write(() => repository.withdrawRequest(token, _device!, requestId));
+  Future<void> withdraw(String requestId) => _write(() => token == null
+      ? repository.withdrawMyRequest(requestId)
+      : repository.withdrawRequest(token!, _device!, requestId));
 
   Future<T> _write<T>(Future<T> Function() call) async {
-    _device ??= await deviceId();
+    if (token != null) _device ??= await deviceId();
     final r = await call();
     await open();
     return r;

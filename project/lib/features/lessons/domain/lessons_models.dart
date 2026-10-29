@@ -98,9 +98,18 @@ class Preacher {
     this.affiliation = 'coop',
     this.languages = const ['ar'],
     this.listed = true,
+    this.homeMosqueId,
+    this.joinedVia = 'admin',
   });
   final String id, nameAr, nameEn, titleAr, titleEn, bioAr, bioEn, city, affiliation;
   final String? linkedProfileId, photoUrl;
+
+  /// The mosque he starts at; his lessons can be at any mosque.
+  final String? homeMosqueId;
+
+  /// admin: an admin added him (and may have emailed him a link).
+  /// application: he applied from his account and an admin approved.
+  final String joinedVia;
   final List<String> languages;
   final bool listed;
   String name(String lang) => pick(lang, nameAr, nameEn);
@@ -120,11 +129,14 @@ class Preacher {
       city: j['city'] as String? ?? 'khobar',
       affiliation: j['affiliation'] as String? ?? 'coop',
       languages: _list(j['languages']),
-      listed: j['listed'] as bool? ?? true);
+      listed: j['listed'] as bool? ?? true,
+      homeMosqueId: j['home_mosque_id'] as String?,
+      joinedVia: j['joined_via'] as String? ?? 'admin');
 
   Preacher copyWith({String? linkedProfileId, bool clearLink = false, List<String>? languages,
           String? nameAr, String? nameEn, String? titleAr, String? titleEn, String? bioAr, String? bioEn,
-          String? photoUrl, bool clearPhoto = false, String? city, String? affiliation, bool? listed}) =>
+          String? photoUrl, bool clearPhoto = false, String? city, String? affiliation, bool? listed,
+          String? homeMosqueId}) =>
       Preacher(
           id: id,
           linkedProfileId: clearLink ? null : (linkedProfileId ?? this.linkedProfileId),
@@ -138,7 +150,9 @@ class Preacher {
           city: city ?? this.city,
           affiliation: affiliation ?? this.affiliation,
           languages: languages ?? this.languages,
-          listed: listed ?? this.listed);
+          listed: listed ?? this.listed,
+          homeMosqueId: homeMosqueId ?? this.homeMosqueId,
+          joinedVia: joinedVia);
 }
 
 class LessonSeries {
@@ -368,12 +382,17 @@ class LessonsAuditEntry {
     this.actorId,
     this.preacherId,
     this.actorName = '',
+    this.actorEmail = '',
     required this.action,
     this.targetAr = '',
     this.targetEn = '',
+    this.note = '',
     required this.createdAt,
   });
-  final String id, action, targetAr, targetEn, actorName;
+  final String id, action, targetAr, targetEn, actorName, actorEmail;
+
+  /// The reason given (a decline, a cancellation), if any.
+  final String note;
 
   /// [preacherId] is set when the action came through a preacher's link
   /// (then there is no [actorId]).
@@ -385,9 +404,12 @@ class LessonsAuditEntry {
       id: _s(j['id']),
       actorId: j['actor_id'] as String?,
       preacherId: j['preacher_id'] as String?,
+      actorName: _s(j['actor_name']),
+      actorEmail: _s(j['actor_email']),
       action: _s(j['action']),
       targetAr: _s(j['target_ar']),
       targetEn: _s(j['target_en']),
+      note: _s(j['note']),
       createdAt: _time(j['created_at']) ?? DateTime.now());
 }
 
@@ -480,13 +502,185 @@ class LessonsMine {
 /// What the caller may do, from `lessons_my_roles()`. Only admins (admins,
 /// master admins and lessons-only admins) manage preachers and lessons.
 class LessonsRoles {
-  const LessonsRoles({this.signedIn = false, this.admin = false, this.master = false});
+  const LessonsRoles({this.signedIn = false, this.admin = false, this.master = false, this.preacherId, this.application});
   final bool signedIn, admin, master;
+
+  /// The preacher card linked to this account: he opens his page from
+  /// Settings, without a link.
+  final String? preacherId;
+
+  /// This account's latest application to give lessons.
+  final MyPreacherApplication? application;
 
   static const guest = LessonsRoles();
 
   factory LessonsRoles.fromJson(Map<String, dynamic>? j) => LessonsRoles(
-      signedIn: true, admin: j?['admin'] as bool? ?? false, master: j?['master'] as bool? ?? false);
+      signedIn: true,
+      admin: j?['admin'] as bool? ?? false,
+      master: j?['master'] as bool? ?? false,
+      preacherId: j?['preacher_id'] as String?,
+      application: j?['application'] is Map
+          ? MyPreacherApplication.fromJson(Map<String, dynamic>.from(j!['application'] as Map))
+          : null);
+}
+
+/// The state of one's own application, from `lessons_my_roles()`.
+class MyPreacherApplication {
+  const MyPreacherApplication({required this.id, required this.status, this.reason, this.createdAt});
+  final String id, status;
+  final String? reason;
+  final DateTime? createdAt;
+  bool get pending => status == 'pending';
+
+  factory MyPreacherApplication.fromJson(Map<String, dynamic> j) => MyPreacherApplication(
+      id: _s(j['id']), status: _s(j['status']), reason: j['reason'] as String?, createdAt: _time(j['created_at']));
+}
+
+/// A person asking to give lessons, as admins review it. Either [mosqueId]
+/// (a listed mosque) or [newMosqueName] with [newMosqueDistrict] (one he
+/// named, added to the directory when approved).
+class PreacherApplication {
+  const PreacherApplication({
+    required this.id,
+    required this.profileId,
+    required this.nameAr,
+    this.nameEn = '',
+    this.titleAr = '',
+    this.bioAr = '',
+    this.photoUrl,
+    required this.city,
+    this.mosqueId,
+    this.newMosqueName,
+    this.newMosqueDistrict,
+    this.languages = const ['ar'],
+    this.phone = '',
+    this.email = '',
+    this.experience = '',
+    this.sampleUrl,
+    this.status = 'pending',
+    this.reason,
+    this.preacherId,
+    this.decidedBy,
+    this.decidedAt,
+    required this.createdAt,
+  });
+  final String id, profileId, nameAr, nameEn, titleAr, bioAr, city, phone, email, experience, status;
+  final String? photoUrl, mosqueId, newMosqueName, newMosqueDistrict, sampleUrl, reason, preacherId, decidedBy;
+  final List<String> languages;
+  final DateTime? decidedAt;
+  final DateTime createdAt;
+  String name(String lang) => pick(lang, nameAr, nameEn);
+  bool get pending => status == 'pending';
+
+  factory PreacherApplication.fromJson(Map<String, dynamic> j) => PreacherApplication(
+      id: _s(j['id']),
+      profileId: _s(j['profile_id']),
+      nameAr: _s(j['name_ar']),
+      nameEn: _s(j['name_en']),
+      titleAr: _s(j['title_ar']),
+      bioAr: _s(j['bio_ar']),
+      photoUrl: j['photo_url'] as String?,
+      city: j['city'] as String? ?? 'other',
+      mosqueId: j['mosque_id'] as String?,
+      newMosqueName: j['new_mosque_name'] as String?,
+      newMosqueDistrict: j['new_mosque_district'] as String?,
+      languages: _list(j['languages']),
+      phone: _s(j['phone']),
+      email: _s(j['email']),
+      experience: _s(j['experience']),
+      sampleUrl: j['sample_url'] as String?,
+      status: j['status'] as String? ?? 'pending',
+      reason: j['reason'] as String?,
+      preacherId: j['preacher_id'] as String?,
+      decidedBy: j['decided_by'] as String?,
+      decidedAt: _time(j['decided_at']),
+      createdAt: _time(j['created_at']) ?? DateTime.now());
+}
+
+/// What a person sends to apply (`lessons_apply`).
+class PreacherApplicationDraft {
+  const PreacherApplicationDraft({
+    required this.nameAr,
+    this.nameEn = '',
+    this.titleAr = '',
+    this.bioAr = '',
+    this.photoUrl,
+    required this.city,
+    this.mosqueId,
+    this.newMosqueName,
+    this.newMosqueDistrict,
+    this.languages = const ['ar'],
+    required this.phone,
+    required this.email,
+    this.experience = '',
+    this.sampleUrl,
+  });
+  final String nameAr, nameEn, titleAr, bioAr, city, phone, email, experience;
+  final String? photoUrl, mosqueId, newMosqueName, newMosqueDistrict, sampleUrl;
+  final List<String> languages;
+
+  Map<String, dynamic> toJson() => {
+        'name_ar': nameAr,
+        'name_en': nameEn,
+        'title_ar': titleAr,
+        'bio_ar': bioAr,
+        if (photoUrl != null) 'photo_url': photoUrl,
+        'city': city,
+        if (mosqueId != null) 'mosque_id': mosqueId,
+        if (mosqueId == null && newMosqueName != null) 'new_mosque_name': newMosqueName,
+        if (mosqueId == null && newMosqueDistrict != null) 'new_mosque_district': newMosqueDistrict,
+        'languages': languages,
+        'phone': phone,
+        'email': email,
+        'experience': experience,
+        if (sampleUrl != null && sampleUrl!.isNotEmpty) 'sample_url': sampleUrl,
+      };
+}
+
+/// An email to a preacher or applicant, as admins see it (address masked).
+/// [status]: queued, sent, failed (given up after five tries), skipped (no
+/// address, or nothing left to say), cancelled (an undone decision, a
+/// revoked link).
+class PreacherEmailEntry {
+  const PreacherEmailEntry({
+    required this.id,
+    required this.kind,
+    required this.status,
+    this.preacherId,
+    this.applicationId,
+    this.to = '',
+    this.attempts = 0,
+    this.error,
+    required this.createdAt,
+    this.sentAt,
+    this.sendAfter,
+    this.nameAr = '',
+    this.nameEn = '',
+    this.canRetry = false,
+  });
+  final String id, kind, status, to, nameAr, nameEn;
+  final String? preacherId, applicationId, error;
+  final int attempts;
+  final DateTime createdAt;
+  final DateTime? sentAt, sendAfter;
+  final bool canRetry;
+  String name(String lang) => pick(lang, nameAr, nameEn);
+
+  factory PreacherEmailEntry.fromJson(Map<String, dynamic> j) => PreacherEmailEntry(
+      id: _s(j['id']),
+      kind: _s(j['kind']),
+      status: _s(j['status']),
+      preacherId: j['preacher_id'] as String?,
+      applicationId: j['application_id'] as String?,
+      to: _s(j['to']),
+      attempts: _int(j['attempts']),
+      error: j['error'] as String?,
+      createdAt: _time(j['created_at']) ?? DateTime.now(),
+      sentAt: _time(j['sent_at']),
+      sendAfter: _time(j['send_after']),
+      nameAr: _s(j['name_ar']),
+      nameEn: _s(j['name_en']),
+      canRetry: j['retry'] as bool? ?? false);
 }
 
 /// A preacher as the admins' list shows him.
@@ -494,13 +688,14 @@ class LessonsRosterEntry {
   const LessonsRosterEntry({
     required this.preacher,
     this.phoneMask,
+    this.emailMask,
     this.activeKeys = 0,
     this.lastSeen,
     this.pendingEdits = 0,
     this.lessons30d = 0,
   });
   final Preacher preacher;
-  final String? phoneMask;
+  final String? phoneMask, emailMask;
 
   /// Links that still open (not revoked, not ended).
   final int activeKeys;
@@ -512,6 +707,7 @@ class LessonsRosterEntry {
   factory LessonsRosterEntry.fromJson(Map<String, dynamic> j) => LessonsRosterEntry(
       preacher: Preacher.fromJson(j),
       phoneMask: j['phone_mask'] as String?,
+      emailMask: j['email_mask'] as String?,
       activeKeys: _int(j['active_keys']),
       lastSeen: _time(j['last_seen']),
       pendingEdits: _int(j['pending_edits']),
@@ -568,16 +764,21 @@ class PreacherKey {
 
 /// A link just created: the only time its secret [token] is known.
 class NewPreacherKey {
-  const NewPreacherKey({required this.id, required this.token, required this.kind, this.validFrom, this.validUntil});
+  const NewPreacherKey(
+      {required this.id, required this.token, required this.kind, this.validFrom, this.validUntil, this.emailed = false});
   final String id, token, kind;
   final DateTime? validFrom, validUntil;
+
+  /// Also queued as an invitation email to the preacher.
+  final bool emailed;
 
   factory NewPreacherKey.fromJson(Map<String, dynamic> j) => NewPreacherKey(
       id: _s(j['id']),
       token: _s(j['token']),
       kind: _s(j['kind']),
       validFrom: _time(j['valid_from']),
-      validUntil: _time(j['valid_until']));
+      validUntil: _time(j['valid_until']),
+      emailed: j['emailed'] as bool? ?? false);
 }
 
 /// Card changes a preacher proposed through his link. Nothing changes on
@@ -594,7 +795,7 @@ class PreacherEdit {
   final String id, preacherId, status;
 
   /// Field name to new value: name_ar, name_en, title_ar, title_en, bio_ar,
-  /// bio_en (strings) and languages (a list).
+  /// bio_en, email (strings) and languages (a list).
   final Map<String, dynamic> changes;
   final String? reason;
   final DateTime createdAt;
@@ -690,8 +891,9 @@ class LessonDraft {
       };
 }
 
-/// A lesson a preacher requests through his link, sent to
-/// `lessons_key_request_lesson`. No mosque: the approving admin chooses it.
+/// A lesson a preacher requests through his link or account. [mosqueId] is
+/// the mosque he suggests (any listed one); the approving admin can change
+/// it, and chooses one when he left it open.
 class LessonRequestDraft {
   const LessonRequestDraft({
     required this.type,
@@ -702,8 +904,10 @@ class LessonRequestDraft {
     required this.slot,
     required this.dates,
     this.note = '',
+    this.mosqueId,
   });
   final String type, topic, titleAr, language, audience, slot, note;
+  final String? mosqueId;
   final List<DateTime> dates;
 
   Map<String, dynamic> toJson() => {
@@ -715,6 +919,7 @@ class LessonRequestDraft {
         'slot': slot,
         'dates': dates.map(isoDate).toList(),
         'note': note,
+        if (mosqueId != null) 'mosque_id': mosqueId,
       };
 }
 
@@ -739,9 +944,10 @@ class PreacherLinkLesson {
     this.cancelReason,
     this.mosqueAr = '',
     this.mosqueEn = '',
+    this.mosqueId,
   });
   final String id, requestId, titleAr, titleEn, type, topic, slot, status, source, preacherNote, mosqueAr, mosqueEn;
-  final String? seriesId, exactTime, rejectionReason, cancelReason;
+  final String? seriesId, exactTime, rejectionReason, cancelReason, mosqueId;
   final int? seq;
   final DateTime date;
   String title(String lang) => pick(lang, titleAr, titleEn);
@@ -765,11 +971,14 @@ class PreacherLinkLesson {
       rejectionReason: j['rejection_reason'] as String?,
       cancelReason: j['cancel_reason'] as String?,
       mosqueAr: _s(j['mosque_name_ar']),
-      mosqueEn: _s(j['mosque_name_en']));
+      mosqueEn: _s(j['mosque_name_en']),
+      mosqueId: j['mosque_id'] as String?);
 }
 
-/// What a preacher's link opens: his card, when the link ends, a card change
+/// What a preacher's page shows: his card, when the link ends, a card change
 /// still waiting for an admin, and his lessons from the last two months on.
+/// [kind] is the link's (once, window), or account when he opened it from
+/// his own account.
 class PreacherLinkView {
   const PreacherLinkView({
     required this.preacher,
@@ -777,9 +986,14 @@ class PreacherLinkView {
     this.validUntil,
     this.pendingEdit,
     this.lessons = const [],
+    this.emailSet = false,
   });
   final Preacher preacher;
   final String kind;
+
+  /// The admins hold an email for him (he gets the programme's emails).
+  final bool emailSet;
+  bool get viaAccount => kind == 'account';
   final DateTime? validUntil;
   final Map<String, dynamic>? pendingEdit;
   final List<PreacherLinkLesson> lessons;
@@ -791,6 +1005,7 @@ class PreacherLinkView {
         kind: _s(key['kind']),
         validUntil: _time(key['valid_until']),
         pendingEdit: j['pending_edit'] == null ? null : Map<String, dynamic>.from(j['pending_edit'] as Map),
+        emailSet: j['email_set'] as bool? ?? false,
         lessons: [
           for (final l in (j['lessons'] as List? ?? const [])) PreacherLinkLesson.fromJson(Map<String, dynamic>.from(l as Map))
         ]);
@@ -827,8 +1042,8 @@ class LessonsCatalog {
           lessons: lessons ?? this.lessons);
 }
 
-/// What only admins see: the preacher list, card changes waiting, viewers'
-/// reports, the action log and after-lesson reports.
+/// What only admins see: the preacher list, applications, card changes
+/// waiting, viewers' reports, the action log and after-lesson reports.
 class LessonsAdminData {
   const LessonsAdminData({
     this.roster = const [],
@@ -836,8 +1051,12 @@ class LessonsAdminData {
     this.flags = const [],
     this.audit = const [],
     this.reports = const {},
+    this.applications = const [],
   });
   final List<LessonsRosterEntry> roster;
+
+  /// Applications to give lessons, newest first (pending and decided).
+  final List<PreacherApplication> applications;
   final List<PreacherEdit> edits;
   final List<LessonsFlag> flags;
   final List<LessonsAuditEntry> audit;

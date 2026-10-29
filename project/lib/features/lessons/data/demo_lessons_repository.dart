@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
@@ -52,6 +54,9 @@ class DemoLessonsRepository implements LessonsRepository {
   /// A timed link of Sheikh Muhammad Iqbal (p4), open this week.
   static const iqbalLink = 'demo-iqbal';
 
+  /// The sample application waiting for the admins.
+  static const sampleApplication = 'app-1';
+
   @override
   bool get isDemo => true;
 
@@ -77,7 +82,16 @@ class DemoLessonsRepository implements LessonsRepository {
   final flags = <LessonsFlag>[];
   final audit = <LessonsAuditEntry>[];
   final phones = <String, String>{};
+
+  /// Preachers' private emails, by preacher.
+  final emails = <String, String>{};
   final edits = <PreacherEdit>[];
+  final applications = <PreacherApplication>[];
+
+  /// The email outbox. Sample data sends nothing: emails show as sent at
+  /// once, except decisions, which wait out the 15-minute undo window as on
+  /// the server.
+  final outbox = <PreacherEmailEntry>[];
   /// Preacher links by their key.
   final links = <String, DemoPreacherLink>{};
 
@@ -106,18 +120,63 @@ class DemoLessonsRepository implements LessonsRepository {
   void _notifyAdmins(String icon, String titleAr, String titleEn, String bodyAr, String bodyEn, String route) =>
       _notify('demo-admin', icon, titleAr, titleEn, bodyAr, bodyEn, route);
 
-  void _log(String action, String ar, String en, {String? preacherId, bool byLink = false}) => audit.insert(
-      0,
-      LessonsAuditEntry(
-          id: _id('a'), actorId: byLink ? null : currentUserId, preacherId: preacherId,
-          actorName: byLink ? '' : _personaName(persona), action: action, targetAr: ar, targetEn: en,
-          createdAt: DateTime.now()));
+  void _log(String action, String ar, String en, {String? preacherId, bool byLink = false, String note = ''}) =>
+      audit.insert(
+          0,
+          LessonsAuditEntry(
+              id: _id('a'), actorId: byLink ? null : currentUserId, preacherId: preacherId,
+              actorName: byLink ? '' : _personaName(persona), actorEmail: byLink ? '' : _personaEmail(persona),
+              action: action, targetAr: ar, targetEn: en, note: note, createdAt: DateTime.now()));
 
   static String _personaName(LessonsDemoPersona p) => switch (p) {
         LessonsDemoPersona.admin => 'Khalid Al-Dosari',
         LessonsDemoPersona.viewer => 'Abdullah Al-Salem',
         LessonsDemoPersona.guest => '',
       };
+
+  static String _personaEmail(LessonsDemoPersona p) => switch (p) {
+        LessonsDemoPersona.admin => 'khalid@example.invalid',
+        LessonsDemoPersona.viewer => 'abdullah@example.invalid',
+        LessonsDemoPersona.guest => '',
+      };
+
+  static const _decisions = {'request_approved', 'request_rejected', 'application_approved', 'application_rejected'};
+
+  /// Queues an email the way private.preacher_email() does: nothing for a
+  /// preacher without an address.
+  void _email(String kind, {String? preacherId, String? applicationId}) {
+    final app = applications.where((a) => a.id == applicationId).firstOrNull;
+    final to = preacherId != null ? emails[preacherId] : app?.email;
+    if (to == null || to.isEmpty) return;
+    final p = preachers[preacherId];
+    final now = DateTime.now();
+    final waits = _decisions.contains(kind);
+    outbox.insert(
+        0,
+        PreacherEmailEntry(
+            id: _id('em'), kind: kind, status: waits ? 'queued' : 'sent', preacherId: preacherId,
+            applicationId: applicationId, to: maskEmail(to), attempts: waits ? 0 : 1, createdAt: now,
+            sentAt: waits ? null : now, sendAfter: waits ? now.add(const Duration(minutes: 15)) : now,
+            nameAr: p?.nameAr ?? app?.nameAr ?? '', nameEn: p?.name('en') ?? app?.name('en') ?? ''));
+  }
+
+  /// An undone decision's waiting email is not sent.
+  void _cancelEmails(bool Function(PreacherEmailEntry e) test) {
+    for (var i = 0; i < outbox.length; i++) {
+      final e = outbox[i];
+      if (e.status == 'queued' && test(e)) {
+        outbox[i] = PreacherEmailEntry(
+            id: e.id, kind: e.kind, status: 'cancelled', preacherId: e.preacherId, applicationId: e.applicationId,
+            to: e.to, createdAt: e.createdAt, nameAr: e.nameAr, nameEn: e.nameEn);
+      }
+    }
+  }
+
+  /// In-app notice for a preacher whose card is linked to an account.
+  void _notifyPreacher(String preacherId, String icon, String titleAr, String titleEn, String bodyAr, String bodyEn) =>
+      _notify(preachers[preacherId]?.linkedProfileId, icon, titleAr, titleEn, bodyAr, bodyEn, '/lessons/me/preacher');
+
+  static final _emailShape = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   // ----------------------------------------------------------------- seed
   void _seed() {
@@ -176,6 +235,18 @@ class DemoLessonsRepository implements LessonsRepository {
     preacher('p9', 'أ. نورة بنت عبدالله السبيعي', 'Ustadha Noura Al-Subaie', 'داعية ومدرّسة (دروس النساء)', "Preacher and teacher (women's lessons)", 'khobar', 'coop', ['ar']);
     preacher('p10', 'الشيخ حسن الرحمن', 'Sheikh Hasan Rahman', 'داعية الجالية البنغالية', 'Preacher to the Bengali community', 'dammam', 'coop', ['bn', 'ar']);
     preacher('p11', 'الشيخ منصور بن علي الخالدي', 'Sheikh Mansour Al-Khalidi', 'داعية في فرع الوزارة', 'Ministry branch preacher', 'qatif', 'ministry', ['ar']);
+    // Where each starts (lessons can be at any mosque), and the emails the
+    // admins hold for some of them.
+    const home = {
+      'p1': 'm1', 'p2': 'm7', 'p3': 'm5', 'p4': 'm2', 'p5': 'm9', 'p6': 'm3', 'p7': 'm11', 'p8': 'm4', 'p9': 'm1',
+      'p10': 'm10', 'p11': 'm12',
+    };
+    for (final e in home.entries) {
+      preachers[e.key] = preachers[e.key]!.copyWith(homeMosqueId: e.value);
+    }
+    emails['p1'] = 'fahd@example.invalid';
+    emails['p4'] = 'iqbal@example.invalid';
+    emails['p9'] = 'noura@example.invalid';
 
     const desc = {
       'lesson': ('درس أسبوعي منتظم يُشرح فيه الكتاب مقطعًا مقطعًا، مع وقت للأسئلة في آخره.',
@@ -355,11 +426,31 @@ class DemoLessonsRepository implements LessonsRepository {
           bodyAr: 'منها سلسلة أسبوعية من ثماني جلسات بالأردية.', bodyEn: 'Including an eight-session weekly series in Urdu.',
           route: '/admin/lessons/approvals', createdAt: DateTime.now().subtract(const Duration(hours: 2))),
     ]);
+    // Someone applied from his account; the admins have not decided yet.
+    applications.add(PreacherApplication(
+        id: sampleApplication, profileId: 'demo-applicant', nameAr: 'الشيخ سعد بن عمر الغامدي', nameEn: 'Sheikh Saad Al-Ghamdi',
+        titleAr: 'إمام وخطيب', bioAr: 'إمام جامع منذ ثماني سنوات، ويدرّس الفقه الميسّر للشباب.', city: 'dammam',
+        mosqueId: 'm9', languages: const ['ar'], phone: '0500000177', email: 'saad@example.invalid',
+        experience: 'إجازة في الفقه من كلية الشريعة، وثماني سنوات إمامًا وخطيبًا في الدمام.',
+        createdAt: DateTime.now().subtract(const Duration(hours: 6))));
+    final sent = DateTime.now().subtract(const Duration(days: 1));
+    outbox.addAll([
+      PreacherEmailEntry(id: 'em1', kind: 'application_received', status: 'sent', applicationId: sampleApplication,
+          to: maskEmail('saad@example.invalid'), attempts: 1, createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+          sentAt: DateTime.now().subtract(const Duration(hours: 6)), nameAr: 'الشيخ سعد بن عمر الغامدي', nameEn: 'Sheikh Saad Al-Ghamdi'),
+      PreacherEmailEntry(id: 'em2', kind: 'invite', status: 'sent', preacherId: 'p1', to: maskEmail('fahd@example.invalid'),
+          attempts: 1, createdAt: sent, sentAt: sent, nameAr: preachers['p1']!.nameAr, nameEn: preachers['p1']!.nameEn),
+    ]);
     audit.addAll([
-      LessonsAuditEntry(id: 'a1', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', action: 'reject',
+      LessonsAuditEntry(id: 'a0', action: 'applicationReceived', actorId: 'demo-applicant', actorName: 'Saad Al-Ghamdi',
+          actorEmail: 'saad@example.invalid', targetAr: 'الشيخ سعد بن عمر الغامدي', targetEn: 'Sheikh Saad Al-Ghamdi',
+          createdAt: DateTime.now().subtract(const Duration(hours: 6))),
+      LessonsAuditEntry(id: 'a1', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', actorEmail: 'khalid@example.invalid',
+          action: 'reject', preacherId: 'p1', note: 'تتعارض مع محاضرة الجمعية الكبرى في الليلة نفسها. نقترح الخميس بعد العشاء.',
           targetAr: 'السعادة الزوجية — الشيخ فهد العتيبي', targetEn: 'A happy marriage, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 2))),
-      LessonsAuditEntry(id: 'a2', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', action: 'add',
+      LessonsAuditEntry(id: 'a2', actorId: 'demo-admin', actorName: 'Khalid Al-Dosari', actorEmail: 'khalid@example.invalid',
+          action: 'add', preacherId: 'p1',
           targetAr: 'الشباب والهوية — الشيخ فهد العتيبي', targetEn: 'Youth and identity, Sheikh Fahd Al-Otaibi',
           createdAt: DateTime.now().subtract(const Duration(days: 4))),
     ]);
@@ -380,11 +471,19 @@ class DemoLessonsRepository implements LessonsRepository {
       );
 
   @override
-  Future<LessonsRoles> loadRoles() async => switch (persona) {
-        LessonsDemoPersona.guest => LessonsRoles.guest,
-        LessonsDemoPersona.viewer => const LessonsRoles(signedIn: true),
-        LessonsDemoPersona.admin => const LessonsRoles(signedIn: true, admin: true),
-      };
+  Future<LessonsRoles> loadRoles() async {
+    if (persona == LessonsDemoPersona.guest) return LessonsRoles.guest;
+    final mine = applications.where((a) => a.profileId == currentUserId).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final app = mine.firstOrNull;
+    return LessonsRoles(
+        signedIn: true,
+        admin: _admin,
+        preacherId: preachers.values.where((p) => p.linkedProfileId == currentUserId).firstOrNull?.id,
+        application: app == null
+            ? null
+            : MyPreacherApplication(id: app.id, status: app.status, reason: app.reason, createdAt: app.createdAt));
+  }
 
   @override
   Future<LessonsMine> loadMine() async => currentUserId == null ? const LessonsMine() : _me();
@@ -399,6 +498,7 @@ class DemoLessonsRepository implements LessonsRepository {
           LessonsRosterEntry(
               preacher: p,
               phoneMask: phones[p.id] == null ? null : maskPhone(phones[p.id]),
+              emailMask: emails[p.id] == null ? null : maskEmail(emails[p.id]!),
               activeKeys: links.values
                   .where((k) => k.preacherId == p.id && k.revokedAt == null && (k.validUntil == null || k.validUntil!.isAfter(now)))
                   .length,
@@ -419,6 +519,7 @@ class DemoLessonsRepository implements LessonsRepository {
       flags: List.of(flags),
       audit: List.of(audit),
       reports: Map.of(reports),
+      applications: List.of(applications)..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
     );
   }
 
@@ -530,6 +631,11 @@ class DemoLessonsRepository implements LessonsRepository {
     _log('add', '${d.titleAr} — ${p.nameAr}', '${d.titleEn.isEmpty ? d.titleAr : d.titleEn}, ${p.name('en')}',
         preacherId: p.id);
     if (d.notifyFollowers) _notifyFollowers(p, added.first);
+    if (added.any((l) => !l.date.isBefore(_today))) {
+      _email('lesson_assigned', preacherId: p.id);
+      _notifyPreacher(p.id, 'calendar', 'أُضيف لك درس: ${d.titleAr}', 'A lesson was added for you: ${added.first.title('en')}',
+          isoDate(added.first.date), isoDate(added.first.date));
+    }
     return req;
   }
 
@@ -560,8 +666,17 @@ class DemoLessonsRepository implements LessonsRepository {
         series[s.id] = s.copyWith(status: status, mosqueId: status == 'approved' && s.mosqueId.isEmpty ? mosqueId : null);
       }
       final l = lessons[items.first.id]!, p = preachers[l.preacherId]!;
-      _log(decision, '${l.titleAr} — ${p.nameAr}', '${l.title('en')}, ${p.name('en')}', preacherId: p.id);
+      _log(decision, '${l.titleAr} — ${p.nameAr}', '${l.title('en')}, ${p.name('en')}', preacherId: p.id,
+          note: status == 'rejected' ? reason!.trim() : '');
       if (status == 'approved' && l.notifyFollowers) _notifyFollowers(p, l);
+      if (l.fromPreacher) _email(status == 'approved' ? 'request_approved' : 'request_rejected', preacherId: p.id);
+      _notifyPreacher(
+          p.id,
+          status == 'approved' ? 'check' : 'x',
+          status == 'approved' ? 'قُبل طلبك: ${l.titleAr}' : 'لم يُقبل طلبك: ${l.titleAr}',
+          status == 'approved' ? 'Your request was approved: ${l.title('en')}' : 'Your request was declined: ${l.title('en')}',
+          status == 'approved' ? isoDate(l.date) : reason!.trim(),
+          status == 'approved' ? isoDate(l.date) : reason!.trim());
     }
     return n;
   }
@@ -580,7 +695,11 @@ class DemoLessonsRepository implements LessonsRepository {
     for (final s in series.values.where((s) => requestIds.contains(s.requestId)).toList()) {
       series[s.id] = s.copyWith(status: 'pending');
     }
-    if (n > 0) _log('undo', 'تراجع عن قرار', 'Undid a decision');
+    if (n > 0) {
+      final undone = {for (final l in lessons.values.where((l) => requestIds.contains(l.requestId))) l.preacherId};
+      _cancelEmails((e) => e.kind.startsWith('request_') && undone.contains(e.preacherId));
+      _log('undo', 'تراجع عن قرار', 'Undid a decision');
+    }
     return n;
   }
 
@@ -618,7 +737,10 @@ class DemoLessonsRepository implements LessonsRepository {
             '${isoDate(l.date)}: $reason', '/lessons/lesson/$lessonId');
       }
     }
-    _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId);
+    _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId,
+        note: reason.trim());
+    _email('lesson_cancelled', preacherId: l.preacherId);
+    _notifyPreacher(l.preacherId, 'alert', 'أُلغي موعد: ${l.titleAr}', 'Cancelled: ${l.title('en')}', reason, reason);
     return n;
   }
 
@@ -641,6 +763,13 @@ class DemoLessonsRepository implements LessonsRepository {
         exactTime: patch['exact_time'] as String?,
         clearExact: patch.containsKey('exact_time') && patch['exact_time'] == null);
     _log('edit', l.titleAr, l.title('en'), preacherId: l.preacherId);
+    final n = lessons[lessonId]!;
+    if (l.status == 'approved' && !n.date.isBefore(_today) &&
+        (n.date != l.date || n.slot != l.slot || n.exactTime != l.exactTime || n.mosqueId != l.mosqueId)) {
+      _email('lesson_changed', preacherId: l.preacherId);
+      _notifyPreacher(l.preacherId, 'clock', 'تغيّر موعد درسك: ${l.titleAr}', 'Your lesson moved: ${l.title('en')}',
+          isoDate(n.date), isoDate(n.date));
+    }
   }
 
   @override
@@ -669,6 +798,10 @@ class DemoLessonsRepository implements LessonsRepository {
     final old = preachers[id];
     final name = (p['name_ar'] as String? ?? old?.nameAr ?? '').trim();
     if (name.length < 3) throw const LessonsException(LessonsFailure.invalid);
+    final email = (p['email'] as String? ?? '').trim().toLowerCase();
+    if (email.isNotEmpty && !_emailShape.hasMatch(email)) throw const LessonsException(LessonsFailure.invalid);
+    final home = p['home_mosque_id'] as String?;
+    if (home != null && !mosques.containsKey(home)) throw const LessonsException(LessonsFailure.invalid);
     preachers[id] = Preacher(
         id: id,
         linkedProfileId: p.containsKey('linked_profile_id') ? p['linked_profile_id'] as String? : old?.linkedProfileId,
@@ -682,13 +815,15 @@ class DemoLessonsRepository implements LessonsRepository {
         city: p['city'] as String? ?? old?.city ?? 'khobar',
         affiliation: p['affiliation'] as String? ?? old?.affiliation ?? 'coop',
         languages: (p['languages'] as List?)?.cast<String>() ?? old?.languages ?? const ['ar'],
-        listed: p['listed'] as bool? ?? old?.listed ?? true);
+        listed: p['listed'] as bool? ?? old?.listed ?? true,
+        homeMosqueId: p.containsKey('home_mosque_id') ? home : old?.homeMosqueId,
+        joinedVia: old?.joinedVia ?? 'admin');
     if (p.containsKey('phone')) {
       final phone = (p['phone'] as String? ?? '').replaceAll(RegExp(r'[^0-9+]'), '');
       phone.isEmpty ? phones.remove(id) : phones[id] = phone;
     }
-    _log(old == null ? 'addPreacher' : 'editPreacher', preachers[id]!.nameAr, preachers[id]!.name('en'),
-        preacherId: old == null ? null : id);
+    if (p.containsKey('email')) email.isEmpty ? emails.remove(id) : emails[id] = email;
+    _log(old == null ? 'addPreacher' : 'editPreacher', preachers[id]!.nameAr, preachers[id]!.name('en'), preacherId: id);
     return id;
   }
 
@@ -703,6 +838,8 @@ class DemoLessonsRepository implements LessonsRepository {
     links.removeWhere((_, k) => k.preacherId == preacherId);
     edits.removeWhere((e) => e.preacherId == preacherId);
     phones.remove(preacherId);
+    emails.remove(preacherId);
+    outbox.removeWhere((e) => e.preacherId == preacherId);
     for (final e in _mine.entries.toList()) {
       _mine[e.key] = e.value.copyWith(follows: {...e.value.follows}..remove('preacher:$preacherId'));
     }
@@ -736,6 +873,23 @@ class DemoLessonsRepository implements LessonsRepository {
   }
 
   @override
+  Future<String?> revealEmail(String preacherId) async {
+    _need(_admin);
+    final p = preachers[preacherId];
+    if (p == null) throw const LessonsException(LessonsFailure.invalid);
+    _log('email', p.nameAr, p.name('en'), preacherId: preacherId);
+    return emails[preacherId];
+  }
+
+  /// Sample data keeps the picture in the address itself.
+  @override
+  Future<String> uploadPhoto(Uint8List bytes, {bool application = false}) async {
+    if (application ? currentUserId == null : !_admin) throw const LessonsException(LessonsFailure.forbidden);
+    final png = bytes.length > 4 && bytes[0] == 0x89 && bytes[1] == 0x50;
+    return 'data:image/${png ? 'png' : 'jpeg'};base64,${base64Encode(bytes)}';
+  }
+
+  @override
   Future<void> decideEdit(String editId, bool approve, {String? reason}) async {
     _need(_admin);
     final i = edits.indexWhere((e) => e.id == editId && e.pending);
@@ -745,6 +899,7 @@ class DemoLessonsRepository implements LessonsRepository {
     if (approve) {
       final x = e.changes;
       final name = (x['name_ar'] as String? ?? '').trim();
+      if ((x['email'] as String? ?? '').isNotEmpty) emails[p.id] = x['email'] as String;
       preachers[p.id] = p.copyWith(
           nameAr: name.isEmpty ? null : name,
           nameEn: x['name_en'] as String?,
@@ -757,7 +912,144 @@ class DemoLessonsRepository implements LessonsRepository {
     edits[i] = PreacherEdit(
         id: e.id, preacherId: e.preacherId, changes: e.changes, status: approve ? 'approved' : 'rejected',
         reason: reason, createdAt: e.createdAt);
-    _log(approve ? 'editApproved' : 'editRejected', p.nameAr, p.name('en'), preacherId: p.id);
+    _log(approve ? 'editApproved' : 'editRejected', p.nameAr, p.name('en'), preacherId: p.id, note: reason ?? '');
+    _email(approve ? 'card_approved' : 'card_rejected', preacherId: p.id);
+    _notifyPreacher(p.id, approve ? 'check' : 'x', approve ? 'اعتُمد تعديل بطاقتك' : 'لم يُعتمد تعديل بطاقتك',
+        approve ? 'Your card change was approved' : 'Your card change was declined', reason ?? '', reason ?? '');
+  }
+
+  // --------------------------------------------------------- applications
+  @override
+  Future<String> apply(PreacherApplicationDraft d) async {
+    _signedIn();
+    if (preachers.values.any((p) => p.linkedProfileId == currentUserId)) {
+      throw const LessonsException(LessonsFailure.conflict, 'already_preacher');
+    }
+    if (applications.any((a) => a.profileId == currentUserId && a.pending)) {
+      throw const LessonsException(LessonsFailure.conflict, 'pending');
+    }
+    final m = mosques[d.mosqueId];
+    final mosqueOk = d.mosqueId != null
+        ? m != null && m.verified && districts[m.districtId]?.city == d.city
+        : (d.newMosqueName ?? '').trim().length >= 2 && districts[d.newMosqueDistrict]?.city == d.city;
+    final phone = d.phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (!mosqueOk || d.nameAr.trim().length < 3 || phone.length < 7 || !_emailShape.hasMatch(d.email.trim())) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    final a = PreacherApplication(
+        id: _id('app'), profileId: currentUserId!, nameAr: d.nameAr.trim(), nameEn: d.nameEn.trim(),
+        titleAr: d.titleAr.trim(), bioAr: d.bioAr.trim(), photoUrl: d.photoUrl, city: d.city, mosqueId: d.mosqueId,
+        newMosqueName: d.mosqueId == null ? d.newMosqueName?.trim() : null,
+        newMosqueDistrict: d.mosqueId == null ? d.newMosqueDistrict : null, languages: d.languages, phone: phone,
+        email: d.email.trim().toLowerCase(), experience: d.experience.trim(), sampleUrl: d.sampleUrl,
+        createdAt: DateTime.now());
+    applications.add(a);
+    _log('applicationReceived', a.nameAr, a.name('en'));
+    _notifyAdmins('user', 'طلب انضمام جديد من داعية', 'A new preacher application', a.nameAr, a.name('en'),
+        '/admin/lessons/approvals');
+    _email('application_received', applicationId: a.id);
+    return a.id;
+  }
+
+  void _setApplication(PreacherApplication a, {required String status, String? reason, String? preacherId, String? mosqueId}) {
+    final i = applications.indexWhere((x) => x.id == a.id);
+    applications[i] = PreacherApplication(
+        id: a.id, profileId: a.profileId, nameAr: a.nameAr, nameEn: a.nameEn, titleAr: a.titleAr, bioAr: a.bioAr,
+        photoUrl: a.photoUrl, city: a.city, mosqueId: mosqueId ?? a.mosqueId, newMosqueName: a.newMosqueName,
+        newMosqueDistrict: a.newMosqueDistrict, languages: a.languages, phone: a.phone, email: a.email,
+        experience: a.experience, sampleUrl: a.sampleUrl, status: status, reason: reason, preacherId: preacherId,
+        decidedBy: status == 'pending' || status == 'withdrawn' ? null : currentUserId,
+        decidedAt: status == 'pending' || status == 'withdrawn' ? null : DateTime.now(), createdAt: a.createdAt);
+  }
+
+  @override
+  Future<void> withdrawApplication() async {
+    _signedIn();
+    final a = applications.where((a) => a.profileId == currentUserId && a.pending).firstOrNull;
+    if (a == null) throw const LessonsException(LessonsFailure.invalid);
+    _setApplication(a, status: 'withdrawn');
+    _log('applicationWithdrawn', a.nameAr, a.name('en'));
+  }
+
+  @override
+  Future<String?> decideApplication(String applicationId, bool approve,
+      {String? reason, String? mosqueId, String? affiliation}) async {
+    _need(_admin);
+    final a = applications.where((a) => a.id == applicationId && a.pending).firstOrNull;
+    if (a == null) throw const LessonsException(LessonsFailure.invalid);
+    final why = reason?.trim() ?? '';
+    if (!approve) {
+      if (why.length < 3) throw const LessonsException(LessonsFailure.invalid);
+      _setApplication(a, status: 'rejected', reason: why);
+      _log('applicationRejected', a.nameAr, a.name('en'), note: why);
+      _notify(a.profileId, 'x', 'لم يُقبل طلب انضمامك داعيةً', 'Your preacher application was declined', why, why, '/lessons/apply');
+      _email('application_rejected', applicationId: a.id);
+      return null;
+    }
+    if (preachers.values.any((p) => p.linkedProfileId == a.profileId)) {
+      throw const LessonsException(LessonsFailure.conflict, 'already_preacher');
+    }
+    var mid = mosqueId ?? a.mosqueId;
+    if (mid == null) {
+      if (a.newMosqueName == null || a.newMosqueDistrict == null) throw const LessonsException(LessonsFailure.invalid);
+      mid = _id('m');
+      mosques[mid] = Mosque(id: mid, nameAr: a.newMosqueName!, districtId: a.newMosqueDistrict!);
+      _log('addMosque', a.newMosqueName!, a.newMosqueName!);
+    } else if (!mosques.containsKey(mid)) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    final pid = _id('p');
+    preachers[pid] = Preacher(
+        id: pid, linkedProfileId: a.profileId, nameAr: a.nameAr, nameEn: a.nameEn, titleAr: a.titleAr, bioAr: a.bioAr,
+        photoUrl: a.photoUrl, city: a.city, affiliation: affiliation ?? 'coop', languages: a.languages,
+        homeMosqueId: mid, joinedVia: 'application');
+    phones[pid] = a.phone;
+    emails[pid] = a.email;
+    _setApplication(a, status: 'approved', reason: why.isEmpty ? null : why, preacherId: pid, mosqueId: mid);
+    _log('applicationApproved', a.nameAr, a.name('en'), preacherId: pid, note: why);
+    _notify(a.profileId, 'check', 'قُبلتَ داعيةً في برنامج الدروس', 'You are now a preacher in the lessons programme',
+        'صفحتك في الإعدادات: صفحتي داعيةً.', 'Your page is in Settings: My preacher page.', '/lessons/me/preacher');
+    outbox.removeWhere((e) => e.applicationId == a.id && e.kind == 'application_approved');
+    _email('application_approved', preacherId: pid, applicationId: a.id);
+    return pid;
+  }
+
+  @override
+  Future<void> undoApplication(String applicationId) async {
+    _need(_admin);
+    final a = applications.where((a) => a.id == applicationId).firstOrNull;
+    if (a == null || a.pending || a.status == 'withdrawn' || a.decidedBy != currentUserId ||
+        DateTime.now().difference(a.decidedAt!) > const Duration(minutes: 15)) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    if (a.status == 'approved') {
+      if (lessons.values.any((l) => l.preacherId == a.preacherId)) throw const LessonsException(LessonsFailure.conflict);
+      preachers.remove(a.preacherId);
+      phones.remove(a.preacherId);
+      emails.remove(a.preacherId);
+    }
+    _cancelEmails((e) => e.applicationId == a.id && e.kind.startsWith('application_'));
+    _setApplication(a, status: 'pending');
+    _log('undo', a.nameAr, a.name('en'));
+  }
+
+  // --------------------------------------------------------------- emails
+  @override
+  Future<List<PreacherEmailEntry>> loadEmails({String? preacherId}) async {
+    _need(_admin);
+    return [for (final e in outbox) if (preacherId == null || e.preacherId == preacherId) e];
+  }
+
+  @override
+  Future<void> retryEmail(String emailId) async {
+    _need(_admin);
+    final i = outbox.indexWhere((e) => e.id == emailId && (e.status == 'failed' || e.status == 'skipped'));
+    if (i < 0) throw const LessonsException(LessonsFailure.invalid);
+    final e = outbox[i];
+    outbox[i] = PreacherEmailEntry(
+        id: e.id, kind: e.kind, status: 'sent', preacherId: e.preacherId, applicationId: e.applicationId, to: e.to,
+        attempts: 1, createdAt: e.createdAt, sentAt: DateTime.now(), nameAr: e.nameAr, nameEn: e.nameEn);
+    _log('emailRetry', e.nameAr, e.nameEn, preacherId: e.preacherId, note: e.kind);
   }
 
   @override
@@ -773,10 +1065,11 @@ class DemoLessonsRepository implements LessonsRepository {
   // ---------------------------------------------------------------- links
   @override
   Future<NewPreacherKey> createKey(String preacherId, String kind,
-      {DateTime? validFrom, DateTime? validUntil, String note = ''}) async {
+      {DateTime? validFrom, DateTime? validUntil, String note = '', bool email = false}) async {
     _need(_admin);
     final p = preachers[preacherId];
     if (p == null || (kind != 'once' && kind != 'window')) throw const LessonsException(LessonsFailure.invalid);
+    if (email && emails[preacherId] == null) throw const LessonsException(LessonsFailure.invalid, 'no_email');
     if (kind == 'window' && (validFrom == null || validUntil == null)) throw const LessonsException(LessonsFailure.invalid);
     if (validUntil != null && !validUntil.isAfter(DateTime.now())) throw const LessonsException(LessonsFailure.invalid);
     if (validFrom != null && validUntil != null && !validUntil.isAfter(validFrom)) {
@@ -787,7 +1080,12 @@ class DemoLessonsRepository implements LessonsRepository {
         id: _id('k'), preacherId: preacherId, kind: kind, validFrom: kind == 'window' ? validFrom : null,
         validUntil: validUntil, note: note.trim(), createdAt: DateTime.now());
     _log(kind == 'once' ? 'keyOnce' : 'keyWindow', p.nameAr, p.name('en'), preacherId: preacherId);
-    return NewPreacherKey(id: k.id, token: token, kind: kind, validFrom: k.validFrom, validUntil: k.validUntil);
+    if (email) {
+      _email('invite', preacherId: preacherId);
+      _log('invite', p.nameAr, p.name('en'), preacherId: preacherId);
+    }
+    return NewPreacherKey(
+        id: k.id, token: token, kind: kind, validFrom: k.validFrom, validUntil: k.validUntil, emailed: email);
   }
 
   @override
@@ -838,14 +1136,19 @@ class DemoLessonsRepository implements LessonsRepository {
   @override
   Future<PreacherLinkView> openLink(String token, String device) async {
     final k = _key(token, device);
-    final p = preachers[k.preacherId]!;
+    return _page(k.preacherId, k.kind, k.validUntil);
+  }
+
+  PreacherLinkView _page(String preacherId, String kind, DateTime? validUntil) {
+    final p = preachers[preacherId]!;
     final since = addDays(_today, -60);
     final mine = lessons.values.where((l) => l.preacherId == p.id && l.status != 'withdrawn' && !l.date.isBefore(since)).toList()
       ..sort(compareLessons);
     return PreacherLinkView(
       preacher: p,
-      kind: k.kind,
-      validUntil: k.validUntil,
+      kind: kind,
+      validUntil: validUntil,
+      emailSet: emails.containsKey(p.id),
       pendingEdit: edits.where((e) => e.preacherId == p.id && e.pending).lastOrNull?.changes,
       lessons: [
         for (final l in mine)
@@ -854,45 +1157,52 @@ class DemoLessonsRepository implements LessonsRepository {
               titleEn: l.titleEn, type: l.type, topic: l.topic, date: l.date, slot: l.slot, exactTime: l.exactTime,
               status: l.status, source: l.source, preacherNote: l.preacherNote, rejectionReason: l.rejectionReason,
               cancelReason: l.cancelReason, mosqueAr: mosques[l.mosqueId]?.nameAr ?? '',
-              mosqueEn: mosques[l.mosqueId]?.nameEn ?? ''),
+              mosqueEn: mosques[l.mosqueId]?.nameEn ?? '', mosqueId: l.hasMosque ? l.mosqueId : null),
       ],
     );
   }
 
   @override
-  Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes) async {
-    final k = _key(token, device);
+  Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes) async =>
+      _propose(_key(token, device).preacherId, changes, byLink: true);
+
+  void _propose(String preacherId, Map<String, dynamic> changes, {required bool byLink}) {
     const fields = ['name_ar', 'name_en', 'title_ar', 'title_en', 'bio_ar', 'bio_en'];
+    final email = (changes['email'] as String? ?? '').trim().toLowerCase();
     final x = <String, dynamic>{
       for (final f in fields)
         if (changes.containsKey(f)) f: (changes[f] as String? ?? '').trim(),
       if (changes['languages'] is List) 'languages': (changes['languages'] as List).cast<String>(),
+      if (email.isNotEmpty) 'email': email,
     };
     final langs = x['languages'] as List<String>?;
     if (x.isEmpty ||
         (x.containsKey('name_ar') && ((x['name_ar'] as String).length < 3 || (x['name_ar'] as String).length > 120)) ||
         ['bio_ar', 'bio_en'].any((f) => ((x[f] as String?) ?? '').length > 1500) ||
         ['name_en', 'title_ar', 'title_en'].any((f) => ((x[f] as String?) ?? '').length > 120) ||
+        (email.isNotEmpty && !_emailShape.hasMatch(email)) ||
         (langs != null && (langs.isEmpty || langs.length > 7))) {
       throw const LessonsException(LessonsFailure.invalid);
     }
-    final i = edits.indexWhere((e) => e.preacherId == k.preacherId && e.pending);
-    final edit = PreacherEdit(id: i < 0 ? _id('e') : edits[i].id, preacherId: k.preacherId, changes: x, createdAt: DateTime.now());
+    final i = edits.indexWhere((e) => e.preacherId == preacherId && e.pending);
+    final edit = PreacherEdit(id: i < 0 ? _id('e') : edits[i].id, preacherId: preacherId, changes: x, createdAt: DateTime.now());
     i < 0 ? edits.add(edit) : edits[i] = edit;
-    final p = preachers[k.preacherId]!;
-    _log('preacherEdit', p.nameAr, p.name('en'), preacherId: p.id, byLink: true);
+    final p = preachers[preacherId]!;
+    _log('preacherEdit', p.nameAr, p.name('en'), preacherId: p.id, byLink: byLink);
     _notifyAdmins('user', 'داعية اقترح تعديلًا على بطاقته', 'A preacher proposed a card change', p.nameAr, p.name('en'),
         '/admin/lessons/approvals');
   }
 
   @override
-  Future<String> requestLesson(String token, String device, LessonRequestDraft d) async {
-    final k = _key(token, device);
-    final waiting = lessons.values.where((l) => l.preacherId == k.preacherId && l.status == 'pending').map((l) => l.requestId).toSet();
+  Future<String> requestLesson(String token, String device, LessonRequestDraft d) async =>
+      _request(_key(token, device).preacherId, d, byLink: true);
+
+  String _request(String preacherId, LessonRequestDraft d, {required bool byLink}) {
+    final waiting = lessons.values.where((l) => l.preacherId == preacherId && l.status == 'pending').map((l) => l.requestId).toSet();
     if (waiting.length >= 20) throw const LessonsException(LessonsFailure.busy);
     final dates = {...d.dates}.toList()..sort();
     if (dates.isEmpty || dates.length > 12 || dates.first.isBefore(_today) || dates.last.isAfter(addDays(_today, 180)) ||
-        d.titleAr.trim().length < 3) {
+        d.titleAr.trim().length < 3 || (d.mosqueId != null && mosques[d.mosqueId]?.verified != true)) {
       throw const LessonsException(LessonsFailure.invalid);
     }
     final req = _id('rq');
@@ -900,33 +1210,55 @@ class DemoLessonsRepository implements LessonsRepository {
     if (dates.length > 1) {
       seriesId = _id('s');
       series[seriesId] = LessonSeries(
-          id: seriesId, requestId: req, preacherId: k.preacherId, titleAr: d.titleAr.trim(), type: d.type,
-          topic: d.topic, language: d.language, audience: d.audience, slot: d.slot, total: dates.length,
+          id: seriesId, requestId: req, preacherId: preacherId, mosqueId: d.mosqueId ?? '', titleAr: d.titleAr.trim(),
+          type: d.type, topic: d.topic, language: d.language, audience: d.audience, slot: d.slot, total: dates.length,
           status: 'pending');
     }
     for (var i = 0; i < dates.length; i++) {
       final id = _id('l');
       lessons[id] = Lesson(
           id: id, requestId: req, seriesId: seriesId, seq: seriesId == null ? null : i + 1, type: d.type,
-          topic: d.topic, titleAr: d.titleAr.trim(), preacherId: k.preacherId, date: dates[i], slot: d.slot,
-          language: d.language, audience: d.audience, status: 'pending', source: 'preacher',
-          preacherNote: d.note.trim(), submittedAt: DateTime.now());
+          topic: d.topic, titleAr: d.titleAr.trim(), preacherId: preacherId, mosqueId: d.mosqueId ?? '',
+          date: dates[i], slot: d.slot, language: d.language, audience: d.audience, status: 'pending',
+          source: 'preacher', preacherNote: d.note.trim(), submittedAt: DateTime.now());
     }
-    final p = preachers[k.preacherId]!;
-    _log('request', '${d.titleAr} — ${p.nameAr}', '${d.titleAr}, ${p.name('en')}', preacherId: p.id, byLink: true);
+    final p = preachers[preacherId]!;
+    _log('request', '${d.titleAr} — ${p.nameAr}', '${d.titleAr}, ${p.name('en')}', preacherId: p.id, byLink: byLink);
     _notifyAdmins('inbox', 'طلب درس جديد من داعية', 'A preacher requested a lesson', '${d.titleAr} — ${p.nameAr}',
         '${d.titleAr}, ${p.name('en')}', '/admin/lessons/approvals');
     return req;
   }
 
   @override
-  Future<void> withdrawRequest(String token, String device, String requestId) async {
-    final k = _key(token, device);
-    if (!lessons.values.any((l) => l.requestId == requestId && l.preacherId == k.preacherId && l.status == 'pending')) {
+  Future<void> withdrawRequest(String token, String device, String requestId) async =>
+      _withdrawOwn(_key(token, device).preacherId, requestId, byLink: true);
+
+  void _withdrawOwn(String preacherId, String requestId, {required bool byLink}) {
+    if (!lessons.values.any((l) => l.requestId == requestId && l.preacherId == preacherId && l.status == 'pending')) {
       throw const LessonsException(LessonsFailure.invalid);
     }
-    _withdraw(requestId, byLink: true);
+    _withdraw(requestId, byLink: byLink);
   }
+
+  // ------------------------------------------------- preacher by account
+  String _myCard() {
+    _signedIn();
+    final p = preachers.values.where((p) => p.linkedProfileId == currentUserId).firstOrNull;
+    if (p == null) throw const LessonsException(LessonsFailure.forbidden, 'not_preacher');
+    return p.id;
+  }
+
+  @override
+  Future<PreacherLinkView> openMyPage() async => _page(_myCard(), 'account', null);
+
+  @override
+  Future<void> proposeMyCardEdit(Map<String, dynamic> changes) async => _propose(_myCard(), changes, byLink: false);
+
+  @override
+  Future<String> requestMyLesson(LessonRequestDraft draft) async => _request(_myCard(), draft, byLink: false);
+
+  @override
+  Future<void> withdrawMyRequest(String requestId) async => _withdrawOwn(_myCard(), requestId, byLink: false);
 
   // -------------------------------------------------------------- mosques
   @override
@@ -962,6 +1294,9 @@ class DemoLessonsRepository implements LessonsRepository {
       }
       for (final s in series.values.where((s) => s.mosqueId == mosqueId).toList()) {
         series[s.id] = s.copyWith(mosqueId: mergeInto);
+      }
+      for (final p in preachers.values.where((p) => p.homeMosqueId == mosqueId).toList()) {
+        preachers[p.id] = p.copyWith(homeMosqueId: mergeInto);
       }
     } else if (lessons.values.any((l) => l.mosqueId == mosqueId)) {
       throw const LessonsException(LessonsFailure.conflict);

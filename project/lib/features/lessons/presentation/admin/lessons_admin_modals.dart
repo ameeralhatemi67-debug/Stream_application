@@ -11,6 +11,7 @@ import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_modals.dart';
 import '../lessons_widgets.dart';
+import '../preacher_form_kit.dart';
 
 /// The page a preacher's link opens (no account needed).
 String preacherLinkUrl(String token) => lessonsLink('/preacher/$token');
@@ -30,126 +31,172 @@ Future<DateTime?> pickDateTime(BuildContext context, DateTime initial, {DateTime
   return DateTime(d.year, d.month, d.day, t.hour, t.minute);
 }
 
-// ---------------------------------------------------------- preacher card
+/// ---------------------------------------------------------- preacher card
 /// Adds a preacher, or edits [preacher]'s card. Returns the preacher's id.
-Future<String?> showPreacherEditSheet(BuildContext context, {Preacher? preacher, String? phoneMask}) {
+/// A new preacher needs his initial mosque; with an email he can be sent his
+/// link at once (an invitation).
+Future<String?> showPreacherEditSheet(BuildContext context, {Preacher? preacher, String? phoneMask, String? emailMask}) {
   final c = context.read<LessonsController>();
   final p = preacher;
   final nameAr = TextEditingController(text: p?.nameAr ?? ''), nameEn = TextEditingController(text: p?.nameEn ?? '');
   final titleAr = TextEditingController(text: p?.titleAr ?? ''), titleEn = TextEditingController(text: p?.titleEn ?? '');
   final bioAr = TextEditingController(text: p?.bioAr ?? ''), bioEn = TextEditingController(text: p?.bioEn ?? '');
-  final photo = TextEditingController(text: p?.photoUrl ?? ''), phone = TextEditingController();
-  var city = p?.city ?? 'khobar', aff = p?.affiliation ?? 'coop', listed = p?.listed ?? true;
+  final phone = TextEditingController(), email = TextEditingController();
+  String? photo = p?.photoUrl;
+  String? home = p?.homeMosqueId;
+  var city = cityOr(c, home, p?.city ?? 'khobar');
+  var aff = p?.affiliation ?? 'coop', listed = p?.listed ?? true, invite = false;
   var langs = {...?p?.languages};
   if (langs.isEmpty) langs = {'ar'};
-  return showTModal<Map<String, dynamic>>(context,
+  bool emailOk(String s) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s);
+  return showTModal<(Map<String, dynamic>, bool)>(context,
       title: p == null ? 'lessons.roster.add_title'.tr() : 'lessons.roster.edit_title'.tr(),
       wide: true,
       body: (ctx) => StatefulBuilder(
-            builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('lessons.preacher_admin.form_note'.tr(), style: tBody(13, color: TC.muted)),
-              const SizedBox(height: 12),
-              TField(
-                  label: 'lessons.roster.name_ar'.tr(),
-                  required: true,
-                  child: TextField(key: const ValueKey('preacher-name-ar'), controller: nameAr, textDirection: TextDirection.rtl, decoration: tInput())),
-              const SizedBox(height: 12),
-              TField(label: 'lessons.roster.name_en'.tr(), child: TextField(controller: nameEn, textDirection: TextDirection.ltr, decoration: tInput())),
-              const SizedBox(height: 12),
-              TField(label: 'lessons.roster.title_ar'.tr(), child: TextField(controller: titleAr, decoration: tInput(hint: 'lessons.roster.title_hint'.tr()))),
-              const SizedBox(height: 12),
-              TField(label: 'lessons.roster.title_en'.tr(), child: TextField(controller: titleEn, textDirection: TextDirection.ltr, decoration: tInput())),
-              const SizedBox(height: 12),
-              TField(label: 'lessons.roster.bio_ar'.tr(), child: TextField(controller: bioAr, maxLines: 3, maxLength: 1500, decoration: tInput())),
-              TField(
-                  label: 'lessons.roster.bio_en'.tr(),
-                  child: TextField(controller: bioEn, maxLines: 3, maxLength: 1500, textDirection: TextDirection.ltr, decoration: tInput())),
-              TField(
+            builder: (ctx, set) {
+              final typedEmail = email.text.trim();
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Text('lessons.preacher_admin.form_note'.tr(), style: tBody(13, color: TC.muted)),
+                const SizedBox(height: 14),
+                TField(
                   label: 'lessons.roster.photo'.tr(),
                   hint: 'lessons.roster.photo_hint'.tr(),
-                  child: TextField(controller: photo, keyboardType: TextInputType.url, textDirection: TextDirection.ltr, decoration: tInput(hint: 'https://'))),
-              const SizedBox(height: 12),
-              Wrap(spacing: 12, runSpacing: 12, children: [
-                SizedBox(
-                  width: 220,
-                  child: TField(
-                    label: 'lessons.roster.city'.tr(),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: city,
-                      decoration: tInput(),
-                      items: [for (final x in LessonsVocab.cities) DropdownMenuItem(value: x, child: Text(cityLabel(x)))],
-                      onChanged: (v) => set(() => city = v ?? city),
-                    ),
+                  child: PhotoField(name: nameAr.text, url: photo, onChanged: (v) => set(() => photo = v)),
+                ),
+                const SizedBox(height: 14),
+                TField(
+                    label: 'lessons.roster.name_ar'.tr(),
+                    required: true,
+                    child: TextField(
+                        key: const ValueKey('preacher-name-ar'),
+                        controller: nameAr,
+                        textDirection: TextDirection.rtl,
+                        onChanged: (_) => set(() {}),
+                        decoration: tInput())),
+                const SizedBox(height: 12),
+                TField(label: 'lessons.roster.name_en'.tr(), child: TextField(controller: nameEn, textDirection: TextDirection.ltr, decoration: tInput())),
+                const SizedBox(height: 12),
+                TField(label: 'lessons.roster.title_ar'.tr(), child: TextField(controller: titleAr, decoration: tInput(hint: 'lessons.roster.title_hint'.tr()))),
+                const SizedBox(height: 12),
+                TField(label: 'lessons.roster.title_en'.tr(), child: TextField(controller: titleEn, textDirection: TextDirection.ltr, decoration: tInput())),
+                const SizedBox(height: 12),
+                TField(label: 'lessons.roster.bio_ar'.tr(), child: TextField(controller: bioAr, maxLines: 3, maxLength: 1500, decoration: tInput())),
+                TField(
+                    label: 'lessons.roster.bio_en'.tr(),
+                    child: TextField(controller: bioEn, maxLines: 3, maxLength: 1500, textDirection: TextDirection.ltr, decoration: tInput())),
+                TSectionHead('lessons.roster.contact'.tr()),
+                TField(
+                    label: 'lessons.roster.email'.tr(),
+                    hint: p == null ? 'lessons.roster.email_hint'.tr() : 'lessons.roster.email_keep'.tr(),
+                    child: TextField(
+                        key: const ValueKey('preacher-email'),
+                        controller: email,
+                        keyboardType: TextInputType.emailAddress,
+                        textDirection: TextDirection.ltr,
+                        onChanged: (_) => set(() {}),
+                        decoration: tInput(hint: emailMask ?? 'name@example.com'))),
+                const SizedBox(height: 12),
+                TField(
+                    label: 'lessons.roster.phone'.tr(),
+                    hint: 'lessons.roster.phone_hint'.tr(),
+                    child: TextField(
+                        controller: phone,
+                        keyboardType: TextInputType.phone,
+                        textDirection: TextDirection.ltr,
+                        decoration: tInput(hint: phoneMask ?? '05XXXXXXXX'))),
+                TSectionHead('lessons.roster.home_mosque'.tr()),
+                Text('lessons.roster.home_mosque_note'.tr(), style: tBody(13, color: TC.muted)),
+                const SizedBox(height: 10),
+                CityMosquePicker(
+                  key: const ValueKey('preacher-home-mosque'),
+                  city: city,
+                  mosqueId: home,
+                  hidden: true,
+                  mosqueLabel: 'lessons.roster.home_mosque'.tr(),
+                  onChanged: (ci, m) => set(() {
+                    city = ci;
+                    home = m;
+                  }),
+                  onAddMosque: (ci) => showMosqueSheet(ctx, city: ci),
+                ),
+                const SizedBox(height: 14),
+                TField(
+                  label: 'lessons.roster.affiliation'.tr(),
+                  hint: 'lessons.roster.affiliation_hint'.tr(),
+                  child: DropdownButtonFormField<String>(
+                    initialValue: aff,
+                    isExpanded: true,
+                    decoration: tInput(),
+                    items: [for (final x in LessonsVocab.affiliations) DropdownMenuItem(value: x, child: Text('lessons.affiliation.$x'.tr()))],
+                    onChanged: (v) => set(() => aff = v ?? aff),
                   ),
                 ),
-                SizedBox(
-                  width: 220,
-                  child: TField(
-                    label: 'lessons.roster.affiliation'.tr(),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: aff,
-                      decoration: tInput(),
-                      items: [for (final x in LessonsVocab.affiliations) DropdownMenuItem(value: x, child: Text('lessons.affiliation.$x'.tr()))],
-                      onChanged: (v) => set(() => aff = v ?? aff),
-                    ),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 12),
-              TField(
-                  label: 'lessons.roster.phone'.tr(),
-                  hint: 'lessons.roster.phone_hint'.tr(),
-                  child: TextField(
-                      controller: phone,
-                      keyboardType: TextInputType.phone,
-                      textDirection: TextDirection.ltr,
-                      decoration: tInput(hint: phoneMask ?? '05XXXXXXXX'))),
-              const SizedBox(height: 12),
-              Text('lessons.roster.languages'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
-              const SizedBox(height: 6),
-              TChips([
-                for (final x in LessonsVocab.languages)
-                  TChip(LessonsVocab.languageNative[x]!, small: true, selected: langs.contains(x),
-                      onTap: () => set(() => langs.contains(x) && langs.length > 1 ? langs.remove(x) : langs.add(x))),
-              ]),
-              TToggleRow(
-                  label: 'lessons.preacher_admin.listed'.tr(),
-                  desc: 'lessons.preacher_admin.listed_desc'.tr(),
-                  icon: TGlyph.eye,
-                  value: listed,
-                  onChanged: (v) => set(() => listed = v)),
-            ]),
+                const SizedBox(height: 12),
+                Text('lessons.roster.languages'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                TChips([
+                  for (final x in LessonsVocab.languages)
+                    TChip(LessonsVocab.languageNative[x]!, small: true, selected: langs.contains(x),
+                        onTap: () => set(() => langs.contains(x) && langs.length > 1 ? langs.remove(x) : langs.add(x))),
+                ]),
+                TToggleRow(
+                    label: 'lessons.preacher_admin.listed'.tr(),
+                    desc: 'lessons.preacher_admin.listed_desc'.tr(),
+                    icon: TGlyph.eye,
+                    value: listed,
+                    onChanged: (v) => set(() => listed = v)),
+                if (p == null)
+                  TToggleRow(
+                      key: const ValueKey('preacher-invite'),
+                      label: 'lessons.roster.invite'.tr(),
+                      desc: emailOk(typedEmail) ? 'lessons.roster.invite_desc'.tr() : 'lessons.roster.invite_needs_email'.tr(),
+                      icon: TGlyph.send,
+                      enabled: emailOk(typedEmail),
+                      value: invite && emailOk(typedEmail),
+                      onChanged: (v) => set(() => invite = v)),
+              ]);
+            },
           ),
       footer: (ctx) => [
             TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
             TButton('lessons.save'.tr(), key: const ValueKey('preacher-save'), kind: TBtn.minted, icon: TGlyph.check, onPressed: () {
-              final url = photo.text.trim();
+              final mail = email.text.trim();
               if (nameAr.text.trim().length < 3) return tToast(ctx, 'lessons.preacher_admin.name_needed'.tr(), warn: true);
-              if (url.isNotEmpty && !url.startsWith('https://')) return tToast(ctx, 'lessons.preacher_admin.photo_https'.tr(), warn: true);
-              Navigator.of(ctx).pop({
-                if (p != null) 'id': p.id,
-                'name_ar': nameAr.text.trim(),
-                'name_en': nameEn.text.trim(),
-                'title_ar': titleAr.text.trim(),
-                'title_en': titleEn.text.trim(),
-                'bio_ar': bioAr.text.trim(),
-                'bio_en': bioEn.text.trim(),
-                'photo_url': url,
-                'city': city,
-                'affiliation': aff,
-                'languages': langs.toList(),
-                'listed': listed,
-                if (phone.text.trim().isNotEmpty) 'phone': phone.text.trim(),
-              });
+              if (mail.isNotEmpty && !emailOk(mail)) return tToast(ctx, 'lessons.preacher_admin.email_bad'.tr(), warn: true);
+              if (p == null && home == null) return tToast(ctx, 'lessons.preacher_admin.mosque_needed'.tr(), warn: true);
+              Navigator.of(ctx).pop((
+                {
+                  if (p != null) 'id': p.id,
+                  'name_ar': nameAr.text.trim(),
+                  'name_en': nameEn.text.trim(),
+                  'title_ar': titleAr.text.trim(),
+                  'title_en': titleEn.text.trim(),
+                  'bio_ar': bioAr.text.trim(),
+                  'bio_en': bioEn.text.trim(),
+                  'photo_url': photo ?? '',
+                  'city': city,
+                  if (home != null) 'home_mosque_id': home,
+                  'affiliation': aff,
+                  'languages': langs.toList(),
+                  'listed': listed,
+                  if (phone.text.trim().isNotEmpty) 'phone': phone.text.trim(),
+                  if (mail.isNotEmpty) 'email': mail,
+                },
+                p == null && invite && emailOk(mail),
+              ));
             }),
-          ]).then((fields) async {
-    if (fields == null || !context.mounted) return null;
-    return tRun(context, () => c.upsertPreacher(fields),
-        success: p == null ? 'lessons.roster.added'.tr() : 'lessons.roster.saved'.tr());
+          ]).then((result) async {
+    if (result == null || !context.mounted) return null;
+    final (fields, sendInvite) = result;
+    final id = await tRun(context, () => c.upsertPreacher(fields),
+        success: p != null ? 'lessons.roster.saved'.tr() : (sendInvite ? null : 'lessons.roster.added'.tr()));
+    if (id == null || !sendInvite || !context.mounted) return id;
+    await tRun(context, () => c.createKey(id, 'once', email: true), success: 'lessons.roster.added_invited'.tr());
+    return id;
   });
 }
 
-/// Parses "name,mobile,city,affiliation" CSV (header row skipped).
+// Parses "name,mobile,city,affiliation" CSV (header row skipped).
 List<Map<String, dynamic>> parsePreacherCsv(String text) {
   String cityOf(String s) {
     final t = s.trim().toLowerCase();
@@ -235,13 +282,16 @@ Future<bool?> showRemovePreacherSheet(BuildContext context, Preacher p) {
 
 // ------------------------------------------------------------------ links
 /// Creates a link for [p]: one-time (the first phone keeps it, with an
-/// optional end) or timed (any phone, from a start to an end). Then shows
-/// the message to send him.
+/// optional end) or timed (any phone, from a start to an end), and emails it
+/// to him when the admins hold his email. Then shows the message to send him
+/// another way.
 Future<void> showNewLinkSheet(BuildContext context, Preacher p) async {
   final c = context.read<LessonsController>();
   final lang = context.lang;
+  final emailMask = c.rosterEntry(p.id)?.emailMask;
   var kind = 'once';
   var ends = false;
+  var byEmail = emailMask != null;
   final now = DateTime.now();
   var from = DateTime(now.year, now.month, now.day, now.hour + 1);
   var until = DateTime(now.year, now.month, now.day + 7, 23, 59);
@@ -289,6 +339,14 @@ Future<void> showNewLinkSheet(BuildContext context, Preacher p) async {
                 TField(
                     label: '${'lessons.links.note'.tr()} (${'lessons.optional'.tr()})',
                     child: TextField(controller: note, maxLength: 200, decoration: tInput(hint: 'lessons.links.note_hint'.tr()))),
+                TToggleRow(
+                    key: const ValueKey('link-by-email'),
+                    label: 'lessons.links.by_email'.tr(),
+                    desc: emailMask == null ? 'lessons.links.no_email'.tr() : 'lessons.links.by_email_desc'.tr(args: [emailMask]),
+                    icon: TGlyph.send,
+                    enabled: emailMask != null,
+                    value: byEmail,
+                    onChanged: (v) => set(() => byEmail = v)),
               ]);
             },
           ),
@@ -302,7 +360,10 @@ Future<void> showNewLinkSheet(BuildContext context, Preacher p) async {
               }
               final k = await tRun(ctx,
                   () => c.createKey(p.id, kind,
-                      validFrom: window ? from : null, validUntil: window || ends ? until : null, note: note.text.trim()));
+                      validFrom: window ? from : null,
+                      validUntil: window || ends ? until : null,
+                      note: note.text.trim(),
+                      email: byEmail && emailMask != null));
               if (k != null && ctx.mounted) Navigator.of(ctx).pop(k);
             }),
           ]);
@@ -324,6 +385,10 @@ Future<void> showLinkMessageSheet(BuildContext context, Preacher p, NewPreacherK
       title: 'lessons.links.ready_title'.tr(),
       subtitle: p.name(lang),
       body: (ctx) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (k.emailed) ...[
+              TCallout(tone: TTone.success, icon: TGlyph.send, child: Text('lessons.links.emailed'.tr())),
+              const SizedBox(height: 10),
+            ],
             TCallout(tone: TTone.warning, icon: TGlyph.lock, child: Text('lessons.links.only_now'.tr())),
             const SizedBox(height: 12),
             Container(
@@ -341,59 +406,87 @@ Future<void> showLinkMessageSheet(BuildContext context, Preacher p, NewPreacherK
           ]);
 }
 
-// ---------------------------------------------------------------- mosques
-/// Adds a mosque, or edits [mosque].
-Future<void> showMosqueSheet(BuildContext context, {Mosque? mosque}) {
+/// ---------------------------------------------------------------- mosques
+/// Adds a mosque (in [city] to start with), or edits [mosque]. Returns its id.
+Future<String?> showMosqueSheet(BuildContext context, {Mosque? mosque, String? city}) {
   final c = context.read<LessonsController>();
   final lang = context.lang;
   final m = mosque;
   final nameAr = TextEditingController(text: m?.nameAr ?? ''), nameEn = TextEditingController(text: m?.nameEn ?? '');
-  var district = m?.districtId ?? c.catalog.districts.keys.firstOrNull ?? 'aqrabiyah';
+  var inCity = m != null ? c.cityOfMosque(m.id) : (city ?? 'khobar');
+  String? district = m?.districtId ?? c.districtsOf(inCity).firstOrNull?.id;
   final fac = <String>{...?m?.facilities};
   if (m == null) fac.add('parking');
   (double, double)? pin = m != null && m.hasPin ? (m.latitude!, m.longitude!) : null;
-  return showTModal<void>(context,
+  return showTModal<String>(context,
       title: m == null ? 'lessons.mosques.add_title'.tr() : 'lessons.mosques.edit_title'.tr(),
       wide: true,
       body: (ctx) => StatefulBuilder(
-            builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              TField(label: 'lessons.mosques.name_ar'.tr(), required: true, child: TextField(controller: nameAr, decoration: tInput())),
-              const SizedBox(height: 12),
-              TField(label: 'lessons.mosques.name_en'.tr(), child: TextField(controller: nameEn, decoration: tInput())),
-              const SizedBox(height: 12),
-              TField(
-                label: 'lessons.mosques.district'.tr(),
-                child: DropdownButtonFormField<String>(
-                  initialValue: district,
-                  isExpanded: true,
-                  decoration: tInput(),
-                  items: [
-                    for (final d in c.catalog.districts.values)
-                      DropdownMenuItem(value: d.id, child: Text('${d.name(lang)} · ${cityLabel(d.city)}'))
-                  ],
-                  onChanged: (v) => set(() => district = v ?? district),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text('lessons.mosques.facilities'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
-              const SizedBox(height: 6),
-              TChips([
-                for (final f in LessonsVocab.facilities)
-                  TChip(facilityLabel(f), small: true, icon: facilityGlyph(f), selected: fac.contains(f),
-                      onTap: () => set(() => fac.contains(f) ? fac.remove(f) : fac.add(f))),
-              ]),
-              const SizedBox(height: 12),
-              Text('lessons.mosques.pin'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
-              const SizedBox(height: 6),
-              SizedBox(height: 260, child: MosquePinPicker(value: pin, onPick: (p) => set(() => pin = p))),
-            ]),
+            builder: (ctx, set) {
+              final areas = c.districtsOf(inCity);
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                TField(label: 'lessons.mosques.name_ar'.tr(), required: true, child: TextField(key: const ValueKey('mosque-name-ar'), controller: nameAr, decoration: tInput())),
+                const SizedBox(height: 12),
+                TField(label: 'lessons.mosques.name_en'.tr(), child: TextField(controller: nameEn, decoration: tInput())),
+                const SizedBox(height: 12),
+                Wrap(spacing: 12, runSpacing: 12, children: [
+                  SizedBox(
+                    width: 220,
+                    child: TField(
+                      label: 'lessons.place.city'.tr(),
+                      required: true,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: inCity,
+                        isExpanded: true,
+                        decoration: tInput(),
+                        items: [
+                          for (final x in LessonsVocab.cities)
+                            if (c.districtsOf(x).isNotEmpty) DropdownMenuItem(value: x, child: Text(cityLabel(x)))
+                        ],
+                        onChanged: (v) => set(() {
+                          inCity = v ?? inCity;
+                          district = c.districtsOf(inCity).firstOrNull?.id;
+                        }),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 220,
+                    child: TField(
+                      label: 'lessons.place.area'.tr(),
+                      required: true,
+                      child: DropdownButtonFormField<String>(
+                        key: ValueKey('mosque-area-$inCity'),
+                        initialValue: areas.any((d) => d.id == district) ? district : null,
+                        isExpanded: true,
+                        decoration: tInput(),
+                        items: [for (final d in areas) DropdownMenuItem(value: d.id, child: Text(d.name(lang)))],
+                        onChanged: (v) => set(() => district = v ?? district),
+                      ),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                Text('lessons.mosques.facilities'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                TChips([
+                  for (final f in LessonsVocab.facilities)
+                    TChip(facilityLabel(f), small: true, icon: facilityGlyph(f), selected: fac.contains(f),
+                        onTap: () => set(() => fac.contains(f) ? fac.remove(f) : fac.add(f))),
+                ]),
+                const SizedBox(height: 12),
+                Text('lessons.mosques.pin'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                SizedBox(height: 260, child: MosquePinPicker(value: pin, onPick: (p) => set(() => pin = p))),
+              ]);
+            },
           ),
       footer: (ctx) => [
             TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
-            TButton(m == null ? 'lessons.mosques.add'.tr() : 'lessons.save'.tr(), kind: TBtn.minted, icon: TGlyph.check, onPressed: () async {
-              if (nameAr.text.trim().length < 2) return;
-              Navigator.of(ctx).pop();
-              await tRun(context,
+            TButton(m == null ? 'lessons.mosques.add'.tr() : 'lessons.save'.tr(), key: const ValueKey('mosque-save'), kind: TBtn.minted, icon: TGlyph.check,
+                onPressed: () async {
+              if (nameAr.text.trim().length < 2 || district == null) return;
+              final id = await tRun(context,
                   () => c.upsertMosque({
                         if (m != null) 'id': m.id,
                         'name_ar': nameAr.text.trim(),
@@ -404,11 +497,12 @@ Future<void> showMosqueSheet(BuildContext context, {Mosque? mosque}) {
                         'facilities': fac.toList(),
                       }),
                   success: m == null ? 'lessons.mosques.added'.tr() : 'lessons.roster.saved'.tr());
+              if (id != null && ctx.mounted) Navigator.of(ctx).pop(id);
             }),
           ]);
 }
 
-/// Removes a mosque. One that sessions use is merged into another instead:
+// Removes a mosque. One that sessions use is merged into another instead:
 /// its sessions move there.
 Future<void> showRemoveMosqueSheet(BuildContext context, Mosque m) {
   final c = context.read<LessonsController>();

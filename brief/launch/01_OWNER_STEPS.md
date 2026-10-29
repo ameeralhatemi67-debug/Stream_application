@@ -154,6 +154,21 @@ Checked by Claude on 2026-10-10:
 - [ ] Billing: the free plan pauses inactive projects and has no daily backups. **Move to the Pro plan before launch**, so the backend never sleeps and you get backups.
 - [ ] Database → Backups: confirm daily backups are on.
 
+### 5b. Email to preachers (added 2026-10-29, ADR-020)
+
+Preachers get emails for their invitation, their application's decision, lessons added for them, approved or declined requests, cancellations, moves and a reminder the day before. The app queues them; nothing is sent until a sender is set up. Until then the admin log's Emails view says the emails are waiting.
+
+- [ ] **Needs the domain from section 1.** An email service only sends to anyone from a domain you own and have verified.
+- [ ] Create a **Resend** account (resend.com; the free plan sends 3,000 emails a month, 100 a day). Domains → Add domain → add the DNS records it shows at your domain's registrar → wait until it says Verified.
+- [ ] API keys → create a key with **sending access** only. Do not paste it in chat or in any file.
+- [ ] Supabase → Edge Functions → Secrets: add
+  - `RESEND_API_KEY` = the key
+  - `EMAIL_FROM` = for example `Hadayah <lessons@your-domain>`
+  - optional `EMAIL_REPLY_TO` = the support email from section 1, so preachers can reply
+  - optional `PUBLIC_SITE_URL` = your final web address (default: the current Vercel address)
+- [ ] **Approve Claude** to apply migration `20261029120000`, deploy `dispatch-preacher-emails` and run its `cron.sql`.
+- [ ] Test: add yourself as a preacher with your own email, tick "Email him his link now", and check your inbox (and spam folder).
+
 ---
 
 ## 6. App signing key (upload key)

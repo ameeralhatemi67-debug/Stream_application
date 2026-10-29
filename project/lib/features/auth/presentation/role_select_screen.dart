@@ -37,6 +37,13 @@ class RoleSelectScreen extends StatelessWidget {
       provider.takeSignInReturn();
       context.go('/streamer-apply');
     });
+    // A preacher in the mosque lessons programme uses the app as a viewer
+    // and applies; the admins approve him (ADR-020).
+    final preacher = _preacherOption(context, onTap: () {
+      final provider = context.read<AppProvider>()..selectViewerRole();
+      provider.takeSignInReturn();
+      context.go('/lessons/apply');
+    });
     return Scaffold(
         backgroundColor: context.pageGround,
         appBar: CaAppBar(languageBare: true),
@@ -93,7 +100,60 @@ class RoleSelectScreen extends StatelessWidget {
                             const SizedBox(height: AppTheme.spaceLg),
                             broadcaster
                           ],
+                          const SizedBox(height: AppTheme.spaceLg),
+                          preacher,
                         ]))))));
+  }
+
+  Widget _preacherOption(BuildContext context, {required VoidCallback onTap}) {
+    final hedayah = context.isHedayahSkin;
+    final text = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('role_select.preacher_title'.tr(),
+          style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: AppTheme.spaceXs),
+      Text('role_select.preacher_desc'.tr(),
+          style: Theme.of(context).textTheme.bodyMedium),
+    ]);
+    final button = CaButton(
+        key: const Key('role-select-preacher'),
+        label: 'role_select.preacher_btn'.tr(),
+        variant: CaButtonVariant.secondary,
+        trailingIcon: CaGlyph.arrow,
+        bareTrailing: true,
+        onPressed: onTap);
+    final icon = Container(
+        padding: const EdgeInsets.all(AppTheme.spaceSm),
+        decoration: BoxDecoration(
+            color: hedayah ? HedayahSkin.chip : Canopy.mint,
+            borderRadius: BorderRadius.circular(
+                hedayah ? HedayahSkin.radiusCard : CanopyRadius.input)),
+        child: const CaIcon(CaGlyph.cal, color: Canopy.brandGreen));
+    return CaCard(
+        child: LayoutBuilder(
+            builder: (context, box) => box.maxWidth >= 600
+                ? Row(children: [
+                    icon,
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(child: text),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    button,
+                  ])
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                        Row(children: [
+                          icon,
+                          const SizedBox(width: AppTheme.spaceMd),
+                          Expanded(
+                              child: Text('role_select.preacher_title'.tr(),
+                                  style: Theme.of(context).textTheme.titleMedium)),
+                        ]),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        Text('role_select.preacher_desc'.tr(),
+                            style: Theme.of(context).textTheme.bodyMedium),
+                        const SizedBox(height: AppTheme.spaceMd),
+                        button,
+                      ])));
   }
 
   Widget _option(BuildContext context,

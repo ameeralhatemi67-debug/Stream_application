@@ -1,12 +1,25 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-28
+updated: 2026-10-29
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Preachers invited or accepted, emails, named log, 2026-10-29 (local; migration and function not on hosted)
+
+Owner request: email and photo upload on "add preacher", city-filtered mosques, an explanation of Affiliation, applying as a preacher from the welcome page and Settings, one initial mosque then any mosque, emails to preachers, and a log of every action with who took it. ADR-020.
+
+- **Add preacher:** photo upload (admins' bucket `preacher-photos`), email (private, masked, shown on request and logged), city → area → initial mosque (required for new preachers, with "Add a mosque to the list"), Affiliation with a hint, and "Email him his link now". The new-link sheet can email the link too.
+- **Applying:** a third option on the welcome page and a row in Settings open `/lessons/apply` (large text, Arabic first): photo, name, title, city → area → first mosque or "my mosque is not listed" with its area, languages, mobile, email, qualifications, an optional sample link, consent. Waiting, declined (with the reason) and approved states; withdraw.
+- **Admins:** Approvals lists applications first (approve with mosque and affiliation, or decline with a reason; undo for 15 minutes); Overview counts them; requests start at the mosque the preacher suggested, else his initial one, chosen city by city; the roster shows photos and has "has an account" and "no email" filters; a preacher's page shows his email, initial mosque, emails sent to him and his history.
+- **Preachers:** one approved from his account opens "My preacher page" in Settings (no link); any preacher can suggest a mosque (or leave it to the admins) and add his email from "Edit my card".
+- **Emails:** 12 kinds, queued by triggers and sent each minute by `dispatch-preacher-emails` (Resend); decisions wait 15 minutes so an undo cancels them. Nothing is sent until the owner sets up a domain, Resend and two function secrets (`brief/launch/01_OWNER_STEPS.md` §5b).
+- **Log:** every entry names the admin (name and email as they were) or "via link" or "System", with exact time and the reason; filter by kind, search, and an Emails view with state and retry.
+
+Verification: see the ledger's RESUME block of the same day.
 
 ## Pre-test fixes, 2026-10-28 (deployed: server and website; APK not rebuilt)
 

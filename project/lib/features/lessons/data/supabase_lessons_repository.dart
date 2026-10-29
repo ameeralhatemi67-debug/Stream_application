@@ -1,10 +1,14 @@
+import 'dart:math' as math;
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/streamer_asset_path.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import 'lessons_repository.dart';
 
-/// Lessons on our Supabase project (migration 20261022125222).
+/// Lessons on our Supabase project (migrations 20261022125222, 20261029120000).
 class SupabaseLessonsRepository implements LessonsRepository {
   SupabaseLessonsRepository([SupabaseClient? client]) : _injected = client;
   final SupabaseClient? _injected;
@@ -31,7 +35,8 @@ class SupabaseLessonsRepository implements LessonsRepository {
             '42P01' || '42883' || 'PGRST202' || 'PGRST205' => LessonsFailure.unavailable,
             _ => LessonsFailure.unknown,
           },
-          e.message);
+          // A hint names the case for the UI (no_email, pending, ...).
+          (e.hint ?? '').isNotEmpty ? e.hint! : e.message);
     } on AuthException catch (e) {
       throw LessonsException(LessonsFailure.forbidden, e.message);
     } catch (e) {
@@ -108,6 +113,7 @@ class SupabaseLessonsRepository implements LessonsRepository {
           _db.from('lesson_flags').select().order('created_at', ascending: false).limit(200),
           _db.from('lesson_audit').select().order('created_at', ascending: false).limit(300),
           _db.from('lesson_reports').select(),
+          _db.from('preacher_applications').select().order('created_at', ascending: false).limit(200),
         ]);
         return LessonsAdminData(
           roster: [for (final x in _rows(r[0])) LessonsRosterEntry.fromJson(x)],
@@ -115,6 +121,7 @@ class SupabaseLessonsRepository implements LessonsRepository {
           flags: [for (final x in _rows(r[2])) LessonsFlag.fromJson(x)],
           audit: [for (final x in _rows(r[3])) LessonsAuditEntry.fromJson(x)],
           reports: {for (final x in _rows(r[4])) x['lesson_id'] as String: LessonsReport.fromJson(x)},
+          applications: [for (final x in _rows(r[5])) PreacherApplication.fromJson(x)],
         );
       });
 
@@ -214,6 +221,39 @@ class SupabaseLessonsRepository implements LessonsRepository {
       (await _rpc('lessons_reveal_phone', {'p_preacher': preacherId})) as String?;
 
   @override
+  Future<String?> revealEmail(String preacherId) async =>
+      (await _rpc('lessons_reveal_email', {'p_preacher': preacherId})) as String?;
+
+  /// Admins: preacher-photos/preachers/. Applicants: their own
+  /// streamer-assets folder, which account deletion cleans.
+  @override
+  Future<String> uploadPhoto(Uint8List bytes, {bool application = false}) => _guard(() async {
+        final (type, ext) = _imageType(bytes);
+        final stamp = DateTime.now().millisecondsSinceEpoch;
+        final String bucket, path;
+        if (application) {
+          final uid = currentUserId;
+          if (uid == null) throw const LessonsException(LessonsFailure.forbidden);
+          bucket = 'streamer-assets';
+          path = streamerAssetPath(userId: uid, folder: 'preacher', fileName: 'photo.$ext', timestamp: stamp);
+        } else {
+          final r = math.Random.secure();
+          bucket = 'preacher-photos';
+          path = 'preachers/${stamp}_${List.generate(12, (_) => r.nextInt(16).toRadixString(16)).join()}.$ext';
+        }
+        await _db.storage.from(bucket).uploadBinary(path, bytes,
+            // A path never changes, so browsers and the CDN may keep it a year.
+            fileOptions: FileOptions(contentType: type, upsert: false, cacheControl: '31536000'));
+        return _db.storage.from(bucket).getPublicUrl(path);
+      });
+
+  static (String, String) _imageType(Uint8List b) {
+    if (b.length > 4 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47) return ('image/png', 'png');
+    if (b.length > 12 && b[8] == 0x57 && b[9] == 0x45 && b[10] == 0x42 && b[11] == 0x50) return ('image/webp', 'webp');
+    return ('image/jpeg', 'jpg');
+  }
+
+  @override
   Future<void> decideEdit(String editId, bool approve, {String? reason}) =>
       _rpc('lessons_decide_edit', {'p_edit': editId, 'p_approve': approve, 'p_reason': reason});
 
@@ -224,16 +264,46 @@ class SupabaseLessonsRepository implements LessonsRepository {
           if (r['is_banned'] != true) LessonsAccount.fromJson(r)
       ];
 
+  // ---------------------------------------------------- admin applications
+  @override
+  Future<String?> decideApplication(String applicationId, bool approve,
+          {String? reason, String? mosqueId, String? affiliation}) async =>
+      (await _rpc('lessons_decide_application', {
+        'p_application': applicationId,
+        'p_approve': approve,
+        'p_reason': reason,
+        'p': {
+          if (mosqueId != null) 'mosque_id': mosqueId,
+          if (affiliation != null) 'affiliation': affiliation,
+        },
+      })) as String?;
+
+  @override
+  Future<void> undoApplication(String applicationId) =>
+      _rpc('lessons_undo_application', {'p_application': applicationId});
+
+  // ---------------------------------------------------------- admin emails
+  @override
+  Future<List<PreacherEmailEntry>> loadEmails({String? preacherId}) async => [
+        for (final r in _rows(await _rpc('lessons_email_log', {'p_preacher': preacherId}))) PreacherEmailEntry.fromJson(r)
+      ];
+
+  @override
+  Future<void> retryEmail(String emailId) => _rpc('lessons_retry_email', {'p_email': emailId});
+
   // ----------------------------------------------------------- admin links
   @override
   Future<NewPreacherKey> createKey(String preacherId, String kind,
-          {DateTime? validFrom, DateTime? validUntil, String note = ''}) async =>
+          {DateTime? validFrom, DateTime? validUntil, String note = '', bool email = false}) async =>
       NewPreacherKey.fromJson(Map<String, dynamic>.from((await _rpc('lessons_create_key', {
         'p_preacher': preacherId,
         'p_kind': kind,
         'p_valid_from': _instant(validFrom),
         'p_valid_until': _instant(validUntil),
         'p_note': note,
+        // Sent only when asked, so the function as it was before
+        // 20261029120000 still matches the call.
+        if (email) 'p_email': true,
       })) as Map));
 
   @override
@@ -268,4 +338,26 @@ class SupabaseLessonsRepository implements LessonsRepository {
   @override
   Future<void> withdrawRequest(String token, String device, String requestId) =>
       _rpc('lessons_key_withdraw', {'p_key': token, 'p_device': device, 'p_request': requestId});
+
+  // ------------------------------------------------------------- applying
+  @override
+  Future<String> apply(PreacherApplicationDraft draft) async => (await _rpc('lessons_apply', {'p': draft.toJson()})) as String;
+
+  @override
+  Future<void> withdrawApplication() => _rpc('lessons_withdraw_application');
+
+  // ------------------------------------------------- preacher by account
+  @override
+  Future<PreacherLinkView> openMyPage() async =>
+      PreacherLinkView.fromJson(Map<String, dynamic>.from((await _rpc('lessons_me_page')) as Map));
+
+  @override
+  Future<void> proposeMyCardEdit(Map<String, dynamic> changes) => _rpc('lessons_me_update_profile', {'p': changes});
+
+  @override
+  Future<String> requestMyLesson(LessonRequestDraft draft) async =>
+      (await _rpc('lessons_me_request_lesson', {'p': draft.toJson()})) as String;
+
+  @override
+  Future<void> withdrawMyRequest(String requestId) => _rpc('lessons_me_withdraw', {'p_request': requestId});
 }

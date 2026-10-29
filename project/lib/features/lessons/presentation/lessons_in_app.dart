@@ -264,9 +264,10 @@ class _LessonsRailState extends State<LessonsRail> {
 }
 
 /// Settings' card for a person's own programme pages: reminders,
-/// notifications, Preachers & lessons for admins, a preacher's page when his
-/// link opened on this phone, and the full programme page (following,
-/// learning log, preferences).
+/// notifications, Preachers & lessons for admins, applying to give lessons
+/// (or its state), a preacher's page (his account's, or the link that opened
+/// on this phone), and the full programme page (following, learning log,
+/// preferences).
 class LessonsSettingsCard extends StatefulWidget {
   const LessonsSettingsCard({super.key});
   @override
@@ -289,10 +290,28 @@ class _LessonsSettingsCardState extends State<LessonsSettingsCard> {
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController?>();
     if (c == null) return const SizedBox.shrink();
+    final application = c.myApplication;
     final rows = <(CaGlyph, String, String, String?, int)>[
       (CaGlyph.cal, 'lessons.programme'.tr(), '/lessons/me', 'settings.lessons_hint'.tr(), 0),
       if (c.canManage) (CaGlyph.shield, 'lessons.admin.title'.tr(), '/admin/lessons', null, c.waitingCount),
-      if (preacherLink != null) (CaGlyph.user, 'lessons.link.my_page'.tr(), '/preacher/$preacherLink', 'lessons.link.my_page_hint'.tr(), 0),
+      // A preacher whose card is linked to this account opens his page here;
+      // anyone else signed in can apply to give lessons (ADR-020).
+      if (c.myPreacherId != null)
+        (CaGlyph.user, 'lessons.me.preacher_page'.tr(), '/lessons/me/preacher', 'lessons.me.preacher_page_hint'.tr(), 0)
+      else if (c.signedIn)
+        (
+          CaGlyph.mic,
+          application?.pending == true ? 'lessons.apply.settings_waiting'.tr() : 'lessons.apply.settings_row'.tr(),
+          '/lessons/apply',
+          application?.pending == true
+              ? 'lessons.apply.settings_waiting_hint'.tr()
+              : application?.status == 'rejected'
+                  ? 'lessons.apply.settings_rejected_hint'.tr()
+                  : 'lessons.apply.settings_hint'.tr(),
+          0
+        ),
+      if (preacherLink != null && c.myPreacherId == null)
+        (CaGlyph.user, 'lessons.link.my_page'.tr(), '/preacher/$preacherLink', 'lessons.link.my_page_hint'.tr(), 0),
       (CaGlyph.clock, 'lessons.me.reminders'.tr(), '/lessons/me/saved?tab=reminders', null, c.mine.reminders.length),
       (CaGlyph.bell, 'lessons.me.notifications'.tr(), '/lessons/me/notifications', null, c.mine.unread),
     ];

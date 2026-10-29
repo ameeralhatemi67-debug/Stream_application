@@ -15,6 +15,7 @@ import '../domain/lessons_vocab.dart';
 import '../state/lessons_controller.dart';
 import 'lessons_kit.dart';
 import 'lessons_widgets.dart';
+import 'preacher_form_kit.dart';
 
 /// Public link to a Lessons page on the website.
 String lessonsLink(String path) => '${AppIdentity.websiteUrl}/#$path';
@@ -243,6 +244,7 @@ Future<void> showEditLessonSheet(BuildContext context, Lesson l) {
   var date = l.date;
   var slot = l.slot;
   String? mosqueId = l.hasMosque ? l.mosqueId : null;
+  var city = cityOr(c, mosqueId, c.preacher(l.preacherId)?.city ?? 'khobar');
   return showTModal<void>(context,
       title: 'lessons.lesson.edit'.tr(),
       subtitle: l.title(lang),
@@ -252,15 +254,15 @@ Future<void> showEditLessonSheet(BuildContext context, Lesson l) {
               const SizedBox(height: 12),
               TField(label: 'lessons.submit.title_en'.tr(), child: TextField(controller: titleEn, decoration: tInput())),
               const SizedBox(height: 12),
-              TField(
-                label: 'lessons.lesson.place'.tr(),
-                child: DropdownButtonFormField<String>(
-                  initialValue: mosqueId,
-                  isExpanded: true,
-                  decoration: tInput(),
-                  items: [for (final m in c.catalog.mosques.values) DropdownMenuItem(value: m.id, child: Text(m.name(lang), overflow: TextOverflow.ellipsis))],
-                  onChanged: (v) => set(() => mosqueId = v ?? mosqueId),
-                ),
+              CityMosquePicker(
+                city: city,
+                mosqueId: mosqueId,
+                hidden: true,
+                mosqueLabel: 'lessons.lesson.place'.tr(),
+                onChanged: (ci, m) => set(() {
+                  city = ci;
+                  mosqueId = m ?? mosqueId;
+                }),
               ),
               const SizedBox(height: 12),
               TField(

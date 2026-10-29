@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../domain/lessons_models.dart';
 
 /// Why a Lessons call failed, in terms the UI can explain. [expired] is a
@@ -14,9 +16,11 @@ class LessonsException implements Exception {
 }
 
 /// Every Lessons read and write. Writes go through server functions that check
-/// the caller (migration 20261022125222): admins manage everything, viewers
-/// keep their own reminders and follows, and a preacher acts only through
-/// his link. The client never decides authority on its own.
+/// the caller (migrations 20261022125222, 20261029120000): admins manage
+/// everything, viewers keep their own reminders and follows and may apply to
+/// give lessons, and a preacher acts through his link or, when his card is
+/// linked to his account, through that account. The client never decides
+/// authority on its own.
 abstract class LessonsRepository {
   /// True for the in-memory sample data used when no backend is configured.
   bool get isDemo;
@@ -62,14 +66,35 @@ abstract class LessonsRepository {
   Future<int> removePreacher(String preacherId);
   Future<int> importPreachers(List<Map<String, dynamic>> rows);
   Future<String?> revealPhone(String preacherId);
+
+  /// Shows a preacher's email (logged, like the phone).
+  Future<String?> revealEmail(String preacherId);
+
+  /// Uploads a preacher photo and returns its public address. [application]:
+  /// the applicant's own folder (account deletion removes it); otherwise the
+  /// admins' preacher photos.
+  Future<String> uploadPhoto(Uint8List bytes, {bool application = false});
   Future<void> decideEdit(String editId, bool approve, {String? reason});
 
   /// The admin user directory, to link a preacher to his account.
   Future<List<LessonsAccount>> searchAccounts(String query);
 
-  // Admins: preacher links
+  // Admins: applications to give lessons
+  /// Approving creates the preacher card linked to the applicant's account
+  /// and returns its id; [mosqueId] replaces the mosque he chose.
+  Future<String?> decideApplication(String applicationId, bool approve,
+      {String? reason, String? mosqueId, String? affiliation});
+
+  /// Undoes the caller's decision of the last 15 minutes.
+  Future<void> undoApplication(String applicationId);
+
+  // Admins: emails to preachers
+  Future<List<PreacherEmailEntry>> loadEmails({String? preacherId});
+  Future<void> retryEmail(String emailId);
+
+  // Admins: preacher links. [email] also emails the link to him (an invitation).
   Future<NewPreacherKey> createKey(String preacherId, String kind,
-      {DateTime? validFrom, DateTime? validUntil, String note = ''});
+      {DateTime? validFrom, DateTime? validUntil, String note = '', bool email = false});
   Future<List<PreacherKey>> loadKeys(String preacherId);
   Future<void> revokeKey(String keyId);
 
@@ -85,4 +110,14 @@ abstract class LessonsRepository {
   Future<void> proposeCardEdit(String token, String device, Map<String, dynamic> changes);
   Future<String> requestLesson(String token, String device, LessonRequestDraft draft);
   Future<void> withdrawRequest(String token, String device, String requestId);
+
+  // Any signed-in account: applying to give lessons.
+  Future<String> apply(PreacherApplicationDraft draft);
+  Future<void> withdrawApplication();
+
+  // A preacher through his own account (no link).
+  Future<PreacherLinkView> openMyPage();
+  Future<void> proposeMyCardEdit(Map<String, dynamic> changes);
+  Future<String> requestMyLesson(LessonRequestDraft draft);
+  Future<void> withdrawMyRequest(String requestId);
 }
