@@ -137,6 +137,10 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     } else if(c.resource.step==='recording_delete') {
       const left=await call('videos',{part:'id',id:c.session.stream_id!});
       await result((left.items as any[])?.length?'reconcile':'recording_delete',{});
+    } else if(!c.resource.step || ['observe','reconcile','finish'].includes(c.resource.step)) {
+      // No YouTube write was in flight: the flag came from a failed check (a
+      // dropped token, a database error), so there is nothing to resolve.
+      await result('reconcile',{});
     } else if(c.resource.provider_broadcast_id) {
       const observed=await call('liveBroadcasts',{part:'id,status,contentDetails,snippet',id:c.resource.provider_broadcast_id});
       const item=(observed.items as any[])?.[0];

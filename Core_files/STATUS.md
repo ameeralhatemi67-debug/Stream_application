@@ -8,6 +8,14 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Hide and delete on YouTube blocked by a dead or erased token, 2026-10-29 (deployed to hosted)
+
+Owner reported that hiding and deleting recordings did not reach YouTube. Found on hosted: the feature was deployed (migration `20261027193159`, functions v10) and worked for the live made that morning, but (1) the old connection's refresh token had stopped working (`oauth_failed`; consistent with Google's 7-day limit while the consent screen is in Testing), and (2) the owner disconnected the channel at 06:02 UTC, which erases the token, before two deletions were requested. Every run then failed in `broadcast_operation_context` with "Owner reconnection required", shown only as `reconciliation_failed` and flagged as an ambiguous write, which a reconnect alone would not clear (no branch for `step='observe'`).
+
+Fixed: `broadcast_control.ts` clears a flag left by a read-only step; both handlers report `owner_reconnection_required`; migration `20261029110440` makes `channel_disconnect` wait while hiding or deleting is pending (not for a refused change or a dead token) and `recording_controls` report an error when the channel is not connected; the status text now says to reconnect. Checks: `broadcast_control_check.mjs` (new case fails on the old code with `provider_write_unresolved`), `hidden_channel_content_test.dart` 18 passed. Deployed through the MCP connector: migration, `broadcast-control` and `reconcile-broadcasts` v11.
+
+**Still needs the owner:** reconnect the YouTube channel in the app and keep it connected; the four waiting sessions retry every 15 minutes. Move the Google consent screen from Testing to In production, or the token dies again after 7 days. Not yet watched: the first successful hide or delete of an old recording on YouTube.
+
 ## Preachers invited or accepted, emails, named log, 2026-10-29 (deployed: server, email sender, website)
 
 Owner request: email and photo upload on "add preacher", city-filtered mosques, an explanation of Affiliation, applying as a preacher from the welcome page and Settings, one initial mosque then any mosque, emails to preachers, and a log of every action with who took it. ADR-020.

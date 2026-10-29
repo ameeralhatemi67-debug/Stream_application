@@ -92,4 +92,10 @@ dropped.live();dropped.c.resource.operation='observe';await dropped.run();
 assert.equal(dropped.c.session.state,'live');assert.deepEqual(dropped.feeds,[true]);
 dropped.stop();await dropped.run();assert.deepEqual(dropped.feeds,[true,false]);
 dropped.c.resource.operation='start';await dropped.run();assert.deepEqual(dropped.feeds,[true,false],'only observe operations probe the feed');
+// A flag left by a failed check (a dropped token, a database error) with no write in flight clears on the next
+// run instead of blocking the session's recording work forever.
+const stuck=harness(null);
+await stuck.run();stuck.c.resource.operation='observe';
+stuck.c.resource.step='observe';stuck.c.resource.needs_reconciliation=true;
+await stuck.run();assert.equal(stuck.c.resource.needs_reconciliation,false);
 console.log('Provider preparation, ambiguous writes, confirmation, independent completion and replay checks passed');

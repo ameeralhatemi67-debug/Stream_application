@@ -9,7 +9,10 @@ Deno.serve(async request=>{
   if(request.method!=='POST'||!key||request.headers.get('authorization')!==`Bearer ${key}`) return new Response('Unauthorized',{status:401});
   const db=createClient(env('SUPABASE_URL'),env('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false,autoRefreshToken:false}});
   async function rpc(name:string,params:Record<string,unknown>) {
-    const {data,error}=await db.rpc(name,params);if(error) throw new Error('Reconciliation persistence failed');return data;
+    const {data,error}=await db.rpc(name,params);
+    // The channel was disconnected (its token is gone): a clear reason the app can show, and no YouTube write was in doubt.
+    if(error && /owner reconnection required/i.test(error.message)) throw new ProviderError(409,'owner_reconnection_required');
+    if(error) throw new Error('Reconciliation persistence failed');return data;
   }
   const claims=await rpc('broadcast_reconcile_claim',{});
   let complete=0,pending=0;

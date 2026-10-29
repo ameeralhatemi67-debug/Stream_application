@@ -1879,7 +1879,7 @@
     "yt_public": "Public on YouTube",
     "yt_private": "Private on YouTube",
     "yt_updating": "Updating YouTube…",
-    "yt_error": "YouTube hasn't accepted the change yet. We'll keep trying.",
+    "yt_error": "YouTube hasn't accepted the change yet. If your channel was disconnected, reconnect it and we'll finish.",
     "yt_deleting": "Deleting from YouTube…",
     "yt_deleted": "Deleted from YouTube",
     "taken_down_badge": "Taken down by an admin",

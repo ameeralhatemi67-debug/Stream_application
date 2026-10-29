@@ -12,6 +12,7 @@ async function rpc(db:ReturnType<typeof createClient>,name:string,params:Record<
   const {data,error}=await db.rpc(name,params);
   if(error) {
     console.error(JSON.stringify({rpc:name,code:error.code,message:error.message}));
+    if(/owner reconnection required/i.test(error.message)) throw new ProviderError(409,'owner_reconnection_required');
     throw new ProviderError(error.code==='42501'?403:409,'session_operation_unavailable');
   }
   return data;
