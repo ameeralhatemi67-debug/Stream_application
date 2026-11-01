@@ -57,8 +57,8 @@ class HidayahWebHeader extends StatelessWidget {
               p.unreadNotificationsCount,
               p.isLoggedInStreamer,
               p.isStreamerModeEnabled,
-              // Lessons-only admins land on their area (the router).
-              p.isLessonsAdmin,
+              // One admin page or both; the router lands on the right one.
+              p.hasAdminPage,
               p.isPermittedAdmin,
             ));
     // Hedayah skin (ADR-016): the association website's white header under

@@ -499,8 +499,8 @@ class LessonsMine {
           notifications: notifications ?? this.notifications);
 }
 
-/// What the caller may do, from `lessons_my_roles()`. Only admins (admins,
-/// master admins and lessons-only admins) manage preachers and lessons.
+/// What the caller may do, from `lessons_my_roles()`. Only master admins and
+/// those given the lessons admin page manage preachers and lessons.
 class LessonsRoles {
   const LessonsRoles({this.signedIn = false, this.admin = false, this.master = false, this.preacherId, this.application});
   final bool signedIn, admin, master;

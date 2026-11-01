@@ -10,16 +10,17 @@ import '../../../lessons/state/lessons_controller.dart';
 enum AdminArea { platform, lessons }
 
 /// The admin page's two areas (owner decision 2026-10-22): the platform
-/// (channels, moderation, roles) and preachers & lessons. Lessons-only
-/// admins have only the second, so they see no switch.
+/// (channels, moderation, roles) and preachers & lessons. A master admin gives
+/// each email one or both, and with only one there is no switch.
 class AdminAreaSwitch extends StatelessWidget {
   const AdminAreaSwitch({super.key, required this.current});
   final AdminArea current;
 
   @override
   Widget build(BuildContext context) {
-    final platform = context.select<AppProvider, bool>((p) => p.isAdminUser);
-    if (!platform) return const SizedBox.shrink();
+    final both = context
+        .select<AppProvider, bool>((p) => p.isAdminUser && p.isLessonsAdmin);
+    if (!both) return const SizedBox.shrink();
     final waiting = context.select<LessonsController?, int>((c) => c?.waitingCount ?? 0);
     Widget option(AdminArea area, String label, IconData icon) {
       final on = area == current;

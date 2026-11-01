@@ -1708,26 +1708,31 @@ class AdminDatabaseService {
         .maybeSingle();
   }
 
-  /// Email addresses that become admins when that account signs in
-  /// (admin_email_grants, master admin only), newest first.
+  /// Who has admin access (admin_email_grants, master admin only), oldest
+  /// first so the owner's lines stay at the top, with each account's name.
   Future<List<AdminEmailGrant>> loadAdminEmailGrants() async {
     if (!_useSupabase) return const [];
     final rows = await _client
         .from('admin_email_grants')
         .select()
-        .order('created_at', ascending: false);
+        .order('created_at')
+        .order('email');
+    final profiles = await _resolveProfileSummaries(
+      rows.map((r) => r['applied_profile_id'] as String?),
+    );
     return [
-      for (final r in rows as List)
-        AdminEmailGrant.fromRow(Map<String, dynamic>.from(r as Map))
+      for (final r in rows)
+        AdminEmailGrant.fromRow(r, profile: profiles[r['applied_profile_id']])
     ];
   }
 
-  /// Returns true when the account already existed and is an admin now,
-  /// false when the address waits for its first sign-in.
-  Future<bool> addAdminEmailGrant(String email) async {
+  /// Sets what [email] may manage (see kAdminAccessLevels). Returns true when
+  /// the account already existed and has it now, false when the address
+  /// waits for its first sign-in.
+  Future<bool> setAdminEmailAccess(String email, String access) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    final result = await _client
-        .rpc('admin_add_email_grant', params: {'p_email': email});
+    final result = await _client.rpc('admin_set_email_access',
+        params: {'p_email': email, 'p_access': access});
     return result == 'granted';
   }
 
@@ -1748,30 +1753,6 @@ class AdminDatabaseService {
     return {
       for (final row in rows) row['id'] as String: row,
     };
-  }
-
-  /// Grants profileId the given platform-wide role (master_admin/admin) or
-  /// org-scoped role (org_owner/org_co_owner, requires organizationId).
-  /// granted_by is always the caller's own id -- RLS's with-check requires
-  /// granted_by = auth.uid() (see 20260827090000) -- so this resolves it
-  /// from the live session rather than trusting a caller-supplied value.
-  Future<void> grantUserRole({
-    required String profileId,
-    required String role,
-    String? organizationId,
-  }) async {
-    if (!_useSupabase) throw Exception('Supabase not available');
-    final grantedBy = _client.auth.currentUser?.id;
-    if (grantedBy == null) throw Exception('Not signed in.');
-    await _client.from('user_roles').upsert(
-      {
-        'profile_id': profileId,
-        'role': role,
-        'organization_id': organizationId,
-        'granted_by': grantedBy,
-      },
-      onConflict: 'profile_id,role,organization_id',
-    );
   }
 
   Future<void> revokeUserRole({

@@ -1,12 +1,18 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-29
+updated: 2026-11-01
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Admin access by email: both pages, one, or master, 2026-11-01 (local; migration not on hosted)
+
+A master admin now gives an email the platform admin page, the lessons admin page, both, or master admin, and changes it later from Roles & Permissions (ADR-021). The account doesn't need to exist yet. Removing a line takes the access away. polkgvd2@gmail.com and ameeralhatemi67@gmail.com are locked as master admins. Migration `20261101090000_admin_access_by_email.sql`; not applied to hosted and not pushed.
+
+Also published a private artifact previewing the map across a week (streamers, lessons, in-mosque and live states, countdowns, affiliated mosques, zoom bubbles): https://claude.ai/artifact/LEbVtfLSruASmqPpBpq4sq. Nothing from it is built in the app yet; its last section lists what is missing today. Open question for the owner: what "affiliated mosque" should mean.
 
 ## Hide and delete on YouTube blocked by a dead or erased token, 2026-10-29 (deployed to hosted)
 

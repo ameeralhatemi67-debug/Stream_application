@@ -44,6 +44,28 @@ class PopulatedAdmin extends AppProvider {
             displayName: 'مالك المؤسسة التعليمية التجريبية'),
       ];
   @override
+  List<AdminEmailGrant> get adminEmailGrants => [
+        AdminEmailGrant(
+            email: 'a-very-long-owner-address-for-the-layout@example.invalid',
+            access: 'master',
+            locked: true,
+            createdAt: DateTime(2026),
+            appliedAt: DateTime(2026),
+            profileId: 'c',
+            displayName: 'المالك صاحب الاسم الطويل جدًا للتجربة'),
+        AdminEmailGrant(
+            email: 'admin@example.invalid',
+            access: 'both',
+            createdAt: DateTime(2026),
+            appliedAt: DateTime(2026),
+            profileId: 'a',
+            displayName: 'مشرف تجريبي طويل الاسم'),
+        AdminEmailGrant(
+            email: 'waiting-for-first-sign-in@example.invalid',
+            access: 'lessons',
+            createdAt: DateTime(2026)),
+      ];
+  @override
   List<ChatReportModel> get chatReports => [
         ChatReportModel(
             id: 'r',

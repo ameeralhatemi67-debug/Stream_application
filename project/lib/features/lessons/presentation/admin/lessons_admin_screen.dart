@@ -19,7 +19,7 @@ import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
 import 'preacher_applications.dart';
 
-/// The Preachers & lessons area of the admin page: admins (and lessons-only
+/// The Preachers & lessons area of the admin page: master admins (and lessons
 /// admins) run the whole programme here, whether or not a preacher ever
 /// opens his link.
 class LessonsAdminScreen extends StatelessWidget {

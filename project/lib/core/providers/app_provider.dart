@@ -226,8 +226,8 @@ class AppProvider extends ChangeNotifier {
   // master_admin-only surfaces (e.g. Checkpoint 2's role/permission
   // management tab) on top of the existing isAdminUser check.
   bool _isMasterAdminFromRoles = false;
-  // Admins, master admins and lessons-only admins (is_lessons_admin()): who
-  // manages preachers and lessons.
+  // Master admins and whoever a master admin gave the lessons page
+  // (is_lessons_admin()): who manages preachers and lessons.
   bool _isLessonsAdminFromRoles = false;
   // organization_id(s) this user is org_owner/org_co_owner for -- the
   // roadmap's "Permitted Admin"tier (see ADR-007). Disjoint from
@@ -2766,6 +2766,7 @@ class AppProvider extends ChangeNotifier {
     bool isAdmin = false,
     bool isMasterAdmin = false,
     bool isLessonsAdmin = false,
+    bool platformPageOnly = false,
     bool isStreamer = true,
     List<String> permittedAdminOrgIds = const [],
     String? ownedStreamerId,
@@ -2788,7 +2789,8 @@ class AppProvider extends ChangeNotifier {
     _googleUserName = name ?? email;
     _isAdminFromRoles = isAdmin || isMasterAdmin;
     _isMasterAdminFromRoles = isMasterAdmin;
-    _isLessonsAdminFromRoles = isLessonsAdmin || isAdmin || isMasterAdmin;
+    _isLessonsAdminFromRoles =
+        !platformPageOnly && (isLessonsAdmin || isAdmin || isMasterAdmin);
     _permittedAdminOrgIds = permittedAdminOrgIds;
     _myApplication = ownedStreamerId == null
         ? null
@@ -3199,10 +3201,13 @@ class AppProvider extends ChangeNotifier {
   // Admin & Governance Getters
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
   bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;
-  /// Manages preachers and lessons: every admin, plus lessons-only admins
-  /// (who see only that part of the admin page).
+  /// Opens the lessons admin page. A master admin chooses this per email,
+  /// separately from the platform admin page ([isAdminUser]).
   bool get isLessonsAdmin => _isLoggedInStreamer && _isLessonsAdminFromRoles;
   bool get isLessonsOnlyAdmin => isLessonsAdmin && !isAdminUser;
+
+  /// Opens at least one admin page, so Settings and the menus link to /admin.
+  bool get hasAdminPage => isAdminUser || isLessonsAdmin;
   List<String> get permittedAdminOrgIds =>
       _isLoggedInStreamer ? List.unmodifiable({
         ..._permittedAdminOrgIds,
@@ -5977,7 +5982,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Email addresses that become admins at their first sign-in (master admin).
+  // Who has admin access, one line per email (master admin).
   List<AdminEmailGrant> _adminEmailGrants = const [];
   List<AdminEmailGrant> get adminEmailGrants => _adminEmailGrants;
 
@@ -6002,40 +6007,26 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  /// Makes [email] an admin: now when that account exists (returns true),
-  /// otherwise at its first sign-in. Throws on failure.
-  Future<bool> addAdminEmail(String email) async {
+  /// Sets what [email] may manage (see kAdminAccessLevels): now when that
+  /// account exists (returns true), otherwise at its first sign-in. Also
+  /// changes an existing line. Throws on failure.
+  Future<bool> setAdminAccess(String email, String access) async {
     _adminDbService ??= await AdminDatabaseService.create();
-    final granted = await _adminDbService!.addAdminEmailGrant(email);
+    final granted = await _adminDbService!.setAdminEmailAccess(email, access);
     await Future.wait(
         [refreshAdminEmailGrants(), if (granted) _refreshRoleManagementData()]);
     return granted;
   }
 
+  /// Removes a line and the access it gave.
   Future<void> removeAdminEmail(String email) async {
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.removeAdminEmailGrant(email);
-    await refreshAdminEmailGrants();
+    await Future.wait([refreshAdminEmailGrants(), _refreshRoleManagementData()]);
   }
 
-  /// Looks up a profile by exact email, for the "grant a role"search field.
-  Future<Map<String, dynamic>?> findProfileByEmail(String email) async {
-    _adminDbService ??= await AdminDatabaseService.create();
-    return _adminDbService!.findProfileByEmail(email);
-  }
-
-  /// Grants a platform-wide role (master_admin/admin). Throws on failure --
-  /// the Master-Admin-only UI that calls this shows the error directly
-  /// rather than silently no-op'ing, since a failed grant should be obvious.
-  Future<void> grantAdminRole({
-    required String profileId,
-    required String role,
-  }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
-    await _adminDbService!.grantUserRole(profileId: profileId, role: role);
-    await _refreshRoleManagementData();
-  }
-
+  /// Revokes an organization role. Platform roles change through
+  /// [setAdminAccess].
   Future<void> revokeAdminRole({
     required String profileId,
     required String role,

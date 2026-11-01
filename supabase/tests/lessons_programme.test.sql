@@ -23,6 +23,7 @@ insert into public.profiles(id, email, display_name_en, display_name_ar) values
 insert into public.user_roles(profile_id, role) values
   ('40000000-0000-4000-8000-0000000000c1', 'master_admin'),
   ('40000000-0000-4000-8000-0000000000c2', 'admin'),
+  ('40000000-0000-4000-8000-0000000000c2', 'lessons_admin'),
   ('40000000-0000-4000-8000-0000000000c3', 'lessons_admin');
 insert into public.organizations(id, owner_profile_id, name_en, name_ar) values
   ('40000000-0000-4000-8000-00000000000f', '40000000-0000-4000-8000-0000000000c6', 'Hidayah Society', 'جمعية هداية');

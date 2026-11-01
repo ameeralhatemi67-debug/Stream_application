@@ -7,8 +7,8 @@ import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
 import 'lessons_repository.dart';
 
-/// Who the sample data is being viewed as. admin covers every admin who
-/// manages lessons (admins, master admins and lessons-only admins).
+/// Who the sample data is being viewed as. admin covers everyone who manages
+/// lessons (master admins and whoever holds the lessons admin page).
 enum LessonsDemoPersona { guest, viewer, admin }
 
 /// A sample preacher link (the real server keeps only hashes of the key

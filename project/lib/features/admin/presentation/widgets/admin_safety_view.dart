@@ -411,6 +411,8 @@ const safetyAuditActions = [
   'recordingTakenDown',
   'recordingRestored',
   'recordingDeleted',
+  'adminAccessChanged',
+  'adminAccessRemoved',
   'appFlagChanged',
   'chatKeywordAdded',
   'chatKeywordUpdated',

@@ -23,33 +23,50 @@ class AdminRoleAssignmentModel {
     this.avatarUrl,
   });
 
-  bool get isMasterAdmin => role == 'master_admin';
-  bool get isAdmin => role == 'admin';
-  bool get isLessonsAdmin => role == 'lessons_admin';
   bool get isPermittedAdmin => role == 'org_owner' || role == 'org_co_owner';
 }
 
-/// An email address that becomes an admin when that account signs in
-/// (admin_email_grants). [appliedAt] is set once it has.
+/// What a master admin can give an email, in the order the screen offers them
+/// (admin_email_grants.access).
+const List<String> kAdminAccessLevels = ['both', 'platform', 'lessons', 'master'];
+
+/// One email's admin access. [appliedAt] is set once the account has signed
+/// in, [profileId] and [displayName] once it exists. A [locked] line is the
+/// owner's and cannot change.
 class AdminEmailGrant {
   const AdminEmailGrant(
       {required this.email,
-      required this.role,
+      required this.access,
       required this.createdAt,
-      this.appliedAt});
+      this.appliedAt,
+      this.locked = false,
+      this.profileId,
+      this.displayName,
+      this.avatarUrl});
   final String email;
-  final String role;
+  final String access;
   final DateTime createdAt;
   final DateTime? appliedAt;
+  final bool locked;
+  final String? profileId, displayName, avatarUrl;
   bool get waiting => appliedAt == null;
 
-  factory AdminEmailGrant.fromRow(Map<String, dynamic> row) => AdminEmailGrant(
-      email: row['email'] as String,
-      role: row['role'] as String? ?? 'admin',
-      createdAt: DateTime.parse(row['created_at'] as String),
-      appliedAt: row['applied_at'] == null
-          ? null
-          : DateTime.parse(row['applied_at'] as String));
+  /// Opens the platform admin page, where capability checkboxes apply.
+  bool get platformPage => access == 'both' || access == 'platform';
+
+  factory AdminEmailGrant.fromRow(Map<String, dynamic> row,
+          {Map<String, dynamic>? profile}) =>
+      AdminEmailGrant(
+          email: row['email'] as String,
+          access: row['access'] as String? ?? 'both',
+          createdAt: DateTime.parse(row['created_at'] as String),
+          appliedAt: row['applied_at'] == null
+              ? null
+              : DateTime.parse(row['applied_at'] as String),
+          locked: row['locked'] as bool? ?? false,
+          profileId: row['applied_profile_id'] as String?,
+          displayName: profile?['display_name_en'] as String?,
+          avatarUrl: profile?['avatar_url'] as String?);
 }
 
 /// The capability keys the roadmap names as examples for the checkbox-style

@@ -174,12 +174,12 @@ class AppRouter {
             return isLoggedIn ? '/feed' : '/welcome';
           }
 
-          // The admin page's Preachers & lessons area: every admin, and
-          // lessons-only admins (who have no other area).
+          // The admin page's Preachers & lessons area, which a master admin
+          // gives per email. A platform-only admin lands on the other area.
           if (path.startsWith('/admin/lessons')) {
             if (!isLoggedIn) return '/welcome';
             if (!provider.adminRoleLoading && !provider.isLessonsAdmin) {
-              return '/feed';
+              return provider.isAdminUser ? '/admin' : '/feed';
             }
             return null;
           }

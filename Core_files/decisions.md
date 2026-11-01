@@ -1,12 +1,47 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-10-29
+updated: 2026-11-01
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-021: Admin access is two pages a master admin assigns per email (2026-11-01)
+
+Owner request 2026-11-01: admins who only run the lessons page; "I as the master
+admin can assign an email a admin for both, one for one, and change later", with
+polkgvd2@gmail.com and ameeralhatemi67@gmail.com as master admins. Migration
+`20261101090000_admin_access_by_email.sql`. This amends ADR-015, where every
+admin also ran the lessons.
+
+- **Two switches.** The `admin` role is the platform admin page and
+  `lessons_admin` is the lessons admin page. Both is the two rows, `master_admin`
+  is everything. `is_lessons_admin()` and `private.lessons_admins()` no longer
+  include plain admins. Each existing admin was given `lessons_admin` so nobody
+  lost anything.
+- **One list.** `admin_email_grants` holds one line per email with `access`
+  (`master`, `both`, `platform`, `lessons`). `admin_set_email_access` adds or
+  changes a line and applies it at once to a verified account, otherwise at its
+  first sign-in. `admin_remove_email_grant` now takes the access away too (it used
+  to leave the role in place). Roles & Permissions shows this one list instead
+  of separate Master, Admin, Lessons and Emails sections.
+- **The list is the only way in.** The master admin RLS policies on `user_roles`
+  now cover only organization roles, so platform roles change through the two
+  functions, the list cannot drift from `user_roles`, and every change lands in
+  the audit log (`adminAccessChanged`, `adminAccessRemoved`, server-only).
+- **Owners are locked.** `locked` lines stay `master` and neither function
+  touches them, so another master admin cannot remove the owner. A master admin
+  also cannot change their own line, to avoid locking themselves out.
+- **Capability checkboxes go with the platform page.** `has_permission()` reads
+  `user_permissions` on its own, so leaving the platform page clears them;
+  otherwise a former admin would keep them.
+- **Only master admins assign.** A plain admin cannot add admins, even lessons
+  ones.
+- **In the app.** `AppProvider.hasAdminPage` opens Settings and the menus for
+  either page. The area switch needs both. A platform-only admin opening
+  `/admin/lessons` lands on `/admin`.
 
 ## ADR-020: Preachers are invited or accepted; emails reach them; the lessons log names who acted (2026-10-29)
 
@@ -225,6 +260,8 @@ design"; nothing in gold & black changes.
   icons, fonts and shared controls but keep their gold layouts.
 
 ## ADR-015: Admins run the lessons; preachers use links, not accounts (2026-10-22)
+
+> **Amended by ADR-021 (2026-11-01):** plain admins no longer run the lessons by default; a master admin gives each email the platform page, the lessons page or both.
 
 Owner decisions 2026-10-22 (the seven questions, answered as recommended).
 This replaces ADR-014's authority model; its "inside Hadayah Live" layout

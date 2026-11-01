@@ -184,7 +184,7 @@ class LessonsController extends ChangeNotifier {
   }
 
   // -------------------------------------------------------------- admins
-  /// Admins, master admins and lessons-only admins manage everything.
+  /// Master admins and lessons admins manage everything.
   bool get canManage => roles.admin;
 
   /// Lesson requests preachers sent through their links, waiting.

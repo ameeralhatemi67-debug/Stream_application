@@ -11,13 +11,13 @@ import '../../models/stream_moderator_model.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Master-Admin-only Role & Permission Management tab (v0.8 Checkpoint 2
-/// Phase 3). Lets a Master Admin view every user_roles grant, promote a
-/// profile to Admin/Master Admin (or revoke), and toggle the checkbox-style
-/// capability grants (user_permissions) from Checkpoint 1 Phase 2. Only
-/// reachable at all when AppProvider.isMasterAdmin is true (see
-/// AdminHubScreen's tab gating) -- write access is also enforced server-side
-/// by the master_admin-only RLS policies from 20260827090000/100000, so this
-/// screen being reachable is a UX convenience, not the security boundary.
+/// Phase 3). One line per email says what it can open: both admin pages, the
+/// platform page, the lessons page, or everything as a master admin. Changing
+/// a line applies at once, and the capability checkboxes (user_permissions)
+/// sit on lines that open the platform page. Only reachable at all when
+/// AppProvider.isMasterAdmin is true (see AdminHubScreen's tab gating) --
+/// admin_set_email_access checks it again on the server, so this screen being
+/// reachable is a UX convenience, not the security boundary.
 class RolePermissionManagementView extends StatefulWidget {
   const RolePermissionManagementView({super.key});
 
@@ -29,7 +29,7 @@ class RolePermissionManagementView extends StatefulWidget {
 class _RolePermissionManagementViewState
     extends State<RolePermissionManagementView> {
   final TextEditingController _grantEmailController = TextEditingController();
-  String _grantRole = 'admin';
+  String _grantAccess = kAdminAccessLevels.first;
   bool _isGranting = false;
 
   @override
@@ -56,38 +56,65 @@ class _RolePermissionManagementViewState
     );
   }
 
-  Future<void> _handleGrantRole(AppProvider provider) async {
+  Future<void> _handleAddAccess(AppProvider provider) async {
     final email = _grantEmailController.text.trim();
     if (email.isEmpty) return;
 
     setState(() => _isGranting = true);
     try {
-      // An admin can be named by email before the account exists: it
-      // becomes an admin at its first sign-in.
-      if (_grantRole == 'admin') {
-        final granted = await provider.addAdminEmail(email);
-        _grantEmailController.clear();
-        _showToast((granted ? 'roles.granted' : 'roles.email_saved_waiting').tr());
-        return;
-      }
-      final profile = await provider.findProfileByEmail(email);
-      if (profile == null) {
-        _showToast(
-          'roles.account_missing'.tr(),
-          isError: true,
-        );
-        return;
-      }
-      await provider.grantAdminRole(
-        profileId: profile['id'] as String,
-        role: _grantRole,
-      );
+      // An email can be named before the account exists: its access starts
+      // at the first sign-in.
+      final granted = await provider.setAdminAccess(email, _grantAccess);
       _grantEmailController.clear();
-      _showToast('roles.granted'.tr());
+      _showToast(
+          (granted ? 'roles.access_saved' : 'roles.access_saved_waiting').tr());
     } catch (e) {
-      _showToast('roles.grant_failed'.tr(), isError: true);
+      _showToast('roles.access_failed'.tr(), isError: true);
     } finally {
       if (mounted) setState(() => _isGranting = false);
+    }
+  }
+
+  Future<void> _handleChangeAccess(
+    AppProvider provider,
+    AdminEmailGrant grant,
+    String access,
+  ) async {
+    if (access == grant.access) return;
+    try {
+      await provider.setAdminAccess(grant.email, access);
+      _showToast('roles.access_changed'.tr());
+    } catch (e) {
+      _showToast('roles.access_failed'.tr(), isError: true);
+    }
+  }
+
+  Future<void> _handleRemoveAccess(
+    AppProvider provider,
+    AdminEmailGrant grant,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('roles.email_remove'.tr()),
+        content: Text('roles.remove_confirm'.tr(args: [grant.email])),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('common.cancel'.tr())),
+          TextButton(
+              key: const ValueKey('roles-remove-confirm'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('roles.email_remove'.tr())),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await provider.removeAdminEmail(grant.email);
+      _showToast('roles.email_removed'.tr());
+    } catch (e) {
+      _showToast('roles.revoke_failed'.tr(), isError: true);
     }
   }
 
@@ -109,13 +136,13 @@ class _RolePermissionManagementViewState
 
   Future<void> _handleTogglePermission(
     AppProvider provider,
-    AdminRoleAssignmentModel assignment,
+    String profileId,
     String capability,
     bool granted,
   ) async {
     try {
       await provider.setUserPermission(
-        profileId: assignment.profileId,
+        profileId: profileId,
         capability: capability,
         granted: granted,
       );
@@ -124,33 +151,8 @@ class _RolePermissionManagementViewState
     }
   }
 
-  String _roleLabel(String role) {
-    switch (role) {
-      case 'master_admin':
-        return 'roles.master_admin'.tr();
-      case 'admin':
-        return 'roles.admin'.tr();
-      case 'lessons_admin':
-        return 'roles.lessons_admin'.tr();
-      case 'org_owner':
-        return 'roles.org_owner'.tr();
-      case 'org_co_owner':
-        return 'roles.org_co_owner'.tr();
-      default:
-        return role;
-    }
-  }
-
-  Color _roleColor(String role) {
-    switch (role) {
-      case 'master_admin':
-        return Canopy.liveCrimson;
-      case 'admin':
-        return AppTheme.primary;
-      default:
-        return AppTheme.accent;
-    }
-  }
+  String _roleLabel(String role) =>
+      role == 'org_owner' ? 'roles.org_owner'.tr() : 'roles.org_co_owner'.tr();
 
   @override
   Widget build(BuildContext context) {
@@ -159,10 +161,6 @@ class _RolePermissionManagementViewState
         context.select<AppProvider, List<AdminRoleAssignmentModel>>(
             (p) => p.roleAssignments);
 
-    final masterAdmins =
-        assignments.where((a) => a.role == 'master_admin').toList();
-    final admins = assignments.where((a) => a.role == 'admin').toList();
-    final lessonsAdmins = assignments.where((a) => a.isLessonsAdmin).toList();
     final permittedAdmins =
         assignments.where((a) => a.isPermittedAdmin).toList();
 
@@ -196,33 +194,9 @@ class _RolePermissionManagementViewState
             style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
-          _buildGrantRoleCard(provider),
+          _buildAddAccessCard(provider),
           const SizedBox(height: AppTheme.spaceXl),
-          _buildSectionHeader('roles.masters'.tr(), masterAdmins.length),
-          const SizedBox(height: AppTheme.spaceMd),
-          if (masterAdmins.isEmpty)
-            _buildEmptyRow('roles.no_masters'.tr())
-          else
-            ...masterAdmins.map((a) => _buildAssignmentCard(provider, a)),
-          const SizedBox(height: AppTheme.spaceXl),
-          _buildSectionHeader('roles.admins'.tr(), admins.length),
-          const SizedBox(height: AppTheme.spaceMd),
-          if (admins.isEmpty)
-            _buildEmptyRow('roles.no_admins'.tr())
-          else
-            ...admins.map((a) => _buildAssignmentCard(provider, a)),
-          const SizedBox(height: AppTheme.spaceXl),
-          _buildSectionHeader('roles.lessons_admins'.tr(), lessonsAdmins.length),
-          const SizedBox(height: AppTheme.spaceSm),
-          Text('roles.lessons_admin_hint'.tr(),
-              style: const TextStyle(color: Canopy.slate, fontSize: 12)),
-          const SizedBox(height: AppTheme.spaceMd),
-          if (lessonsAdmins.isEmpty)
-            _buildEmptyRow('roles.no_lessons_admins'.tr())
-          else
-            ...lessonsAdmins.map((a) => _buildAssignmentCard(provider, a)),
-          const SizedBox(height: AppTheme.spaceXl),
-          _buildAdminEmailsSection(provider),
+          _buildAccessList(provider),
           const SizedBox(height: AppTheme.spaceXl),
           _buildSectionHeader('roles.owners'.tr(), permittedAdmins.length),
           const SizedBox(height: AppTheme.spaceMd),
@@ -331,68 +305,161 @@ class _RolePermissionManagementViewState
     );
   }
 
-  /// Addresses that become admins at their first sign-in, with their state.
-  Widget _buildAdminEmailsSection(AppProvider provider) {
+  /// One line per email: what it can open and whether it has signed in yet.
+  Widget _buildAccessList(AppProvider provider) {
     final grants =
         context.select<AppProvider, List<AdminEmailGrant>>((p) => p.adminEmailGrants);
+    final own = context
+        .select<AppProvider, String?>((p) => p.currentUserEmail)
+        ?.toLowerCase();
     return Column(
       key: const ValueKey('roles-admin-emails'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('roles.emails_title'.tr(), grants.length),
+        _buildSectionHeader('roles.access_title'.tr(), grants.length),
         const SizedBox(height: AppTheme.spaceSm),
-        Text('roles.emails_hint'.tr(),
+        Text('roles.access_hint'.tr(),
             style: const TextStyle(color: Canopy.slate, fontSize: 12)),
         const SizedBox(height: AppTheme.spaceMd),
         if (grants.isEmpty)
           _buildEmptyRow('roles.no_emails'.tr())
         else
           for (final g in grants)
-            AdminCard(
-                margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
-                child: Row(children: [
-                  Icon(g.waiting ? Icons.hourglass_empty_rounded : Icons.verified_user_rounded,
-                      size: 18, color: g.waiting ? Canopy.slate : Canopy.leaf),
-                  const SizedBox(width: AppTheme.spaceSm),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(g.email,
-                            style: const TextStyle(
-                                color: Canopy.ink,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600)),
-                        Text(
-                            [
-                              _roleLabel(g.role),
-                              g.waiting
-                                  ? 'roles.email_waiting'.tr()
-                                  : 'roles.email_applied'.tr(args: [
-                                      DateFormat('yyyy-MM-dd').format(g.appliedAt!)
-                                    ]),
-                            ].join(' · '),
-                            style: const TextStyle(
-                                color: Canopy.slate, fontSize: 12)),
-                      ])),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline_rounded,
-                        size: 18, color: Canopy.liveCrimson),
-                    tooltip: 'roles.email_remove'.tr(),
-                    onPressed: () async {
-                      try {
-                        await provider.removeAdminEmail(g.email);
-                        _showToast('roles.email_removed'.tr());
-                      } catch (e) {
-                        _showToast('roles.revoke_failed'.tr(), isError: true);
-                      }
-                    },
-                  ),
-                ])),
+            _buildAccessRow(provider, g, mine: g.email == own),
       ],
     );
+  }
+
+  // From the theme: a bare TextStyle here would lose the app's font.
+  TextStyle? _accessMenuStyle() => Theme.of(context)
+      .textTheme
+      .bodyMedium
+      ?.copyWith(color: Canopy.ink, fontSize: 13);
+
+  List<DropdownMenuItem<String>> _accessItems() => [
+        for (final access in kAdminAccessLevels)
+          DropdownMenuItem(
+              value: access,
+              child: Text('roles.access_$access'.tr(),
+                  overflow: TextOverflow.ellipsis)),
+      ];
+
+  Widget _buildAccessRow(AppProvider provider, AdminEmailGrant g,
+      {required bool mine}) {
+    final fixed = g.locked || mine;
+    final profileId = g.profileId;
+    final grantedPermissions = profileId == null
+        ? const <String>{}
+        : provider.permissionsForProfile(profileId);
+    return AdminCard(
+        key: ValueKey('roles-access-${g.email}'),
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              CaAvatar(
+                  name: g.displayName ?? g.email,
+                  url: g.avatarUrl,
+                  radius: 18,
+                  // Admins wear the same green ring they have in chat.
+                  ring: g.access == 'lessons'
+                      ? CaAvatarRing.none
+                      : CaAvatarRing.admin),
+              const SizedBox(width: AppTheme.spaceSm),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    if (g.displayName != null)
+                      Text(g.displayName!,
+                          style: const TextStyle(
+                              color: Canopy.ink,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
+                    Text(g.email,
+                        style: const TextStyle(
+                            color: Canopy.slate,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                    Text(
+                        g.waiting
+                            ? 'roles.email_waiting'.tr()
+                            : 'roles.email_applied'.tr(args: [
+                                DateFormat('yyyy-MM-dd').format(g.appliedAt!)
+                              ]),
+                        style: const TextStyle(
+                            color: Canopy.haze, fontSize: 12)),
+                  ])),
+              if (!fixed)
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline_rounded,
+                      size: 18, color: Canopy.liveCrimson),
+                  tooltip: 'roles.email_remove'.tr(),
+                  onPressed: () => _handleRemoveAccess(provider, g),
+                ),
+            ]),
+            const SizedBox(height: AppTheme.spaceSm),
+            if (fixed)
+              Text(
+                  g.locked
+                      ? 'roles.access_locked'.tr()
+                      : [
+                          'roles.access_${g.access}'.tr(),
+                          'roles.access_you'.tr(),
+                        ].join(' · '),
+                  style: const TextStyle(
+                      color: Canopy.ink,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600))
+            else
+              DropdownButton<String>(
+                key: ValueKey('roles-access-menu-${g.email}'),
+                isExpanded: true,
+                value: g.access,
+                dropdownColor: Canopy.mint,
+                style: _accessMenuStyle(),
+                items: _accessItems(),
+                onChanged: (value) {
+                  if (value != null) _handleChangeAccess(provider, g, value);
+                },
+              ),
+            if (profileId != null && g.platformPage) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              const Divider(color: Canopy.hairline, height: 1),
+              const SizedBox(height: AppTheme.spaceSm),
+              Wrap(
+                spacing: AppTheme.spaceMd,
+                runSpacing: 4,
+                children: kKnownAdminCapabilities.map((capability) {
+                  final granted = grantedPermissions.contains(capability);
+                  return InkWell(
+                    onTap: () => _handleTogglePermission(
+                        provider, profileId, capability, !granted),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: granted,
+                          activeColor: Canopy.leaf,
+                          onChanged: (checked) => _handleTogglePermission(
+                              provider, profileId, capability, checked == true),
+                        ),
+                        Flexible(
+                            child: Text(
+                          'roles.$capability'.tr(),
+                          style: const TextStyle(
+                              color: Canopy.slate, fontSize: 12),
+                        )),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ));
   }
 
   Widget _buildSectionHeader(String title, int count) {
@@ -436,14 +503,14 @@ class _RolePermissionManagementViewState
                 const TextStyle(color: Canopy.slate, fontSize: 12)));
   }
 
-  Widget _buildGrantRoleCard(AppProvider provider) {
+  Widget _buildAddAccessCard(AppProvider provider) {
     return AdminCard(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'design_ui.grant_a_platform_role'.tr(),
+              'roles.add_title'.tr(),
               style: const TextStyle(
                 color: Canopy.ink,
                 fontWeight: FontWeight.bold,
@@ -481,24 +548,14 @@ class _RolePermissionManagementViewState
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 DropdownButton<String>(
+                  key: const ValueKey('roles-add-access'),
                   isExpanded: true,
-                  value: _grantRole,
+                  value: _grantAccess,
                   dropdownColor: Canopy.mint,
-                  style: const TextStyle(
-                      color: Canopy.ink, fontSize: 13),
-                  items: [
-                    DropdownMenuItem(
-                        value: 'admin',
-                        child: Text('roles.admin_by_email'.tr())),
-                    DropdownMenuItem(
-                        value: 'lessons_admin',
-                        child: Text('roles.lessons_admin'.tr())),
-                    DropdownMenuItem(
-                        value: 'master_admin',
-                        child: Text('design_ui.master_admin'.tr())),
-                  ],
+                  style: _accessMenuStyle(),
+                  items: _accessItems(),
                   onChanged: (value) {
-                    if (value != null) setState(() => _grantRole = value);
+                    if (value != null) setState(() => _grantAccess = value);
                   },
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
@@ -517,9 +574,9 @@ class _RolePermissionManagementViewState
                               strokeWidth: 2, color: AppTheme.onMedia),
                         )
                       : const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                  label: Text('design_ui.grant'.tr()),
+                  label: Text('roles.add_button'.tr()),
                   onPressed:
-                      _isGranting ? null : () => _handleGrantRole(provider),
+                      _isGranting ? null : () => _handleAddAccess(provider),
                 ),
               ],
             ),
@@ -529,11 +586,7 @@ class _RolePermissionManagementViewState
 
   Widget _buildAssignmentCard(
       AppProvider provider, AdminRoleAssignmentModel assignment) {
-    final tierColor = _roleColor(assignment.role);
-    final canTogglePermissions =
-        assignment.role == 'master_admin' || assignment.role == 'admin';
-    final grantedPermissions =
-        provider.permissionsForProfile(assignment.profileId);
+    const tierColor = AppTheme.accent;
 
     return AdminCard(
         margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
@@ -550,11 +603,6 @@ class _RolePermissionManagementViewState
                   name: assignment.displayName,
                   url: assignment.avatarUrl,
                   radius: 18,
-                  // Admins wear the same green ring they have in chat.
-                  ring: assignment.role == 'master_admin' ||
-                          assignment.role == 'admin'
-                      ? CaAvatarRing.admin
-                      : CaAvatarRing.none,
                 ),
                 const SizedBox(width: AppTheme.spaceMd),
                 SizedBox(
@@ -589,7 +637,7 @@ class _RolePermissionManagementViewState
                   ),
                   child: Text(
                     _roleLabel(assignment.role),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: tierColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -605,42 +653,6 @@ class _RolePermissionManagementViewState
                 ),
               ],
             ),
-            if (canTogglePermissions) ...[
-              const SizedBox(height: AppTheme.spaceSm),
-              const Divider(color: Canopy.hairline, height: 1),
-              const SizedBox(height: AppTheme.spaceSm),
-              Wrap(
-                spacing: AppTheme.spaceMd,
-                runSpacing: 4,
-                children: kKnownAdminCapabilities.map((capability) {
-                  final granted = grantedPermissions.contains(capability);
-                  return InkWell(
-                    onTap: () => _handleTogglePermission(
-                        provider, assignment, capability, !granted),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Checkbox(
-                          value: granted,
-                          activeColor: Canopy.leaf,
-                          onChanged: (checked) => _handleTogglePermission(
-                              provider,
-                              assignment,
-                              capability,
-                              checked == true),
-                        ),
-                        Flexible(
-                            child: Text(
-                          'roles.$capability'.tr(),
-                          style: const TextStyle(
-                              color: Canopy.slate, fontSize: 12),
-                        )),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
           ],
         ));
   }
