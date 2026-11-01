@@ -12,7 +12,7 @@ health: release_blocked
 
 A master admin now gives an email the platform admin page, the lessons admin page, both, or master admin, and changes it later from Roles & Permissions (ADR-021). The account doesn't need to exist yet. Removing a line takes the access away. polkgvd2@gmail.com and ameeralhatemi67@gmail.com are locked as master admins. Migration `20261101090000_admin_access_by_email.sql`; not applied to hosted and not pushed.
 
-Also published a private artifact previewing the map across a week (streamers, lessons, in-mosque and live states, countdowns, affiliated mosques, zoom bubbles): https://claude.ai/artifact/LEbVtfLSruASmqPpBpq4sq. Nothing from it is built in the app yet; its last section lists what is missing today. Open question for the owner: what "affiliated mosque" should mean.
+Also published a private artifact previewing the map across a week (streamers, lessons, in-mosque and live states, countdowns, affiliated mosques, zoom bubbles): https://claude.ai/artifact/LEbVtfLSruASmqPpBpq4sq. Nothing from it is built in the app yet; its last section lists what is missing today. Owner feedback the same day: keep the markers, keep the app's real streamer cards, and no streamer-to-mosque "Affiliated with" link, because that feature does not exist. The second version does that. The owner has asked for the full list of database, streamer and organization changes before deciding whether to build it.
 
 ## Hide and delete on YouTube blocked by a dead or erased token, 2026-10-29 (deployed to hosted)
 
