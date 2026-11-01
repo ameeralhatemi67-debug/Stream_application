@@ -12,10 +12,15 @@ import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_fields.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_rows.dart';
+import '../../discovery/models/academic_category_model.dart';
+import '../../map/presentation/map_cluster_layout.dart';
 import '../../map/presentation/map_visible_catalog.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import '../domain/lessons_dates.dart';
+import '../domain/lessons_models.dart';
+import '../domain/lessons_rules.dart';
+import '../domain/lessons_vocab.dart';
 import '../state/lessons_controller.dart';
 import '../state/preacher_link_controller.dart';
 import 'lessons_kit.dart';
@@ -28,42 +33,193 @@ import 'lessons_widgets.dart';
 // Discover, and a person's programme pages in Settings. Each reads the
 // LessonsController when the app provides one and shows nothing without it.
 
-/// A mosque on the map with its approved lessons in the coming week.
-typedef MapMosque = ({String id, LatLng point, String label, int count, bool live});
+/// A mosque on the map: what its marker says right now. [minutes] counts to
+/// the end of the lesson that is on, or to the start of the next one. [count]
+/// is its lessons in the coming seven days. [chip] is the line under it.
+typedef MapMosque = ({
+  String id,
+  LatLng point,
+  String label,
+  int count,
+  bool live,
+  MosqueStatus status,
+  int minutes,
+  String chip,
+});
 
-/// Mosques inside the map's area that host a lesson in the next seven days.
-List<MapMosque> mapMosques(LessonsController c, String lang) {
-  final end = addDays(c.today, 6);
-  final counts = <String, int>{};
-  final live = <String>{};
+/// Every approved mosque inside the map's area. With a [topic], only mosques
+/// with a coming lesson on it. Without a connection nothing here can be
+/// trusted as happening now, so there is no status, only the lessons we hold.
+List<MapMosque> mapMosques(LessonsController c, String lang, {DateTime? now, bool online = true, String? topic}) {
+  final at = now ?? DateTime.now();
+  final byMosque = <String, List<Lesson>>{};
   for (final l in c.upcoming) {
-    if (l.date.isAfter(end)) continue;
-    counts[l.mosqueId] = (counts[l.mosqueId] ?? 0) + 1;
-    if (c.isLiveNow(l)) live.add(l.mosqueId);
+    if (topic == null || l.topic == topic) (byMosque[l.mosqueId] ??= []).add(l);
   }
   return [
-    for (final e in counts.entries)
-      if (c.mosque(e.key) case final m?
-          when m.verified && m.hasPin && LessonsMap.covers(m.latitude!, m.longitude!))
-        (id: m.id, point: LatLng(m.latitude!, m.longitude!), label: m.name(lang), count: e.value, live: live.contains(m.id)),
+    for (final m in c.verifiedMosques)
+      if (m.hasPin && LessonsMap.covers(m.latitude!, m.longitude!) && (topic == null || byMosque.containsKey(m.id)))
+        _mapMosque(c, m, byMosque[m.id] ?? const [], lang, at, online),
   ];
 }
 
-/// The mosque coins as a map layer.
-Widget mosqueMarkerLayer(List<MapMosque> mosques, {String? selected, required ValueChanged<MapMosque> onTap}) =>
-    MarkerLayer(markers: [
-      for (final m in mosques)
-        Marker(
-          key: ValueKey('map-mosque-${m.id}'),
-          point: m.point,
-          width: m.id == selected ? 46 : 38,
-          height: m.id == selected ? 46 : 38,
-          child: MosqueCoin(
-              pin: MosquePin(id: m.id, lat: m.point.latitude, lng: m.point.longitude, label: m.label, count: m.count, live: m.live),
-              selected: m.id == selected,
-              onTap: () => onTap(m)),
+MapMosque _mapMosque(LessonsController c, Mosque m, List<Lesson> lessons, String lang, DateTime at, bool online) {
+  final state = mosqueNow(lessons, c.catalog, at);
+  final l = state.lesson;
+  final status = online || state.status == MosqueStatus.quiet ? state.status : MosqueStatus.week;
+  return (
+    id: m.id,
+    point: LatLng(m.latitude!, m.longitude!),
+    label: m.name(lang),
+    count: state.count,
+    live: online && l != null && c.isLiveNow(l, now: at),
+    status: status,
+    minutes: state.minutes,
+    chip: !online || l == null
+        ? ''
+        : switch (status) {
+            MosqueStatus.now => 'lessons.map.now_left'.tr(args: [durationLabel(state.minutes, lang)]),
+            MosqueStatus.soon || MosqueStatus.today => 'lessons.map.in'.tr(args: [durationLabel(state.minutes, lang)]),
+            MosqueStatus.week => '${relativeDayLabel(l.date, lang)} · ${clockLabel(c.startHours(l), lang)}',
+            MosqueStatus.quiet => '',
+          },
+  );
+}
+
+/// Which marker anchors a bubble: what is happening now comes first.
+int mapMosquePriority(MapMosque m) => switch (m.status) {
+      MosqueStatus.now => m.live ? 7 : 6,
+      MosqueStatus.soon => 5,
+      MosqueStatus.today => 3,
+      MosqueStatus.week => 2,
+      MosqueStatus.quiet => 0,
+    };
+
+/// Mosques with a lesson on now or later today, the soonest first, for the
+/// lists beside the map.
+List<MapMosque> activeMapMosques(Iterable<MapMosque> mosques) {
+  int order(MapMosque m) => m.status == MosqueStatus.now ? -1 : m.minutes;
+  return mosques.where((m) => m.status.index <= MosqueStatus.today.index).toList()
+    ..sort((a, b) => order(a).compareTo(order(b)));
+}
+
+/// One mosque as a map marker. The further out the map is, the less each one
+/// says: only what is happening soon keeps its line.
+Marker mosqueMarker(MapMosque m, {required double zoom, bool selected = false, required VoidCallback onTap}) {
+  final showChip = switch (m.status) {
+    MosqueStatus.now || MosqueStatus.soon => true,
+    MosqueStatus.today => zoom >= 11.2,
+    MosqueStatus.week => zoom >= kMapQuietMosqueZoom,
+    MosqueStatus.quiet => false,
+  };
+  return Marker(
+    key: ValueKey('map-mosque-${m.id}'),
+    point: m.point,
+    width: 52,
+    height: 52,
+    child: MosqueArch(
+        pin: MosquePin(
+            id: m.id,
+            lat: m.point.latitude,
+            lng: m.point.longitude,
+            label: m.label,
+            count: m.count,
+            live: m.live,
+            onSite: m.status == MosqueStatus.now && !m.live,
+            quiet: m.status == MosqueStatus.quiet,
+            chip: showChip ? m.chip : '',
+            chipTone: switch (m.status) {
+              MosqueStatus.now => m.live ? MosqueChipTone.live : MosqueChipTone.onSite,
+              MosqueStatus.soon || MosqueStatus.today => MosqueChipTone.countdown,
+              _ => MosqueChipTone.day,
+            }),
+        selected: selected,
+        onTap: onTap),
+  );
+}
+
+/// A mosque with something on today, in the lists beside the map.
+class MapMosqueTile extends StatelessWidget {
+  const MapMosqueTile({super.key, required this.mosque, required this.onTap});
+  final MapMosque mosque;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => InkWell(
+        key: ValueKey('map-mosque-tile-${mosque.id}'),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceSm),
+          child: Row(children: [
+            const TIcon(TGlyph.mosque, size: 22, color: TC.goldIcon),
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(mosque.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: tStrong(14)),
+                Text(mosque.chip,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tBody(12, color: mosque.status == MosqueStatus.now ? TC.successFg : TC.bronze, weight: FontWeight.w600)),
+              ]),
+            ),
+          ]),
         ),
-    ]);
+      );
+}
+
+/// What is happening right now, at a glance: green at mosques, red in the app.
+class MapNowPill extends StatelessWidget {
+  const MapNowPill({super.key, required this.onSite, required this.live});
+  final int onSite, live;
+  @override
+  Widget build(BuildContext context) {
+    Widget part(Color dot, String text) => Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 7, height: 7, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+          const SizedBox(width: 5),
+          Flexible(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(12, color: TC.onNight, weight: FontWeight.w600))),
+        ]);
+    return Container(
+      key: const ValueKey('map-now-pill'),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: TC.ink.withValues(alpha: .9), borderRadius: BorderRadius.circular(99)),
+      child: Wrap(spacing: 10, runSpacing: 2, children: [
+        if (onSite > 0) part(const Color(0xFF5BC184), 'lessons.map.now_mosques'.tr(args: ['$onSite'])),
+        if (live > 0) part(const Color(0xFFE5545F), 'lessons.map.now_live'.tr(args: ['$live'])),
+      ]),
+    );
+  }
+}
+
+/// A hit for the map's search: a mosque, or a coming lesson at one.
+typedef MapSearchHit = ({String mosqueId, String title, String subtitle});
+
+/// Mosques by name or area, then coming lessons by title or preacher.
+List<MapSearchHit> searchMapLessons(LessonsController c, String query, String lang, {int limit = 8}) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return const [];
+  bool hit(Iterable<String> values) => values.any((v) => v.toLowerCase().contains(q));
+  final mosques = c.verifiedMosques.where((m) => m.hasPin);
+  final out = <MapSearchHit>[
+    for (final m in mosques)
+      if (hit([m.nameAr, m.nameEn, c.district(m.districtId)?.nameAr ?? '', c.district(m.districtId)?.nameEn ?? '']))
+        (mosqueId: m.id, title: m.name(lang), subtitle: c.district(m.districtId)?.name(lang) ?? ''),
+  ];
+  final end = addDays(c.today, 6);
+  for (final l in c.upcoming) {
+    if (l.date.isAfter(end)) continue;
+    final p = c.preacher(l.preacherId), m = c.mosque(l.mosqueId);
+    if (m == null || !m.hasPin || !m.verified) continue;
+    if (hit([l.titleAr, l.titleEn, p?.nameAr ?? '', p?.nameEn ?? ''])) {
+      out.add((mosqueId: m.id, title: l.title(lang), subtitle: '${m.name(lang)} · ${relativeDayLabel(l.date, lang)}'));
+    }
+  }
+  return out.take(limit).toList();
+}
+
+/// The lesson topics, in the shape the map's topic dropdown takes.
+List<AcademicCategoryModel> lessonTopicCategories() => [
+      for (final t in LessonsVocab.topics)
+        AcademicCategoryModel(id: t, nameEn: topicLabel(t), nameAr: topicLabel(t), iconName: 'mosque'),
+    ];
 
 /// What the map shows: broadcasters, mosque lessons, or both.
 enum MapLayers { all, streamers, lessons }
@@ -100,9 +256,12 @@ class MapLayerSwitch extends StatelessWidget {
 
 /// The selected mosque: its next lessons, its page and directions.
 class MapMosqueCard extends StatelessWidget {
-  const MapMosqueCard({super.key, required this.mosqueId, required this.onClose});
+  const MapMosqueCard({super.key, required this.mosqueId, required this.onClose, this.online = true});
   final String mosqueId;
   final VoidCallback onClose;
+
+  /// Without a connection we can't say what is happening now.
+  final bool online;
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController>();
@@ -111,6 +270,8 @@ class MapMosqueCard extends StatelessWidget {
     final lang = context.lang;
     final end = addDays(c.today, 6);
     final lessons = c.upcomingWhere((l) => l.mosqueId == m.id && !l.date.isAfter(end));
+    final next = mosqueNow(lessons, c.catalog, DateTime.now()).lesson;
+    final preachers = c.listedPreachers.where((p) => p.homeMosqueId == m.id).take(2).toList();
     return TCard(
       key: const ValueKey('map-mosque-card'),
       highlight: true,
@@ -125,10 +286,33 @@ class MapMosqueCard extends StatelessWidget {
           TIconButton(TGlyph.x, tooltip: 'lessons.close'.tr(), onPressed: onClose),
         ]),
         const SizedBox(height: 8),
+        if (online && next != null) ...[LessonStatusCard(next), const SizedBox(height: 8)],
         if (lessons.isEmpty)
           Text('lessons.map.none_period'.tr(), style: tBody(13, color: TC.muted))
         else
-          for (final l in lessons.take(3)) Padding(padding: const EdgeInsets.only(bottom: 6), child: LessonRow(l, showDate: true)),
+          for (final l in lessons.take(3)) Padding(padding: const EdgeInsets.only(bottom: 6), child: LessonRow(l, dense: true)),
+        if (preachers.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text('lessons.map.preachers_here'.tr(), style: tBody(13, color: TC.bronze, weight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              for (final p in preachers)
+                InkWell(
+                  onTap: () => context.push('/lessons/preachers/${p.id}'),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 12),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      TAvatar(name: p.name(lang), size: 24),
+                      const SizedBox(width: 6),
+                      Text(p.name(lang), maxLines: 1, style: tBody(13, color: TC.ink, weight: FontWeight.w600)),
+                    ]),
+                  ),
+                ),
+            ]),
+          ),
+        ],
         const SizedBox(height: 6),
         Wrap(spacing: 8, runSpacing: 8, children: [
           TButton('lessons.map.mosque_page'.tr(), kind: TBtn.minted, small: true, iconEnd: TGlyph.arrowEnd, onPressed: () => context.push('/lessons/mosques/${m.id}')),
@@ -149,8 +333,9 @@ class MapPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
-    final mosques = context.select<LessonsController?, List<MapMosque>>(
-        (c) => c == null ? const [] : mapMosques(c, lang));
+    final mosques = context.select<LessonsController?, List<MapMosque>>((c) => c == null
+        ? const []
+        : mapMosques(c, lang).where((m) => m.status != MosqueStatus.quiet).toList());
     final venues = visibleMapStreamers(streamers);
     final counts = [
       if (streamers.isNotEmpty) 'web.map_count'.plural(venues.length),
@@ -159,7 +344,14 @@ class MapPreviewCard extends StatelessWidget {
     ].join(' · ');
     final pins = [
       for (final m in mosques)
-        MosquePin(id: m.id, lat: m.point.latitude, lng: m.point.longitude, label: m.label, count: m.count, live: m.live),
+        MosquePin(
+            id: m.id,
+            lat: m.point.latitude,
+            lng: m.point.longitude,
+            label: m.label,
+            count: m.count,
+            live: m.live,
+            onSite: m.status == MosqueStatus.now && !m.live),
     ];
     final markers = [
       for (final s in venues)

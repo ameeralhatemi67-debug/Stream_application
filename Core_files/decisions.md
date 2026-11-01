@@ -8,6 +8,22 @@ updated: 2026-11-01
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
 
+## ADR-022: One map for mosques and streamers; status from the schedule, LIVE from the channel (2026-11-01)
+
+Owner request 2026-11-01, after reviewing the Hadayah Map Week preview: build it, keeping the app's real streamer cards and with no "Affiliated with" link between streamers and mosques. The owner left four choices to Claude's recommendations: the mini channel card shows up close, Started and Finished come later, default lengths are lesson 60, lecture 75, talk 15 minutes, and there is no "Affiliated mosque" tag. Migration `20261101130000_lesson_length_and_map_schedules.sql`.
+
+- **One layer, one grouping.** Mosques and streamers go through `clusterMapPoints` together, by distance instead of the 72 px grid. A bubble sits on its highest-priority pin, and the radius is wider than the largest bubble, so two markers can't touch. What is happening now anchors its bubble where it really is.
+- **Three shapes.** Streamers keep `SpatialStreamerMarker` (circle, rounded square for organizations). Mosques are `MosqueArch`. Bubbles are `MapClusterBadge`, whose ring shows the mix and whose small badges count what is live and what is on at a mosque. From zoom 14.6 a streamer becomes `MapDiscoveryChannelCardMarker`, which existed but no screen used. A selected streamer stays the pulsing pin.
+- **Red means live in the app, green means at the mosque.** Nothing else uses them on the map.
+- **On at the mosque comes from the schedule.** `lessonTiming` and `mosqueNow` work from the start time the app already computes plus the length (`lessons.duration_minutes`, or the default for the type). The card says "Shown from the schedule".
+- **LIVE comes from the channel.** `isLiveNow` used to be true for any lesson marked streamed during its time, even if nobody was broadcasting. It now also needs the preacher's linked channel to be live (`LessonsController.liveChannels`, fed from `AppProvider.liveChannelIds`). A preacher with no linked account can't show as live, and the admin form says so.
+- **Every approved mosque is on the map**, not only those with a lesson in seven days. A mosque with nothing coming up is a hollow arch from zoom 12.4. There is no separate notion of affiliated: it means approved.
+- **Topics follow the layer.** Streamers use academic categories and lessons use their 8 fixed topics, so the dropdown shows lesson topics only when only lessons are shown. With both layers on, it filters streamers.
+- **Schedules.** `list_map_schedules()` returns every personal channel's published schedule in one read, for "in 35m" on the pins. Organizations are off and stay out of it.
+- **Freshness.** While the map is visible, lessons reload every 3 minutes and schedules every 5, and the clock moves on each minute. No realtime on `lessons`.
+- **Offline.** Mosques are saved after each load. Without a connection the map shows arches and counts, never a chip, green or red.
+- **Not built.** Started and Finished on the preacher's page, organization schedules on the map, and a pin that moves to the branch an organization is live from.
+
 ## ADR-021: Admin access is two pages a master admin assigns per email (2026-11-01)
 
 Owner request 2026-11-01: admins who only run the lessons page; "I as the master

@@ -31,6 +31,15 @@ class UpcomingScheduleService {
         .toList();
   }
 
+  /// Every channel's published schedule at once, for the map's pins.
+  Future<List<UpcomingSchedule>> loadForMap() async {
+    final rows = await client.rpc('list_map_schedules');
+    return (rows as List)
+        .map((row) =>
+            UpcomingSchedule.fromRow(Map<String, dynamic>.from(row as Map)))
+        .toList();
+  }
+
   Future<UpcomingSchedule> save(UpcomingSchedule schedule) async {
     final data = schedule.toRow();
     final Map<String, dynamic> row;

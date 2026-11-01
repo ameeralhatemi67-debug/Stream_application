@@ -1,5 +1,20 @@
 import 'package:flutter/material.dart';
 
+/// Each channel's next planned live after [after].
+Map<String, ({UpcomingSchedule schedule, DateTime start})> nextLiveByChannel(
+    Iterable<UpcomingSchedule> schedules, DateTime after) {
+  final next = <String, ({UpcomingSchedule schedule, DateTime start})>{};
+  for (final s in schedules) {
+    final start = s.nextStartUtc(after);
+    if (start == null) continue;
+    final known = next[s.streamerId];
+    if (known == null || start.isBefore(known.start)) {
+      next[s.streamerId] = (schedule: s, start: start);
+    }
+  }
+  return next;
+}
+
 /// A planned announcement, independent of YouTube and live-session state.
 @immutable
 class UpcomingSchedule {

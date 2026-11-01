@@ -18,6 +18,9 @@ class District {
   final int sort;
   String name(String lang) => pick(lang, nameAr, nameEn);
 
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'city': city, 'name_ar': nameAr, 'name_en': nameEn, 'sort': sort};
+
   factory District.fromJson(Map<String, dynamic> j) => District(
       id: _s(j['id']),
       city: _s(j['city']),
@@ -65,6 +68,19 @@ class Mosque {
       mapsUrl: j['maps_url'] as String?,
       facilities: _list(j['facilities']),
       verified: j['verified'] as bool? ?? false);
+
+  /// What is saved for the offline map.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name_ar': nameAr,
+        'name_en': nameEn,
+        'district_id': districtId,
+        'latitude': latitude,
+        'longitude': longitude,
+        'maps_url': mapsUrl,
+        'facilities': facilities,
+        'verified': verified,
+      };
 
   Mosque copyWith({bool? verified, String? nameAr, String? nameEn, String? districtId,
           double? latitude, double? longitude, List<String>? facilities}) =>
@@ -216,6 +232,7 @@ class Lesson {
     required this.date,
     required this.slot,
     this.exactTime,
+    this.durationMinutes,
     this.language = 'ar',
     this.interpretation,
     this.audience = 'all',
@@ -240,6 +257,9 @@ class Lesson {
       preacherId, mosqueId, slot, language, audience, status, source, preacherNote;
   final String? seriesId, exactTime, interpretation, rejectionReason, cancelReason, submittedBy, reviewedBy;
   final int? seq;
+
+  /// Minutes it runs, when an admin set them; see [lessonMinutes].
+  final int? durationMinutes;
   final DateTime date;
   final DateTime? submittedAt, reviewedAt;
   final bool womenSection, streamed, notifyFollowers;
@@ -267,6 +287,7 @@ class Lesson {
       date: parseIsoDate(_s(j['lesson_date'])),
       slot: _s(j['slot']),
       exactTime: (j['exact_time'] as String?)?.substring(0, 5),
+      durationMinutes: (j['duration_minutes'] as num?)?.toInt(),
       language: j['language'] as String? ?? 'ar',
       interpretation: j['interpretation'] as String?,
       audience: j['audience'] as String? ?? 'all',
@@ -300,6 +321,8 @@ class Lesson {
     String? slot,
     String? exactTime,
     bool clearExact = false,
+    int? durationMinutes,
+    bool clearDuration = false,
   }) =>
       Lesson(
           id: id,
@@ -317,6 +340,7 @@ class Lesson {
           date: date ?? this.date,
           slot: slot ?? this.slot,
           exactTime: clearExact ? null : (exactTime ?? this.exactTime),
+          durationMinutes: clearDuration ? null : (durationMinutes ?? this.durationMinutes),
           language: language,
           interpretation: interpretation,
           audience: audience,
@@ -860,12 +884,14 @@ class LessonDraft {
     this.notifyFollowers = true,
     required this.slot,
     this.exactTime,
+    this.durationMinutes,
     required this.dates,
     this.mosqueId,
     this.newMosque,
   });
   final String preacherId, type, topic, titleAr, titleEn, descriptionAr, language, audience, slot;
   final String? interpretation, exactTime, mosqueId;
+  final int? durationMinutes;
   final bool womenSection, streamed, notifyFollowers;
   final List<DateTime> dates;
   final LessonsNewMosque? newMosque;
@@ -885,6 +911,7 @@ class LessonDraft {
         'notify_followers': notifyFollowers,
         'slot': slot,
         if (exactTime != null) 'exact_time': exactTime,
+        if (durationMinutes != null) 'duration_minutes': durationMinutes,
         'dates': dates.map(isoDate).toList(),
         if (mosqueId != null) 'mosque_id': mosqueId,
         if (newMosque != null) 'new_mosque': newMosque!.toJson(),

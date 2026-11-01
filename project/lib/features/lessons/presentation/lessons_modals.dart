@@ -243,6 +243,7 @@ Future<void> showEditLessonSheet(BuildContext context, Lesson l) {
   final titleAr = TextEditingController(text: l.titleAr), titleEn = TextEditingController(text: l.titleEn);
   var date = l.date;
   var slot = l.slot;
+  int? minutes = l.durationMinutes;
   String? mosqueId = l.hasMosque ? l.mosqueId : null;
   var city = cityOr(c, mosqueId, c.preacher(l.preacherId)?.city ?? 'khobar');
   return showTModal<void>(context,
@@ -275,6 +276,24 @@ Future<void> showEditLessonSheet(BuildContext context, Lesson l) {
               ),
               const SizedBox(height: 12),
               TChips([for (final s in LessonsVocab.slots) TChip(slotLabel(s), small: true, icon: slotGlyph(s), selected: slot == s, onTap: () => set(() => slot = s))]),
+              const SizedBox(height: 12),
+              TField(
+                label: 'lessons.submit.length'.tr(),
+                child: DropdownButtonFormField<int?>(
+                  key: const ValueKey('lesson-edit-length'),
+                  initialValue: minutes,
+                  isExpanded: true,
+                  decoration: tInput(),
+                  items: [
+                    DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('lessons.submit.length_default'.tr(args: [durationLabel(LessonsVocab.lengthMinutes[l.type] ?? 60, lang)]),
+                            overflow: TextOverflow.ellipsis)),
+                    for (final m in LessonsVocab.lengths) DropdownMenuItem<int?>(value: m, child: Text(durationLabel(m, lang))),
+                  ],
+                  onChanged: (v) => set(() => minutes = v),
+                ),
+              ),
             ]),
           ),
       footer: (ctx) => [
@@ -288,6 +307,7 @@ Future<void> showEditLessonSheet(BuildContext context, Lesson l) {
                         if (mosqueId != null) 'mosque_id': mosqueId,
                         'lesson_date': isoDate(date),
                         'slot': slot,
+                        'duration_minutes': minutes,
                       }),
                   success: 'lessons.roster.saved'.tr());
             }),

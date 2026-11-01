@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/demo_lessons_repository.dart';
 import '../data/lessons_repository.dart';
@@ -27,7 +29,12 @@ class LessonsController extends ChangeNotifier {
 
   bool loading = false;
   bool loaded = false;
+  DateTime? _loadedAt;
   LessonsFailure? failure;
+
+  /// Channels live right now, which the catalog of streamers knows. A lesson
+  /// shows as live only when its preacher's channel is in here.
+  Set<String> liveChannels = const {};
   String? _userId;
   bool _disposed = false;
   Future<void>? _inFlight;
@@ -41,6 +48,57 @@ class LessonsController extends ChangeNotifier {
   Future<void> ensureLoaded() => loaded ? Future.value() : refresh();
 
   Future<void> refresh() => _inFlight ??= _load().whenComplete(() => _inFlight = null);
+
+  /// The map stays open for a long time; a lesson cancelled or moved should
+  /// not wait for the next app start.
+  Future<void> refreshIfOlderThan(Duration age) {
+    final at = _loadedAt;
+    if (!loaded || at == null || DateTime.now().difference(at) < age) return Future.value();
+    return refresh();
+  }
+
+  void setLiveChannels(Set<String> channels) {
+    if (setEquals(channels, liveChannels)) return;
+    liveChannels = channels;
+    // Called while providers update, so listeners hear after that frame.
+    scheduleMicrotask(_notify);
+  }
+
+  static const _savedMosquesKey = 'lessons_saved_mosques_v1';
+
+  /// Keeps the mosques, so the map still has them without a connection.
+  Future<void> _saveMosques() async {
+    if (isDemo) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          _savedMosquesKey,
+          jsonEncode({
+            'mosques': [for (final m in catalog.mosques.values) if (m.verified) m.toJson()],
+            'districts': [for (final d in catalog.districts.values) d.toJson()],
+          }));
+    } catch (e) {
+      debugPrint('Saving mosques failed: $e');
+    }
+  }
+
+  Future<void> _restoreMosques() async {
+    if (isDemo || catalog.mosques.isNotEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_savedMosquesKey);
+      if (raw == null) return;
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      Iterable<Map<String, dynamic>> rows(String key) =>
+          (data[key] as List).map((r) => Map<String, dynamic>.from(r as Map));
+      catalog = catalog.copyWith(
+          mosques: {for (final r in rows('mosques')) r['id'] as String: Mosque.fromJson(r)},
+          districts: {for (final r in rows('districts')) r['id'] as String: District.fromJson(r)});
+      _notify();
+    } catch (e) {
+      debugPrint('Restoring mosques failed: $e');
+    }
+  }
 
   Future<void> _load() async {
     loading = true;
@@ -56,9 +114,12 @@ class LessonsController extends ChangeNotifier {
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
+      _loadedAt = DateTime.now();
       unawaited(_realignReminders());
+      unawaited(_saveMosques());
     } on LessonsException catch (e) {
       failure = e.failure;
+      unawaited(_restoreMosques());
     } finally {
       loading = false;
       _notify();
@@ -177,10 +238,14 @@ class LessonsController extends ChangeNotifier {
   }
 
   double startHours(Lesson l) => lessonStartHours(l, catalog);
-  bool isLiveNow(Lesson l) {
-    if (!l.streamed || !l.isPublic || !sameDay(l.date, today)) return false;
-    final start = startHours(l), now = lessonsNowHours();
-    return now >= start && now <= start + 1.25;
+
+  /// Streamed, in its time, and the preacher's channel really is live: the
+  /// schedule alone only says it should be.
+  bool isLiveNow(Lesson l, {DateTime? now}) {
+    if (!l.streamed || !l.isPublic) return false;
+    final channel = preacher(l.preacherId)?.linkedProfileId;
+    if (channel == null || !liveChannels.contains(channel)) return false;
+    return lessonTiming(l, catalog, now ?? DateTime.now()).phase == LessonPhase.running;
   }
 
   // -------------------------------------------------------------- admins

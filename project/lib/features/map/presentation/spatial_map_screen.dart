@@ -11,7 +11,11 @@ import '../../../core/providers/app_provider.dart';
 import '../../discovery/models/academic_category_model.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
+import '../../../core/services/upcoming_schedule_service.dart';
 import '../../profile/models/streamer_models.dart';
+import '../../profile/models/upcoming_schedule.dart';
+import '../../lessons/domain/lessons_dates.dart';
+import '../../lessons/domain/lessons_rules.dart';
 import '../../lessons/presentation/lessons_in_app.dart';
 import '../../lessons/state/lessons_controller.dart';
 import '../models/map_models.dart';
@@ -22,6 +26,8 @@ import 'map_cluster_layout.dart';
 import 'map_viewport_policy.dart';
 import 'map_visible_catalog.dart';
 import 'venue_directions_launcher.dart';
+import 'widgets/map_cluster_badge.dart';
+import 'widgets/map_discovery_channel_card_marker.dart';
 import 'widgets/map_status_details.dart';
 import 'widgets/spatial_streamer_marker.dart';
 import 'widgets/marker_summary_card.dart';
@@ -38,8 +44,8 @@ import 'widgets/tricity_basemap_layer.dart';
 /// Streets and labels come from the app-bundled vector pack
 /// ([MapPackController]); backend connectivity only decides whether venue
 /// pins are current or saved, never whether the map itself can be drawn.
-/// Every camera move goes through one [MapViewportPolicy]. Mosques with
-/// Lessons lessons in the coming week share the map with broadcasters.
+/// Every camera move goes through one [MapViewportPolicy]. Approved mosques
+/// share the map with broadcasters and group into the same bubbles.
 class SpatialMapScreen extends StatefulWidget {
   const SpatialMapScreen({super.key, this.packController, this.initialMosque});
 
@@ -67,6 +73,16 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   String? _selectedStreamerId;
   String? _selectedMosqueId;
   MapLayers _layers = MapLayers.all;
+
+  /// The lesson topic chosen while only mosque lessons are shown.
+  String? _lessonTopic;
+
+  /// The time the map shows; moves on a minute at a time while it is visible.
+  DateTime _now = DateTime.now();
+
+  /// Every channel's announced lives, for "goes live soon".
+  List<UpcomingSchedule> _schedules = const [];
+  DateTime? _schedulesAt;
 
   /// [SpatialMapScreen.initialMosque] until the map and the lessons are
   /// ready; [_mosques] and [_lessonsLoaded] are the last build's.
@@ -115,6 +131,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     unawaited(_pack.ensureOpened());
     _pendingMosqueId = widget.initialMosque;
     unawaited(context.read<LessonsController?>()?.ensureLoaded());
+    unawaited(_loadSchedules());
     if (_pack.supportsWebOffline) unawaited(_loadWebHintState());
     _mapController = MapController();
     _zoomNotifier = ValueNotifier<double>(0);
@@ -135,8 +152,33 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       if (provider.isOnline) {
         unawaited(
             provider.refreshCatalogIfOlderThan(const Duration(seconds: 30)));
+        // A lesson cancelled or moved shows within a few minutes.
+        unawaited(context
+            .read<LessonsController?>()
+            ?.refreshIfOlderThan(const Duration(minutes: 3)));
+        final schedulesAt = _schedulesAt;
+        if (schedulesAt != null &&
+            DateTime.now().difference(schedulesAt).inMinutes >= 5) {
+          unawaited(_loadSchedules());
+        }
       }
+      final now = DateTime.now();
+      if (now.minute != _now.minute) setState(() => _now = now);
     });
+  }
+
+  Future<void> _loadSchedules() async {
+    try {
+      final schedules = await UpcomingScheduleService().loadForMap();
+      if (!mounted) return;
+      setState(() {
+        _schedules = schedules;
+        _schedulesAt = DateTime.now();
+      });
+    } catch (e) {
+      // The pins work without it; they just don't say who goes live soon.
+      debugPrint('Map schedules failed: $e');
+    }
   }
 
   Timer? _catalogFreshnessTimer;
@@ -428,45 +470,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return MapMarkerModel.fromStreamer(streamer);
   }
 
-  Widget _buildClusterBadge(MapClusterGroup group, VoidCallback onTap) {
-    return Semantics(
-      button: true,
-      label: 'map.cluster_label'
-          .plural(group.memberIds.length, name: 'count'),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.surface, width: 3),
-            boxShadow: const [BoxShadow(color: AppTheme.shadow, blurRadius: 8)],
-          ),
-          child: Text('${group.memberIds.length}',
-              style: const TextStyle(
-                  color: AppTheme.onMedia,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16)),
-        ),
-      ),
-    );
-  }
-
-  void _openCluster<T>(
-    MapClusterGroup group,
-    Map<String, T> byId,
-    String Function(T) label,
-    void Function(T) onPick,
-  ) {
+  /// Zooms into a bubble; at the deepest zoom its pins are listed, each at
+  /// its own true coordinates.
+  void _openCluster(MapClusterGroup group,
+      Map<String, ({String label, bool mosque, VoidCallback open})> pins) {
     final nextZoom = clusterTapZoom(_mapController.camera.zoom);
     if (nextZoom != null) {
       _focusVenue(group.center, nextZoom);
       return;
     }
-    // Deepest zoom: overlapping or same-coordinate venues are listed, each
-    // at its own true coordinates.
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -487,16 +499,16 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ),
               ),
             ),
-            ...group.memberIds.where(byId.containsKey).map((id) {
-              final item = byId[id];
-              if (item == null) return const SizedBox.shrink();
+            ...group.memberIds.where(pins.containsKey).map((id) {
+              final pin = pins[id]!;
               return ListTile(
-                leading:
-                    const Icon(Icons.place_rounded, color: AppTheme.primary),
-                title: Text(label(item)),
+                leading: Icon(
+                    pin.mosque ? Icons.mosque_rounded : Icons.place_rounded,
+                    color: AppTheme.primary),
+                title: Text(pin.label),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  onPick(item);
+                  pin.open();
                 },
               );
             }),
@@ -506,53 +518,198 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     );
   }
 
-  /// UI-08 offline marker layer: cached venues only, always rendered with
-  /// [MarkerStatus.offline] (MapMarkerModel.fromCachedJson forces this), so
-  /// there is no risk of replaying a stale "LIVE" badge from before the
-  /// device went offline. Cached points use the same bounded cluster layout
-  /// and only render IDs still eligible in the current provider catalog.
-  Widget _buildOfflineMarkerLayer(
-    BuildContext context,
-    List<MapMarkerModel> visible,
-  ) {
+  /// Every pin in one layer, so mosques and streamers group into the same
+  /// bubbles. Online, live state comes only from the current provider
+  /// snapshot; [cached] pins are the saved venues of UI-08, always offline,
+  /// so a stale LIVE can't be replayed.
+  Widget _buildPinLayer({
+    required List<StreamerModel> streamers,
+    required List<MapMarkerModel> cached,
+    required List<MapMosque> mosques,
+    required StreamerModel? selectedStreamer,
+    required String? ownStreamerId,
+    required Map<String, ({UpcomingSchedule schedule, DateTime start})>
+        nextLive,
+  }) {
     return ValueListenableBuilder<int>(
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
         final camera = _clusterCamera(context);
-        final groups = clusterMapPoints(
-          visible.map((m) => MapClusterPoint(m.streamerId, m.coordinates)),
-          project: camera.projectAtZoom,
-          unproject: camera.unprojectAtZoom,
-        );
-        final byId = {for (final marker in visible) marker.streamerId: marker};
-        return MarkerLayer(
-          markers: groups.map((group) {
-            final marker = group.isSingle ? byId[group.memberIds.single] : null;
+        final zoom = camera.zoom;
+        final lang = context.locale.languageCode;
+        final cards = zoom >= kMapChannelCardZoom;
+        String? soonChip(StreamerModel s) {
+          final next = nextLive[s.streamerId];
+          if (next == null || s.isCurrentlyLive) return null;
+          final minutes = next.start.difference(_now).inMinutes + 1;
+          return minutes > 60
+              ? null
+              : 'lessons.map.in'.tr(args: [durationLabel(minutes, lang)]);
+        }
+
+        final selectedMosque =
+            mosques.where((m) => m.id == _selectedMosqueId).firstOrNull;
+        final points = <MapClusterPoint>[
+          for (final s in streamers)
+            if (s.streamerId != selectedStreamer?.streamerId)
+              MapClusterPoint(
+                  's:${s.streamerId}', LatLng(s.latitude, s.longitude),
+                  priority: s.isCurrentlyLive
+                      ? 6
+                      : soonChip(s) != null
+                          ? 4
+                          : 1),
+          for (final m in cached)
+            MapClusterPoint('c:${m.streamerId}', m.coordinates, priority: 1),
+          for (final m in mosques)
+            if (m.id != selectedMosque?.id &&
+                (m.status != MosqueStatus.quiet || zoom >= kMapQuietMosqueZoom))
+              MapClusterPoint('m:${m.id}', m.point,
+                  priority: mapMosquePriority(m)),
+        ];
+        final groups = clusterMapPoints(points,
+            project: camera.projectAtZoom,
+            radius: cards ? kMapCardClusterRadius : kMapClusterRadius);
+
+        final streamersById = {for (final s in streamers) s.streamerId: s};
+        final cachedById = {for (final m in cached) m.streamerId: m};
+        final mosquesById = {for (final m in mosques) m.id: m};
+        final pins = <String, ({String label, bool mosque, VoidCallback open})>{
+          for (final s in streamers)
+            's:${s.streamerId}': (
+              label: s.getLocalizedName(lang),
+              mosque: false,
+              open: () => _selectStreamer(s)
+            ),
+          for (final m in cached)
+            'c:${m.streamerId}': (
+              label: m.getLocalizedName(lang),
+              mosque: false,
+              open: () => _showCachedMarkerInfo(context, m)
+            ),
+          for (final m in mosques)
+            'm:${m.id}': (
+              label: m.label,
+              mosque: true,
+              open: () => _selectMosque(m)
+            ),
+        };
+
+        Marker streamerMarker(StreamerModel streamer) {
+          final isSelected = _selectedStreamerId == streamer.streamerId;
+          final markerModel = _mapStreamerToMarker(streamer);
+          void doubleTap() => _focusVenue(
+                LatLng(streamer.latitude, streamer.longitude),
+                math.min(_mapController.camera.zoom + 2, kMapMaxZoom),
+              );
+          if (cards && !isSelected) {
             return Marker(
-              key: ValueKey('offline_${group.id}'),
-              point: group.center,
-              width: 56,
-              height: 56,
-              child: marker == null
-                  ? _buildClusterBadge(
-                      group,
-                      () => _openCluster(
-                          group,
-                          byId,
-                          (m) =>
-                              m.getLocalizedName(context.locale.languageCode),
-                          (m) => _showCachedMarkerInfo(context, m)))
-                  : SpatialStreamerMarker(
-                      marker: marker,
-                      onTap: () => _showCachedMarkerInfo(context, marker),
-                      onDoubleTap: () => _focusVenue(
-                          marker.coordinates,
-                          math.min(
-                              _mapController.camera.zoom + 2, kMapMaxZoom)),
-                    ),
+              key: ValueKey('marker_${streamer.streamerId}'),
+              point: LatLng(streamer.latitude, streamer.longitude),
+              width: 168,
+              height: 76,
+              // Its height follows the language's font, so it isn't forced
+              // into the marker's box.
+              child: OverflowBox(
+                maxHeight: 120,
+                child: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.1,
+                  child: MapDiscoveryChannelCardMarker(
+                    marker: markerModel,
+                    isSelected: false,
+                    onTap: () => _selectStreamer(streamer),
+                    onDoubleTap: doubleTap,
+                  ),
+                ),
+              ),
             );
-          }).toList(),
-        );
+          }
+          final size = markerModel.isLive ? 56.0 : 48.0;
+          return Marker(
+            key: ValueKey('marker_${streamer.streamerId}'),
+            point: LatLng(streamer.latitude, streamer.longitude),
+            width: size,
+            height: size,
+            alignment: Alignment.center,
+            child: SpatialStreamerMarker(
+              key: ValueKey('avatar_${streamer.streamerId}'),
+              marker: markerModel,
+              isSelected: isSelected,
+              isMine: ownStreamerId == streamer.streamerId,
+              chip: soonChip(streamer),
+              onTap: () => _selectStreamer(streamer),
+              onDoubleTap: doubleTap,
+            ),
+          );
+        }
+
+        Marker bubble(MapClusterGroup group) {
+          final inside = [
+            for (final id in group.memberIds)
+              if (id.startsWith('m:')) mosquesById[id.substring(2)]
+          ].nonNulls.toList();
+          final liveStreamers = group.memberIds
+              .where((id) =>
+                  id.startsWith('s:') &&
+                  (streamersById[id.substring(2)]?.isCurrentlyLive ?? false))
+              .length;
+          final count = group.memberIds.length;
+          final box = MapClusterBadge.boxFor(count);
+          return Marker(
+            key: ValueKey(group.id),
+            point: group.center,
+            width: box,
+            height: box,
+            child: MapClusterBadge(
+              count: count,
+              mosques: inside.length,
+              live: liveStreamers + inside.where((m) => m.live).length,
+              onSite: inside
+                  .where((m) => m.status == MosqueStatus.now && !m.live)
+                  .length,
+              semanticLabel: 'map.cluster_label'.plural(count, name: 'count'),
+              onTap: () => _openCluster(group, pins),
+            ),
+          );
+        }
+
+        final markers = <Marker>[
+          for (final group in groups)
+            if (!group.isSingle)
+              bubble(group)
+            else if (group.memberIds.single.startsWith('m:'))
+              mosqueMarker(mosquesById[group.memberIds.single.substring(2)]!,
+                  zoom: zoom,
+                  onTap: () => _selectMosque(
+                      mosquesById[group.memberIds.single.substring(2)]!))
+            else if (group.memberIds.single.startsWith('s:'))
+              streamerMarker(streamersById[group.memberIds.single.substring(2)]!)
+            else
+              Marker(
+                key: ValueKey('offline_${group.id}'),
+                point: group.center,
+                width: 56,
+                height: 56,
+                child: () {
+                  final marker =
+                      cachedById[group.memberIds.single.substring(2)]!;
+                  return SpatialStreamerMarker(
+                    marker: marker,
+                    onTap: () => _showCachedMarkerInfo(context, marker),
+                    onDoubleTap: () => _focusVenue(marker.coordinates,
+                        math.min(_mapController.camera.zoom + 2, kMapMaxZoom)),
+                  );
+                }(),
+              ),
+          if (selectedStreamer != null) streamerMarker(selectedStreamer),
+          if (selectedMosque != null)
+            mosqueMarker(selectedMosque,
+                zoom: zoom,
+                selected: true,
+                onTap: () => _selectMosque(selectedMosque)),
+        ];
+        if (markers.isEmpty) return const SizedBox.shrink();
+        return MarkerLayer(markers: markers);
       },
     );
   }
@@ -654,8 +811,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final venuesUpdatedAt =
         context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
     // Lessons's mosques; none in builds and tests without the programme.
-    final mosques = context.select<LessonsController?, List<MapMosque>>(
-        (c) => c == null ? const [] : mapMosques(c, locale.languageCode));
+    final lessonTopic = _layers == MapLayers.lessons ? _lessonTopic : null;
+    final mosques = context.select<LessonsController?, List<MapMosque>>((c) =>
+        c == null
+            ? const []
+            : mapMosques(c, locale.languageCode,
+                now: _now, online: isOnline, topic: lessonTopic));
     _mosques = mosques;
     _lessonsLoaded =
         context.select<LessonsController?, bool>((c) => c?.loaded ?? true);
@@ -665,7 +826,17 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     if (!shownMosques.any((m) => m.id == _selectedMosqueId)) {
       _selectedMosqueId = null;
     }
-    final layerSwitch = mosques.isEmpty
+    final nextLive = nextLiveByChannel(_schedules, _now);
+    final todayMosques = activeMapMosques(shownMosques);
+    final onSiteNow = shownMosques
+        .where((m) => m.status == MosqueStatus.now && !m.live)
+        .length;
+    final liveNow = shownMosques.where((m) => m.live).length +
+        (isOnline && showStreamers
+            ? displayedStreamers.where((s) => s.isCurrentlyLive).length
+            : 0);
+    final layerSwitch = !mosques.any((m) => m.status != MosqueStatus.quiet) &&
+            _lessonTopic == null
         ? null
         : MapLayerSwitch(
             value: _layers,
@@ -690,6 +861,16 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
             .firstOrNull;
         if (current != null) _selectStreamer(current);
       },
+      searchLessons: (query) {
+        final lessons = context.read<LessonsController?>();
+        return lessons == null
+            ? const []
+            : searchMapLessons(lessons, query, locale.languageCode);
+      },
+      onMosqueSelected: (id) {
+        final mosque = mosques.where((m) => m.id == id).firstOrNull;
+        if (mosque != null) _selectMosque(mosque);
+      },
       onCachedMarkerSelected: (marker) {
         _focusVenue(marker.coordinates, kVenueFocusZoom);
         _showCachedMarkerInfo(context, marker);
@@ -699,11 +880,21 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       selectedCityId: _selectedCityId,
       onCitySelected: _selectCity,
     );
+    final academicCategories =
+        context.select<AppProvider, List<AcademicCategoryModel>>(
+            (p) => p.academicCategories);
+    // Streamers and lessons have different topic lists, so the dropdown
+    // follows the layer: lesson topics only when only lessons are shown.
+    final lessonsOnly = _layers == MapLayers.lessons;
     final topicDropdown = TopicSelectorDropdown(
-      selectedCategoryId: currentCategoryFilter,
-      categories: context.select<AppProvider, List<AcademicCategoryModel>>(
-          (p) => p.academicCategories),
+      selectedCategoryId:
+          lessonsOnly ? (_lessonTopic ?? 'all') : currentCategoryFilter,
+      categories: lessonsOnly ? lessonTopicCategories() : academicCategories,
       onCategorySelected: (categoryId) {
+        if (lessonsOnly) {
+          setState(() => _lessonTopic = categoryId == 'all' ? null : categoryId);
+          return;
+        }
         context.read<AppProvider>().setCategoryFilter(categoryId);
         if (selectedStreamer != null &&
             !categoryFilterMatches(categoryId, selectedStreamer.categoryId)) {
@@ -724,6 +915,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       endDrawer: StreamerSlidingDrawer(
         streamers: displayedStreamers,
         onStreamerSelected: (streamer) => _selectStreamer(streamer),
+        mosques: todayMosques,
+        onMosqueSelected: _selectMosque,
       ),
       body: Row(
         children: [
@@ -736,6 +929,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               cityDropdown: cityDropdown,
               topicDropdown: topicDropdown,
               layers: layerSwitch,
+              mosques: todayMosques,
+              onMosque: _selectMosque,
             ),
           // Main Map Canvas Viewport
           Expanded(
@@ -810,16 +1005,18 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         ),
                         children: [
                           TricityBasemapLayer(controller: _pack),
-                          if (shownMosques.isNotEmpty)
-                            mosqueMarkerLayer(shownMosques,
-                                selected: _selectedMosqueId,
-                                onTap: _selectMosque),
-                          if (!isOnline && showStreamers)
-                            _buildOfflineMarkerLayer(
-                                context, visibleCachedMarkers),
-                          if (isOnline && showStreamers)
-                            _buildLiveMarkerLayer(displayedStreamers,
-                                selectedStreamer, ownStreamerId),
+                          _buildPinLayer(
+                            streamers: isOnline && showStreamers
+                                ? displayedStreamers
+                                : const [],
+                            cached: !isOnline && showStreamers
+                                ? visibleCachedMarkers
+                                : const [],
+                            mosques: shownMosques,
+                            selectedStreamer: selectedStreamer,
+                            ownStreamerId: ownStreamerId,
+                            nextLive: nextLive,
+                          ),
                         ],
                       ),
                     ),
@@ -1047,8 +1244,23 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   // The row clears the system navigation bar, which Android 16
                   // always draws over the app; inside the phone tab shell the
                   // bottom bar has already taken that inset.
+                  // Floats over the map, so it never takes room from a card.
+                  if (!web && onSiteNow + liveNow > 0)
+                    PositionedDirectional(
+                      top: _safePadding.top + MediaQuery.paddingOf(context).top,
+                      start: AppTheme.spaceMd,
+                      end: 76,
+                      child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: MapNowPill(onSite: onSiteNow, live: liveNow)),
+                    ),
+
+                  // A mosque card may rise over the controls: it holds a status
+                  // and lessons, and should read without scrolling.
                   PositionedDirectional(
-                    top: _safePadding.top,
+                    top: _selectedMosqueId != null
+                        ? AppTheme.spaceSm
+                        : _safePadding.top,
                     bottom: MediaQuery.paddingOf(context).bottom,
                     start: 0,
                     end: 0,
@@ -1066,18 +1278,28 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(
                                     maxWidth: 420,
-                                    maxHeight: available.height * 0.55,
+                                    maxHeight: selectedStreamer != null
+                                        ? available.height * 0.55
+                                        : available.height,
                                   ),
                                   child: SingleChildScrollView(
                                     child: selectedStreamer != null
                                         ? MarkerSummaryCard(
                                             streamer: selectedStreamer,
+                                            nextLive: selectedStreamer
+                                                    .isCurrentlyLive
+                                                ? null
+                                                : _nextLiveLine(
+                                                    nextLive[selectedStreamer
+                                                        .streamerId],
+                                                    locale.languageCode),
                                             onClose: () => setState(() {
                                               _selectedStreamerId = null;
                                             }),
                                           )
                                         : MapMosqueCard(
                                             mosqueId: _selectedMosqueId!,
+                                            online: isOnline,
                                             onClose: () => setState(() {
                                               _selectedMosqueId = null;
                                             }),
@@ -1137,85 +1359,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return '$prefix · $saved';
   }
 
-  /// Current catalog pins: live state only comes from the current provider
-  /// snapshot, never from the saved cache.
-  Widget _buildLiveMarkerLayer(
-    List<StreamerModel> displayedStreamers,
-    StreamerModel? selectedStreamer,
-    String? ownStreamerId,
-  ) {
-    return ValueListenableBuilder<int>(
-      valueListenable: _cameraRevision,
-      builder: (context, revision, child) {
-        final camera = _clusterCamera(context);
-        if (displayedStreamers.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        final List<Marker> markerList = [];
-        final groups = clusterMapPoints(
-          displayedStreamers
-              .where((s) => s.streamerId != selectedStreamer?.streamerId)
-              .map((s) => MapClusterPoint(
-                  s.streamerId, LatLng(s.latitude, s.longitude))),
-          project: camera.projectAtZoom,
-          unproject: camera.unprojectAtZoom,
-        );
-        if (selectedStreamer != null) {
-          groups.add(MapClusterGroup(
-            'marker_${selectedStreamer.streamerId}',
-            [selectedStreamer.streamerId],
-            LatLng(selectedStreamer.latitude, selectedStreamer.longitude),
-          ));
-        }
-        final byId = {for (final s in displayedStreamers) s.streamerId: s};
-
-        for (final group in groups) {
-          if (!group.isSingle) {
-            markerList.add(Marker(
-              key: ValueKey(group.id),
-              point: group.center,
-              width: 56,
-              height: 56,
-              child: _buildClusterBadge(
-                  group,
-                  () => _openCluster(
-                      group,
-                      byId,
-                      (s) => s.getLocalizedName(context.locale.languageCode),
-                      _selectStreamer)),
-            ));
-            continue;
-          }
-          final streamer = byId[group.memberIds.single]!;
-          final isSelected = _selectedStreamerId == streamer.streamerId;
-          final markerModel = _mapStreamerToMarker(streamer);
-          final isLive = markerModel.isLive;
-
-          markerList.add(
-            Marker(
-              key: ValueKey('marker_${streamer.streamerId}'),
-              point: group.center,
-              width: isLive ? 56.0 : 48.0,
-              height: isLive ? 56.0 : 48.0,
-              alignment: Alignment.center,
-              child: SpatialStreamerMarker(
-                key: ValueKey('avatar_${streamer.streamerId}'),
-                marker: markerModel,
-                isSelected: isSelected,
-                isMine: ownStreamerId == streamer.streamerId,
-                onTap: () => _selectStreamer(streamer),
-                onDoubleTap: () => _focusVenue(
-                  LatLng(streamer.latitude, streamer.longitude),
-                  math.min(_mapController.camera.zoom + 2, kMapMaxZoom),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return MarkerLayer(markers: markerList);
-      },
-    );
+  String? _nextLiveLine(
+      ({UpcomingSchedule schedule, DateTime start})? next, String lang) {
+    if (next == null) return null;
+    final minutes = next.start.difference(_now).inMinutes + 1;
+    return 'map.next_live'.tr(args: [
+      next.schedule.title(lang),
+      'lessons.map.in'.tr(args: [durationLabel(minutes, lang)])
+    ]);
   }
 
   // UI-11: same radius and drop-shadow mechanism as the search bar and

@@ -2,13 +2,29 @@ import 'dart:ui' show Offset;
 
 import 'package:latlong2/latlong.dart';
 
-/// A screen-space grid keeps layout work bounded as the catalog grows.
+/// Pins closer than this on screen become one bubble, and bubbles sit on one
+/// of their pins, so two markers can never touch.
+const double kMapClusterRadius = 64;
+
+/// The same, once streamers are shown as wider channel cards.
+const double kMapCardClusterRadius = 104;
+
+/// From this zoom a streamer is drawn as its channel card.
+const double kMapChannelCardZoom = 14.6;
+
+/// From this zoom mosques with nothing coming up are drawn too.
+const double kMapQuietMosqueZoom = 12.4;
+
 /// Membership and IDs are deterministic for a given camera and catalog.
 class MapClusterPoint {
-  const MapClusterPoint(this.id, this.coordinates);
+  const MapClusterPoint(this.id, this.coordinates, {this.priority = 0});
 
   final String id;
   final LatLng coordinates;
+
+  /// The highest in a group anchors its bubble: something happening now
+  /// stays where it really is.
+  final int priority;
 }
 
 class MapClusterGroup {
@@ -23,29 +39,47 @@ class MapClusterGroup {
 List<MapClusterGroup> clusterMapPoints(
   Iterable<MapClusterPoint> points, {
   required Offset Function(LatLng) project,
-  required LatLng Function(Offset) unproject,
-  double cellSize = 72,
+  double radius = kMapClusterRadius,
 }) {
-  assert(cellSize > 0);
-  final cells = <(int, int), List<(MapClusterPoint, Offset)>>{};
-  for (final point in points) {
-    final pixel = project(point.coordinates);
-    final cell = ((pixel.dx / cellSize).floor(), (pixel.dy / cellSize).floor());
-    cells.putIfAbsent(cell, () => []).add((point, pixel));
+  assert(radius > 0);
+  final placed = [for (final p in points) (point: p, pixel: project(p.coordinates))]
+    ..sort((a, b) {
+      final byPriority = b.point.priority.compareTo(a.point.priority);
+      return byPriority != 0 ? byPriority : a.point.id.compareTo(b.point.id);
+    });
+  // Pins are bucketed by the radius, so each looks only at its neighbours
+  // and layout work stays bounded as the catalog grows.
+  (int, int) cellOf(Offset pixel) =>
+      ((pixel.dx / radius).floor(), (pixel.dy / radius).floor());
+  final cells = <(int, int), List<int>>{};
+  for (var i = 0; i < placed.length; i++) {
+    cells.putIfAbsent(cellOf(placed[i].pixel), () => []).add(i);
   }
 
+  final taken = List<bool>.filled(placed.length, false);
   final groups = <MapClusterGroup>[];
-  for (final members in cells.values) {
-    members.sort((a, b) => a.$1.id.compareTo(b.$1.id));
-    final ids = members.map((m) => m.$1.id).toList(growable: false);
-    final x =
-        members.fold<double>(0, (sum, m) => sum + m.$2.dx) / members.length;
-    final y =
-        members.fold<double>(0, (sum, m) => sum + m.$2.dy) / members.length;
+  for (var i = 0; i < placed.length; i++) {
+    if (taken[i]) continue;
+    taken[i] = true;
+    final seed = placed[i];
+    final (cx, cy) = cellOf(seed.pixel);
+    final ids = [seed.point.id];
+    for (var dx = -1; dx <= 1; dx++) {
+      for (var dy = -1; dy <= 1; dy++) {
+        for (final j in cells[(cx + dx, cy + dy)] ?? const <int>[]) {
+          if (taken[j] || (placed[j].pixel - seed.pixel).distance >= radius) {
+            continue;
+          }
+          taken[j] = true;
+          ids.add(placed[j].point.id);
+        }
+      }
+    }
+    ids.sort();
     groups.add(MapClusterGroup(
       ids.length == 1 ? 'marker_${ids.single}' : 'cluster_${ids.join('|')}',
       ids,
-      ids.length == 1 ? members.single.$1.coordinates : unproject(Offset(x, y)),
+      seed.point.coordinates,
     ));
   }
   groups.sort((a, b) => a.id.compareTo(b.id));

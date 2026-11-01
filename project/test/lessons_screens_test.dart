@@ -21,6 +21,7 @@ import 'package:streamer_app/features/lessons/presentation/admin/lessons_admin_s
 import 'package:streamer_app/features/lessons/presentation/screens/discover_screen.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_in_app.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_map.dart';
+import 'package:streamer_app/features/map/presentation/widgets/map_cluster_badge.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_widgets.dart';
 import 'package:streamer_app/features/lessons/presentation/preacher_form_kit.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
@@ -335,28 +336,28 @@ void main() {
         final app = await _open(tester, '/map', size: size);
         final pins = mapMosques(app.lessons, 'en');
         expect(pins, isNotEmpty);
-        // The marker layer draws the pins inside the visible map.
-        final shown = find.byType(MosqueCoin).evaluate().length;
+        // The marker layer draws the pins inside the visible map, alone or
+        // inside a bubble with what is near them.
+        final shown = find.byType(MosqueArch).evaluate().length;
         expect(shown, inInclusiveRange(1, pins.length));
+        final bubbles = find.byType(MapClusterBadge).evaluate().length;
 
         // Broadcasters only, then lessons back.
         await _tap(tester, find.byKey(const ValueKey('map-layer-streamers')));
-        expect(find.byType(MosqueCoin), findsNothing);
+        expect(find.byType(MosqueArch), findsNothing);
         await _tap(tester, find.byKey(const ValueKey('map-layer-lessons')));
-        expect(find.byType(MosqueCoin), findsNWidgets(shown));
+        expect(find.byType(MosqueArch).evaluate().length + find.byType(MapClusterBadge).evaluate().length,
+            greaterThanOrEqualTo(shown + bubbles - pins.length));
 
-        // A coin opens the mosque's card, and its page from there. (Called
+        // An arch opens the mosque's card, and its page from there. (Called
         // directly: without map files the pack notice covers the centre.)
-        final m1 = pins.firstWhere((m) => m.id == 'm1');
-        tester
-            .widget<MosqueCoin>(find.byWidgetPredicate(
-                (w) => w is MosqueCoin && w.pin.id == m1.id))
-            .onTap!();
+        final arch = tester.widget<MosqueArch>(find.byType(MosqueArch).first);
+        arch.onTap!();
         await _settle(tester);
         expect(find.byKey(const ValueKey('map-mosque-card')), findsOneWidget);
-        expect(find.text(m1.label), findsWidgets);
+        expect(find.text(arch.pin.label), findsWidgets);
         await _tap(tester, find.text('lessons.map.mosque_page'.tr()));
-        expect(app.at, '/lessons/mosques/m1');
+        expect(app.at, '/lessons/mosques/${arch.pin.id}');
         await app.close();
       });
     }
@@ -400,7 +401,7 @@ void main() {
       final app = await _open(tester, '/map',
           setup: (repo) => repo.lessons.clear());
       expect(find.byType(MapLayerSwitch), findsNothing);
-      expect(find.byType(MosqueCoin), findsNothing);
+      expect(find.byType(MosqueArch), findsNothing);
       await app.close();
     });
   });

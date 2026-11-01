@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../lessons/presentation/lessons_in_app.dart';
 import '../../../profile/models/streamer_models.dart';
 import 'venue_navigation_sheet.dart';
 
@@ -11,10 +12,16 @@ class StreamerSlidingDrawer extends StatelessWidget {
   final List<StreamerModel> streamers;
   final ValueChanged<StreamerModel> onStreamerSelected;
 
+  /// Mosques with a lesson on now or later today, listed first.
+  final List<MapMosque> mosques;
+  final ValueChanged<MapMosque>? onMosqueSelected;
+
   const StreamerSlidingDrawer({
     super.key,
     required this.streamers,
     required this.onStreamerSelected,
+    this.mosques = const [],
+    this.onMosqueSelected,
   });
 
   @override
@@ -78,6 +85,31 @@ class StreamerSlidingDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
                 children: [
+                  if (mosques.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spaceLg,
+                        vertical: AppTheme.spaceSm,
+                      ),
+                      child: Text(
+                        '${'lessons.map.today_list'.tr()} (${mosques.length})',
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    for (final mosque in mosques)
+                      MapMosqueTile(
+                          mosque: mosque,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onMosqueSelected?.call(mosque);
+                          }),
+                    const Divider(color: AppTheme.border, height: 24),
+                  ],
                   if (liveStreamers.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.symmetric(

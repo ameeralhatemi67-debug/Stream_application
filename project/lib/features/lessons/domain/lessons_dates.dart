@@ -95,6 +95,15 @@ String clockLabel(double hours, String lang) {
   return '$h12:${_pad(mm)} ${_ar(lang) ? (pm ? 'م' : 'ص') : (pm ? 'PM' : 'AM')}';
 }
 
+/// "1h 20m" / "1 س 20 د": how long until something, or how much is left.
+String durationLabel(int minutes, String lang) {
+  final m = minutes < 0 ? 0 : minutes, days = m ~/ 1440, hours = (m % 1440) ~/ 60, mins = m % 60;
+  final ar = _ar(lang), d = ar ? ' يوم' : 'd', h = ar ? ' س' : 'h', n = ar ? ' د' : 'm';
+  if (days > 0) return hours > 0 ? '$days$d $hours$h' : '$days$d';
+  if (hours > 0) return mins > 0 ? '$hours$h $mins$n' : '$hours$h';
+  return '$mins$n';
+}
+
 double hhmmToHours(String s) {
   final p = s.split(':');
   return int.parse(p[0]) + int.parse(p[1]) / 60;

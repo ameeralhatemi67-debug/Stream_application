@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../lessons/presentation/lessons_in_app.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
 import '../../models/map_tricity_domain.dart';
@@ -14,6 +15,7 @@ class SearchResultItem {
   final String? cityId;
   final String? streamerId;
   final MapMarkerModel? cachedMarker;
+  final String? mosqueId;
 
   SearchResultItem({
     required this.title,
@@ -23,6 +25,7 @@ class SearchResultItem {
     this.cityId,
     this.streamerId,
     this.cachedMarker,
+    this.mosqueId,
   });
 }
 
@@ -39,6 +42,10 @@ class TopSpatialSearchBar extends StatefulWidget {
   final ValueChanged<String>? onStreamerSelected;
   final ValueChanged<MapMarkerModel>? onCachedMarkerSelected;
 
+  /// Mosques and coming lessons matching a query.
+  final List<MapSearchHit> Function(String query)? searchLessons;
+  final ValueChanged<String>? onMosqueSelected;
+
   const TopSpatialSearchBar({
     super.key,
     this.visibleStreamers = const [],
@@ -46,6 +53,8 @@ class TopSpatialSearchBar extends StatefulWidget {
     required this.onCitySelected,
     this.onStreamerSelected,
     this.onCachedMarkerSelected,
+    this.searchLessons,
+    this.onMosqueSelected,
   });
 
   @override
@@ -125,6 +134,15 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
         subtitle: marker.getLocalizedVenue(langCode),
         icon: Icons.place_outlined,
         cachedMarker: marker,
+      ));
+    }
+
+    for (final hit in widget.searchLessons?.call(q) ?? const <MapSearchHit>[]) {
+      matches.add(SearchResultItem(
+        title: hit.title,
+        subtitle: hit.subtitle,
+        icon: Icons.mosque_rounded,
+        mosqueId: hit.mosqueId,
       ));
     }
 
@@ -292,6 +310,8 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                   onTap: () {
                     if (result.streamerId != null) {
                       widget.onStreamerSelected?.call(result.streamerId!);
+                    } else if (result.mosqueId != null) {
+                      widget.onMosqueSelected?.call(result.mosqueId!);
                     } else if (result.cachedMarker != null) {
                       widget.onCachedMarkerSelected?.call(result.cachedMarker!);
                     } else if (result.cityId != null) {

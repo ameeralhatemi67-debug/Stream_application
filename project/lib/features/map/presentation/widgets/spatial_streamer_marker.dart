@@ -18,6 +18,9 @@ class SpatialStreamerMarker extends StatefulWidget {
   final bool isSelected;
   final bool isMine;
 
+  /// A line under the pin: how soon this channel goes live.
+  final String? chip;
+
   const SpatialStreamerMarker({
     super.key,
     required this.marker,
@@ -25,6 +28,7 @@ class SpatialStreamerMarker extends StatefulWidget {
     required this.onDoubleTap,
     this.isSelected = false,
     this.isMine = false,
+    this.chip,
   });
 
   @override
@@ -347,6 +351,36 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                               ),
                             ],
                           ],
+                        ),
+                      ),
+                    ),
+
+                  if (widget.chip != null)
+                    Positioned(
+                      top: 46,
+                      left: -60,
+                      right: -60,
+                      child: Center(
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: AppTheme.media,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Text(
+                              widget.chip!,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: AppTheme.onMedia,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                height: 1.15,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

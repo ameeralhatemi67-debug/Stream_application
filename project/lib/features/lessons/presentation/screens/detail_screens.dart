@@ -63,7 +63,7 @@ class LessonScreen extends StatelessWidget {
     final admin = c.canManage;
     final report = c.admin.reports[l.id];
     final channel = preacherChannel(context, p);
-    final liveNow = c.isLiveNow(l) || (channel?.isCurrentlyLive ?? false) && l.streamed && sameDay(l.date, c.today);
+    final liveNow = c.isLiveNow(l);
 
     final facts = [
       _Fact(TGlyph.calendar, 'lessons.lesson.date'.tr(), '${relativeDayLabel(l.date, lang) == weekdayName(l.date, lang) ? '' : '${relativeDayLabel(l.date, lang)} · '}${weekdayName(l.date, lang)} ${gregorianLabel(l.date, lang)}',
@@ -104,6 +104,9 @@ class LessonScreen extends StatelessWidget {
               const SizedBox(height: 12),
               ...facts,
               const SizedBox(height: 12),
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: LessonStatusCard(l, runningOnly: true)),
               actions,
             ]);
             if (!wide) return copy;

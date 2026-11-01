@@ -49,7 +49,6 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
   Offset project(LatLng p) => Offset(p.longitude, p.latitude);
-  LatLng unproject(Offset p) => LatLng(p.dy, p.dx);
 
   test('dense points form one stable cluster with bounded projection work', () {
     var projections = 0;
@@ -60,9 +59,8 @@ void main() {
     final first = clusterMapPoints(dense, project: (p) {
       projections++;
       return project(p);
-    }, unproject: unproject);
-    final refreshed = clusterMapPoints(dense.reversed,
-        project: project, unproject: unproject);
+    });
+    final refreshed = clusterMapPoints(dense.reversed, project: project);
     expect(projections, 1000);
     expect(first, hasLength(1));
     expect(first.single.memberIds, hasLength(1000));
@@ -76,10 +74,9 @@ void main() {
       const MapClusterPoint('b', LatLng(26.3, 250.1)),
       const MapClusterPoint('c', LatLng(26.3, 450.1)),
     ];
-    final first =
-        clusterMapPoints(points, project: project, unproject: unproject);
-    final refreshed = clusterMapPoints([points[2], points[0]],
-        project: project, unproject: unproject);
+    final first = clusterMapPoints(points, project: project);
+    final refreshed =
+        clusterMapPoints([points[2], points[0]], project: project);
     expect(first.every((g) => g.isSingle), isTrue);
     expect(first.map((g) => g.id),
         containsAll(['marker_a', 'marker_b', 'marker_c']));

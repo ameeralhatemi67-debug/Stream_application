@@ -32,6 +32,9 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
   String? interpretation, mosqueId, district, exact;
   String city = 'khobar';
   bool weekly = false, women = false, streamed = false, notify = true, useExact = false;
+
+  /// Empty uses the default for the lesson's type.
+  int? minutes;
   late DateTime date, start;
   final weekdays = <int>{};
   int count = 8;
@@ -66,6 +69,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
     slot = src.slot;
     women = src.womenSection;
     streamed = src.streamed;
+    minutes = src.durationMinutes;
   }
 
   @override
@@ -351,6 +355,24 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           }),
         ),
       gap(),
+      TField(
+        label: 'lessons.submit.length'.tr(),
+        child: DropdownButtonFormField<int?>(
+          key: const ValueKey('lesson-length'),
+          initialValue: minutes,
+          isExpanded: true,
+          decoration: tInput(),
+          items: [
+            DropdownMenuItem<int?>(
+                value: null,
+                child: Text('lessons.submit.length_default'.tr(args: [durationLabel(LessonsVocab.lengthMinutes[type] ?? 60, lang)]),
+                    overflow: TextOverflow.ellipsis)),
+            for (final m in LessonsVocab.lengths) DropdownMenuItem<int?>(value: m, child: Text(durationLabel(m, lang))),
+          ],
+          onChanged: (v) => setState(() => minutes = v),
+        ),
+      ),
+      gap(),
       TCallout(
         tone: clashes.isEmpty ? TTone.success : TTone.warning,
         icon: clashes.isEmpty ? TGlyph.check : TGlyph.alert,
@@ -378,6 +400,16 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           value: women,
           onChanged: (v) => setState(() => women = v)),
       TToggleRow(label: 'lessons.submit.stream'.tr(), desc: 'lessons.submit.stream_note'.tr(), icon: TGlyph.radio, value: streamed, onChanged: (v) => setState(() => streamed = v)),
+      // Live comes from the preacher's own channel, so without one it never shows.
+      if (streamed && preacherId != null && c.preacher(preacherId)?.linkedProfileId == null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: TCallout(
+              key: const ValueKey('lesson-stream-no-channel'),
+              tone: TTone.warning,
+              icon: TGlyph.alert,
+              child: Text('lessons.submit.stream_no_channel'.tr(), style: tBody(13, color: TC.warnFg))),
+        ),
       TToggleRow(label: 'lessons.submit.notify'.tr(), icon: TGlyph.bell, value: notify, onChanged: (v) => setState(() => notify = v)),
       const SizedBox(height: 10),
       TField(
@@ -436,6 +468,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
         notifyFollowers: notify,
         slot: slot,
         exactTime: useExact ? exact : null,
+        durationMinutes: minutes,
         dates: ds,
         mosqueId: newMosque == null ? mosqueId : null,
         newMosque: newMosque,

@@ -34,6 +34,81 @@ DateTime lessonStartInstant(Lesson l, LessonsCatalog c) {
       .add(Duration(minutes: minutes - 180));
 }
 
+/// How long a lesson runs: what an admin set, else the default for its type.
+int lessonMinutes(Lesson l) => l.durationMinutes ?? LessonsVocab.lengthMinutes[l.type] ?? 60;
+
+DateTime lessonEndInstant(Lesson l, LessonsCatalog c) =>
+    lessonStartInstant(l, c).add(Duration(minutes: lessonMinutes(l)));
+
+enum LessonPhase { upcoming, running, ended }
+
+/// Where a lesson stands at [now], by its schedule. [minutes] counts to its
+/// start, to its end, or since its end; [progress] is how far through it is.
+typedef LessonTiming = ({LessonPhase phase, int minutes, double progress});
+
+LessonTiming lessonTiming(Lesson l, LessonsCatalog c, DateTime now) {
+  final start = lessonStartInstant(l, c), end = lessonEndInstant(l, c);
+  int up(Duration d) => (d.inSeconds / 60).ceil();
+  if (now.isBefore(start)) {
+    return (phase: LessonPhase.upcoming, minutes: up(start.difference(now)), progress: 0);
+  }
+  if (now.isBefore(end)) {
+    return (
+      phase: LessonPhase.running,
+      minutes: up(end.difference(now)),
+      progress: now.difference(start).inSeconds / end.difference(start).inSeconds
+    );
+  }
+  return (phase: LessonPhase.ended, minutes: up(now.difference(end)), progress: 1);
+}
+
+/// What a mosque's marker says: a lesson is on now, starts within the hour,
+/// later today, in the next seven days, or nothing is coming up.
+enum MosqueStatus { now, soon, today, week, quiet }
+
+/// [lesson] is the one running or the next one. [minutes] counts to the end
+/// of the running lesson or to the start of the next. [count] is the lessons
+/// in the coming seven days, the running one included.
+typedef MosqueNow = ({MosqueStatus status, Lesson? lesson, int minutes, int count});
+
+MosqueNow mosqueNow(Iterable<Lesson> lessons, LessonsCatalog c, DateTime now) {
+  final horizon = now.add(const Duration(days: 7));
+  Lesson? running, next;
+  DateTime? nextStart;
+  var runningLeft = 0, count = 0;
+  for (final l in lessons) {
+    if (!l.isPublic) continue;
+    final t = lessonTiming(l, c, now);
+    if (t.phase == LessonPhase.ended) continue;
+    if (t.phase == LessonPhase.running) {
+      count++;
+      if (running == null) {
+        running = l;
+        runningLeft = t.minutes;
+      }
+      continue;
+    }
+    final start = lessonStartInstant(l, c);
+    if (start.isAfter(horizon)) continue;
+    count++;
+    if (nextStart == null || start.isBefore(nextStart)) {
+      next = l;
+      nextStart = start;
+    }
+  }
+  if (running != null) {
+    return (status: MosqueStatus.now, lesson: running, minutes: runningLeft, count: count);
+  }
+  if (next == null) return (status: MosqueStatus.quiet, lesson: null, minutes: 0, count: 0);
+  final minutes = lessonTiming(next, c, now).minutes;
+  final status = minutes <= 60
+      ? MosqueStatus.soon
+      : sameDay(next.date, lessonsToday(now))
+          ? MosqueStatus.today
+          : MosqueStatus.week;
+  return (status: status, lesson: next, minutes: minutes, count: count);
+}
+
 /// When a reminder with [lead] fires.
 DateTime reminderInstant(Lesson l, String lead, LessonsCatalog c) {
   final start = lessonStartInstant(l, c);

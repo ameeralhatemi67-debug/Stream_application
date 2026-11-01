@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -104,6 +106,86 @@ class LessonBadges extends StatelessWidget {
 
 void openLesson(BuildContext context, String id) => context.push('/lessons/lesson/$id');
 
+/// Where a lesson stands right now: on at the mosque, also live in the app,
+/// or how long until it starts. It says the status comes from the schedule,
+/// and it keeps counting while it is on screen.
+class LessonStatusCard extends StatefulWidget {
+  const LessonStatusCard(this.lesson, {super.key, this.runningOnly = false});
+  final Lesson lesson;
+
+  /// Shows nothing until the lesson starts.
+  final bool runningOnly;
+  @override
+  State<LessonStatusCard> createState() => _LessonStatusCardState();
+}
+
+class _LessonStatusCardState extends State<LessonStatusCard> {
+  late final Timer _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.watch<LessonsController>();
+    final l = widget.lesson, lang = context.lang;
+    if (!l.isPublic) return const SizedBox.shrink();
+    final now = DateTime.now();
+    final t = lessonTiming(l, c.catalog, now);
+    if (t.phase == LessonPhase.ended) return const SizedBox.shrink();
+    if (t.phase == LessonPhase.upcoming) {
+      if (widget.runningOnly) return const SizedBox.shrink();
+      return Container(
+        key: const ValueKey('lesson-status-upcoming'),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(gradient: TC.night, borderRadius: BorderRadius.circular(TC.r)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('lessons.map.starts_in'.tr(), style: tBody(12.5, color: TC.onNight2)),
+          Text(durationLabel(t.minutes, lang), style: tDisplay(26, color: TC.onNightGold)),
+          Text('${relativeDayLabel(l.date, lang)} · ${clockLabel(c.startHours(l), lang)}',
+              style: tBody(12.5, color: TC.onNight2)),
+        ]),
+      );
+    }
+    final live = c.isLiveNow(l);
+    final (bg, fg) = live ? (TC.dangerBg, TC.dangerFg) : (TC.successBg, TC.successFg);
+    final started = lessonMinutes(l) - t.minutes;
+    return Container(
+      key: ValueKey(live ? 'lesson-status-live' : 'lesson-status-on-site'),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(TC.r)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Container(width: 9, height: 9, decoration: BoxDecoration(color: fg, shape: BoxShape.circle)),
+          const SizedBox(width: 7),
+          Expanded(child: Text((live ? 'lessons.map.both' : 'lessons.map.on_site').tr(), style: tStrong(14, color: fg))),
+        ]),
+        const SizedBox(height: 4),
+        Wrap(spacing: 12, alignment: WrapAlignment.spaceBetween, children: [
+          Text('lessons.map.started_ago'.tr(args: [durationLabel(started < 1 ? 1 : started, lang)]), style: tBody(12.5, color: TC.ink2)),
+          Text('lessons.map.left_about'.tr(args: [durationLabel(t.minutes, lang)]), style: tBody(12.5, color: TC.ink2)),
+        ]),
+        const SizedBox(height: 4),
+        TMeter(value: (t.progress * 100).round(), max: 100),
+        const SizedBox(height: 4),
+        Text('${(live ? 'lessons.lesson.stream_note' : 'lessons.map.not_streamed').tr()} ${'lessons.map.from_schedule'.tr()}.',
+            style: tBody(12, color: TC.ink2)),
+      ]),
+    );
+  }
+}
+
 class LessonCard extends StatelessWidget {
   const LessonCard(this.lesson, {super.key, this.preview = false});
   final Lesson lesson;
@@ -167,10 +249,14 @@ class _Meta extends StatelessWidget {
 }
 
 class LessonRow extends StatelessWidget {
-  const LessonRow(this.lesson, {super.key, this.showDate = false, this.extra});
+  const LessonRow(this.lesson, {super.key, this.showDate = false, this.extra, this.dense = false});
   final Lesson lesson;
   final bool showDate;
   final Widget? extra;
+
+  /// One line each for the time, title and preacher, where the place is
+  /// already known: the mosque's own card on the map.
+  final bool dense;
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController>();
@@ -178,6 +264,31 @@ class LessonRow extends StatelessWidget {
     final p = c.preacher(l.preacherId);
     final t = clockLabel(c.startHours(l), lang);
     final cancelled = l.isCancelled;
+    if (dense) {
+      return TCard(
+        padding: const EdgeInsets.all(8),
+        onTap: () => openLesson(context, l.id),
+        child: Row(children: [
+          Container(
+            width: 72,
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+            decoration: BoxDecoration(color: TC.tint, borderRadius: BorderRadius.circular(TC.r)),
+            child: Column(children: [
+              Text(gregorianLabel(l.date, lang, short: true), maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(11.5, color: TC.muted, height: 1.3)),
+              Text(t, maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(12, color: TC.ink, weight: FontWeight.w700, height: 1.3)),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(l.title(lang), maxLines: 1, overflow: TextOverflow.ellipsis, style: tStrong(14)),
+              if (p != null) Text(p.name(lang), maxLines: 1, overflow: TextOverflow.ellipsis, style: tBody(12.5, color: TC.muted, height: 1.3)),
+            ]),
+          ),
+          RemindButton(l, compact: true),
+        ]),
+      );
+    }
     return Opacity(
       opacity: cancelled ? .72 : 1,
       child: TCard(

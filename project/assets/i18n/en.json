@@ -58,6 +58,7 @@
     "viewer_mode": "Viewer Mode"
   },
   "map": {
+    "next_live": "Next live: {}, {}",
     "pin_invalid": "Enter valid latitude and longitude, or leave both empty.",
     "location_outside_supported": "Your location is outside our supported map area. Choose a point inside the map before applying or changing your location.",
     "search_placeholder": "Search Al Khobar, Dhahran, Dammam or venues...",
@@ -2721,7 +2722,20 @@
     "map": {
       "with_lessons": "with lessons",
       "mosque_page": "Mosque page",
-      "none_period": "No lessons in this period"
+      "none_period": "No lessons in this period",
+      "in": "in {}",
+      "now_left": "Now · {}",
+      "on_site": "Happening now at the mosque",
+      "both": "At the mosque and live in the app",
+      "starts_in": "Starts in",
+      "started_ago": "Started {} ago",
+      "left_about": "About {} left",
+      "not_streamed": "Not streamed. Attend in person.",
+      "from_schedule": "Shown from the schedule",
+      "today_list": "Mosque lessons today",
+      "preachers_here": "Preachers here",
+      "now_mosques": "{} at mosques now",
+      "now_live": "{} live in the app"
     },
     "preacher": {
       "verified": "Verified preacher",
@@ -2839,6 +2853,9 @@
       "adhan": "Adhan {}",
       "starts_at": "Starts ≈ {}",
       "fixed": "A fixed clock time instead",
+      "length": "Length",
+      "length_default": "Default for this type ({})",
+      "stream_no_channel": "This preacher has no linked account, so this lesson can't show as live. Link their account first.",
       "clash_on": "Clash on {}",
       "no_clash": "No clash with the mosque or the preacher's schedule",
       "pick_mosque": "Pick a mosque to check for clashes",

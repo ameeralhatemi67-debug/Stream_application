@@ -10,8 +10,14 @@ class MarkerSummaryCard extends StatelessWidget {
   final StreamerModel streamer;
   final VoidCallback onClose;
 
+  /// When this channel next goes live, if it has announced it.
+  final String? nextLive;
+
   const MarkerSummaryCard(
-      {super.key, required this.streamer, required this.onClose});
+      {super.key,
+      required this.streamer,
+      required this.onClose,
+      this.nextLive});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,8 @@ class MarkerSummaryCard extends StatelessWidget {
           isLive: streamer.isCurrentlyLive, isAudio: streamer.isAudioLive),
       onClose: onClose,
       onTap: () => context.push(streamer.isCurrentlyLive ? '/live/${streamer.liveSessionId ?? streamer.streamerId}' : '/profile/${streamer.channelProfileId}'),
-      child: Semantics(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Semantics(
         button: true,
         label: 'venue.open_maps'.tr(),
         child: Material(
@@ -73,6 +80,17 @@ class MarkerSummaryCard extends StatelessWidget {
           ),
         ),
       ),
+      if (nextLive != null)
+        Padding(
+          padding: const EdgeInsets.only(top: AppTheme.spaceSm),
+          child: Text(nextLive!,
+              key: const ValueKey('map-card-next-live'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 12, color: AppTheme.textSecondary)),
+        ),
+      ]),
     );
   }
 }

@@ -159,7 +159,8 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
               ? SupabaseLessonsRepository()
               : DemoLessonsRepository()),
           update: (_, app, lessons) => lessons!
-            ..onAccountChanged(app.isLoggedInStreamer ? app.currentUserId : null),
+            ..onAccountChanged(app.isLoggedInStreamer ? app.currentUserId : null)
+            ..setLiveChannels(app.liveChannelIds),
         ),
       ],
       child: Builder(

@@ -229,14 +229,18 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 3),
-                            Text(
-                              isLive
-                                  ? 'map.live_badge'.tr()
-                                  : 'map.offline_badge'.tr(),
-                              style: TextStyle(
-                                color: isLive ? AppTheme.danger : AppTheme.textMuted,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Text(
+                                isLive
+                                    ? 'map.live_badge'.tr()
+                                    : 'map.offline_badge'.tr(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isLive ? AppTheme.danger : AppTheme.textMuted,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             if (isLive) ...[
@@ -262,19 +266,23 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
               // Bottom Row: Category Tag & Venue Location Name Pill
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 0.5),
-                    ),
-                    child: Text(
-                      'feed.${marker.categoryId == 'cs_tech' ? 'cat_cs' : marker.categoryId == 'islamic_studies' ? 'cat_islamic' : marker.categoryId == 'engineering' ? 'cat_eng' : 'cat_all'}'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.primary,
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 0.5),
+                      ),
+                      child: Text(
+                        'feed.${marker.categoryId == 'cs_tech' ? 'cat_cs' : marker.categoryId == 'islamic_studies' ? 'cat_islamic' : marker.categoryId == 'engineering' ? 'cat_eng' : 'cat_all'}'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

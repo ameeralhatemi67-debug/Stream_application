@@ -3198,6 +3198,13 @@ class AppProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Channels live right now. A lesson that is streamed shows as live only
+  /// when its preacher's channel is one of these.
+  Set<String> get liveChannelIds => {
+        for (final s in streamers)
+          if (s.isCurrentlyLive) s.channelProfileId
+      };
+
   // Admin & Governance Getters
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
   bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;

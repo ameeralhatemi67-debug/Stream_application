@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../lessons/presentation/lessons_in_app.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../web/presentation/hidayah_web_kit.dart';
 
@@ -19,7 +20,9 @@ class MapWebPanel extends StatelessWidget {
       required this.cityDropdown,
       required this.topicDropdown,
       this.notice,
-      this.layers});
+      this.layers,
+      this.mosques = const [],
+      this.onMosque});
   final List<StreamerModel> streamers;
   final String? selectedId;
   final ValueChanged<StreamerModel> onSelect;
@@ -28,6 +31,10 @@ class MapWebPanel extends StatelessWidget {
 
   /// Broadcasters, mosque lessons or both, when there are lessons to show.
   final Widget? layers;
+
+  /// Mosques with a lesson on now or later today, listed first.
+  final List<MapMosque> mosques;
+  final ValueChanged<MapMosque>? onMosque;
   static const width = 400.0;
 
   @override
@@ -81,72 +88,84 @@ class MapWebPanel extends StatelessWidget {
                     const Divider(height: 1, color: HidayahGold.hairline),
                   ])),
           Expanded(
-              child: streamers.isEmpty
-                  ? Padding(
+              child: ListView(
+                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
+                  children: [
+                if (mosques.isNotEmpty) ...[
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                      child: Text('lessons.map.today_list'.tr(),
+                          style: HidayahText.body(13,
+                              color: HidayahGold.s900,
+                              weight: FontWeight.w700))),
+                  for (final mosque in mosques)
+                    MapMosqueTile(
+                        mosque: mosque, onTap: () => onMosque?.call(mosque)),
+                  const Divider(height: 16, color: HidayahGold.hairline),
+                ],
+                if (streamers.isEmpty)
+                  Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text('map.empty_body'.tr(),
-                          style: HidayahText.body(14)))
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                      itemCount: streamers.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 4),
-                      itemBuilder: (context, i) {
-                        final s = streamers[i];
-                        final selected = s.streamerId == selectedId;
-                        final live = s.isLiveForRoom;
-                        return Material(
-                            color: selected
-                                ? HidayahGold.g100
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () => onSelect(s),
-                                child: Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Row(children: [
-                                      CaAvatar(
-                                          name: s.getLocalizedName(lang),
-                                          url: s.avatarUrl,
-                                          org: s.isOrganization,
-                                          live: live,
-                                          ring: CaAvatarRing.brand,
-                                          radius: 22),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                          child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                            Text(s.getLocalizedName(lang),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: HidayahText.body(14.5,
-                                                    color: HidayahGold.s900,
-                                                    weight: FontWeight.w700,
-                                                    height: 1.3)),
-                                            const SizedBox(height: 2),
-                                            HidayahMeta(
-                                                icon: CaGlyph.pin,
-                                                text: [
-                                                  s.getLocalizedVenue(lang),
-                                                  s.getLocalizedCity(lang)
-                                                ]
-                                                    .where((t) => t.isNotEmpty)
-                                                    .join(' · ')),
-                                          ])),
-                                      if (live) ...[
-                                        const SizedBox(width: 8),
-                                        HidayahLiveBadge(
-                                            audio: s.isAudioLive,
-                                            label: (s.isAudioLive
-                                                    ? 'web.badge_audio'
-                                                    : 'web.badge_live')
-                                                .tr()),
-                                      ] else
-                                        const HidayahForwardIcon(size: 16),
-                                    ]))));
-                      })),
+                          style: HidayahText.body(14))),
+                for (final s in streamers)
+                  Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 2),
+                      child: _venueRow(s, lang)),
+              ])),
         ]));
+  }
+
+  Widget _venueRow(StreamerModel s, String lang) {
+    final selected = s.streamerId == selectedId;
+    final live = s.isLiveForRoom;
+    return Material(
+        color: selected ? HidayahGold.g100 : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => onSelect(s),
+            child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(children: [
+                  CaAvatar(
+                      name: s.getLocalizedName(lang),
+                      url: s.avatarUrl,
+                      org: s.isOrganization,
+                      live: live,
+                      ring: CaAvatarRing.brand,
+                      radius: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text(s.getLocalizedName(lang),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HidayahText.body(14.5,
+                                color: HidayahGold.s900,
+                                weight: FontWeight.w700,
+                                height: 1.3)),
+                        const SizedBox(height: 2),
+                        HidayahMeta(
+                            icon: CaGlyph.pin,
+                            text: [
+                              s.getLocalizedVenue(lang),
+                              s.getLocalizedCity(lang)
+                            ].where((t) => t.isNotEmpty).join(' · ')),
+                      ])),
+                  if (live) ...[
+                    const SizedBox(width: 8),
+                    HidayahLiveBadge(
+                        audio: s.isAudioLive,
+                        label: (s.isAudioLive
+                                ? 'web.badge_audio'
+                                : 'web.badge_live')
+                            .tr()),
+                  ] else
+                    const HidayahForwardIcon(size: 16),
+                ]))));
   }
 }

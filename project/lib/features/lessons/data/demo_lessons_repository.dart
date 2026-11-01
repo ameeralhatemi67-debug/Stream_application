@@ -619,7 +619,7 @@ class DemoLessonsRepository implements LessonsRepository {
         Lesson(
             id: _id('l'), requestId: req, seriesId: seriesId, seq: seriesId == null ? null : i + 1, type: d.type,
             topic: d.topic, titleAr: d.titleAr, titleEn: d.titleEn, descriptionAr: d.descriptionAr,
-            preacherId: d.preacherId, mosqueId: mosqueId, date: dates[i], slot: d.slot, exactTime: d.exactTime,
+            preacherId: d.preacherId, mosqueId: mosqueId, date: dates[i], slot: d.slot, exactTime: d.exactTime, durationMinutes: d.durationMinutes,
             language: d.language, interpretation: d.interpretation, audience: d.audience,
             womenSection: d.womenSection, streamed: d.streamed, notifyFollowers: d.notifyFollowers,
             submittedBy: currentUserId, submittedAt: DateTime.now(), reviewedBy: currentUserId,
@@ -761,7 +761,9 @@ class DemoLessonsRepository implements LessonsRepository {
         date: patch['lesson_date'] == null ? null : parseIsoDate(patch['lesson_date'] as String),
         slot: patch['slot'] as String?,
         exactTime: patch['exact_time'] as String?,
-        clearExact: patch.containsKey('exact_time') && patch['exact_time'] == null);
+        clearExact: patch.containsKey('exact_time') && patch['exact_time'] == null,
+        durationMinutes: patch['duration_minutes'] as int?,
+        clearDuration: patch.containsKey('duration_minutes') && patch['duration_minutes'] == null);
     _log('edit', l.titleAr, l.title('en'), preacherId: l.preacherId);
     final n = lessons[lessonId]!;
     if (l.status == 'approved' && !n.date.isBefore(_today) &&
