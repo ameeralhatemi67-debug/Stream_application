@@ -58,7 +58,7 @@ insert into expected_anon_execute values
   ('broadcast_room'),          -- guests open a public live room (20261001114055)
   ('broadcast_chat_read'),     -- guests read a public session's chat (20261001114055)
   ('list_upcoming_schedules'), -- guests see sanitized announcements (20260930010000)
-  ('list_map_schedules'),      -- the map's "goes live soon" (20261101130000)
+  ('list_map_schedules'),      -- the map's "goes live soon" (20261101095634)
   ('can_publish_upcoming'),    -- announcement visibility check (20260930010000)
   ('lessons_today'),           -- the programme's date in Riyadh (20261022125222)
   -- A preacher's link works without an account; each call checks the key

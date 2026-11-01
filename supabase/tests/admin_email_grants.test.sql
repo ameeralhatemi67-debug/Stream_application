@@ -1,6 +1,6 @@
 -- Admin access by email: both admin pages, one of them, or master admin, set
 -- and changed by a master admin (20261022124908_admin_email_grants.sql,
--- 20261101090000_admin_access_by_email.sql).
+-- 20261101095553_admin_access_by_email.sql).
 begin;
 set local search_path = public, extensions;
 select plan(49);

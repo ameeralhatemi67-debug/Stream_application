@@ -8,13 +8,13 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## The new map, 2026-11-01 (local; migration not on hosted)
+## The new map, 2026-11-01 (deployed to hosted)
 
-Built from the Hadayah Map Week preview (ADR-022): mosques and streamers share one set of bubbles grouped by distance; mosques are gold arches showing what is on now, a countdown or a day and time; every approved mosque appears; streamers keep their marker, card and list and gain "in 35m"; up close they become channel cards. LIVE on a lesson now needs the preacher's channel to really be live. Search, the broadcasters list and the website panel include mosques and today's lessons. Lessons have a length that admins set. Migration `20261101130000_lesson_length_and_map_schedules.sql`; not applied to hosted and not pushed. Hosted has no mosques or lessons yet, so the live map will look the same until admins add them.
+Built from the Hadayah Map Week preview (ADR-022): mosques and streamers share one set of bubbles grouped by distance; mosques are gold arches showing what is on now, a countdown or a day and time; every approved mosque appears; streamers keep their marker, card and list and gain "in 35m"; up close they become channel cards. LIVE on a lesson now needs the preacher's channel to really be live. Search, the broadcasters list and the website panel include mosques and today's lessons. Lessons have a length that admins set. Migration `20261101095634_lesson_length_and_map_schedules.sql`, on hosted since 2026-11-01. Hosted has no mosques or lessons yet, so the live map will look the same until admins add them.
 
-## Admin access by email: both pages, one, or master, 2026-11-01 (local; migration not on hosted)
+## Admin access by email: both pages, one, or master, 2026-11-01 (deployed to hosted)
 
-A master admin now gives an email the platform admin page, the lessons admin page, both, or master admin, and changes it later from Roles & Permissions (ADR-021). The account doesn't need to exist yet. Removing a line takes the access away. polkgvd2@gmail.com and ameeralhatemi67@gmail.com are locked as master admins. Migration `20261101090000_admin_access_by_email.sql`; not applied to hosted and not pushed.
+A master admin now gives an email the platform admin page, the lessons admin page, both, or master admin, and changes it later from Roles & Permissions (ADR-021). The account doesn't need to exist yet. Removing a line takes the access away. polkgvd2@gmail.com and ameeralhatemi67@gmail.com are locked as master admins. Migration `20261101095553_admin_access_by_email.sql`, on hosted since 2026-11-01.
 
 Also published a private artifact previewing the map across a week (streamers, lessons, in-mosque and live states, countdowns, affiliated mosques, zoom bubbles): https://claude.ai/artifact/LEbVtfLSruASmqPpBpq4sq. Nothing from it is built in the app yet; its last section lists what is missing today. Owner feedback the same day: keep the markers, keep the app's real streamer cards, and no streamer-to-mosque "Affiliated with" link, because that feature does not exist. The second version does that. The owner has asked for the full list of database, streamer and organization changes before deciding whether to build it.
 

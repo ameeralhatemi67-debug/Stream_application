@@ -1,5 +1,5 @@
 -- Lesson length and the map's schedule read
--- (20261101130000_lesson_length_and_map_schedules.sql).
+-- (20261101095634_lesson_length_and_map_schedules.sql).
 begin;
 set local search_path = public, extensions;
 select plan(14);

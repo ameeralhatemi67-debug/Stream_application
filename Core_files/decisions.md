@@ -10,7 +10,7 @@ updated: 2026-11-01
 
 ## ADR-022: One map for mosques and streamers; status from the schedule, LIVE from the channel (2026-11-01)
 
-Owner request 2026-11-01, after reviewing the Hadayah Map Week preview: build it, keeping the app's real streamer cards and with no "Affiliated with" link between streamers and mosques. The owner left four choices to Claude's recommendations: the mini channel card shows up close, Started and Finished come later, default lengths are lesson 60, lecture 75, talk 15 minutes, and there is no "Affiliated mosque" tag. Migration `20261101130000_lesson_length_and_map_schedules.sql`.
+Owner request 2026-11-01, after reviewing the Hadayah Map Week preview: build it, keeping the app's real streamer cards and with no "Affiliated with" link between streamers and mosques. The owner left four choices to Claude's recommendations: the mini channel card shows up close, Started and Finished come later, default lengths are lesson 60, lecture 75, talk 15 minutes, and there is no "Affiliated mosque" tag. Migration `20261101095634_lesson_length_and_map_schedules.sql`.
 
 - **One layer, one grouping.** Mosques and streamers go through `clusterMapPoints` together, by distance instead of the 72 px grid. A bubble sits on its highest-priority pin, and the radius is wider than the largest bubble, so two markers can't touch. What is happening now anchors its bubble where it really is.
 - **Three shapes.** Streamers keep `SpatialStreamerMarker` (circle, rounded square for organizations). Mosques are `MosqueArch`. Bubbles are `MapClusterBadge`, whose ring shows the mix and whose small badges count what is live and what is on at a mosque. From zoom 14.6 a streamer becomes `MapDiscoveryChannelCardMarker`, which existed but no screen used. A selected streamer stays the pulsing pin.
@@ -29,7 +29,7 @@ Owner request 2026-11-01, after reviewing the Hadayah Map Week preview: build it
 Owner request 2026-11-01: admins who only run the lessons page; "I as the master
 admin can assign an email a admin for both, one for one, and change later", with
 polkgvd2@gmail.com and ameeralhatemi67@gmail.com as master admins. Migration
-`20261101090000_admin_access_by_email.sql`. This amends ADR-015, where every
+`20261101095553_admin_access_by_email.sql`. This amends ADR-015, where every
 admin also ran the lessons.
 
 - **Two switches.** The `admin` role is the platform admin page and
