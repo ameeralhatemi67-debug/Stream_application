@@ -169,6 +169,21 @@ class AppNotificationModel {
   }
 }
 
+/// A push that arrived while the app was open, for the app to show itself.
+@immutable
+class PushWhileOpen {
+  final String titleAr, titleEn, bodyAr, bodyEn;
+  final String? route;
+
+  const PushWhileOpen({
+    required this.titleAr,
+    required this.titleEn,
+    required this.bodyAr,
+    required this.bodyEn,
+    this.route,
+  });
+}
+
 /// User Notification Settings and Anti-Spam Throttling Preferences
 @immutable
 class NotificationPreferencesModel {
@@ -180,6 +195,7 @@ class NotificationPreferencesModel {
   final bool watchMilestonesEnabled;
   final bool orgInvitesEnabled;
   final bool adminNotesEnabled;
+  final bool lessonsEnabled;
   final bool quietHoursEnabled;
   final int quietHoursStart; // Hour in 24h format (e.g. 23)
   final int quietHoursEnd; // Hour in 24h format (e.g. 7)
@@ -193,6 +209,7 @@ class NotificationPreferencesModel {
     this.watchMilestonesEnabled = true,
     this.orgInvitesEnabled = true,
     this.adminNotesEnabled = true,
+    this.lessonsEnabled = true,
     this.quietHoursEnabled = false,
     this.quietHoursStart = 23,
     this.quietHoursEnd = 7,
@@ -252,6 +269,7 @@ class NotificationPreferencesModel {
     bool? watchMilestonesEnabled,
     bool? orgInvitesEnabled,
     bool? adminNotesEnabled,
+    bool? lessonsEnabled,
     bool? quietHoursEnabled,
     int? quietHoursStart,
     int? quietHoursEnd,
@@ -266,6 +284,7 @@ class NotificationPreferencesModel {
           watchMilestonesEnabled ?? this.watchMilestonesEnabled,
       orgInvitesEnabled: orgInvitesEnabled ?? this.orgInvitesEnabled,
       adminNotesEnabled: adminNotesEnabled ?? this.adminNotesEnabled,
+      lessonsEnabled: lessonsEnabled ?? this.lessonsEnabled,
       quietHoursEnabled: quietHoursEnabled ?? this.quietHoursEnabled,
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,

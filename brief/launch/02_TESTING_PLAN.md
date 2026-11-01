@@ -182,6 +182,15 @@ Needs Firebase + the reminder job. Use an approved **individual** broadcaster (c
 | D7 | Chrome (web push): allow notifications, close the tab, trigger an event. | The browser notification arrives. The click opens the right page. |
 | D8 | Signed-out device. | Gets nothing for the old account. |
 | D9 | Arabic device language. | Push text is in Arabic. |
+| D10 | Account B follows account A's channel. A goes live. B's app is closed. | "Live now" arrives within about a minute and opens the live room. |
+| D11 | The same with B's app open. | A banner shows at the top and the alert is in the bell. No system notification. |
+| D12 | B follows a preacher. An admin cancels one of that preacher's upcoming lessons, B has no reminder on it. | "Cancelled" arrives on the phone with the reason, and opens the lesson. |
+| D13 | B has a reminder on a lesson. An admin moves it to another day. | "A lesson time or place changed" arrives with the new date. The reminder comes on the new day. |
+| D14 | B follows a series. An admin cancels one session. | B is told. |
+| D15 | A streamed lesson of a preacher with a linked account: B follows the preacher, not the channel. The preacher goes live around the lesson's time. | "Live now" for the lesson arrives. Going live on another day says nothing. |
+| D16 | B follows a mosque and a preacher, with lessons tomorrow. Wait until 9 PM Riyadh. | One "Tomorrow's lessons" notification. Turning the digest off in the Lessons preferences stops it. |
+| D17 | Settings → notifications: turn off "Lesson reminders, changes and cancellations", restart the app. | The switch is still off. Lesson pushes stop; the Lessons inbox still has them. |
+| D18 | Decline the permission, then use "Turn on notifications" in Settings. | The system prompt comes back, or the note explains where to allow it. |
 
 ---
 

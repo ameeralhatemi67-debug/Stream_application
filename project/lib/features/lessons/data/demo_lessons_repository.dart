@@ -580,12 +580,30 @@ class DemoLessonsRepository implements LessonsRepository {
   // --------------------------------------------------------------- lessons
   void _notifyFollowers(Preacher p, Lesson l) {
     for (final e in _mine.entries.toList()) {
-      if (e.value.isFollowing('preacher', p.id) || e.value.isFollowing('mosque', l.mosqueId)) {
-        _notify(e.key, 'sparkle', 'درس جديد من داعية تتابعه', 'New lesson from a preacher you follow',
-            '${p.nameAr}: ${l.titleAr}', '${p.name('en')}: ${l.title('en')}', '/lessons/requests/${l.requestId}');
+      final byPreacher = e.value.isFollowing('preacher', p.id);
+      if (byPreacher || e.value.isFollowing('mosque', l.mosqueId)) {
+        _notify(
+            e.key,
+            'sparkle',
+            byPreacher ? 'درس جديد من داعية تتابعه' : 'درس جديد في مسجد تتابعه',
+            byPreacher ? 'New lesson from a preacher you follow' : 'New lesson at a mosque you follow',
+            '${p.nameAr}: ${l.titleAr}',
+            '${p.name('en')}: ${l.title('en')}',
+            '/lessons/requests/${l.requestId}');
       }
     }
   }
+
+  /// As private.lesson_audience(): a reminder on the session, or a follow of
+  /// its preacher, mosque or series.
+  Iterable<String> _audience(Lesson l) => _mine.entries
+      .where((e) =>
+          e.value.reminders.containsKey(l.id) ||
+          e.value.isFollowing('preacher', l.preacherId) ||
+          e.value.isFollowing('mosque', l.mosqueId) ||
+          (l.seriesId != null && e.value.isFollowing('series', l.seriesId!)))
+      .map((e) => e.key)
+      .toList();
 
   @override
   Future<String> addLessons(LessonDraft d) async {
@@ -729,19 +747,16 @@ class DemoLessonsRepository implements LessonsRepository {
       throw const LessonsException(LessonsFailure.invalid);
     }
     lessons[lessonId] = l.copyWith(status: 'cancelled', cancelReason: reason);
-    var n = 0;
-    for (final e in _mine.entries.toList()) {
-      if (e.value.reminders.containsKey(lessonId)) {
-        n++;
-        _notify(e.key, 'alert', 'أُلغي موعد: ${l.titleAr}', 'Cancelled: ${l.title('en')}', '${isoDate(l.date)} — $reason',
-            '${isoDate(l.date)}: $reason', '/lessons/lesson/$lessonId');
-      }
+    final told = _audience(l).where((p) => p != currentUserId).toList();
+    for (final p in told) {
+      _notify(p, 'alert', 'أُلغي موعد: ${l.titleAr}', 'Cancelled: ${l.title('en')}', '${isoDate(l.date)} — $reason',
+          '${isoDate(l.date)}: $reason', '/lessons/lesson/$lessonId');
     }
     _log('cancel', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId,
         note: reason.trim());
     _email('lesson_cancelled', preacherId: l.preacherId);
     _notifyPreacher(l.preacherId, 'alert', 'أُلغي موعد: ${l.titleAr}', 'Cancelled: ${l.title('en')}', reason, reason);
-    return n;
+    return told.length;
   }
 
   @override
@@ -771,6 +786,10 @@ class DemoLessonsRepository implements LessonsRepository {
       _email('lesson_changed', preacherId: l.preacherId);
       _notifyPreacher(l.preacherId, 'clock', 'تغيّر موعد درسك: ${l.titleAr}', 'Your lesson moved: ${l.title('en')}',
           isoDate(n.date), isoDate(n.date));
+      for (final p in {..._audience(l), ..._audience(n)}) {
+        _notify(p, 'clock', 'تغيّر موعد درس', 'A lesson time or place changed', '${n.titleAr} — ${isoDate(n.date)}',
+            '${n.title('en')}, ${isoDate(n.date)}', '/lessons/lesson/$lessonId');
+      }
     }
   }
 

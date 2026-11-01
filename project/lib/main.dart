@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/app_skin_preference.dart';
+import 'core/services/notifications/notification_models.dart';
 import 'core/services/reminder_push_service.dart';
 import 'core/services/retired_preferences.dart';
 import 'core/theme/app_theme.dart';
@@ -19,6 +20,7 @@ import 'core/routing/app_router.dart';
 import 'core/widgets/app_update_gate.dart';
 import 'core/widgets/app_update_presenter.dart';
 import 'core/widgets/device_session_presenter.dart';
+import 'core/widgets/interactive_toast_overlay.dart';
 import 'features/lessons/data/demo_lessons_repository.dart';
 import 'features/lessons/data/supabase_lessons_repository.dart';
 import 'features/lessons/state/lessons_controller.dart';
@@ -88,6 +90,13 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppUpdateController _appUpdates;
   late final AppUpdatePresenter _appUpdatePresenter;
 
+  /// Lessons: created on first use; follows sign-in and sign-out. Without a
+  /// configured backend it shows sample data, marked as such.
+  late final LessonsController _lessons = LessonsController(
+      SupabaseConfig.isConfigured
+          ? SupabaseLessonsRepository()
+          : DemoLessonsRepository());
+
   @override
   void initState() {
     super.initState();
@@ -105,12 +114,17 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.
     _router = AppRouter.build(_appProvider);
-    _appProvider.attachReminderPush(onOpen: (streamerId) async {
-      await _appProvider.loadVerifiedStreamersFromBackend();
-      if (mounted) _router.go('/profile/$streamerId?tab=upcoming');
-    }, onOpenRoute: (route) async {
-      if (mounted) _router.push(route);
-    });
+    _appProvider.attachReminderPush(
+        onOpen: (streamerId) async {
+          await _appProvider.loadVerifiedStreamersFromBackend();
+          _openFromPush('/profile/$streamerId?tab=upcoming', replace: true);
+        },
+        onOpenRoute: (route) async => _openFromPush(route),
+        onLessonNotice: () => unawaited(_lessons.refresh()),
+        onLessonNoticeRead: (id) => unawaited(_lessons
+            .markRead([id]).catchError((Object e) =>
+                debugPrint('Lesson notice read sync failed: $e'))),
+        onPushWhileOpen: _showPushWhileOpen);
     _deviceSessionPresenter =
         DeviceSessionPresenter(provider: _appProvider, router: _router)
           ..attach();
@@ -124,6 +138,34 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     unawaited(_appUpdates.loadInstalled().then((_) => _appUpdates.check()));
   }
 
+  /// Opens the page a tapped push points at. A tap can be what started the
+  /// app, and the splash screen replaces whatever is open when it finishes, so
+  /// until then the page waits for the splash screen to open it.
+  void _openFromPush(String route, {bool replace = false}) {
+    if (!mounted) return;
+    final current = _router.routerDelegate.currentConfiguration.uri.path;
+    if (current.isEmpty || current == '/' || current == '/splash') {
+      unawaited(_appProvider.rememberSignInReturn(route));
+    } else if (replace) {
+      _router.go(route);
+    } else {
+      unawaited(_router.push(route));
+    }
+  }
+
+  /// Android shows nothing for a push while the app is in front.
+  void _showPushWhileOpen(PushWhileOpen push) {
+    final overlay = _router.routerDelegate.navigatorKey.currentState?.overlay;
+    final route = push.route;
+    if (!mounted || overlay == null) return;
+    final ar = context.locale.languageCode == 'ar';
+    InteractiveToastOverlay.show(context,
+        overlay: overlay,
+        title: ar ? push.titleAr : push.titleEn,
+        message: ar ? push.bodyAr : push.bodyEn,
+        onTap: route == null ? null : () => _openFromPush(route));
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _appProvider.setConnectivityForeground(state == AppLifecycleState.resumed ||
@@ -133,6 +175,7 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       unawaited(_appProvider.onAppResumed());
       unawaited(_appUpdates.check());
+      unawaited(_lessons.refreshIfOlderThan(const Duration(minutes: 3)));
     }
   }
 
@@ -152,12 +195,8 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
         ChangeNotifierProvider<AppUpdateController>.value(value: _appUpdates),
-        // Lessons: created on first use; follows sign-in and sign-out. Without
-        // a configured backend it shows sample data, marked as such.
         ChangeNotifierProxyProvider<AppProvider, LessonsController>(
-          create: (_) => LessonsController(SupabaseConfig.isConfigured
-              ? SupabaseLessonsRepository()
-              : DemoLessonsRepository()),
+          create: (_) => _lessons,
           update: (_, app, lessons) => lessons!
             ..onAccountChanged(app.isLoggedInStreamer ? app.currentUserId : null)
             ..setLiveChannels(app.liveChannelIds),

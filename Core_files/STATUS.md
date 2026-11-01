@@ -8,6 +8,14 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Lesson alerts reach the phone, 2026-11-01 (local; migration and function not on hosted)
+
+Every Lessons notice is now a phone push as well as an inbox row (ADR-023). A cancellation or a time change reaches everyone with a reminder on the session and everyone following its preacher, mosque or series. A streamed lesson going live alerts that same group, a nightly digest at 9 PM Riyadh lists tomorrow's lessons, and a mosque follower is told it was the mosque. Removing a preacher tells the people expecting their lessons, and reminders move with a moved lesson.
+
+For delivery itself: a phone is only known once it allows notifications, so following a preacher now asks, someone who already follows channels is asked once at sign-in, and Settings offers "Turn on notifications". Settings has a lesson alerts switch, and the switches are read back at sign-in (they were never loaded, so one turned off showed as on while its pushes stayed off). Pushes use an app channel at high importance and the monochrome icon. With the app open it shows a banner, because Android shows nothing then. A tap that starts the app no longer loses its page to the splash screen.
+
+**Still needs the owner:** approve the deployment (the migration, then `dispatch-organization-events`), then a real push test. On hosted, no push has been sent for a live or a lesson yet: the only registered phone has never been a recipient. Hosted also has no mosques or lessons to alert about. The banner with the app open is covered at the provider level only, since it needs a signed-in account (test plan D11).
+
 ## The new map, 2026-11-01 (deployed to hosted)
 
 Built from the Hadayah Map Week preview (ADR-022): mosques and streamers share one set of bubbles grouped by distance; mosques are gold arches showing what is on now, a countdown or a day and time; every approved mosque appears; streamers keep their marker, card and list and gain "in 35m"; up close they become channel cards. LIVE on a lesson now needs the preacher's channel to really be live. Search, the broadcasters list and the website panel include mosques and today's lessons. Lessons have a length that admins set. Migration `20261101095634_lesson_length_and_map_schedules.sql`, on hosted since 2026-11-01. Hosted has no mosques or lessons yet, so the live map will look the same until admins add them.

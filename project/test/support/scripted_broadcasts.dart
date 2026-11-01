@@ -70,8 +70,13 @@ class ScriptedBroadcasts extends OrganizationBroadcastService {
   Future<void> markEventsRead([List<String>? ids]) async =>
       _check('read:${ids?.join(',') ?? 'all'}');
   @override
-  Future<void> savePushPreferences({required bool live, required bool organization}) async =>
-      _check('push-preferences:$live:$organization');
+  Future<void> savePushPreferences(
+          {required bool live, required bool organization, required bool lessons}) async =>
+      _check('push-preferences:$live:$organization:$lessons');
+  ({bool live, bool organization, bool lessons})? pushPreferences;
+  @override
+  Future<({bool live, bool organization, bool lessons})?> loadPushPreferences() async =>
+      pushPreferences;
   @override
   Future<List<({String id, String nameEn, String nameAr, bool pilot})>> pilotStatus() async => pilots;
   @override

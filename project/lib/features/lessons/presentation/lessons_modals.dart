@@ -22,6 +22,14 @@ String lessonsLink(String path) => '${AppIdentity.websiteUrl}/#$path';
 
 Future<void> openExternal(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
 
+/// Lesson alerts arrive by push: a phone that was never asked gets none.
+void askForLessonAlerts(BuildContext context) {
+  final app = context.read<AppProvider>();
+  if (app.remindersAvailable && app.currentUserId != null) {
+    unawaited(app.syncReminderPush(requestPermission: true, language: context.lang));
+  }
+}
+
 // ----------------------------------------------------------------- remind
 Future<void> showRemindSheet(BuildContext context, Lesson l) {
   final c = context.read<LessonsController>();
@@ -31,13 +39,7 @@ Future<void> showRemindSheet(BuildContext context, Lesson l) {
   Future<void> set(BuildContext ctx, String? lead) async {
     Navigator.of(ctx).pop();
     await tRun(context, () => c.setReminder(l, lead), success: lead == null ? 'lessons.remind.removed'.tr() : 'lessons.remind.saved'.tr());
-    // The reminder also arrives by push: ask for it, as channel reminders do.
-    if (lead != null && context.mounted && c.hasReminder(l.id)) {
-      final app = context.read<AppProvider>();
-      if (app.remindersAvailable && app.currentUserId != null) {
-        unawaited(app.syncReminderPush(requestPermission: true, language: lang));
-      }
-    }
+    if (lead != null && context.mounted && c.hasReminder(l.id)) askForLessonAlerts(context);
   }
 
   String detail(String lead) => switch (lead) {

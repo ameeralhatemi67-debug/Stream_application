@@ -235,6 +235,8 @@ TGlyph _notificationGlyph(String icon) => switch (icon) {
       'clock' => TGlyph.clock,
       'user' => TGlyph.user,
       'file' => TGlyph.file,
+      'radio' => TGlyph.radio,
+      'calendar' => TGlyph.calendar,
       _ => TGlyph.bell,
     };
 

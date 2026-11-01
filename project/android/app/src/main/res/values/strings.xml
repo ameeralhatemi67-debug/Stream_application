@@ -7,4 +7,6 @@
 -->
 <resources>
     <string name="app_name">Hadayah Live</string>
+    <string name="alerts_channel_id" translatable="false">alerts</string>
+    <string name="alerts_channel_name">Alerts</string>
 </resources>

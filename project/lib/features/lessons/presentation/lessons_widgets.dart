@@ -413,12 +413,13 @@ class FollowButton extends StatelessWidget {
         kind: on ? TBtn.ink : TBtn.outline,
         icon: on ? TGlyph.check : TGlyph.plus,
         small: small,
-        expand: expand, onPressed: () {
+        expand: expand, onPressed: () async {
       if (!c.signedIn) {
         showTSignIn(context, 'lessons.sign_in_follow'.tr());
         return;
       }
-      tRun(context, () => c.toggleFollow(kind, id), success: on ? 'lessons.follow.off'.tr() : 'lessons.follow.on'.tr());
+      await tRun(context, () => c.toggleFollow(kind, id), success: on ? 'lessons.follow.off'.tr() : 'lessons.follow.on'.tr());
+      if (!on && context.mounted) askForLessonAlerts(context);
     });
   }
 }

@@ -74,7 +74,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
       } else if (provider.isReturningGuest) {
         // A guest who already agreed and chose a name on this device is not
         // walked through the welcome gate again (audit 2026-10-21, P0-2).
-        context.go('/feed');
+        context.go(provider.takeSignInReturn() ?? '/feed');
       } else {
         context.go('/welcome');
       }

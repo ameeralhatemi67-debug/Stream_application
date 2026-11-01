@@ -1,5 +1,6 @@
 -- Due lesson reminders reach the Lessons inbox and the push devices
--- (20261028133020). Run as supabase_admin.
+-- (20261028133020, through the queue since 20261101170000). Run as
+-- supabase_admin.
 begin;
 set local search_path = public, extensions;
 select plan(11);
@@ -42,12 +43,12 @@ insert into public.lesson_reminders(profile_id, lesson_id, lead, remind_at) valu
   -- due, but the viewer is banned
   ('85000000-0000-4000-8000-000000000003', '85000000-0000-4000-8000-0000000000c1', 'adhan', now() - interval '1 minute');
 
-select throws_ok($$set local role authenticated; select public.claim_due_lesson_reminders()$$, '42501', null,
+select throws_ok($$set local role authenticated; select public.claim_lesson_pushes()$$, '42501', null,
   'a signed-in account cannot claim reminders');
 reset role;
 
 set local role service_role;
-create temporary table first_claim as select * from public.claim_due_lesson_reminders();
+create temporary table first_claim as select * from public.claim_lesson_pushes();
 reset role;
 select is((select count(*)::int from first_claim), 2, 'each due reminder is returned with its push device');
 select ok((select title_ar = 'تذكير بدرس: تفسير سورة الكهف' and body_ar = 'اليوم بعد صلاة العشاء في جامع الإحسان.'
@@ -62,7 +63,8 @@ select is((select count(*)::int from public.lesson_notifications where profile_i
  0, 'a banned viewer gets nothing');
 
 set local role service_role;
-create temporary table second_claim as select * from public.claim_due_lesson_reminders();
+select public.lesson_push_sent(notification_id, token) from first_claim;
+create temporary table second_claim as select * from public.claim_lesson_pushes();
 reset role;
 select is((select count(*)::int from second_claim), 0, 'a reminder is delivered once');
 
@@ -70,7 +72,7 @@ select is((select count(*)::int from second_claim), 0, 'a reminder is delivered 
 update public.lesson_reminders set remind_at = now() - interval '1 minute'
  where lesson_id = '85000000-0000-4000-8000-0000000000c2';
 set local role service_role;
-create temporary table cancelled_claim as select * from public.claim_due_lesson_reminders();
+create temporary table cancelled_claim as select * from public.claim_lesson_pushes();
 reset role;
 select ok((select count(*) = 0 from cancelled_claim) and (select sent_at is not null from public.lesson_reminders
    where lesson_id = '85000000-0000-4000-8000-0000000000c2'),
@@ -86,7 +88,7 @@ select ok((select sent_at is null from public.lesson_reminders where profile_id 
 update public.lesson_reminders set remind_at = now() - interval '7 hours'
  where profile_id = '85000000-0000-4000-8000-000000000002';
 set local role service_role;
-create temporary table late_claim as select * from public.claim_due_lesson_reminders();
+create temporary table late_claim as select * from public.claim_lesson_pushes();
 reset role;
 select is((select count(*)::int from late_claim), 0, 'a reminder six hours late is skipped');
 

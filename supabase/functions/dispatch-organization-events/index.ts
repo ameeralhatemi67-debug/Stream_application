@@ -14,17 +14,18 @@ type Claim = {
   payload: Record<string, unknown>;
 };
 
-// A due lesson reminder (claim_due_lesson_reminders): already in the Lessons
-// inbox when it is claimed, so a failed push is not retried.
+// A Lessons inbox notice waiting for this device (claim_lesson_pushes).
 type LessonClaim = {
+  notification_id: string;
   token: string;
   profile_id: string;
   language_code: string;
-  lesson_id: string;
   title_ar: string;
   title_en: string;
   body_ar: string;
   body_en: string;
+  route: string;
+  ttl_seconds: number;
 };
 
 const env = (name: string) => Deno.env.get(name) ?? '';
@@ -48,9 +49,12 @@ Deno.serve(async (request) => {
   const { data, error } = await db.rpc('claim_org_v1_event_pushes');
   if (error) return new Response('Event claim failed', { status: 503 });
   const claims = (data ?? []) as Claim[];
-  const { data: lessonData, error: lessonError } = await db.rpc('claim_due_lesson_reminders');
+  const { data: lessonData, error: lessonError } = await db.rpc('claim_lesson_pushes');
   const lessons = lessonError ? [] : (lessonData ?? []) as LessonClaim[];
-  if (claims.length === 0 && lessons.length === 0) return Response.json({ claimed: 0, sent: 0 });
+  // Event pushes still go out, and the failure shows in the job's responses.
+  const status = lessonError ? 503 : 200;
+  if (lessonError) console.error('Lesson claim failed', lessonError.code);
+  if (claims.length === 0 && lessons.length === 0) return Response.json({ claimed: 0, sent: 0 }, { status });
 
   const accountJson = env('FIREBASE_SERVICE_ACCOUNT_JSON');
   const projectId = env('FIREBASE_PROJECT_ID');
@@ -71,7 +75,12 @@ Deno.serve(async (request) => {
     const message = {
       token: claim.token,
       notification: text,
-      android: { notification: { tag: `org-${claim.event_id}` } },
+      android: {
+        priority: 'HIGH',
+        // "Live now" means nothing to a phone that comes back online later.
+        ...(claim.kind === 'show_live' ? { ttl: '1800s' } : {}),
+        notification: { tag: `org-${claim.event_id}` },
+      },
       data: {
         type: 'org_event',
         event_id: claim.event_id,
@@ -101,22 +110,32 @@ Deno.serve(async (request) => {
     const message = {
       token: lesson.token,
       notification: { title: ar ? lesson.title_ar : lesson.title_en, body: ar ? lesson.body_ar : lesson.body_en },
-      android: { notification: { tag: `lesson-${lesson.lesson_id}` } },
+      android: {
+        priority: 'HIGH',
+        ttl: `${lesson.ttl_seconds}s`,
+        notification: { tag: `lesson-${lesson.notification_id}` },
+      },
       data: {
-        type: 'lesson_reminder',
-        lesson_id: lesson.lesson_id,
+        type: 'lesson_notice',
+        notification_id: lesson.notification_id,
+        route: lesson.route,
         viewer_id: lesson.profile_id,
         title_en: lesson.title_en, body_en: lesson.body_en, title_ar: lesson.title_ar, body_ar: lesson.body_ar,
       },
     };
     try {
       const result = await sendFcm(projectId, accessToken, message);
-      if (result === 'sent') sent++;
-      else if (result === 'unregistered') await db.from('schedule_push_devices').delete().eq('token', lesson.token);
+      if (result === 'sent') {
+        const { error: saved } = await db.rpc('lesson_push_sent',
+          { p_notification: lesson.notification_id, p_token: lesson.token });
+        if (!saved) sent++;
+      } else if (result === 'unregistered') {
+        await db.from('schedule_push_devices').delete().eq('token', lesson.token);
+      }
     } catch (_) {
-      // The reminder is already in the Lessons inbox.
+      // The lease expires after two minutes; the next run retries (at most five attempts).
     }
   }
   return Response.json({ claimed: claims.length + lessons.length, sent },
-    { headers: { 'cache-control': 'no-store' } });
+    { status, headers: { 'cache-control': 'no-store' } });
 });

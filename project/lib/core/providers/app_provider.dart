@@ -652,10 +652,13 @@ class AppProvider extends ChangeNotifier {
       if (_authGeneration != generation) return;
       await loadViewerLibrary();
       if (_authGeneration != generation) return;
+      unawaited(_loadPushPreferences());
       try {
         await refreshScheduleReminders();
-        unawaited(_savedAppLanguage().then((language) =>
-            syncReminderPush(requestPermission: false, language: language)));
+        final language = await _savedAppLanguage();
+        unawaited(syncReminderPush(
+            requestPermission: await shouldAskForPush(user.id),
+            language: language));
       } catch (e) {
         // An older backend may not have the new migration yet. Sign-in must
         // remain usable while Upcoming Live reports its own unavailable state.
@@ -3384,7 +3387,27 @@ class AppProvider extends ChangeNotifier {
       unawaited(_organizationBroadcastService.savePushPreferences(
         live: preferences.liveVideoEnabled || preferences.liveAudioEnabled,
         organization: preferences.orgInvitesEnabled,
+        lessons: preferences.lessonsEnabled,
       ).catchError((Object e) => debugPrint('Push preference sync failed: $e')));
+    }
+  }
+
+  /// The switches live on the server. Without this a switch turned off showed
+  /// as on after a restart while its pushes stayed off.
+  Future<void> _loadPushPreferences() async {
+    final generation = _authGeneration;
+    try {
+      final saved = await _organizationBroadcastService.loadPushPreferences();
+      if (generation != _authGeneration) return;
+      _notificationPreferences = _notificationPreferences.copyWith(
+        liveVideoEnabled: saved?.live ?? true,
+        liveAudioEnabled: saved?.live ?? true,
+        orgInvitesEnabled: saved?.organization ?? true,
+        lessonsEnabled: saved?.lessons ?? true,
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Push preference load failed: $e');
     }
   }
 
@@ -3412,6 +3435,7 @@ class AppProvider extends ChangeNotifier {
 
   void markNotificationAsRead(String id) {
     if (id.startsWith('org:')) _markOrgEventReadQuietly([id.substring(4)]);
+    if (id.startsWith('lesson:')) _onLessonNoticeRead?.call(id.substring(7));
     final enhIdx = _enhancedNotifications.indexWhere((n) => n.id == id);
     if (enhIdx != -1) {
       _enhancedNotifications[enhIdx] =
@@ -3426,6 +3450,11 @@ class AppProvider extends ChangeNotifier {
 
   void markAllNotificationsAsRead() {
     if (_orgEvents.any((e) => !e.read)) _markOrgEventReadQuietly(null);
+    for (final n in _enhancedNotifications) {
+      if (!n.isRead && n.id.startsWith('lesson:')) {
+        _onLessonNoticeRead?.call(n.id.substring(7));
+      }
+    }
     for (int i = 0; i < _enhancedNotifications.length; i++) {
       _enhancedNotifications[i] =
           _enhancedNotifications[i].copyWith(isRead: true);
@@ -3467,6 +3496,7 @@ class AppProvider extends ChangeNotifier {
     // Server events are each a durable row the server already deduplicates;
     // throttling one here would hide it for good (it is marked announced).
     if (!item.id.startsWith('org:') &&
+        !item.id.startsWith('lesson:') &&
         recentNotificationsCount >= _notificationPreferences.maxPer10Min) {
       // Throttle notification when rate limit is exceeded
       return false;
@@ -5183,46 +5213,87 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> Function(String streamerId)? _onOpenChannel;
+  Future<void> Function(String route)? _onOpenRoute;
+  VoidCallback? _onLessonNotice;
+  void Function(String id)? _onLessonNoticeRead;
+  void Function(PushWhileOpen push)? _onPushWhileOpen;
+
   void attachReminderPush({required Future<void> Function(String) onOpen,
-      Future<void> Function(String route)? onOpenRoute}) {
-    _reminderPush.attach(onMessage: handlePushWhileOpen, onOpen: (data) {
-      if (data['type'] == 'org_event') {
-        final route = organizationEventRoute(data);
-        if (route != null && onOpenRoute != null) unawaited(onOpenRoute(route));
-        return;
-      }
-      if (data['type'] == 'lesson_reminder') {
-        final lesson = data['lesson_id']?.toString() ?? '';
-        if (_uuidPattern.hasMatch(lesson) && onOpenRoute != null) {
-          unawaited(onOpenRoute('/lessons/lesson/$lesson'));
-        }
-        return;
-      }
-      final id = data['streamer_id']?.toString() ?? '';
-      if (_uuidPattern.hasMatch(id)) unawaited(onOpen(id));
-    });
+      Future<void> Function(String route)? onOpenRoute,
+      VoidCallback? onLessonNotice,
+      void Function(String id)? onLessonNoticeRead,
+      void Function(PushWhileOpen push)? onPushWhileOpen}) {
+    _onOpenChannel = onOpen;
+    _onOpenRoute = onOpenRoute;
+    _onLessonNotice = onLessonNotice;
+    _onLessonNoticeRead = onLessonNoticeRead;
+    _onPushWhileOpen = onPushWhileOpen;
+    _reminderPush.attach(
+        onMessage: handlePushWhileOpen, onOpen: handlePushOpened);
   }
 
-  /// A push that arrives while the app is open (Firebase shows nothing then).
+  /// A push that was tapped, with the app in the background or closed.
+  @visibleForTesting
+  void handlePushOpened(Map<String, dynamic> data) {
+    if (data['type'] == 'org_event') {
+      final route = organizationEventRoute(data);
+      if (route != null) unawaited(_onOpenRoute?.call(route));
+      return;
+    }
+    if (data['type'] == 'lesson_notice') {
+      unawaited(_onOpenRoute?.call(lessonNoticeRoute(data['route'])));
+      final id = data['notification_id']?.toString() ?? '';
+      if (_uuidPattern.hasMatch(id)) _onLessonNoticeRead?.call(id);
+      return;
+    }
+    final id = data['streamer_id']?.toString() ?? '';
+    if (_uuidPattern.hasMatch(id)) unawaited(_onOpenChannel?.call(id));
+  }
+
+  /// Where a Lessons notice opens. The route comes from the server, but a push
+  /// is still outside input: anything unexpected opens the Lessons tab.
+  static String lessonNoticeRoute(Object? route) {
+    final value = route?.toString() ?? '';
+    return _lessonRoutePattern.hasMatch(value) ? value : '/lessons';
+  }
+
+  static final _lessonRoutePattern =
+      RegExp(r'^/(admin/)?lessons(/[A-Za-z0-9_-]+)*$');
+
+  void _announcePush(Map<String, dynamic> data, String? route) {
+    String text(String key) => data[key]?.toString() ?? '';
+    _onPushWhileOpen?.call(PushWhileOpen(
+        titleAr: text('title_ar'),
+        titleEn: text('title_en'),
+        bodyAr: text('body_ar'),
+        bodyEn: text('body_en'),
+        route: route));
+  }
+
+  /// A push that arrives while the app is open. Firebase shows nothing then,
+  /// so the app says it itself, and keeps it in the bell.
   @visibleForTesting
   void handlePushWhileOpen(Map<String, dynamic> data) {
     if (data['type'] == 'org_event') {
       if (_isLoggedInStreamer && data['viewer_id'] == currentUserId) {
         unawaited(refreshOrganizationEvents().catchError(
             (Object e) => debugPrint('Organization event refresh failed: $e')));
+        _announcePush(data, organizationEventRoute(data));
       }
       return;
     }
-    if (data['type'] == 'lesson_reminder') {
-      final lesson = data['lesson_id']?.toString() ?? '';
+    if (data['type'] == 'lesson_notice') {
+      final id = data['notification_id']?.toString() ?? '';
       if (!_isLoggedInStreamer ||
           data['viewer_id'] != currentUserId ||
-          !_uuidPattern.hasMatch(lesson)) {
+          !_uuidPattern.hasMatch(id)) {
         return;
       }
+      final route = lessonNoticeRoute(data['route']);
       // Also in the Lessons inbox (the server wrote it there).
       addEnhancedNotification(AppNotificationModel(
-        id: 'lesson:$lesson',
+        id: 'lesson:$id',
         type: NotificationType.scheduleReminder,
         streamerId: '',
         streamerName: '',
@@ -5231,8 +5302,10 @@ class AppProvider extends ChangeNotifier {
         bodyEn: data['body_en']?.toString() ?? '',
         bodyAr: data['body_ar']?.toString() ?? '',
         timestamp: DateTime.now(),
-        actionUrl: '/lessons/lesson/$lesson',
+        actionUrl: route,
       ));
+      _announcePush(data, route);
+      _onLessonNotice?.call();
       return;
     }
     if (data['type'] != 'upcoming_reminder') return;
@@ -5256,6 +5329,7 @@ class AppProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
       actionUrl: '/profile/$streamerId?tab=upcoming',
     ));
+    _announcePush(data, '/profile/$streamerId?tab=upcoming');
   }
 
   /// The in-app route for an organization push, from validated identifiers
@@ -5271,6 +5345,24 @@ class AppProvider extends ChangeNotifier {
     return OrgEvent(id: eventId, kind: kind, createdAt: DateTime.now(),
         organizationId: id('organization_id'), sessionId: id('session_id'),
         invitationId: id('invitation_id')).route;
+  }
+
+  /// Whether to ask for notifications as this account signs in. Pushes reach a
+  /// phone only once it has said yes, and until now only a new follow or
+  /// reminder asked, so someone who already followed channels was never asked.
+  /// Asked once per account on this device.
+  @visibleForTesting
+  Future<bool> shouldAskForPush(String userId) async {
+    if (!remindersAvailable || _followedStreamerIds.isEmpty) return false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'push_asked_$userId';
+      if (prefs.getBool(key) ?? false) return false;
+      await prefs.setBool(key, true);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> syncReminderPush(

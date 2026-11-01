@@ -201,14 +201,28 @@ class OrganizationBroadcastService {
   Future<void> markEventsRead([List<String>? ids]) =>
       client.rpc('org_v1_mark_events_read', params: {'p_ids': ids});
 
-  Future<void> savePushPreferences({required bool live, required bool organization}) async {
+  Future<void> savePushPreferences(
+      {required bool live, required bool organization, required bool lessons}) async {
     final user = client.auth.currentUser?.id;
     if (user == null) return;
     await client.from('notification_push_preferences').upsert({
       'viewer_profile_id': user, 'live_enabled': live,
-      'organization_enabled': organization,
+      'organization_enabled': organization, 'lessons_enabled': lessons,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
+  }
+
+  /// What the server holds; null for an account that never changed a switch.
+  Future<({bool live, bool organization, bool lessons})?> loadPushPreferences() async {
+    final user = client.auth.currentUser?.id;
+    if (user == null) return null;
+    final row = await client.from('notification_push_preferences')
+        .select('live_enabled,organization_enabled,lessons_enabled')
+        .eq('viewer_profile_id', user).maybeSingle();
+    if (row == null) return null;
+    return (live: row['live_enabled'] as bool? ?? true,
+        organization: row['organization_enabled'] as bool? ?? true,
+        lessons: row['lessons_enabled'] as bool? ?? true);
   }
 
   Future<List<({String id, String nameEn, String nameAr, bool pilot})>> pilotStatus() async {

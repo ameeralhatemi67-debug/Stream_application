@@ -1539,6 +1539,7 @@
     "1_hour_watch_milestone_rewards": " 1-Hour Watch Milestone Rewards",
     "org_invites_guest_roles": "Org Invites & Guest Roles",
     "administrative_governance_notes": "Administrative Governance Notes",
+    "lesson_alerts": "Lesson reminders, changes and cancellations",
     "new_vods_lectures": "New VODs & Lectures",
     "play_all_lectures": "Play All Lectures",
     "loading_playlist_lectures": "Loading playlist lectures...",
@@ -1941,6 +1942,8 @@
     "lead_time": "Notify me before the planned time",
     "permission_denied": "This device blocks notifications. Your saved reminders can still reach other permitted devices.",
     "permission_unavailable": "Push notifications are not configured on this build. Your reminder choice is saved.",
+    "permission_help": "If nothing opens, allow notifications for Hadayah Live in your phone's settings.",
+    "permission_enable": "Turn on notifications",
     "day_1": "Monday",
     "day_2": "Tuesday",
     "day_3": "Wednesday",
@@ -2682,14 +2685,14 @@
       "title": "When should we remind you?",
       "adhan_detail": "{} adhan {}",
       "remove": "Remove reminder",
-      "note": "Reminders arrive as a notification in your inbox.",
+      "note": "Reminders reach your phone and your inbox.",
       "saved": "Reminder saved",
       "removed": "Reminder removed"
     },
     "follow": {
       "follow": "Follow",
       "following": "Following",
-      "on": "Following. You'll hear about new lessons",
+      "on": "Following. You'll hear about new lessons, changes and cancellations",
       "off": "Unfollowed"
     },
     "share": {
@@ -2775,7 +2778,7 @@
       "prefs": "Reminder preferences",
       "default_lead": "Default reminder time",
       "digest": "Tomorrow's lessons, after Isha",
-      "digest_body": "One notification each evening with what is on tomorrow in your city.",
+      "digest_body": "One notification each evening with tomorrow's lessons from the preachers, mosques and series you follow.",
       "console": "Preachers & lessons",
       "console_body": "{} waiting · {} from users",
       "open": "Open",

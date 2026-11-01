@@ -1,6 +1,8 @@
 // Firebase Messaging registers this worker at its own push scope. It does not
 // replace streamer_offline_sw.js, which owns the app's offline-map page scope.
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Mirrors AppProvider.lessonNoticeRoute.
+const lessonRoute = /^\/(admin\/)?lessons(\/[A-Za-z0-9_-]+)*$/;
 const orgKinds = new Set(['invitation', 'invitation_answered', 'join_request',
   'join_request_answered', 'assignment', 'assignment_changed', 'assignment_cancelled',
   'assignment_answered', 'assignment_reminder', 'membership_changed', 'show_live',
@@ -30,6 +32,16 @@ self.addEventListener('push', (event) => {
         body: payload.notification?.body || data.body_en || '',
         tag: `org-${data.event_id}`,
         data: { route: orgRoute(data) },
+        icon: './icons/Icon-192.png',
+      }));
+    return;
+  }
+  if (data.type === 'lesson_notice') {
+    event.waitUntil(self.registration.showNotification(
+      payload.notification?.title || data.title_en || 'Lessons', {
+        body: payload.notification?.body || data.body_en || '',
+        tag: `lesson-${data.notification_id}`,
+        data: { route: lessonRoute.test(data.route) ? data.route : '/lessons' },
         icon: './icons/Icon-192.png',
       }));
     return;

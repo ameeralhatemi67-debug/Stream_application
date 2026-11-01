@@ -138,6 +138,23 @@ class NotificationSettingsSection extends StatelessWidget {
                           : 'upcoming.permission_unavailable')
                       .tr(),
                   style: const TextStyle(color: Canopy.slate)),
+              if (provider.reminderPushStatus ==
+                  ReminderPushStatus.notGranted) ...[
+                const SizedBox(height: 4),
+                Text('upcoming.permission_help'.tr(),
+                    style: const TextStyle(
+                        color: Canopy.haze, fontSize: AppTheme.captionFont)),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    key: const ValueKey('turn-on-notifications'),
+                    onPressed: () => provider.syncReminderPush(
+                        requestPermission: true,
+                        language: context.locale.languageCode),
+                    child: Text('upcoming.permission_enable'.tr()),
+                  ),
+                ),
+              ],
             ],
             const Divider(color: Canopy.hairline, height: 24),
           ],
@@ -204,6 +221,15 @@ class NotificationSettingsSection extends StatelessWidget {
             onChanged: (val) {
               provider.updateNotificationPreferences(
                 prefs.copyWith(vodsEnabled: val),
+              );
+            },
+          ),
+          _buildNotifCaSwitch(
+            title: 'design_copy.lesson_alerts'.tr(),
+            value: prefs.lessonsEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(lessonsEnabled: val),
               );
             },
           ),

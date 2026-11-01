@@ -2,4 +2,6 @@
 <resources>
     <!-- Hidayah Gold night slate s900: the launch window behind the gold mark. -->
     <color name="launch_night">#151D24</color>
+    <!-- AppTheme.primary: the accent on a notification in the tray. -->
+    <color name="notification_gold">#805B1B</color>
 </resources>
