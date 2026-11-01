@@ -872,4 +872,6 @@ Owner: "Yes, deploy both". Preflight on hosted: last migration `20261029110440`,
 
 Applied through the MCP connector, in order: `20261101095553_admin_access_by_email.sql`, `20261101095634_lesson_length_and_map_schedules.sql`; local files renamed to those stamps. Checked after: function hashes equal the tested database; polkgvd2@gmail.com and ameeralhatemi67@gmail.com locked master admins; amir.alhatemi@gmail.com an unlocked master line, not applied until that account signs in; roles unchanged; anon can run `list_map_schedules` and not `admin_set_email_access`; signed-in users cannot run `private.set_admin_roles`; `admin_add_email_grant` is gone. Security advisors 135 to 137: both new lines are `list_map_schedules`, public on purpose.
 
-Not checked: signing in as a real admin and changing access on the live site, or the map on a phone. Hosted has no mosques or lessons, so the live map shows streamers only until admins add them.
+App: full suite 1,833 passed, 12 skipped; analyzer 0. Master pushed `82c2e60..c570775`; Vercel production READY, and the live page reports build `c570775`.
+
+Not checked: the site in a real browser. Automated requests get Vercel's Security Checkpoint (403, `X-Vercel-Mitigated: challenge`), so the built-in browser could not open it. Also not checked: signing in as a real admin and changing access on the live site, or the map on a phone. Hosted has no mosques or lessons, so the live map shows streamers only until admins add them.
