@@ -1,5 +1,5 @@
 -- Due lesson reminders reach the Lessons inbox and the push devices
--- (20261028133020, through the queue since 20261101170000). Run as
+-- (20261028133020, through the queue since 20261101183342). Run as
 -- supabase_admin.
 begin;
 set local search_path = public, extensions;

@@ -1,4 +1,4 @@
--- Lesson alerts reach the phone (20261101170000_lesson_alerts_reach_the_phone).
+-- Lesson alerts reach the phone (20261101183342_lesson_alerts_reach_the_phone).
 -- Run as supabase_admin.
 begin;
 set local search_path = public, extensions;

@@ -8,13 +8,15 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## Lesson alerts reach the phone, 2026-11-01 (local; migration and function not on hosted)
+## Lesson alerts reach the phone, 2026-11-01 (deployed: server, push sender, website)
 
 Every Lessons notice is now a phone push as well as an inbox row (ADR-023). A cancellation or a time change reaches everyone with a reminder on the session and everyone following its preacher, mosque or series. A streamed lesson going live alerts that same group, a nightly digest at 9 PM Riyadh lists tomorrow's lessons, and a mosque follower is told it was the mosque. Removing a preacher tells the people expecting their lessons, and reminders move with a moved lesson.
 
 For delivery itself: a phone is only known once it allows notifications, so following a preacher now asks, someone who already follows channels is asked once at sign-in, and Settings offers "Turn on notifications". Settings has a lesson alerts switch, and the switches are read back at sign-in (they were never loaded, so one turned off showed as on while its pushes stayed off). Pushes use an app channel at high importance and the monochrome icon. With the app open it shows a banner, because Android shows nothing then. A tap that starts the app no longer loses its page to the splash screen.
 
-**Still needs the owner:** approve the deployment (the migration, then `dispatch-organization-events`), then a real push test. On hosted, no push has been sent for a live or a lesson yet: the only registered phone has never been a recipient. Hosted also has no mosques or lessons to alert about. The banner with the app open is covered at the provider level only, since it needs a signed-in account (test plan D11).
+Deployed 2026-11-01: migration `20261101183342`, `dispatch-organization-events` v2. One test notice to the owner's account went through the real queue and Firebase accepted it first time (18:36:01 UTC).
+
+**Still needs the owner:** confirm that test notice showed on the phone, and install the new APK, since an older APK can't open a lesson push when tapped. A real "Live now" needs two accounts: one follows the other, which goes live (test plan D10). Hosted has no mosques or lessons to alert about yet. The banner with the app open is covered at the provider level only, since it needs a signed-in account (test plan D11).
 
 ## The new map, 2026-11-01 (deployed to hosted)
 
