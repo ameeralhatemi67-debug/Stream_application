@@ -209,6 +209,10 @@ class SupabaseLessonsRepository implements LessonsRepository {
       (await _rpc('lessons_upsert_preacher', {'p': preacher})) as String;
 
   @override
+  Future<String> addGuestPreacher(String name) async =>
+      (await _rpc('lessons_add_guest_preacher', {'p_name': name})) as String;
+
+  @override
   Future<int> removePreacher(String preacherId) async =>
       (await _rpc('lessons_remove_preacher', {'p_preacher': preacherId})) as int;
 

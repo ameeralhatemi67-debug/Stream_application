@@ -494,7 +494,7 @@ class DemoLessonsRepository implements LessonsRepository {
     final now = DateTime.now();
     return LessonsAdminData(
       roster: [
-        for (final p in preachers.values.toList()..sort((a, b) => a.nameAr.compareTo(b.nameAr)))
+        for (final p in preachers.values.where((p) => !p.oneOff).toList()..sort((a, b) => a.nameAr.compareTo(b.nameAr)))
           LessonsRosterEntry(
               preacher: p,
               phoneMask: phones[p.id] == null ? null : maskPhone(phones[p.id]),
@@ -838,13 +838,25 @@ class DemoLessonsRepository implements LessonsRepository {
         languages: (p['languages'] as List?)?.cast<String>() ?? old?.languages ?? const ['ar'],
         listed: p['listed'] as bool? ?? old?.listed ?? true,
         homeMosqueId: p.containsKey('home_mosque_id') ? home : old?.homeMosqueId,
-        joinedVia: old?.joinedVia ?? 'admin');
+        joinedVia: old?.joinedVia ?? 'admin',
+        oneOff: old?.oneOff ?? false);
     if (p.containsKey('phone')) {
       final phone = (p['phone'] as String? ?? '').replaceAll(RegExp(r'[^0-9+]'), '');
       phone.isEmpty ? phones.remove(id) : phones[id] = phone;
     }
     if (p.containsKey('email')) email.isEmpty ? emails.remove(id) : emails[id] = email;
     _log(old == null ? 'addPreacher' : 'editPreacher', preachers[id]!.nameAr, preachers[id]!.name('en'), preacherId: id);
+    return id;
+  }
+
+  @override
+  Future<String> addGuestPreacher(String name) async {
+    _need(_admin);
+    final nm = name.trim();
+    if (nm.length < 3 || nm.length > 120) throw const LessonsException(LessonsFailure.invalid);
+    final id = _id('p');
+    preachers[id] = Preacher(id: id, nameAr: nm, listed: false, oneOff: true);
+    _log('addGuest', nm, nm, preacherId: id);
     return id;
   }
 

@@ -776,7 +776,7 @@ void main() {
         await tester.enterText(find.byKey(const ValueKey('add-title-ar')), title);
         await _settle(tester);
         await _tap(tester, next);
-        await _tap(tester, find.text(app.repo.mosques['m1']!.name(lang)));
+        await _chooseMosque(tester, app, find.byKey(const ValueKey('add-mosque')), 'm1');
         await _tap(tester, next);
         await _tap(tester, next);
         expect(find.text('lessons.submit.summary'.tr()), findsOneWidget);
@@ -804,20 +804,62 @@ void main() {
       await app.close();
     });
 
-    testWidgets('the add wizard offers «new» in the preacher list and selects the preacher it adds', (tester) async {
-      final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin, size: _web);
-      final before = app.repo.preachers.length;
-      await _tap(tester, find.byType(DropdownButtonFormField<String>).first);
-      await _tap(tester, find.text('lessons.add.new_preacher'.tr()).last);
-      await tester.enterText(find.byKey(const ValueKey('preacher-name-ar')), 'الشيخ سعيد بن عمر');
-      await tester.ensureVisible(find.byKey(const ValueKey('preacher-home-mosque')));
+    for (final withEmail in [false, true]) {
+      testWidgets('the add wizard adds a new preacher by name${withEmail ? ' and email' : ' only'}', (tester) async {
+        final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin, size: _web);
+        final before = app.repo.preachers.length;
+        final next = find.text('lessons.next'.tr());
+        await _tap(tester, find.byKey(const ValueKey('add-preacher-new')));
+        await tester.enterText(find.byKey(const ValueKey('add-new-preacher-name')), 'الشيخ سعيد بن عمر');
+        if (withEmail) await tester.enterText(find.byKey(const ValueKey('add-new-preacher-email')), 'Said@Example.com');
+        await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'درس لداعية جديد');
+        await _settle(tester);
+        await _tap(tester, next);
+        await _chooseMosque(tester, app, find.byKey(const ValueKey('add-mosque')), 'm1');
+        await _tap(tester, next);
+        await _tap(tester, next);
+        // Nothing is created until the lesson is published.
+        expect(app.repo.preachers.length, before);
+        await _tap(tester, find.text('lessons.add.publish'.tr()));
+
+        expect(app.repo.preachers.length, before + 1);
+        final p = app.repo.preachers.values.firstWhere((p) => p.nameAr == 'الشيخ سعيد بن عمر');
+        // With an email he joins the list; without one he is for this lesson only.
+        expect(p.oneOff, !withEmail);
+        expect(p.listed, withEmail);
+        expect(app.repo.emails[p.id], withEmail ? 'said@example.com' : isNull);
+        expect(app.repo.lessons.values.where((l) => l.titleAr == 'درس لداعية جديد').single.preacherId, p.id);
+        await app.close();
+      });
+    }
+
+    testWidgets('the add wizard holds Next while a new preacher has no name or a bad email', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin);
+      await _tap(tester, find.byKey(const ValueKey('add-preacher-new')));
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'عنوان كافٍ');
       await _settle(tester);
-      await _chooseMosque(tester, app, find.byKey(const ValueKey('preacher-home-mosque')), 'm1');
-      await _tap(tester, find.byKey(const ValueKey('preacher-save')));
-      expect(app.repo.preachers.length, before + 1);
-      // The wizard now has him as the chosen preacher.
-      final added = app.repo.preachers.values.firstWhere((p) => p.nameAr == 'الشيخ سعيد بن عمر');
-      expect(tester.widget<DropdownButtonFormField<String>>(find.byType(DropdownButtonFormField<String>).first).initialValue, added.id);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      expect(find.byKey(const ValueKey('add-new-preacher-name')), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('add-new-preacher-name')), 'الشيخ سعيد بن عمر');
+      await tester.enterText(find.byKey(const ValueKey('add-new-preacher-email')), 'not-an-email');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      expect(find.byKey(const ValueKey('add-new-preacher-name')), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('the add wizard offers only the mosques of the chosen area', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add?preacher=p3', persona: LessonsDemoPersona.admin, size: _web);
+      final c = app.lessons;
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'عنوان كافٍ');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      final m1 = c.mosque('m1')!;
+      final other = c.mosquesIn(c.cityOfMosque('m1'), app.lang, hidden: true).firstWhere((m) => m.districtId != m1.districtId);
+      await _tap(tester, find.text(c.district(m1.districtId)!.name(app.lang)).first);
+      await _tap(tester, find.descendant(of: find.byKey(const ValueKey('add-mosque')), matching: find.byType(DropdownButtonFormField<String>)));
+      expect(find.textContaining(m1.name(app.lang)), findsWidgets);
+      expect(find.textContaining('${other.name(app.lang)} · ${c.district(other.districtId)!.name(app.lang)}'), findsNothing);
       await app.close();
     });
 

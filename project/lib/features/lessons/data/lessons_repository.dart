@@ -61,6 +61,9 @@ abstract class LessonsRepository {
   // Admins: preachers
   Future<String> upsertPreacher(Map<String, dynamic> preacher);
 
+  /// Names a preacher for one lesson only: he is not added to the list.
+  Future<String> addGuestPreacher(String name);
+
   /// Removes a preacher with all his lessons and links. Returns how many
   /// lessons went with him.
   Future<int> removePreacher(String preacherId);

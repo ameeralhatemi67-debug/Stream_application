@@ -11,7 +11,6 @@ import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_widgets.dart';
-import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
 
 // ------------------------------------------------------------ add lesson
@@ -26,10 +25,17 @@ class LessonsAddScreen extends StatefulWidget {
 }
 
 class _LessonsAddScreenState extends State<LessonsAddScreen> {
-  static const _newPreacher = '__new__';
-  int step = 0, _preacherRev = 0;
+  static final _emailShape = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+  int step = 0;
   bool _seeded = false, busy = false;
   String? preacherId;
+
+  /// A preacher typed in here: with an email he joins the list, without one
+  /// he is added for this lesson only. [createdPreacherId] keeps a retry from
+  /// adding him twice when publishing fails after he was created.
+  bool addingPreacher = false;
+  String? createdPreacherId;
+  final newPreacherName = TextEditingController(), newPreacherEmail = TextEditingController();
   String type = 'lesson', topic = 'aqeedah', language = 'ar', audience = 'all', slot = 'isha';
   String? interpretation, mosqueId, district, exact;
   String city = 'khobar';
@@ -40,7 +46,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
   late DateTime date, start;
   final weekdays = <int>{};
   int count = 8;
-  final titleAr = TextEditingController(), titleEn = TextEditingController(), desc = TextEditingController(), mq = TextEditingController();
+  final titleAr = TextEditingController(), titleEn = TextEditingController(), desc = TextEditingController();
   LessonsNewMosque? newMosque;
   final newName = TextEditingController();
   (double, double)? newPin;
@@ -76,7 +82,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
 
   @override
   void dispose() {
-    for (final t in [titleAr, titleEn, desc, mq, newName]) {
+    for (final t in [titleAr, titleEn, desc, newName, newPreacherName, newPreacherEmail]) {
       t.dispose();
     }
     super.dispose();
@@ -99,54 +105,87 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
               for (final x in candidateClashes(c, requestId: '__new', date: d, slot: slot, mosqueId: mosqueId!, preacherId: preacherId!))
                 (d, x)
           ];
+    final typedEmail = newPreacherEmail.text.trim();
+    final emailBad = typedEmail.isNotEmpty && !_emailShape.hasMatch(typedEmail);
+    final newPreacherOk = addingPreacher && newPreacherName.text.trim().length > 2 && !emailBad;
     final valid = [
-      preacherId != null && titleAr.text.trim().length > 2,
+      (preacherId != null || newPreacherOk) && titleAr.text.trim().length > 2,
       mosqueId != null || (newMosque != null && newMosque!.nameAr.trim().length > 1),
       ds.isNotEmpty && !ds.first.isBefore(earliest) && (!useExact || RegExp(r'^\d{2}:\d{2}$').hasMatch(exact ?? '')),
       true,
     ];
     final mosque = mosqueId == null ? null : c.mosque(mosqueId!);
-    final preachers = c.catalog.preachers.values.toList()..sort((a, b) => a.nameAr.compareTo(b.nameAr));
+    // Guests (named for one lesson) are not in the list, unless one is already chosen.
+    final preachers = c.catalog.preachers.values.where((p) => !p.oneOff || p.id == preacherId).toList()
+      ..sort((a, b) => a.nameAr.compareTo(b.nameAr));
 
     Widget label(String text) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(text, style: tBody(13, color: TC.ink2, weight: FontWeight.w700)));
     Widget gap() => const SizedBox(height: 18);
 
     final s0 = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      TField(
-        label: 'lessons.submit.preacher'.tr(),
-        required: true,
-        hint: 'lessons.add.preacher_hint'.tr(),
-        child: DropdownButtonFormField<String>(
-          // The key follows the choice, so the field shows the preacher that
-          // was just added (or drops «new» when the sheet is dismissed).
-          key: ValueKey('add-preacher-$_preacherRev'),
-          initialValue: preacherId,
-          isExpanded: true,
-          hint: Text('lessons.submit.choose_preacher'.tr()),
-          decoration: tInput(),
-          items: [
-            DropdownMenuItem(
-              key: const ValueKey('add-preacher-new'),
-              value: _newPreacher,
-              child: Row(children: [
-                const TIcon(TGlyph.plus, size: 15, color: TC.bronze),
-                const SizedBox(width: 8),
-                Text('lessons.add.new_preacher'.tr(), style: tBody(15, color: TC.bronze, weight: FontWeight.w700)),
-              ]),
-            ),
-            for (final p in preachers) DropdownMenuItem(value: p.id, child: Text(p.name(lang), overflow: TextOverflow.ellipsis)),
-          ],
-          onChanged: (v) async {
-            if (v != _newPreacher) return setState(() => preacherId = v);
-            final id = await showPreacherEditSheet(context);
-            if (!mounted) return;
-            setState(() {
-              if (id != null) preacherId = id;
-              _preacherRev++;
-            });
-          },
+      if (!addingPreacher) ...[
+        TField(
+          label: 'lessons.submit.preacher'.tr(),
+          required: true,
+          hint: 'lessons.add.preacher_hint'.tr(),
+          child: DropdownButtonFormField<String>(
+            key: const ValueKey('add-preacher'),
+            initialValue: preacherId,
+            isExpanded: true,
+            hint: Text('lessons.submit.choose_preacher'.tr()),
+            decoration: tInput(),
+            items: [for (final p in preachers) DropdownMenuItem(value: p.id, child: Text(p.name(lang), overflow: TextOverflow.ellipsis))],
+            onChanged: (v) => setState(() => preacherId = v),
+          ),
         ),
-      ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TButton('lessons.add.new_preacher'.tr(),
+              key: const ValueKey('add-preacher-new'),
+              kind: TBtn.ghost,
+              icon: TGlyph.plus,
+              onPressed: () => setState(() {
+                    addingPreacher = true;
+                    preacherId = null;
+                  })),
+        ),
+      ] else
+        TCard(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              Expanded(child: Text('lessons.add.new_preacher_title'.tr(), style: tStrong(15))),
+              TButton('lessons.cancel'.tr(), kind: TBtn.ghost, small: true, icon: TGlyph.x, onPressed: () => setState(() {
+                    addingPreacher = false;
+                    createdPreacherId = null;
+                    newPreacherName.clear();
+                    newPreacherEmail.clear();
+                  })),
+            ]),
+            const SizedBox(height: 10),
+            TField(
+                label: 'lessons.add.new_preacher_name'.tr(),
+                required: true,
+                child: TextField(
+                    key: const ValueKey('add-new-preacher-name'),
+                    controller: newPreacherName,
+                    textDirection: TextDirection.rtl,
+                    onChanged: (_) => setState(() => createdPreacherId = null),
+                    decoration: tInput())),
+            const SizedBox(height: 12),
+            TField(
+                label: '${'lessons.add.new_preacher_email'.tr()} (${'lessons.optional'.tr()})',
+                hint: emailBad
+                    ? 'lessons.preacher_admin.email_bad'.tr()
+                    : (typedEmail.isEmpty ? 'lessons.add.new_preacher_guest'.tr() : 'lessons.add.new_preacher_saved'.tr()),
+                child: TextField(
+                    key: const ValueKey('add-new-preacher-email'),
+                    controller: newPreacherEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    textDirection: TextDirection.ltr,
+                    onChanged: (_) => setState(() => createdPreacherId = null),
+                    decoration: tInput(hint: 'name@example.com'))),
+          ]),
+        ),
       gap(),
       label('${'lessons.submit.type'.tr()} *'),
       TGrid(minWidth: 180, spacing: 10, children: [
@@ -191,10 +230,15 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
     ]);
 
     final districts = c.catalog.districts.values.where((d) => d.city == city).toList()..sort((a, b) => a.sort.compareTo(b.sort));
-    final q = mq.text.trim().toLowerCase();
+    // The mosques of the chosen area (of the whole city while no area is chosen), by area then name.
+    final areaOrder = {for (final (i, d) in districts.indexed) d.id: i};
     final cityMosques = c.catalog.mosques.values
-        .where((m) => c.district(m.districtId)?.city == city && (district == null || m.districtId == district) && (q.isEmpty || m.name(lang).toLowerCase().contains(q)))
-        .toList();
+        .where((m) => c.district(m.districtId)?.city == city && (district == null || m.districtId == district))
+        .toList()
+      ..sort((a, b) {
+        final byArea = (areaOrder[a.districtId] ?? 999).compareTo(areaOrder[b.districtId] ?? 999);
+        return byArea != 0 ? byArea : a.name(lang).compareTo(b.name(lang));
+      });
     final s1 = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       label('lessons.submit.city'.tr()),
       TSeg<String>(
@@ -210,24 +254,41 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
       gap(),
       label('lessons.submit.district'.tr()),
       TChips([
-        for (final d in districts) TChip(d.name(lang), small: true, selected: district == d.id, onTap: () => setState(() => district = district == d.id ? null : d.id)),
+        for (final d in districts)
+          TChip(d.name(lang), small: true, selected: district == d.id, onTap: () => setState(() {
+                district = district == d.id ? null : d.id;
+                // A mosque outside the chosen area is no longer the choice.
+                if (district != null && mosqueId != null && c.mosque(mosqueId!)?.districtId != district) mosqueId = null;
+              })),
       ]),
       gap(),
       if (newMosque == null) ...[
-        TSearchBox(hint: 'lessons.submit.search_mosque'.tr(), controller: mq, onChanged: (_) => setState(() {})),
-        const SizedBox(height: 10),
-        if (cityMosques.isEmpty) Text('lessons.submit.no_mosques'.tr(), style: tBody(13, color: TC.muted)),
-        for (final m in cityMosques)
-          TOptionRow(
-            title: m.name(lang),
-            subtitle: [c.district(m.districtId)?.name(lang) ?? '', ...m.facilities.map(facilityLabel)].join(' · '),
-            selected: mosqueId == m.id,
-            onTap: () => setState(() {
-              mosqueId = m.id;
-              district = m.districtId;
-              women = m.facilities.contains('women');
-            }),
+        TField(
+          key: const ValueKey('add-mosque'),
+          label: 'lessons.place.mosque'.tr(),
+          required: true,
+          hint: cityMosques.isEmpty ? 'lessons.submit.no_mosques'.tr() : null,
+          child: DropdownButtonFormField<String>(
+            key: ValueKey('add-mosque-$city-$district-${cityMosques.length}-$mosqueId'),
+            initialValue: cityMosques.any((m) => m.id == mosqueId) ? mosqueId : null,
+            isExpanded: true,
+            hint: Text('lessons.place.choose'.tr()),
+            decoration: tInput(),
+            items: [
+              for (final m in cityMosques)
+                DropdownMenuItem(value: m.id, child: Text('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}', overflow: TextOverflow.ellipsis)),
+            ],
+            onChanged: cityMosques.isEmpty
+                ? null
+                : (v) => setState(() {
+                      final m = c.mosque(v);
+                      if (m == null) return;
+                      mosqueId = m.id;
+                      district = m.districtId;
+                      women = m.facilities.contains('women');
+                    }),
           ),
+        ),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TButton('lessons.add.new_mosque'.tr(), kind: TBtn.ghost, icon: TGlyph.plus, onPressed: () => setState(() {
@@ -424,7 +485,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           onChanged: (v) => setState(() => women = v)),
       TToggleRow(label: 'lessons.submit.stream'.tr(), desc: 'lessons.submit.stream_note'.tr(), icon: TGlyph.radio, value: streamed, onChanged: (v) => setState(() => streamed = v)),
       // Live comes from the preacher's own channel, so without one it never shows.
-      if (streamed && preacherId != null && c.preacher(preacherId)?.linkedProfileId == null)
+      if (streamed && (preacherId != null ? c.preacher(preacherId)?.linkedProfileId == null : newPreacherOk))
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: TCallout(
@@ -454,7 +515,14 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           Text('lessons.submit.summary'.tr(), style: tStrong(15)),
           const SizedBox(height: 8),
           for (final (k, v) in [
-            ('lessons.submit.preacher'.tr(), preacherId == null ? '—' : c.preacher(preacherId!)?.name(lang) ?? '—'),
+            (
+              'lessons.submit.preacher'.tr(),
+              preacherId != null
+                  ? c.preacher(preacherId!)?.name(lang) ?? '—'
+                  : newPreacherOk
+                      ? '${newPreacherName.text.trim()} (${typedEmail.isEmpty ? 'lessons.add.new_preacher_for_lesson'.tr() : 'lessons.add.new'.tr()})'
+                      : '—'
+            ),
             ('lessons.submit.activity'.tr(), '${typeLabel(type)} · ${titleAr.text.isEmpty ? '—' : titleAr.text}'),
             ('lessons.submit.place'.tr(), mosque?.name(lang) ?? (newMosque == null ? '—' : '${newMosque!.nameAr} (${'lessons.add.new'.tr()})')),
             (
@@ -476,8 +544,21 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
 
     Future<void> send() async {
       setState(() => busy = true);
+      var pid = preacherId ?? createdPreacherId;
+      if (pid == null) {
+        // With an email he joins the list; without one he is added for this lesson only.
+        final name = newPreacherName.text.trim();
+        pid = await tRun(context,
+            () => typedEmail.isEmpty ? c.addGuestPreacher(name) : c.upsertPreacher({'name_ar': name, 'email': typedEmail, 'city': city}),
+            success: typedEmail.isEmpty ? null : 'lessons.roster.added'.tr());
+        if (pid == null || !context.mounted) {
+          if (mounted) setState(() => busy = false);
+          return;
+        }
+        createdPreacherId = pid;
+      }
       final draft = LessonDraft(
-        preacherId: preacherId!,
+        preacherId: pid,
         type: type,
         topic: topic,
         titleAr: titleAr.text.trim(),
@@ -496,11 +577,10 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
         mosqueId: newMosque == null ? mosqueId : null,
         newMosque: newMosque,
       );
-      final pid = preacherId!;
       final r = await tRun(context, () => c.addLessons(draft), success: 'lessons.add.published'.tr());
       if (!context.mounted) return;
       setState(() => busy = false);
-      if (r != null) context.go(widget.preacherId != null ? '/admin/lessons/preachers/$pid' : '/admin/lessons/lessons');
+      if (r != null) context.go(widget.preacherId != null ? '/admin/lessons/preachers/${widget.preacherId}' : '/admin/lessons/lessons');
     }
 
     final stepLabels = ['lessons.submit.s_activity'.tr(), 'lessons.submit.s_place'.tr(), 'lessons.submit.s_when'.tr(), 'lessons.submit.s_review'.tr()];

@@ -116,9 +116,13 @@ class Preacher {
     this.listed = true,
     this.homeMosqueId,
     this.joinedVia = 'admin',
+    this.oneOff = false,
   });
   final String id, nameAr, nameEn, titleAr, titleEn, bioAr, bioEn, city, affiliation;
   final String? linkedProfileId, photoUrl;
+
+  /// A guest an admin named for one lesson: never in the preachers list.
+  final bool oneOff;
 
   /// The mosque he starts at; his lessons can be at any mosque.
   final String? homeMosqueId;
@@ -147,7 +151,8 @@ class Preacher {
       languages: _list(j['languages']),
       listed: j['listed'] as bool? ?? true,
       homeMosqueId: j['home_mosque_id'] as String?,
-      joinedVia: j['joined_via'] as String? ?? 'admin');
+      joinedVia: j['joined_via'] as String? ?? 'admin',
+      oneOff: j['one_off'] as bool? ?? false);
 
   Preacher copyWith({String? linkedProfileId, bool clearLink = false, List<String>? languages,
           String? nameAr, String? nameEn, String? titleAr, String? titleEn, String? bioAr, String? bioEn,
@@ -168,7 +173,8 @@ class Preacher {
           languages: languages ?? this.languages,
           listed: listed ?? this.listed,
           homeMosqueId: homeMosqueId ?? this.homeMosqueId,
-          joinedVia: joinedVia);
+          joinedVia: joinedVia,
+          oneOff: oneOff);
 }
 
 class LessonSeries {

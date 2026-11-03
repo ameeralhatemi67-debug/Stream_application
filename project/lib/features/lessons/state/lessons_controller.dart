@@ -328,6 +328,7 @@ class LessonsController extends ChangeNotifier {
   Future<void> resolveFlag(String id) => _write(() => repository.resolveFlag(id));
 
   Future<String> upsertPreacher(Map<String, dynamic> p) => _write(() => repository.upsertPreacher(p));
+  Future<String> addGuestPreacher(String name) => _write(() => repository.addGuestPreacher(name));
   Future<int> removePreacher(String preacherId) => _write(() => repository.removePreacher(preacherId));
   Future<int> importPreachers(List<Map<String, dynamic>> rows) => _write(() => repository.importPreachers(rows));
   Future<String?> revealPhone(String preacherId) => _write(() => repository.revealPhone(preacherId));
