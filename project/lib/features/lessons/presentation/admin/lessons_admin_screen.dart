@@ -601,6 +601,19 @@ class _Mosques extends StatelessWidget {
               Expanded(child: Text(m.name(lang), style: tStrong(14))),
               if (!m.verified) TTag('lessons.mosques.hidden'.tr(), tone: TTone.slate, icon: TGlyph.lock),
             ]),
+            if (m.locationCheck)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                  TTag('lessons.mosques.confirm_location'.tr(), key: ValueKey('confirm-location-${m.id}'), tone: TTone.warning, icon: TGlyph.pin),
+                  TButton('lessons.mosques.location_ok'.tr(),
+                      key: ValueKey('location-ok-${m.id}'),
+                      small: true,
+                      kind: TBtn.ghost,
+                      icon: TGlyph.check,
+                      onPressed: () => tRun(context, () => c.upsertMosque({'id': m.id, 'location_check': false}), success: 'lessons.mosques.location_ok_toast'.tr())),
+                ]),
+              ),
             Text(c.district(m.districtId)?.name(lang) ?? '', style: tBody(12.5, color: TC.muted)),
             const SizedBox(height: 6),
             FacilityList(m.facilities, dense: true),

@@ -495,6 +495,8 @@ Future<String?> showMosqueSheet(BuildContext context, {Mosque? mosque, String? c
                         if (pin != null) 'latitude': pin!.$1,
                         if (pin != null) 'longitude': pin!.$2,
                         'facilities': fac.toList(),
+                        // An admin saved it, so the location has been looked at.
+                        'location_check': false,
                       }),
                   success: m == null ? 'lessons.mosques.added'.tr() : 'lessons.roster.saved'.tr());
               if (id != null && ctx.mounted) Navigator.of(ctx).pop(id);

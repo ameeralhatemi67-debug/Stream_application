@@ -666,6 +666,19 @@ void main() {
       await app.close();
     });
 
+    testWidgets('the Mosques page asks admins to confirm a location found by a map search', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      await app.lessons.upsertMosque({'id': 'm1', 'location_check': true});
+      await _settle(tester);
+      final chip = find.byKey(const ValueKey('confirm-location-m1'));
+      await tester.ensureVisible(chip);
+      expect(chip, findsOneWidget);
+      await _tap(tester, find.byKey(const ValueKey('location-ok-m1')));
+      expect(app.repo.mosques['m1']!.locationCheck, isFalse);
+      expect(chip, findsNothing);
+      await app.close();
+    });
+
     testWidgets('guests and viewers are kept out', (tester) async {
       final app = await _open(tester, '/admin/lessons', persona: LessonsDemoPersona.viewer);
       expect(app.at, '/welcome');

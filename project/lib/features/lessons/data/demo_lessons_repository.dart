@@ -1310,7 +1310,8 @@ class DemoLessonsRepository implements LessonsRepository {
         latitude: m.containsKey('latitude') ? (m['latitude'] as num?)?.toDouble() : old?.latitude,
         longitude: m.containsKey('longitude') ? (m['longitude'] as num?)?.toDouble() : old?.longitude,
         facilities: (m['facilities'] as List?)?.cast<String>() ?? old?.facilities ?? const [],
-        verified: m['verified'] as bool? ?? old?.verified ?? true);
+        verified: m['verified'] as bool? ?? old?.verified ?? true,
+        locationCheck: m['location_check'] as bool? ?? old?.locationCheck ?? false);
     _log(old == null ? 'addMosque' : 'editMosque', mosques[id]!.nameAr, mosques[id]!.name('en'));
     return id;
   }

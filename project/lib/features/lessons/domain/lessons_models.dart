@@ -40,11 +40,16 @@ class Mosque {
     this.mapsUrl,
     this.facilities = const [],
     this.verified = true,
+    this.locationCheck = false,
   });
   final String id, nameAr, nameEn, districtId;
   final double? latitude, longitude;
   final String? mapsUrl;
   final List<String> facilities;
+
+  /// The pin or the area came from a map search, not from an admin: the
+  /// admins' list asks them to confirm it.
+  final bool locationCheck;
 
   /// Public. Admins can hide a mosque without removing it.
   final bool verified;
@@ -67,7 +72,8 @@ class Mosque {
       longitude: _num(j['longitude']),
       mapsUrl: j['maps_url'] as String?,
       facilities: _list(j['facilities']),
-      verified: j['verified'] as bool? ?? false);
+      verified: j['verified'] as bool? ?? false,
+      locationCheck: j['location_check'] as bool? ?? false);
 
   /// What is saved for the offline map.
   Map<String, dynamic> toJson() => {
@@ -80,6 +86,7 @@ class Mosque {
         'maps_url': mapsUrl,
         'facilities': facilities,
         'verified': verified,
+        'location_check': locationCheck,
       };
 
   Mosque copyWith({bool? verified, String? nameAr, String? nameEn, String? districtId,
@@ -93,7 +100,8 @@ class Mosque {
           longitude: longitude ?? this.longitude,
           mapsUrl: mapsUrl,
           facilities: facilities ?? this.facilities,
-          verified: verified ?? this.verified);
+          verified: verified ?? this.verified,
+          locationCheck: locationCheck);
 }
 
 /// A preacher the admins manage: always a person, never an organization.
