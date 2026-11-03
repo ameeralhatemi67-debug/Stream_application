@@ -20,7 +20,7 @@ import '../../web/presentation/hidayah_web_kit.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
-import '../domain/lessons_vocab.dart';
+import '../domain/lessons_names.dart';
 import '../state/lessons_controller.dart';
 import '../state/preacher_link_controller.dart';
 import 'lessons_kit.dart';
@@ -217,7 +217,7 @@ List<MapSearchHit> searchMapLessons(LessonsController c, String query, String la
 
 /// The lesson topics, in the shape the map's topic dropdown takes.
 List<AcademicCategoryModel> lessonTopicCategories() => [
-      for (final t in LessonsVocab.topics)
+      for (final t in LessonsNames.topics)
         AcademicCategoryModel(id: t, nameEn: topicLabel(t), nameAr: topicLabel(t), iconName: 'mosque'),
     ];
 

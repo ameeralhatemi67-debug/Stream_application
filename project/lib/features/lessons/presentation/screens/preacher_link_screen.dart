@@ -11,6 +11,7 @@ import '../../data/lessons_repository.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
 import '../../domain/lessons_rules.dart';
+import '../../domain/lessons_names.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../../state/preacher_link_controller.dart';
@@ -279,7 +280,7 @@ Future<void> _showRequestSheet(BuildContext context, PreacherLinkView view) {
                 decoration: tInput(hint: 'lessons.submit.title_ar_hint'.tr()),
               ),
               label('lessons.link.q_topic'.tr()),
-              TChips([for (final t in LessonsVocab.topics) TChip(topicLabel(t), selected: topic == t, onTap: () => set(() => topic = t))]),
+              TChips([for (final t in LessonsNames.topics) TChip(topicLabel(t), selected: topic == t, onTap: () => set(() => topic = t))]),
               label('lessons.link.q_date'.tr()),
               TButton('${weekdayName(date, lang)} ${gregorianLabel(date, lang, year: true)}', large: true, expand: true, icon: TGlyph.calendar,
                   onPressed: () async {
@@ -305,11 +306,11 @@ Future<void> _showRequestSheet(BuildContext context, PreacherLinkView view) {
                 TOptionRow(title: slotLabel(x), leading: slotGlyph(x), selected: slot == x, onTap: () => set(() => slot = x)),
               label('lessons.link.q_language'.tr()),
               TChips([
-                for (final x in LessonsVocab.languages)
-                  TChip(LessonsVocab.languageNative[x]!, selected: language == x, onTap: () => set(() => language = x)),
+                for (final x in LessonsNames.languages)
+                  TChip(languageNativeLabel(x), selected: language == x, onTap: () => set(() => language = x)),
               ]),
               label('lessons.link.q_audience'.tr()),
-              TChips([for (final a in LessonsVocab.audiences) TChip(audienceLabel(a), selected: audience == a, onTap: () => set(() => audience = a))]),
+              TChips([for (final a in LessonsNames.audiences) TChip(audienceLabel(a), selected: audience == a, onTap: () => set(() => audience = a))]),
               label('lessons.link.q_mosque'.tr()),
               Text('lessons.link.q_mosque_note'.tr(), style: tBody(15, color: TC.muted)),
               const SizedBox(height: 10),

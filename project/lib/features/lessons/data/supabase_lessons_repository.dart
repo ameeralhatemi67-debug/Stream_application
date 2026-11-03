@@ -62,8 +62,12 @@ class SupabaseLessonsRepository implements LessonsRepository {
           _db.from('preachers').select(),
           _db.from('lesson_series').select(),
           _db.from('lessons').select().or('lesson_date.gte.$since,status.eq.pending'),
+          _db.from('mosque_cities').select().order('sort'),
+          _db.from('lesson_options').select().order('sort'),
         ]);
         return LessonsCatalog(
+          cities: {for (final r in _rows(results[5])) r['id'] as String: City.fromJson(r)},
+          options: {for (final r in _rows(results[6])) '${r['kind']}:${r['code']}': LessonOption.fromJson(r)},
           districts: {for (final r in _rows(results[0])) r['id'] as String: District.fromJson(r)},
           mosques: {for (final r in _rows(results[1])) r['id'] as String: Mosque.fromJson(r)},
           preachers: {for (final r in _rows(results[2])) r['id'] as String: Preacher.fromJson(r)},
@@ -211,6 +215,23 @@ class SupabaseLessonsRepository implements LessonsRepository {
   @override
   Future<String> addGuestPreacher(String name) async =>
       (await _rpc('lessons_add_guest_preacher', {'p_name': name})) as String;
+
+  @override
+  Future<String> addOption(String kind, String nameAr, String nameEn, {required bool permanent}) async =>
+      (await _rpc('lessons_add_option', {'p_kind': kind, 'p_name_ar': nameAr, 'p_name_en': nameEn, 'p_permanent': permanent})) as String;
+
+  @override
+  Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon}) async =>
+      (await _rpc('lessons_add_city', {'p_name_ar': nameAr, 'p_name_en': nameEn, 'p_lat': lat, 'p_lon': lon})) as String;
+
+  @override
+  Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon}) async =>
+      (await _rpc('lessons_add_district', {'p_city': city, 'p_name_ar': nameAr, 'p_name_en': nameEn, 'p_lat': lat, 'p_lon': lon})) as String;
+
+  @override
+  Future<void> setPlaceLocation(String kind, String id, double lat, double lon) async {
+    await _rpc('lessons_set_place_location', {'p_kind': kind, 'p_id': id, 'p_lat': lat, 'p_lon': lon});
+  }
 
   @override
   Future<int> removePreacher(String preacherId) async =>

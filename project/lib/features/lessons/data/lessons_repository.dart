@@ -64,6 +64,16 @@ abstract class LessonsRepository {
   /// Names a preacher for one lesson only: he is not added to the list.
   Future<String> addGuestPreacher(String name);
 
+  // Admins: places and options
+  /// Adds a topic, language or audience ([kind] topic/language/audience) and
+  /// returns its code. [permanent] false: for the lesson being entered only.
+  Future<String> addOption(String kind, String nameAr, String nameEn, {required bool permanent});
+  Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon});
+  Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon});
+
+  /// Moves a city's or area's map centre ([kind] city/district).
+  Future<void> setPlaceLocation(String kind, String id, double lat, double lon);
+
   /// Removes a preacher with all his lessons and links. Returns how many
   /// lessons went with him.
   Future<int> removePreacher(String preacherId);

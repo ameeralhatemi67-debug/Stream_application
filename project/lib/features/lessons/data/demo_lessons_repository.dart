@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
 import '../domain/lessons_rules.dart';
+import '../domain/lessons_vocab.dart';
 import 'lessons_repository.dart';
 
 /// Who the sample data is being viewed as. admin covers everyone who manages
@@ -74,6 +75,10 @@ class DemoLessonsRepository implements LessonsRepository {
 
   // ---------------------------------------------------------------- state
   final districts = <String, District>{};
+  final cities = <String, City>{};
+
+  /// Keyed `kind:code`.
+  final options = <String, LessonOption>{};
   final mosques = <String, Mosque>{};
   final preachers = <String, Preacher>{};
   final series = <String, LessonSeries>{};
@@ -180,6 +185,35 @@ class DemoLessonsRepository implements LessonsRepository {
 
   // ----------------------------------------------------------------- seed
   void _seed() {
+    for (final (i, c) in [
+      ('khobar', 'الخبر', 'Al Khobar'),
+      ('dhahran', 'الظهران', 'Dhahran'),
+      ('dammam', 'الدمام', 'Dammam'),
+      ('qatif', 'القطيف', 'Qatif'),
+      ('other', 'أخرى', 'Other')
+    ].indexed) {
+      final centre = LessonsVocab.cityCentre[c.$1]!;
+      cities[c.$1] = City(id: c.$1, nameAr: c.$2, nameEn: c.$3, latitude: c.$1 == 'other' ? null : centre.$1, longitude: c.$1 == 'other' ? null : centre.$2, sort: (i + 1) * 10);
+    }
+    void option(String kind, String code, String ar, String en, int sort) =>
+        options['$kind:$code'] = LessonOption(kind: kind, code: code, nameAr: ar, nameEn: en, builtIn: true, sort: sort);
+    for (final (i, o) in [
+      ('aqeedah', 'العقيدة', 'Aqeedah'), ('fiqh', 'الفقه', 'Fiqh'), ('tafsir', 'التفسير', 'Tafsir'), ('hadith', 'الحديث', 'Hadith'),
+      ('seerah', 'السيرة', 'Seerah'), ('family', 'الأسرة والتربية', 'Family'), ('raqaiq', 'الرقائق', 'Reflections'), ('intro', 'التعريف بالإسلام', 'Intro to Islam')
+    ].indexed) {
+      option('topic', o.$1, o.$2, o.$3, (i + 1) * 10);
+    }
+    for (final (i, o) in [
+      ('ar', 'العربية', 'Arabic'), ('en', 'الإنجليزية', 'English'), ('ur', 'الأردية', 'Urdu'), ('tl', 'التغالوغ', 'Tagalog'),
+      ('bn', 'البنغالية', 'Bengali'), ('ml', 'المليالم', 'Malayalam'), ('id', 'الإندونيسية', 'Indonesian')
+    ].indexed) {
+      option('language', o.$1, o.$2, o.$3, (i + 1) * 10);
+    }
+    for (final (i, o) in [
+      ('all', 'الجميع', 'Everyone'), ('men', 'رجال', 'Men'), ('women', 'نساء', 'Women'), ('youth', 'شباب', 'Youth'), ('kids', 'أطفال', 'Children')
+    ].indexed) {
+      option('audience', o.$1, o.$2, o.$3, (i + 1) * 10);
+    }
     void district(String id, String city, String ar, String en, int sort) =>
         districts[id] = District(id: id, city: city, nameAr: ar, nameEn: en, sort: sort);
     district('aqrabiyah', 'khobar', 'العقربية', 'Al-Aqrabiyah', 10);
@@ -461,6 +495,8 @@ class DemoLessonsRepository implements LessonsRepository {
 
   @override
   Future<LessonsCatalog> loadCatalog() async => LessonsCatalog(
+        cities: Map.of(cities),
+        options: Map.of(options),
         districts: Map.of(districts),
         mosques: {for (final m in mosques.values.where((m) => m.verified || _admin)) m.id: m},
         preachers: {
@@ -858,6 +894,63 @@ class DemoLessonsRepository implements LessonsRepository {
     preachers[id] = Preacher(id: id, nameAr: nm, listed: false, oneOff: true);
     _log('addGuest', nm, nm, preacherId: id);
     return id;
+  }
+
+  @override
+  Future<String> addOption(String kind, String nameAr, String nameEn, {required bool permanent}) async {
+    _need(_admin);
+    final ar = nameAr.trim(), en = nameEn.trim();
+    if (!const ['topic', 'language', 'audience'].contains(kind) || ar.length < 2 || ar.length > 60) throw const LessonsException(LessonsFailure.invalid);
+    for (final o in options.values.where((o) => o.kind == kind && o.nameAr == ar)) {
+      if (permanent && !o.permanent) {
+        options['$kind:${o.code}'] = LessonOption(kind: kind, code: o.code, nameAr: o.nameAr, nameEn: o.nameEn, permanent: true, builtIn: o.builtIn, sort: o.sort);
+      }
+      return o.code;
+    }
+    final code = _id('x');
+    final sort = options.values.where((o) => o.kind == kind).fold<int>(0, (a, o) => o.sort > a ? o.sort : a) + 10;
+    options['$kind:$code'] = LessonOption(kind: kind, code: code, nameAr: ar, nameEn: en, permanent: permanent, sort: sort);
+    _log('addOption', ar, en.isEmpty ? ar : en);
+    return code;
+  }
+
+  @override
+  Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon}) async {
+    _need(_admin);
+    final ar = nameAr.trim();
+    if (ar.length < 2 || cities.values.any((c) => c.nameAr == ar)) throw const LessonsException(LessonsFailure.invalid);
+    final id = _id('c');
+    cities[id] = City(id: id, nameAr: ar, nameEn: nameEn.trim(), latitude: lat, longitude: lon, sort: cities.values.where((c) => c.id != 'other').length * 10 + 10);
+    _log('addCity', ar, nameEn.trim().isEmpty ? ar : nameEn.trim());
+    return id;
+  }
+
+  @override
+  Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon}) async {
+    _need(_admin);
+    final ar = nameAr.trim();
+    if (ar.length < 2 || !cities.containsKey(city) || districts.values.any((d) => d.city == city && d.nameAr == ar)) {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
+    final id = _id('d');
+    districts[id] = District(
+        id: id, city: city, nameAr: ar, nameEn: nameEn.trim().isEmpty ? ar : nameEn.trim(), sort: districts.values.where((d) => d.city == city).length * 10 + 10, latitude: lat, longitude: lon);
+    _log('addDistrict', ar, nameEn.trim().isEmpty ? ar : nameEn.trim());
+    return id;
+  }
+
+  @override
+  Future<void> setPlaceLocation(String kind, String id, double lat, double lon) async {
+    _need(_admin);
+    if (kind == 'city' && cities.containsKey(id)) {
+      final c = cities[id]!;
+      cities[id] = City(id: id, nameAr: c.nameAr, nameEn: c.nameEn, latitude: lat, longitude: lon, zoom: c.zoom, sort: c.sort);
+    } else if (kind == 'district' && districts.containsKey(id)) {
+      final d = districts[id]!;
+      districts[id] = District(id: id, city: d.city, nameAr: d.nameAr, nameEn: d.nameEn, sort: d.sort, latitude: lat, longitude: lon);
+    } else {
+      throw const LessonsException(LessonsFailure.invalid);
+    }
   }
 
   @override

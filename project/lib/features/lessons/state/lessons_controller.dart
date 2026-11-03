@@ -8,6 +8,7 @@ import '../data/demo_lessons_repository.dart';
 import '../data/lessons_repository.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
+import '../domain/lessons_names.dart';
 import '../domain/lessons_rules.dart';
 
 /// Lessons's client state: the public catalogue, the signed-in account's own
@@ -108,6 +109,7 @@ class LessonsController extends ChangeNotifier {
     try {
       final r = await Future.wait<Object>([repository.loadCatalog(), repository.loadRoles(), repository.loadMine()]);
       catalog = r[0] as LessonsCatalog;
+      LessonsNames.update(catalog);
       roles = r[1] as LessonsRoles;
       mine = r[2] as LessonsMine;
       admin = roles.admin ? await repository.loadAdmin() : const LessonsAdminData();
@@ -329,6 +331,12 @@ class LessonsController extends ChangeNotifier {
 
   Future<String> upsertPreacher(Map<String, dynamic> p) => _write(() => repository.upsertPreacher(p));
   Future<String> addGuestPreacher(String name) => _write(() => repository.addGuestPreacher(name));
+  Future<String> addOption(String kind, String nameAr, String nameEn, {required bool permanent}) =>
+      _write(() => repository.addOption(kind, nameAr, nameEn, permanent: permanent));
+  Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon}) => _write(() => repository.addCity(nameAr, nameEn, lat: lat, lon: lon));
+  Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon}) =>
+      _write(() => repository.addDistrict(city, nameAr, nameEn, lat: lat, lon: lon));
+  Future<void> setPlaceLocation(String kind, String id, double lat, double lon) => _write(() => repository.setPlaceLocation(kind, id, lat, lon));
   Future<int> removePreacher(String preacherId) => _write(() => repository.removePreacher(preacherId));
   Future<int> importPreachers(List<Map<String, dynamic>> rows) => _write(() => repository.importPreachers(rows));
   Future<String?> revealPhone(String preacherId) => _write(() => repository.revealPhone(preacherId));

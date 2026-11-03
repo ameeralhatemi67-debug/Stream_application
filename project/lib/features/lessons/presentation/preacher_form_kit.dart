@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/presentation/widgets/image_arrange_modal.dart';
-import '../domain/lessons_vocab.dart';
+import '../domain/lessons_names.dart';
 import '../state/lessons_controller.dart';
 import 'lessons_kit.dart';
 import 'lessons_widgets.dart';
@@ -180,7 +180,7 @@ class _CityMosquePickerState extends State<CityMosquePicker> {
           isExpanded: true,
           decoration: tInput(),
           style: text,
-          items: [for (final x in LessonsVocab.cities) DropdownMenuItem(value: x, child: Text(cityLabel(x)))],
+          items: [for (final x in LessonsNames.cityIds) DropdownMenuItem(value: x, child: Text(cityLabel(x)))],
           onChanged: (v) {
             if (v == null || v == city) return;
             setState(() => area = null);

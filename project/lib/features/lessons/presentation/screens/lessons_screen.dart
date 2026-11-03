@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
 import '../../domain/lessons_rules.dart';
+import '../../domain/lessons_names.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
@@ -268,7 +269,7 @@ class _FilterPanel extends StatelessWidget {
         const SizedBox(height: 14),
       ],
       group('lessons.calendar.city'.tr(), [
-        for (final x in LessonsVocab.cities.where((x) => x != 'other'))
+        for (final x in LessonsNames.cityIds.where((x) => x != 'other'))
           TChip(cityLabel(x), small: true, selected: f.city == x,
               onTap: () => onChanged(f.copyWith(city: f.city == x ? null : x, districtId: null, mosqueId: null))),
       ]),
@@ -284,15 +285,15 @@ class _FilterPanel extends StatelessWidget {
           TChip(typeLabel(t), small: true, icon: typeGlyph(t), selected: f.type == t, onTap: () => onChanged(f.copyWith(type: f.type == t ? null : t))),
       ]),
       group('lessons.calendar.language'.tr(), [
-        for (final x in LessonsVocab.languages)
-          TChip(LessonsVocab.languageNative[x]!, small: true, selected: f.language == x, onTap: () => onChanged(f.copyWith(language: f.language == x ? null : x))),
+        for (final x in LessonsNames.languages)
+          TChip(languageNativeLabel(x), small: true, selected: f.language == x, onTap: () => onChanged(f.copyWith(language: f.language == x ? null : x))),
       ]),
       group('lessons.calendar.audience'.tr(), [
-        for (final a in LessonsVocab.audiences)
+        for (final a in LessonsNames.audiences)
           TChip(audienceLabel(a), small: true, selected: f.audience == a, onTap: () => onChanged(f.copyWith(audience: f.audience == a ? null : a))),
       ]),
       group('lessons.calendar.subject'.tr(), [
-        for (final t in LessonsVocab.topics)
+        for (final t in LessonsNames.topics)
           TChip(topicLabel(t), small: true, selected: f.topic == t, onTap: () => onChanged(f.copyWith(topic: f.topic == t ? null : t))),
       ]),
       TToggleRow(label: 'lessons.calendar.women'.tr(), icon: TGlyph.users, value: f.womenOnly, onChanged: (v) => onChanged(f.copyWith(womenOnly: v))),

@@ -16,8 +16,10 @@ import 'package:streamer_app/features/map/services/map_pack_controller.dart';
 import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_dates.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_models.dart';
+import 'package:streamer_app/features/lessons/domain/lessons_names.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_rules.dart';
 import 'package:streamer_app/features/lessons/presentation/admin/lessons_admin_shell.dart';
+import 'package:streamer_app/features/lessons/presentation/admin/place_option_widgets.dart';
 import 'package:streamer_app/features/lessons/presentation/screens/discover_screen.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_in_app.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_map.dart';
@@ -78,6 +80,7 @@ Future<_App> _open(
   bool platformAdmin = false,
   bool? signIn,
 }) async {
+  LessonsNames.reset();
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -177,8 +180,12 @@ Future<String> _pickMosque(WidgetTester tester, _App app, String requestId) asyn
 Future<String> _chooseMosque(WidgetTester tester, _App app, Finder picker, String mosqueId) async {
   final c = app.lessons, lang = app.lang;
   final m = c.mosque(mosqueId)!;
-  await _tap(tester, find.descendant(of: picker, matching: find.byType(DropdownButtonFormField<String>)).last);
-  await tester.tap(find.textContaining('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}').last);
+  final typeahead = find.descendant(of: picker, matching: find.byType(DropdownMenu<String>));
+  final typed = typeahead.evaluate().isNotEmpty;
+  await _tap(tester, typed ? typeahead.last : find.descendant(of: picker, matching: find.byType(DropdownButtonFormField<String>)).last);
+  final entry = find.textContaining('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}');
+  // The typeahead's entries are menu buttons; the page may show the same text elsewhere (a preview).
+  await tester.tap(typed ? find.descendant(of: find.byType(MenuItemButton), matching: entry).last : entry.last);
   await _settle(tester);
   return m.id;
 }
@@ -869,10 +876,149 @@ void main() {
       await _tap(tester, find.text('lessons.next'.tr()));
       final m1 = c.mosque('m1')!;
       final other = c.mosquesIn(c.cityOfMosque('m1'), app.lang, hidden: true).firstWhere((m) => m.districtId != m1.districtId);
-      await _tap(tester, find.text(c.district(m1.districtId)!.name(app.lang)).first);
-      await _tap(tester, find.descendant(of: find.byKey(const ValueKey('add-mosque')), matching: find.byType(DropdownButtonFormField<String>)));
-      expect(find.textContaining(m1.name(app.lang)), findsWidgets);
-      expect(find.textContaining('${other.name(app.lang)} · ${c.district(other.districtId)!.name(app.lang)}'), findsNothing);
+      final area = c.district(m1.districtId)!.name(app.lang);
+      // A few areas are chips; a long list is a dropdown.
+      final areaDropdown = find.byType(DropdownButtonFormField<String?>);
+      if (areaDropdown.evaluate().isNotEmpty) {
+        await _tap(tester, areaDropdown.first);
+        await _tap(tester, find.text(area).last);
+      } else {
+        await _tap(tester, find.text(area).first);
+      }
+      await _tap(tester, find.descendant(of: find.byKey(const ValueKey('add-mosque')), matching: find.byType(DropdownMenu<String>)));
+      final entries = find.descendant(of: find.byType(MenuItemButton), matching: find.byType(Text));
+      expect(find.descendant(of: find.byType(MenuItemButton), matching: find.textContaining(m1.name(app.lang))), findsWidgets);
+      expect(find.descendant(of: find.byType(MenuItemButton), matching: find.textContaining('${other.name(app.lang)} · ${c.district(other.districtId)!.name(app.lang)}')), findsNothing);
+      expect(entries, findsWidgets);
+      await app.close();
+    });
+
+    testWidgets('a topic, language or audience can be added: for one lesson, or kept', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add?preacher=p3', persona: LessonsDemoPersona.admin, size: _web);
+      final plus = find.byTooltip('lessons.add.plus_tip'.tr());
+      Future<String> addOption(int which, String name, {required bool keep}) async {
+        await _tap(tester, plus.at(which));
+        await tester.enterText(find.byKey(const ValueKey('option-name-ar')), name);
+        if (keep) await _tap(tester, find.byKey(const ValueKey('option-keep')));
+        await _tap(tester, find.byKey(const ValueKey('option-save')));
+        return app.repo.options.values.firstWhere((o) => o.nameAr == name).code;
+      }
+
+      final once = await addOption(0, 'علوم الآلة', keep: false);
+      expect(app.repo.options['topic:$once']!.permanent, isFalse);
+      // It is chosen for this lesson but not offered again.
+      expect(LessonsNames.topics, isNot(contains(once)));
+      expect(tester.widget<DropdownButtonFormField<String>>(find.byKey(ValueKey('add-topic-$once-9'))).initialValue, once);
+
+      final kept = await addOption(1, 'الفرنسية', keep: true);
+      expect(app.repo.options['language:$kept']!.permanent, isTrue);
+      expect(LessonsNames.languages, contains(kept));
+      expect(languageLabel(kept), 'الفرنسية');
+      await app.close();
+    });
+
+    testWidgets('a city or an area can be added from the form, and the lesson uses it', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add?preacher=p3', persona: LessonsDemoPersona.admin, size: _phone);
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'درس في حي جديد');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      await _tap(tester, find.byKey(const ValueKey('add-district-plus')));
+      await tester.enterText(find.byKey(const ValueKey('place-name-ar')), 'حي تجريبي');
+      await _tap(tester, find.byKey(const ValueKey('place-save')));
+      final district = app.repo.districts.values.firstWhere((d) => d.nameAr == 'حي تجريبي');
+      expect(district.city, 'khobar');
+
+      await _tap(tester, find.byKey(const ValueKey('add-city-plus')));
+      await tester.enterText(find.byKey(const ValueKey('place-name-ar')), 'الجبيل');
+      await _tap(tester, find.byKey(const ValueKey('place-save')));
+      final city = app.repo.cities.values.firstWhere((c) => c.nameAr == 'الجبيل');
+      expect(LessonsNames.cityIds, contains(city.id));
+      expect(cityLabel(city.id), 'الجبيل');
+      await app.close();
+    });
+
+    testWidgets('areas are chips while they fit on one row, a dropdown when there are many', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add?preacher=p3', persona: LessonsDemoPersona.admin, size: _phone);
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'عنوان كافٍ');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      // Khobar has six areas: too many for one phone row.
+      expect(find.byType(DropdownButtonFormField<String?>), findsOneWidget);
+      final cityDropdown = find.byWidgetPredicate((w) => w is DropdownButtonFormField<String> && (w.key as ValueKey<String>).value.startsWith('add-city-'));
+      if (cityDropdown.evaluate().isNotEmpty) {
+        await _tap(tester, cityDropdown);
+        await _tap(tester, find.text(cityLabel('dhahran')).last);
+      } else {
+        await _tap(tester, find.text(cityLabel('dhahran')));
+      }
+      // Dhahran has two: they stay chips.
+      expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
+      await app.close();
+    });
+
+    testWidgets('the mosque dropdown can be typed into', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add?preacher=p3', persona: LessonsDemoPersona.admin, size: _web);
+      await tester.enterText(find.byKey(const ValueKey('add-title-ar')), 'عنوان كافٍ');
+      await _settle(tester);
+      await _tap(tester, find.text('lessons.next'.tr()));
+      final m1 = app.repo.mosques['m1']!;
+      final typed = m1.name('en').substring(0, 4);
+      final field = find.descendant(of: find.byKey(const ValueKey('add-mosque')), matching: find.byType(TextField));
+      await tester.enterText(field, typed);
+      await _settle(tester);
+      // Picking the entry the typing led to chooses that mosque.
+      final label = '${m1.name('en')} · ${app.lessons.district(m1.districtId)!.name('en')}';
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.textContaining(label)).last);
+      await _settle(tester);
+      expect(tester.widget<TextField>(field).controller!.text, label);
+
+      final entries = [for (final m in app.repo.mosques.values) DropdownMenuEntry<String>(value: m.id, label: m.name('en'))];
+      final found = filterMosqueEntries(entries, typed.toLowerCase());
+      expect(found.map((e) => e.value), contains('m1'));
+      expect(found.length, lessThan(entries.length));
+      expect(filterMosqueEntries(entries, '  '), entries);
+      await app.close();
+    });
+
+    testWidgets('a mosque card with a location opens Google Maps from its corner', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      final bareId = await app.lessons.upsertMosque({'name_ar': 'مسجد بلا موقع', 'district_id': 'aqrabiyah'});
+      await _settle(tester);
+      final pinned = app.repo.mosques.values.where((m) => m.directions != null).first;
+      final bare = app.repo.mosques[bareId]!;
+      final shortcut = find.byKey(ValueKey('mosque-maps-${pinned.id}'));
+      await tester.ensureVisible(shortcut);
+      expect(shortcut, findsOneWidget);
+      expect(find.byKey(ValueKey('mosque-maps-${bare.id}')), findsNothing);
+      await app.close();
+    });
+
+    testWidgets('the Mosques map moves to the chosen city and area and can add and place them', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      await _tap(tester, find.text('lessons.mosques.view_map'.tr()));
+      String view() => tester.widget<Text>(find.byKey(const ValueKey('place-map-view'))).data!;
+      expect(view(), 'map 26.280,50.210 z12');
+
+      await _tap(tester, find.text(cityLabel('dhahran')));
+      expect(view(), 'map 26.290,50.120 z12');
+
+      // An area with a centre: the map zooms to it.
+      final area = app.repo.districts.values.firstWhere((d) => d.city == 'dhahran');
+      await app.lessons.setPlaceLocation('district', area.id, 26.3, 50.15);
+      await _settle(tester);
+      await _tap(tester, find.text(area.name('en')));
+      expect(view(), 'map 26.300,50.150 z15');
+
+      // A new city has no centre yet: the page offers to place it, and a tap does.
+      await _tap(tester, find.byKey(const ValueKey('map-city-plus')));
+      await tester.enterText(find.byKey(const ValueKey('place-name-ar')), 'الجبيل');
+      await _tap(tester, find.byKey(const ValueKey('place-save')));
+      expect(find.byKey(const ValueKey('map-no-location')), findsOneWidget);
+      await _tap(tester, find.byKey(const ValueKey('map-set-location')));
+      await _tap(tester, find.byKey(const ValueKey('place-map')));
+      final jubail = app.repo.cities.values.firstWhere((c) => c.nameAr == 'الجبيل');
+      expect(jubail.hasPin, isTrue);
+      expect(find.byKey(const ValueKey('map-no-location')), findsNothing);
       await app.close();
     });
 

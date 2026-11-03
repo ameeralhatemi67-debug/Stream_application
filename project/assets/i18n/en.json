@@ -2262,6 +2262,7 @@
     "studio_help": "Streaming from a laptop"
   },
   "lessons": {
+    "lang_code": "en",
     "app_name": "Mosque lessons",
     "programme": "Lessons programme",
     "sample_banner": "Sample data. Connect the backend to see the real programme.",
@@ -2992,6 +2993,16 @@
       "f_noemail": "No email"
     },
     "mosques": {
+      "map_body": "Every mosque with a location. Choose a city, then an area, and the map moves to it. Add new cities and areas here too.",
+      "map_set": "Set location",
+      "map_placing": "Tap the map to set the location of \"{}\".",
+      "map_unplaced": "\"{}\" has no location on the map yet.",
+      "map_placed": "Location saved",
+      "map_on_map": "{} on the map",
+      "map_off_map": "{} without a location",
+      "open_maps": "Open in Google Maps",
+      "view_list": "List",
+      "view_map": "Map",
       "add": "Add mosque",
       "merge_into": "Move its lessons to…",
       "merge": "Move and remove",
@@ -3252,6 +3263,15 @@
       "email_keep": "We have your email. Type a new one to change it."
     },
     "add": {
+      "plus_tip": "Add new",
+      "name_needed": "Enter the name first",
+      "option_title": {"topic": "New topic", "language": "New language", "audience": "New audience"},
+      "option_keep": "Keep in the list for later lessons",
+      "option_keep_hint": "Unticked, it is used for this lesson only.",
+      "city_title": "New city",
+      "district_title": "New area",
+      "place_pin": "Location on the map (optional)",
+      "place_pin_hint": "Tap the map to put it.",
       "title": "Add a lesson",
       "preacher_hint": "Any preacher in the list. He does not need an account.",
       "new_preacher": "Add a new preacher",
@@ -3278,6 +3298,7 @@
       "cannot_read": "That picture could not be read. Try another one."
     },
     "place": {
+      "type_mosque": "Type the mosque's name or pick it",
       "city": "City",
       "area": "Area (optional)",
       "mosque": "Mosque",

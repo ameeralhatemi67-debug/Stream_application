@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
+import '../../domain/lessons_names.dart';
 import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
@@ -12,6 +13,7 @@ import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_widgets.dart';
 import 'lessons_admin_shell.dart';
+import 'place_option_widgets.dart';
 
 // ------------------------------------------------------------ add lesson
 /// An admin enters a lesson or a weekly series for a preacher. It is
@@ -122,6 +124,27 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
     Widget label(String text) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(text, style: tBody(13, color: TC.ink2, weight: FontWeight.w700)));
     Widget gap() => const SizedBox(height: 18);
 
+    // A dropdown with a plus that adds one more: kept for later, or for this lesson only.
+    Widget optionField(String kind, String value, List<String> codes, String Function(String) labelOf, void Function(String) set) {
+      final all = [...codes, if (!codes.contains(value)) value];
+      return DropdownWithAdd(
+        onAdd: () async {
+          final code = await showAddOptionSheet(context, kind);
+          if (code != null && mounted) setState(() => set(code));
+        },
+        field: DropdownButtonFormField<String>(
+          key: ValueKey('add-$kind-$value-${all.length}'),
+          initialValue: value,
+          isExpanded: true,
+          decoration: tInput(),
+          items: [for (final x in all) DropdownMenuItem(value: x, child: Text(labelOf(x), overflow: TextOverflow.ellipsis))],
+          onChanged: (v) {
+            if (v != null) setState(() => set(v));
+          },
+        ),
+      );
+    }
+
     final s0 = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (!addingPreacher) ...[
         TField(
@@ -210,19 +233,16 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           child: TextField(controller: titleEn, textDirection: TextDirection.ltr, decoration: tInput())),
       gap(),
       label('lessons.submit.subject'.tr()),
-      TChips([for (final t in LessonsVocab.topics) TChip(topicLabel(t), small: true, selected: topic == t, onTap: () => setState(() => topic = t))]),
+      optionField('topic', topic, LessonsNames.topics, topicLabel, (v) => topic = v),
       gap(),
       label('lessons.submit.language'.tr()),
-      TChips([
-        for (final x in LessonsVocab.languages)
-          TChip(LessonsVocab.languageNative[x]!, small: true, selected: language == x, onTap: () => setState(() {
-                language = x;
-                if (interpretation == x) interpretation = null;
-              })),
-      ]),
+      optionField('language', language, LessonsNames.languages, languageNativeLabel, (v) {
+        language = v;
+        if (interpretation == v) interpretation = null;
+      }),
       gap(),
       label('lessons.submit.audience'.tr()),
-      TChips([for (final a in LessonsVocab.audiences) TChip(audienceLabel(a), small: true, selected: audience == a, onTap: () => setState(() => audience = a))]),
+      optionField('audience', audience, LessonsNames.audiences, audienceLabel, (v) => audience = v),
       gap(),
       TField(
           label: '${'lessons.submit.description'.tr()} (${'lessons.optional'.tr()})',
@@ -239,28 +259,62 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
         final byArea = (areaOrder[a.districtId] ?? 999).compareTo(areaOrder[b.districtId] ?? 999);
         return byArea != 0 ? byArea : a.name(lang).compareTo(b.name(lang));
       });
+    final cityIds = LessonsNames.cityIds.where((x) => x != 'other' || x == city).toList();
+    void pickCity(String id) {
+      city = id;
+      district = null;
+      mosqueId = null;
+      newMosque = null;
+    }
+
+    void pickDistrict(String? id) {
+      district = id;
+      // A mosque outside the chosen area is no longer the choice.
+      if (id != null && mosqueId != null && c.mosque(mosqueId!)?.districtId != id) mosqueId = null;
+    }
+
     final s1 = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      label('lessons.submit.city'.tr()),
-      TSeg<String>(
-        value: city,
-        onChanged: (v) => setState(() {
-          city = v;
-          district = null;
-          mosqueId = null;
-          newMosque = null;
-        }),
-        options: [for (final x in LessonsVocab.cities.where((x) => x != 'other')) TSegOption(x, cityLabel(x))],
+      LabelWithAdd('lessons.submit.city'.tr(), addKey: const ValueKey('add-city-plus'), onAdd: () async {
+        final id = await showAddPlaceSheet(context);
+        if (id != null && mounted) setState(() => pickCity(id));
+      }),
+      FitOrDropdown(
+        labels: [for (final x in cityIds) cityLabel(x)],
+        perItem: 36,
+        fits: () => TSeg<String>(value: city, onChanged: (v) => setState(() => pickCity(v)), options: [for (final x in cityIds) TSegOption(x, cityLabel(x))]),
+        dropdown: () => DropdownButtonFormField<String>(
+          key: ValueKey('add-city-$city-${cityIds.length}'),
+          initialValue: cityIds.contains(city) ? city : null,
+          isExpanded: true,
+          decoration: tInput(),
+          items: [for (final x in cityIds) DropdownMenuItem(value: x, child: Text(cityLabel(x)))],
+          onChanged: (v) {
+            if (v != null) setState(() => pickCity(v));
+          },
+        ),
       ),
       gap(),
-      label('lessons.submit.district'.tr()),
-      TChips([
-        for (final d in districts)
-          TChip(d.name(lang), small: true, selected: district == d.id, onTap: () => setState(() {
-                district = district == d.id ? null : d.id;
-                // A mosque outside the chosen area is no longer the choice.
-                if (district != null && mosqueId != null && c.mosque(mosqueId!)?.districtId != district) mosqueId = null;
-              })),
-      ]),
+      LabelWithAdd('lessons.submit.district'.tr(), addKey: const ValueKey('add-district-plus'), onAdd: () async {
+        final id = await showAddPlaceSheet(context, cityId: city);
+        if (id != null && mounted) setState(() => pickDistrict(id));
+      }),
+      FitOrDropdown(
+        labels: [for (final d in districts) d.name(lang)],
+        fits: () => TChips([
+          for (final d in districts) TChip(d.name(lang), small: true, selected: district == d.id, onTap: () => setState(() => pickDistrict(district == d.id ? null : d.id))),
+        ]),
+        dropdown: () => DropdownButtonFormField<String?>(
+          key: ValueKey('add-district-$city-$district-${districts.length}'),
+          initialValue: districts.any((d) => d.id == district) ? district : null,
+          isExpanded: true,
+          decoration: tInput(),
+          items: [
+            DropdownMenuItem<String?>(value: null, child: Text('lessons.all'.tr())),
+            for (final d in districts) DropdownMenuItem<String?>(value: d.id, child: Text(d.name(lang))),
+          ],
+          onChanged: (v) => setState(() => pickDistrict(v)),
+        ),
+      ),
       gap(),
       if (newMosque == null) ...[
         TField(
@@ -268,25 +322,19 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           label: 'lessons.place.mosque'.tr(),
           required: true,
           hint: cityMosques.isEmpty ? 'lessons.submit.no_mosques'.tr() : null,
-          child: DropdownButtonFormField<String>(
-            key: ValueKey('add-mosque-$city-$district-${cityMosques.length}-$mosqueId'),
-            initialValue: cityMosques.any((m) => m.id == mosqueId) ? mosqueId : null,
-            isExpanded: true,
-            hint: Text('lessons.place.choose'.tr()),
-            decoration: tInput(),
-            items: [
-              for (final m in cityMosques)
-                DropdownMenuItem(value: m.id, child: Text('${m.name(lang)} · ${c.district(m.districtId)?.name(lang) ?? ''}', overflow: TextOverflow.ellipsis)),
-            ],
-            onChanged: cityMosques.isEmpty
-                ? null
-                : (v) => setState(() {
-                      final m = c.mosque(v);
-                      if (m == null) return;
-                      mosqueId = m.id;
-                      district = m.districtId;
-                      women = m.facilities.contains('women');
-                    }),
+          child: MosqueTypeahead(
+            mosques: cityMosques,
+            lang: lang,
+            districtName: (m) => c.district(m.districtId)?.name(lang) ?? '',
+            selected: mosqueId,
+            hint: 'lessons.place.type_mosque'.tr(),
+            onSelected: (id) => setState(() {
+              final m = c.mosque(id);
+              if (m == null) return;
+              mosqueId = m.id;
+              district = m.districtId;
+              women = m.facilities.contains('women');
+            }),
           ),
         ),
         Align(
@@ -503,7 +551,7 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
           decoration: tInput(),
           items: [
             DropdownMenuItem<String?>(value: null, child: Text('lessons.none'.tr())),
-            for (final x in LessonsVocab.languages.where((x) => x != language)) DropdownMenuItem<String?>(value: x, child: Text(languageLabel(x))),
+            for (final x in LessonsNames.languages.where((x) => x != language)) DropdownMenuItem<String?>(value: x, child: Text(languageLabel(x))),
           ],
           onChanged: (v) => setState(() => interpretation = v),
         ),

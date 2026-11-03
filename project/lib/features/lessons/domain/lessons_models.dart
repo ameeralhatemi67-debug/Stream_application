@@ -13,19 +13,78 @@ int _int(Object? v) => (v as num?)?.toInt() ?? 0;
 
 class District {
   const District(
-      {required this.id, required this.city, required this.nameAr, required this.nameEn, this.sort = 0});
+      {required this.id,
+      required this.city,
+      required this.nameAr,
+      required this.nameEn,
+      this.sort = 0,
+      this.latitude,
+      this.longitude});
   final String id, city, nameAr, nameEn;
   final int sort;
+
+  /// Where the admin map moves to when this area is chosen.
+  final double? latitude, longitude;
+  bool get hasPin => latitude != null && longitude != null;
   String name(String lang) => pick(lang, nameAr, nameEn);
 
-  Map<String, dynamic> toJson() =>
-      {'id': id, 'city': city, 'name_ar': nameAr, 'name_en': nameEn, 'sort': sort};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'city': city,
+        'name_ar': nameAr,
+        'name_en': nameEn,
+        'sort': sort,
+        'latitude': latitude,
+        'longitude': longitude,
+      };
 
   factory District.fromJson(Map<String, dynamic> j) => District(
       id: _s(j['id']),
       city: _s(j['city']),
       nameAr: _s(j['name_ar']),
       nameEn: _s(j['name_en']),
+      sort: _int(j['sort']),
+      latitude: _num(j['latitude']),
+      longitude: _num(j['longitude']));
+}
+
+/// A city of the district-then-mosque picker. The four first ones and "other"
+/// are built in; admins add the rest.
+class City {
+  const City({required this.id, required this.nameAr, this.nameEn = '', this.latitude, this.longitude, this.zoom = 12, this.sort = 0});
+  final String id, nameAr, nameEn;
+  final double? latitude, longitude;
+  final int zoom, sort;
+  bool get hasPin => latitude != null && longitude != null;
+  String name(String lang) => pick(lang, nameAr, nameEn);
+
+  factory City.fromJson(Map<String, dynamic> j) => City(
+      id: _s(j['id']),
+      nameAr: _s(j['name_ar']),
+      nameEn: _s(j['name_en']),
+      latitude: _num(j['latitude']),
+      longitude: _num(j['longitude']),
+      zoom: j['zoom'] == null ? 12 : _int(j['zoom']),
+      sort: _int(j['sort']));
+}
+
+/// A topic, language or audience. [permanent] false: named by one lesson only,
+/// not offered again.
+class LessonOption {
+  const LessonOption(
+      {required this.kind, required this.code, required this.nameAr, this.nameEn = '', this.permanent = true, this.builtIn = false, this.sort = 0});
+  final String kind, code, nameAr, nameEn;
+  final bool permanent, builtIn;
+  final int sort;
+  String name(String lang) => pick(lang, nameAr, nameEn);
+
+  factory LessonOption.fromJson(Map<String, dynamic> j) => LessonOption(
+      kind: _s(j['kind']),
+      code: _s(j['code']),
+      nameAr: _s(j['name_ar']),
+      nameEn: _s(j['name_en']),
+      permanent: j['permanent'] as bool? ?? true,
+      builtIn: j['built_in'] as bool? ?? false,
       sort: _int(j['sort']));
 }
 
@@ -1056,12 +1115,18 @@ class PreacherLinkView {
 /// Everything public (and, for admins, every request).
 class LessonsCatalog {
   const LessonsCatalog({
+    this.cities = const {},
+    this.options = const {},
     this.districts = const {},
     this.mosques = const {},
     this.preachers = const {},
     this.series = const {},
     this.lessons = const {},
   });
+  final Map<String, City> cities;
+
+  /// Keyed `kind:code`.
+  final Map<String, LessonOption> options;
   final Map<String, District> districts;
   final Map<String, Mosque> mosques;
   final Map<String, Preacher> preachers;
@@ -1069,6 +1134,8 @@ class LessonsCatalog {
   final Map<String, Lesson> lessons;
 
   LessonsCatalog copyWith({
+    Map<String, City>? cities,
+    Map<String, LessonOption>? options,
     Map<String, District>? districts,
     Map<String, Mosque>? mosques,
     Map<String, Preacher>? preachers,
@@ -1076,6 +1143,8 @@ class LessonsCatalog {
     Map<String, Lesson>? lessons,
   }) =>
       LessonsCatalog(
+          cities: cities ?? this.cities,
+          options: options ?? this.options,
           districts: districts ?? this.districts,
           mosques: mosques ?? this.mosques,
           preachers: preachers ?? this.preachers,

@@ -56,6 +56,9 @@ class LessonsMap extends StatefulWidget {
   @visibleForTesting
   static bool debugPlaceholder = false;
 
+  /// For other lessons maps that stand in for the vector map in widget tests.
+  static bool get placeholderOn => debugPlaceholder;
+
   static bool covers(double lat, double lng) => kTricityNavigationExtent.contains(lat, lng);
 
   @override

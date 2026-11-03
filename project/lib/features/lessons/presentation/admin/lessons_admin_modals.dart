@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
+import '../../domain/lessons_names.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
@@ -440,7 +441,7 @@ Future<String?> showMosqueSheet(BuildContext context, {Mosque? mosque, String? c
                         isExpanded: true,
                         decoration: tInput(),
                         items: [
-                          for (final x in LessonsVocab.cities)
+                          for (final x in LessonsNames.cityIds)
                             if (c.districtsOf(x).isNotEmpty) DropdownMenuItem(value: x, child: Text(cityLabel(x)))
                         ],
                         onChanged: (v) => set(() {

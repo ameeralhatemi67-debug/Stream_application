@@ -1,13 +1,14 @@
 import 'prayer_times.dart';
 import 'lessons_dates.dart';
 import 'lessons_models.dart';
+import 'lessons_names.dart';
 import 'lessons_vocab.dart';
 
 /// Where to compute prayer times for a mosque: its pin, else its city centre.
 (double, double) mosqueCoordinates(Mosque? m, Map<String, District> districts) {
   if (m != null && m.hasPin) return (m.latitude!, m.longitude!);
   final city = districts[m?.districtId]?.city ?? 'khobar';
-  return LessonsVocab.cityCentre[city] ?? LessonsVocab.cityCentre['khobar']!;
+  return LessonsNames.centre(city) ?? LessonsVocab.cityCentre['khobar']!;
 }
 
 String cityOf(Mosque? m, Map<String, District> districts) =>

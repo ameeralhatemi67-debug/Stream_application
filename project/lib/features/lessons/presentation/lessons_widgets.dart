@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../domain/prayer_times.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
+import '../domain/lessons_names.dart';
 import '../domain/lessons_rules.dart';
 import '../domain/lessons_vocab.dart';
 import '../state/lessons_controller.dart';
@@ -18,10 +19,15 @@ import 'lessons_modals.dart';
 String slotLabel(String slot) => 'lessons.slot.$slot'.tr();
 String prayerLabel(String slot) => 'lessons.prayer.$slot'.tr();
 String typeLabel(String t) => 'lessons.type.$t'.tr();
-String topicLabel(String t) => 'lessons.topic.$t'.tr();
-String audienceLabel(String a) => 'lessons.audience.$a'.tr();
-String languageLabel(String l) => 'lessons.language.$l'.tr();
-String cityLabel(String c) => 'lessons.city.$c'.tr();
+/// The language the screen is in, without a BuildContext.
+String _uiLang() => 'lessons.lang_code'.tr();
+String topicLabel(String t) => LessonsNames.customOption('topic', t, _uiLang()) ?? 'lessons.topic.$t'.tr();
+String audienceLabel(String a) => LessonsNames.customOption('audience', a, _uiLang()) ?? 'lessons.audience.$a'.tr();
+String languageLabel(String l) => LessonsNames.customOption('language', l, _uiLang()) ?? 'lessons.language.$l'.tr();
+String cityLabel(String c) => LessonsNames.customCity(c, _uiLang()) ?? 'lessons.city.$c'.tr();
+
+/// A language named in itself (an added one is shown as typed).
+String languageNativeLabel(String l) => LessonsVocab.languageNative[l] ?? LessonsNames.customOption('language', l, 'ar') ?? l;
 String facilityLabel(String f) => 'lessons.facility.$f'.tr();
 String statusLabel(String s) => 'lessons.status.$s'.tr();
 

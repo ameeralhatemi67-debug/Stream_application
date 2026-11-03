@@ -1,12 +1,23 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-11-01
+updated: 2026-11-03
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-024: Admins add their own cities, areas, topics, languages and audiences; the admin map uses public tiles (2026-11-03)
+
+Owner test notes 2026-11-03 on the add-lesson form and the Mosques page.
+
+- **Options are rows, not CHECK lists.** `lesson_options` (kind topic/language/audience, code, names, `permanent`, `built_in`) holds the eight topics, seven languages and five audiences and whatever an admin adds with `lessons_add_option`. `permanent = false` is "for this lesson only": the row exists so the lesson can name it, and the pickers do not offer it again. The CHECK lists on `lessons` became the trigger `private.check_lesson_options` (same error code 23514), so every writer is still checked. Asking again with the same name returns the same option, and ticking "keep" promotes it. Preachers' own `languages` stay on the fixed list.
+- **Cities are rows.** `mosque_cities` (the four plus "other", each with a map centre and zoom) replaced the city CHECK lists on `mosque_districts`, `preachers` and `preacher_applications` with foreign keys. `mosque_districts` gained a map centre (the thirteen from OpenStreetMap). `lessons_add_city`, `lessons_add_district` and `lessons_set_place_location` are admin-only.
+- **The app reads names through `LessonsNames`** (a registry the controller refreshes on every load) because the label functions have no controller. Built-ins keep their translations; an added name is shown as typed, in the screen's language (`lessons.lang_code`). Filters, the preacher link form and the add-lesson form list built-ins plus kept options.
+- **Chips become a dropdown when they stop fitting on one row** (`FitOrDropdown`), for cities and areas. The mosque field is a dropdown that can also be typed into.
+- **The admin Mosques page has a Map view** (`PlaceMap`): choose a city, then an area, and the map moves to it; add a city or area with a tap on the map; place one that has no centre. It draws OpenStreetMap raster tiles, not the offline tri-city pack, because the pack covers only Khobar, Dhahran and Dammam and a city an admin adds has to have a map (ADR-008 still governs the public map). It is an admin tool, a few tiles at a time, with the attribution shown.
+- **A mosque card with a location has a Google Maps shortcut** in its corner (`Mosque.directions`).
 
 ## ADR-023: Every Lessons notice is also a push; one audience for a session (2026-11-01)
 

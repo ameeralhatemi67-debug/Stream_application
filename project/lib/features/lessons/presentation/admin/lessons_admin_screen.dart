@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
+import '../../domain/lessons_names.dart';
 import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
@@ -17,6 +18,7 @@ import '../preacher_form_kit.dart';
 import 'lessons_admin_log.dart';
 import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
+import 'mosques_map.dart';
 import 'preacher_applications.dart';
 
 /// The Preachers & lessons area of the admin page: master admins (and lessons
@@ -585,8 +587,15 @@ class _LessonsListState extends State<_LessonsList> {
 }
 
 // ---------------------------------------------------------------- mosques
-class _Mosques extends StatelessWidget {
+class _Mosques extends StatefulWidget {
   const _Mosques();
+  @override
+  State<_Mosques> createState() => _MosquesState();
+}
+
+class _MosquesState extends State<_Mosques> {
+  bool onMap = false;
+
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController>();
@@ -600,6 +609,11 @@ class _Mosques extends StatelessWidget {
             Row(children: [
               Expanded(child: Text(m.name(lang), style: tStrong(14))),
               if (!m.verified) TTag('lessons.mosques.hidden'.tr(), tone: TTone.slate, icon: TGlyph.lock),
+              // A shortcut to the mosque on Google Maps, at the end of the row
+              // (the left in Arabic, the right in English).
+              if (m.directions != null)
+                TIconButton(TGlyph.map,
+                    key: ValueKey('mosque-maps-${m.id}'), tooltip: 'lessons.mosques.open_maps'.tr(), onPressed: () => openExternal(m.directions!)),
             ]),
             if (m.locationCheck)
               Padding(
@@ -637,13 +651,23 @@ class _Mosques extends StatelessWidget {
         const SizedBox(width: 10),
         TButton('lessons.mosques.add'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.plus, onPressed: () => showMosqueSheet(context)),
       ]),
+      const SizedBox(height: 12),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TSeg<bool>(
+            key: const ValueKey('mosques-view'),
+            value: onMap,
+            onChanged: (v) => setState(() => onMap = v),
+            options: [TSegOption(false, 'lessons.mosques.view_list'.tr(), icon: TGlyph.mosque), TSegOption(true, 'lessons.mosques.view_map'.tr(), icon: TGlyph.map)]),
+      ),
       const SizedBox(height: 14),
+      if (onMap) const MosquesMapView() else ...[
       if (hidden.isNotEmpty) ...[
         TSectionHead('lessons.mosques.hidden_title'.tr(), count: hidden.length),
         TGrid(minWidth: 260, spacing: 10, children: [for (final m in hidden) card(m)]),
         const SizedBox(height: 14),
       ],
-      for (final city in LessonsVocab.cities)
+      for (final city in LessonsNames.cityIds)
         if (all.any((m) => m.verified && c.cityOfMosque(m.id) == city)) ...[
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 8),
@@ -652,6 +676,7 @@ class _Mosques extends StatelessWidget {
           TGrid(minWidth: 260, spacing: 10, children: [for (final m in all.where((m) => m.verified && c.cityOfMosque(m.id) == city)) card(m)]),
           const SizedBox(height: 8),
         ],
+      ],
     ]);
   }
 }

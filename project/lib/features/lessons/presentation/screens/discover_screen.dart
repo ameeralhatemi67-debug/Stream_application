@@ -7,7 +7,7 @@ import '../../../../core/providers/app_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../domain/prayer_times.dart';
 import '../../domain/lessons_dates.dart';
-import '../../domain/lessons_vocab.dart';
+import '../../domain/lessons_names.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
 import '../lessons_in_app.dart';
@@ -31,7 +31,7 @@ class LessonsDiscoverScreen extends StatelessWidget {
     final series = c.approvedSeries;
     final preachers = c.listedPreachers.take(wide ? 8 : 6).toList();
     final langCounts = [
-      for (final x in LessonsVocab.languages.where((x) => x != 'ar'))
+      for (final x in LessonsNames.languages.where((x) => x != 'ar'))
         (x, upcoming.where((l) => l.language == x || l.interpretation == x).length)
     ].where((e) => e.$2 > 0).toList();
     final live = context.select<AppProvider, List<StreamerModel>>((a) => a.streamers.where((s) => s.isCurrentlyLive).take(3).toList());
@@ -110,7 +110,7 @@ class LessonsDiscoverScreen extends StatelessWidget {
 
     final topics = Wrap(spacing: 8, runSpacing: 8, children: [
       TChip('lessons.discover.all_subjects'.tr(), selected: true, small: true, onTap: () => context.go('/lessons/calendar')),
-      for (final t in LessonsVocab.topics) TChip(topicLabel(t), small: true, onTap: () => context.go('/lessons/calendar?topic=$t')),
+      for (final t in LessonsNames.topics) TChip(topicLabel(t), small: true, onTap: () => context.go('/lessons/calendar?topic=$t')),
     ]);
 
     return LessonsTabBody(
@@ -172,7 +172,7 @@ class LessonsDiscoverScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   onTap: () => context.go('/lessons/calendar?lang=$x'),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    Text(LessonsVocab.languageNative[x]!, style: tDisplay(18)),
+                    Text(languageNativeLabel(x), style: tDisplay(18)),
                     Text('${languageLabel(x)} · ${tPlural('lessons', n)}', style: tBody(12.5, color: TC.muted, height: 1.4)),
                   ]),
                 ),
