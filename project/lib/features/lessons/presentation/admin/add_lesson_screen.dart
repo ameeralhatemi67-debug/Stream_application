@@ -11,6 +11,7 @@ import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_widgets.dart';
+import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
 
 // ------------------------------------------------------------ add lesson
@@ -25,7 +26,8 @@ class LessonsAddScreen extends StatefulWidget {
 }
 
 class _LessonsAddScreenState extends State<LessonsAddScreen> {
-  int step = 0;
+  static const _newPreacher = '__new__';
+  int step = 0, _preacherRev = 0;
   bool _seeded = false, busy = false;
   String? preacherId;
   String type = 'lesson', topic = 'aqeedah', language = 'ar', audience = 'all', slot = 'isha';
@@ -115,13 +117,34 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
         required: true,
         hint: 'lessons.add.preacher_hint'.tr(),
         child: DropdownButtonFormField<String>(
-          key: const ValueKey('add-preacher'),
+          // The key follows the choice, so the field shows the preacher that
+          // was just added (or drops «new» when the sheet is dismissed).
+          key: ValueKey('add-preacher-$_preacherRev'),
           initialValue: preacherId,
           isExpanded: true,
           hint: Text('lessons.submit.choose_preacher'.tr()),
           decoration: tInput(),
-          items: [for (final p in preachers) DropdownMenuItem(value: p.id, child: Text(p.name(lang), overflow: TextOverflow.ellipsis))],
-          onChanged: (v) => setState(() => preacherId = v),
+          items: [
+            DropdownMenuItem(
+              key: const ValueKey('add-preacher-new'),
+              value: _newPreacher,
+              child: Row(children: [
+                const TIcon(TGlyph.plus, size: 15, color: TC.bronze),
+                const SizedBox(width: 8),
+                Text('lessons.add.new_preacher'.tr(), style: tBody(15, color: TC.bronze, weight: FontWeight.w700)),
+              ]),
+            ),
+            for (final p in preachers) DropdownMenuItem(value: p.id, child: Text(p.name(lang), overflow: TextOverflow.ellipsis)),
+          ],
+          onChanged: (v) async {
+            if (v != _newPreacher) return setState(() => preacherId = v);
+            final id = await showPreacherEditSheet(context);
+            if (!mounted) return;
+            setState(() {
+              if (id != null) preacherId = id;
+              _preacherRev++;
+            });
+          },
         ),
       ),
       gap(),

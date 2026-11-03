@@ -804,6 +804,23 @@ void main() {
       await app.close();
     });
 
+    testWidgets('the add wizard offers «new» in the preacher list and selects the preacher it adds', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin, size: _web);
+      final before = app.repo.preachers.length;
+      await _tap(tester, find.byType(DropdownButtonFormField<String>).first);
+      await _tap(tester, find.text('lessons.add.new_preacher'.tr()).last);
+      await tester.enterText(find.byKey(const ValueKey('preacher-name-ar')), 'الشيخ سعيد بن عمر');
+      await tester.ensureVisible(find.byKey(const ValueKey('preacher-home-mosque')));
+      await _settle(tester);
+      await _chooseMosque(tester, app, find.byKey(const ValueKey('preacher-home-mosque')), 'm1');
+      await _tap(tester, find.byKey(const ValueKey('preacher-save')));
+      expect(app.repo.preachers.length, before + 1);
+      // The wizard now has him as the chosen preacher.
+      final added = app.repo.preachers.values.firstWhere((p) => p.nameAr == 'الشيخ سعيد بن عمر');
+      expect(tester.widget<DropdownButtonFormField<String>>(find.byType(DropdownButtonFormField<String>).first).initialValue, added.id);
+      await app.close();
+    });
+
     testWidgets('preachers: add one with no account', (tester) async {
       final app = await _open(tester, '/admin/lessons/preachers',
           persona: LessonsDemoPersona.admin, size: _web);

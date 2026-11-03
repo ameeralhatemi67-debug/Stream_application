@@ -3251,6 +3251,7 @@
     "add": {
       "title": "Add a lesson",
       "preacher_hint": "Any preacher in the list. He does not need an account.",
+      "new_preacher": "New",
       "new_mosque": "Add a new mosque",
       "new_mosque_title": "New mosque",
       "new_mosque_note": "It is added to the directory and the map.",
