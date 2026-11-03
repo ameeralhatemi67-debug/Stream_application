@@ -1022,6 +1022,62 @@ void main() {
       await app.close();
     });
 
+    testWidgets('the Lists view renames and deletes what was added, and keeps what is in use', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      final topic = await app.lessons.addOption('topic', 'علوم الآلة', '', permanent: true);
+      final cityId = await app.lessons.addCity('الجبيل', '');
+      final areaId = await app.lessons.addDistrict(cityId, 'حي تجريبي', '');
+      await _tap(tester, find.text('lessons.mosques.view_lists'.tr()));
+
+      // Rename the topic, then the area.
+      await _tap(tester, find.byKey(ValueKey('list-topic-$topic-edit')));
+      await tester.enterText(find.byKey(const ValueKey('edit-name-ar')), 'علوم اللغة');
+      await _tap(tester, find.byKey(const ValueKey('edit-save')));
+      expect(app.repo.options['topic:$topic']!.nameAr, 'علوم اللغة');
+      await _tap(tester, find.byKey(ValueKey('list-district-$areaId-edit')));
+      await tester.enterText(find.byKey(const ValueKey('edit-name-ar')), 'حي الجبيل');
+      await _tap(tester, find.byKey(const ValueKey('edit-save')));
+      expect(app.repo.districts[areaId]!.nameAr, 'حي الجبيل');
+
+      // The built-in ones have no edit or delete.
+      expect(find.byKey(const ValueKey('list-topic-fiqh-edit')), findsNothing);
+      expect(find.byKey(const ValueKey('list-city-khobar-delete')), findsNothing);
+
+      // A city with an area is kept; once the area is gone the city can go.
+      await _tap(tester, find.byKey(ValueKey('list-city-$cityId-delete')));
+      expect(app.repo.cities.containsKey(cityId), isTrue);
+      await _tap(tester, find.byKey(ValueKey('list-district-$areaId-delete')));
+      await _tap(tester, find.byKey(const ValueKey('delete-confirm')));
+      expect(app.repo.districts.containsKey(areaId), isFalse);
+      await _tap(tester, find.byKey(ValueKey('list-city-$cityId-delete')));
+      await _tap(tester, find.byKey(const ValueKey('delete-confirm')));
+      expect(app.repo.cities.containsKey(cityId), isFalse);
+      await _tap(tester, find.byKey(ValueKey('list-topic-$topic-delete')));
+      await _tap(tester, find.byKey(const ValueKey('delete-confirm')));
+      expect(app.repo.options.containsKey('topic:$topic'), isFalse);
+      await app.close();
+    });
+
+    testWidgets('the Mosques page can be searched by typing a name', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      final m1 = app.repo.mosques['m1']!;
+      final other = app.repo.mosques.values.firstWhere((m) => m.id != 'm1' && !m.name('en').contains(m1.name('en').substring(0, 6)));
+      await tester.enterText(find.byKey(const ValueKey('mosques-search')), m1.name('en').substring(0, 6));
+      await _settle(tester);
+      expect(find.byKey(ValueKey('admin-mosque-${m1.id}')), findsOneWidget);
+      expect(find.byKey(ValueKey('admin-mosque-${other.id}')), findsNothing);
+      await app.close();
+    });
+
+    testWidgets('the activity types are a lesson and a talk, with no lecture', (tester) async {
+      final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin, size: _web);
+      expect(find.text('lessons.type.lesson'.tr()), findsWidgets);
+      expect(find.text('lessons.type.talk'.tr()), findsWidgets);
+      expect(find.text('lessons.type.lecture'.tr()), findsNothing);
+      expect('lessons.type.talk'.tr().toLowerCase(), isNot(contains('short')));
+      await app.close();
+    });
+
     testWidgets('preachers: add one with no account', (tester) async {
       final app = await _open(tester, '/admin/lessons/preachers',
           persona: LessonsDemoPersona.admin, size: _web);

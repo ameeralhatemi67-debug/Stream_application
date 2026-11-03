@@ -229,6 +229,36 @@ class SupabaseLessonsRepository implements LessonsRepository {
       (await _rpc('lessons_add_district', {'p_city': city, 'p_name_ar': nameAr, 'p_name_en': nameEn, 'p_lat': lat, 'p_lon': lon})) as String;
 
   @override
+  Future<void> updateOption(String kind, String code, String nameAr, String nameEn, {bool? permanent}) async {
+    await _rpc('lessons_update_option', {'p_kind': kind, 'p_code': code, 'p_name_ar': nameAr, 'p_name_en': nameEn, 'p_permanent': permanent});
+  }
+
+  @override
+  Future<void> deleteOption(String kind, String code) async {
+    await _rpc('lessons_delete_option', {'p_kind': kind, 'p_code': code});
+  }
+
+  @override
+  Future<void> updateCity(String id, String nameAr, String nameEn) async {
+    await _rpc('lessons_update_city', {'p_id': id, 'p_name_ar': nameAr, 'p_name_en': nameEn});
+  }
+
+  @override
+  Future<void> deleteCity(String id) async {
+    await _rpc('lessons_delete_city', {'p_id': id});
+  }
+
+  @override
+  Future<void> updateDistrict(String id, String nameAr, String nameEn) async {
+    await _rpc('lessons_update_district', {'p_id': id, 'p_name_ar': nameAr, 'p_name_en': nameEn});
+  }
+
+  @override
+  Future<void> deleteDistrict(String id) async {
+    await _rpc('lessons_delete_district', {'p_id': id});
+  }
+
+  @override
   Future<void> setPlaceLocation(String kind, String id, double lat, double lon) async {
     await _rpc('lessons_set_place_location', {'p_kind': kind, 'p_id': id, 'p_lat': lat, 'p_lon': lon});
   }

@@ -940,6 +940,63 @@ class DemoLessonsRepository implements LessonsRepository {
   }
 
   @override
+  Future<void> updateOption(String kind, String code, String nameAr, String nameEn, {bool? permanent}) async {
+    _need(_admin);
+    final o = options['$kind:$code'];
+    final ar = nameAr.trim();
+    if (o == null || o.builtIn || ar.length < 2) throw const LessonsException(LessonsFailure.invalid);
+    options['$kind:$code'] = LessonOption(kind: kind, code: code, nameAr: ar, nameEn: nameEn.trim(), permanent: permanent ?? o.permanent, sort: o.sort);
+  }
+
+  @override
+  Future<void> deleteOption(String kind, String code) async {
+    _need(_admin);
+    final o = options['$kind:$code'];
+    if (o == null || o.builtIn) throw const LessonsException(LessonsFailure.invalid);
+    final used = lessons.values.any((l) => switch (kind) {
+          'topic' => l.topic == code,
+          'language' => l.language == code || l.interpretation == code,
+          _ => l.audience == code,
+        });
+    if (used) throw const LessonsException(LessonsFailure.conflict);
+    options.remove('$kind:$code');
+  }
+
+  @override
+  Future<void> updateCity(String id, String nameAr, String nameEn) async {
+    _need(_admin);
+    final c = cities[id];
+    final ar = nameAr.trim();
+    if (c == null || LessonsVocab.cities.contains(id) || ar.length < 2) throw const LessonsException(LessonsFailure.invalid);
+    cities[id] = City(id: id, nameAr: ar, nameEn: nameEn.trim(), latitude: c.latitude, longitude: c.longitude, zoom: c.zoom, sort: c.sort);
+  }
+
+  @override
+  Future<void> deleteCity(String id) async {
+    _need(_admin);
+    if (!cities.containsKey(id) || LessonsVocab.cities.contains(id)) throw const LessonsException(LessonsFailure.invalid);
+    if (districts.values.any((d) => d.city == id) || preachers.values.any((p) => p.city == id)) throw const LessonsException(LessonsFailure.conflict);
+    cities.remove(id);
+  }
+
+  @override
+  Future<void> updateDistrict(String id, String nameAr, String nameEn) async {
+    _need(_admin);
+    final d = districts[id];
+    final ar = nameAr.trim();
+    if (d == null || ar.length < 2) throw const LessonsException(LessonsFailure.invalid);
+    districts[id] = District(id: id, city: d.city, nameAr: ar, nameEn: nameEn.trim().isEmpty ? ar : nameEn.trim(), sort: d.sort, latitude: d.latitude, longitude: d.longitude);
+  }
+
+  @override
+  Future<void> deleteDistrict(String id) async {
+    _need(_admin);
+    if (!districts.containsKey(id)) throw const LessonsException(LessonsFailure.invalid);
+    if (mosques.values.any((m) => m.districtId == id)) throw const LessonsException(LessonsFailure.conflict);
+    districts.remove(id);
+  }
+
+  @override
   Future<void> setPlaceLocation(String kind, String id, double lat, double lon) async {
     _need(_admin);
     if (kind == 'city' && cities.containsKey(id)) {

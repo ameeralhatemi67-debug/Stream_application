@@ -19,6 +19,7 @@ import 'lessons_admin_log.dart';
 import 'lessons_admin_modals.dart';
 import 'lessons_admin_shell.dart';
 import 'mosques_map.dart';
+import 'place_lists.dart';
 import 'preacher_applications.dart';
 
 /// The Preachers & lessons area of the admin page: master admins (and lessons
@@ -594,13 +595,23 @@ class _Mosques extends StatefulWidget {
 }
 
 class _MosquesState extends State<_Mosques> {
-  bool onMap = false;
+  /// list, map or lists (the cities, areas, topics, languages and audiences).
+  String view = 'list';
+  final search = TextEditingController();
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController>();
     final lang = context.lang;
-    final all = c.catalog.mosques.values.toList()..sort((a, b) => a.name(lang).compareTo(b.name(lang)));
+    final q = search.text.trim().toLowerCase();
+    final all = c.catalog.mosques.values.where((m) => q.isEmpty || m.nameAr.toLowerCase().contains(q) || m.nameEn.toLowerCase().contains(q)).toList()
+      ..sort((a, b) => a.name(lang).compareTo(b.name(lang)));
     final hidden = all.where((m) => !m.verified).toList();
     Widget card(Mosque m) => TCard(
           key: ValueKey('admin-mosque-${m.id}'),
@@ -654,14 +665,20 @@ class _MosquesState extends State<_Mosques> {
       const SizedBox(height: 12),
       Align(
         alignment: AlignmentDirectional.centerStart,
-        child: TSeg<bool>(
+        child: TSeg<String>(
             key: const ValueKey('mosques-view'),
-            value: onMap,
-            onChanged: (v) => setState(() => onMap = v),
-            options: [TSegOption(false, 'lessons.mosques.view_list'.tr(), icon: TGlyph.mosque), TSegOption(true, 'lessons.mosques.view_map'.tr(), icon: TGlyph.map)]),
+            value: view,
+            onChanged: (v) => setState(() => view = v),
+            options: [
+              TSegOption('list', 'lessons.mosques.view_list'.tr(), icon: TGlyph.mosque),
+              TSegOption('map', 'lessons.mosques.view_map'.tr(), icon: TGlyph.map),
+              TSegOption('lists', 'lessons.mosques.view_lists'.tr(), icon: TGlyph.edit),
+            ]),
       ),
       const SizedBox(height: 14),
-      if (onMap) const MosquesMapView() else ...[
+      if (view == 'map') const MosquesMapView() else if (view == 'lists') const PlaceLists() else ...[
+        TSearchBox(key: const ValueKey('mosques-search'), hint: 'lessons.mosques.search'.tr(), controller: search, onChanged: (_) => setState(() {})),
+        const SizedBox(height: 14),
       if (hidden.isNotEmpty) ...[
         TSectionHead('lessons.mosques.hidden_title'.tr(), count: hidden.length),
         TGrid(minWidth: 260, spacing: 10, children: [for (final m in hidden) card(m)]),
@@ -758,16 +775,16 @@ class _StatsState extends State<_Stats> {
       for (final pid in held.map((l) => l.preacherId).toSet())
         (
           c.preacher(pid),
-          held.where((l) => l.preacherId == pid && l.type == 'lesson').length,
-          held.where((l) => l.preacherId == pid && l.type == 'lecture').length,
+          // Lectures are no longer offered; an old one counts as a lesson.
+          held.where((l) => l.preacherId == pid && l.type != 'talk').length,
           held.where((l) => l.preacherId == pid && l.type == 'talk').length,
           held.where((l) => l.preacherId == pid).fold<int>(0, (s, l) => s + (reports[l.id]?.attendance ?? 0)),
         )
-    ]..sort((a, b) => (b.$2 + b.$3 + b.$4).compareTo(a.$2 + a.$3 + a.$4));
+    ]..sort((a, b) => (b.$2 + b.$3).compareTo(a.$2 + a.$3));
     final monthLabel = '${gregorianMonthLabel(first, lang)} · ${hijriMonthLabel(first, lang)}';
     final csv = excelSafeCsv([
-      ['lessons.review.h_preacher'.tr(), 'lessons.type.lesson'.tr(), 'lessons.type.lecture'.tr(), 'lessons.type.talk'.tr(), 'lessons.stats.attendance'.tr()],
-      for (final r in preachers) [r.$1?.name(lang) ?? '', r.$2, r.$3, r.$4, r.$5],
+      ['lessons.review.h_preacher'.tr(), 'lessons.type.lesson'.tr(), 'lessons.type.talk'.tr(), 'lessons.stats.attendance'.tr()],
+      for (final r in preachers) [r.$1?.name(lang) ?? '', r.$2, r.$3, r.$4],
     ]);
     Widget bars(String title, Map<String, int> rows, String Function(String) label) {
       final maxV = rows.values.fold<int>(1, math.max);
@@ -840,14 +857,12 @@ class _StatsState extends State<_Stats> {
                         DataCell(Text(r.$1?.name(lang) ?? '', style: tBody(13, color: TC.ink))),
                         DataCell(Text('${r.$2}')),
                         DataCell(Text('${r.$3}')),
-                        DataCell(Text('${r.$4}')),
-                        DataCell(Text(r.$5 == 0 ? '—' : '${r.$5}')),
+                        DataCell(Text(r.$4 == 0 ? '—' : '${r.$4}')),
                       ]),
                     DataRow(color: const WidgetStatePropertyAll(TC.tint), cells: [
                       DataCell(Text('lessons.stats.total'.tr(), style: tStrong(13))),
                       DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$2)}', style: tStrong(13))),
                       DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$3)}', style: tStrong(13))),
-                      DataCell(Text('${preachers.fold<int>(0, (s, r) => s + r.$4)}', style: tStrong(13))),
                       DataCell(Text('$att', style: tStrong(13))),
                     ]),
                   ],

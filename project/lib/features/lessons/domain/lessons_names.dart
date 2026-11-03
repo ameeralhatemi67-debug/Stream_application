@@ -14,6 +14,9 @@ abstract final class LessonsNames {
     if (c.options.isNotEmpty) _options = c.options.values.toList();
   }
 
+  /// Every option (kept or not) of [kind], for the admin's lists.
+  static List<LessonOption> optionsOf(String kind) => _options.where((o) => o.kind == kind).toList()..sort((a, b) => a.sort.compareTo(b.sort));
+
   /// Tests start from the built-in vocabulary.
   static void reset() {
     _cities = const {};

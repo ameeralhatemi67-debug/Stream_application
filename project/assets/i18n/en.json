@@ -2262,6 +2262,7 @@
     "studio_help": "Streaming from a laptop"
   },
   "lessons": {
+    "lists": {"body": "Cities, areas, topics, languages and audiences. Rename or delete what you added. The built-in ones keep their names and stay; an area can be renamed, and deleted when it is empty.", "built_in": "Built in", "one_time": "One lesson only", "edit": "Rename", "add": "Add", "add_area": "Add an area in {}", "cities": "Cities and areas", "city_has_areas": "A city with areas cannot be deleted. Delete its areas first.", "area_has_mosques": "An area with mosques cannot be deleted. Move them to another area first.", "delete_body": "It is deleted for good. Anything a lesson uses stays.", "deleted": "Deleted"},
     "lang_code": "en",
     "app_name": "Mosque lessons",
     "programme": "Lessons programme",
@@ -2323,12 +2324,12 @@
     "type": {
       "lesson": "Lesson",
       "lecture": "Lecture",
-      "talk": "Short talk"
+      "talk": "Talk"
     },
     "type_desc": {
       "lesson": "Regular study of a book or subject",
       "lecture": "A single talk on one subject",
-      "talk": "A short talk after the prayer"
+      "talk": "A talk after the prayer"
     },
     "topic": {
       "aqeedah": "Aqeedah",
@@ -2993,6 +2994,8 @@
       "f_noemail": "No email"
     },
     "mosques": {
+      "view_lists": "Lists",
+      "search": "Type a mosque's name to search",
       "map_body": "Every mosque with a location. Choose a city, then an area, and the map moves to it. Add new cities and areas here too.",
       "map_set": "Set location",
       "map_placing": "Tap the map to set the location of \"{}\".",

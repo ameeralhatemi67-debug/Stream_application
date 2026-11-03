@@ -16,7 +16,7 @@ abstract final class LessonsVocab {
   };
   static const lessonStartsAfterIqama = 10;
 
-  static const types = ['lesson', 'lecture', 'talk'];
+  static const types = ['lesson', 'talk'];
 
   /// How long each type runs, unless an admin set a length.
   static const lengthMinutes = {'lesson': 60, 'lecture': 75, 'talk': 15};

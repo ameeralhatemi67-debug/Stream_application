@@ -71,6 +71,20 @@ abstract class LessonsRepository {
   Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon});
   Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon});
 
+  /// Renames an option an admin added ([permanent] null leaves it as it is).
+  Future<void> updateOption(String kind, String code, String nameAr, String nameEn, {bool? permanent});
+
+  /// Refused while a lesson still uses it.
+  Future<void> deleteOption(String kind, String code);
+  Future<void> updateCity(String id, String nameAr, String nameEn);
+
+  /// Refused while the city still has areas or preachers.
+  Future<void> deleteCity(String id);
+  Future<void> updateDistrict(String id, String nameAr, String nameEn);
+
+  /// Refused while the area still has mosques.
+  Future<void> deleteDistrict(String id);
+
   /// Moves a city's or area's map centre ([kind] city/district).
   Future<void> setPlaceLocation(String kind, String id, double lat, double lon);
 

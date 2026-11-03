@@ -336,6 +336,13 @@ class LessonsController extends ChangeNotifier {
   Future<String> addCity(String nameAr, String nameEn, {double? lat, double? lon}) => _write(() => repository.addCity(nameAr, nameEn, lat: lat, lon: lon));
   Future<String> addDistrict(String city, String nameAr, String nameEn, {double? lat, double? lon}) =>
       _write(() => repository.addDistrict(city, nameAr, nameEn, lat: lat, lon: lon));
+  Future<void> updateOption(String kind, String code, String nameAr, String nameEn, {bool? permanent}) =>
+      _write(() => repository.updateOption(kind, code, nameAr, nameEn, permanent: permanent));
+  Future<void> deleteOption(String kind, String code) => _write(() => repository.deleteOption(kind, code));
+  Future<void> updateCity(String id, String nameAr, String nameEn) => _write(() => repository.updateCity(id, nameAr, nameEn));
+  Future<void> deleteCity(String id) => _write(() => repository.deleteCity(id));
+  Future<void> updateDistrict(String id, String nameAr, String nameEn) => _write(() => repository.updateDistrict(id, nameAr, nameEn));
+  Future<void> deleteDistrict(String id) => _write(() => repository.deleteDistrict(id));
   Future<void> setPlaceLocation(String kind, String id, double lat, double lon) => _write(() => repository.setPlaceLocation(kind, id, lat, lon));
   Future<int> removePreacher(String preacherId) => _write(() => repository.removePreacher(preacherId));
   Future<int> importPreachers(List<Map<String, dynamic>> rows) => _write(() => repository.importPreachers(rows));
