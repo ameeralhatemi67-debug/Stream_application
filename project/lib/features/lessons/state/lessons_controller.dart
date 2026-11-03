@@ -323,6 +323,10 @@ class LessonsController extends ChangeNotifier {
       _write(() => repository.review(ids, decision, reason: reason, mosqueId: mosqueId));
   Future<int> undoReview(List<String> ids) => _write(() => repository.undoReview(ids));
   Future<void> withdraw(String requestId) => _write(() => repository.withdraw(requestId));
+  Future<int> cancelSeries(String seriesId, String reason) => _write(() => repository.cancelSeries(seriesId, reason));
+  Future<int> restoreLesson(String id, {bool wholeSeries = false}) => _write(() => repository.restoreLesson(id, wholeSeries: wholeSeries));
+  Future<void> deleteLesson(String id, {String? reason}) => _write(() => repository.deleteLesson(id, reason: reason));
+  Future<int> deleteSeries(String seriesId, {String? reason}) => _write(() => repository.deleteSeries(seriesId, reason: reason));
   Future<int> cancelLesson(String id, String reason) => _write(() => repository.cancelLesson(id, reason));
   Future<void> editLesson(String id, Map<String, dynamic> patch) => _write(() => repository.editLesson(id, patch));
   Future<void> postReport(String id, int attendance, int women, String issue, String notes) =>

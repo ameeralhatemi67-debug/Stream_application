@@ -2262,6 +2262,8 @@
     "studio_help": "Streaming from a laptop"
   },
   "lessons": {
+    "restore": {"title": "Restore", "note": "The session is back, and whoever was told it was cancelled is told it is back on.", "confirm": "Restore", "done": "{} restored"},
+    "del": {"title": "Delete", "reason": "Reason (sent to whoever expected it)", "reason_needed": "Enter the reason first", "warn": "This is permanent: the session, its report and its reminders go. It is for a mistake or a wrong import. To call a lesson off, use Cancel.", "confirm": "Delete", "scope_series": "The whole series", "done": "Deleted"},
     "lists": {"body": "Cities, areas, topics, languages and audiences. Rename or delete what you added. The built-in ones keep their names and stay; an area can be renamed, and deleted when it is empty.", "built_in": "Built in", "one_time": "One lesson only", "edit": "Rename", "add": "Add", "add_area": "Add an area in {}", "cities": "Cities and areas", "city_has_areas": "A city with areas cannot be deleted. Delete its areas first.", "area_has_mosques": "An area with mosques cannot be deleted. Move them to another area first.", "delete_body": "It is deleted for good. Anything a lesson uses stays.", "deleted": "Deleted"},
     "lang_code": "en",
     "app_name": "Mosque lessons",
@@ -2716,6 +2718,9 @@
       "sent": "Report sent to the coordinators"
     },
     "cxl": {
+      "scope_one": "This session only",
+      "scope_series": "All upcoming sessions of the series ({})",
+      "series_done": "{} sessions of the series cancelled",
       "title": "Cancel this session",
       "message": "Message to attendees",
       "notify": "Everyone with a reminder gets an instant notification. The session stays visible, marked cancelled.",

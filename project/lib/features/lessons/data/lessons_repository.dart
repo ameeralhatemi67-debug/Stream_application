@@ -54,6 +54,19 @@ abstract class LessonsRepository {
   Future<int> undoReview(List<String> requestIds);
   Future<void> withdraw(String requestId);
   Future<int> cancelLesson(String lessonId, String reason);
+
+  /// Cancels every upcoming session of a series; returns how many.
+  Future<int> cancelSeries(String seriesId, String reason);
+
+  /// Puts a cancelled session back (with the series' cancelled upcoming
+  /// sessions when [wholeSeries]); returns how many came back.
+  Future<int> restoreLesson(String lessonId, {bool wholeSeries = false});
+
+  /// Removes a session for good, past or upcoming. A reason is needed for an upcoming one.
+  Future<void> deleteLesson(String lessonId, {String? reason});
+
+  /// Removes a series with all its sessions; returns how many.
+  Future<int> deleteSeries(String seriesId, {String? reason});
   Future<void> editLesson(String lessonId, Map<String, dynamic> patch);
   Future<void> postReport(String lessonId, int attendance, int women, String issue, String notes);
   Future<void> resolveFlag(String flagId);

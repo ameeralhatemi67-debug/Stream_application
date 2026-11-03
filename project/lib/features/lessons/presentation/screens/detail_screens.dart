@@ -132,10 +132,10 @@ class LessonScreen extends StatelessWidget {
               const TIcon(TGlyph.shield, size: 18, color: TC.goldIcon),
               Text(l.status == 'pending' ? 'lessons.lesson.pending_note'.tr() : 'lessons.lesson.admin_note'.tr(),
                   style: tBody(14, color: TC.ink2, weight: FontWeight.w600)),
-              if (l.isPublic && !past) ...[
-                TButton('lessons.lesson.edit'.tr(), small: true, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
-                TButton('lessons.lesson.cancel'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
-              ],
+              if (l.isPublic) TButton('lessons.lesson.edit'.tr(), small: true, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
+              if (l.isPublic && !past) TButton('lessons.lesson.cancel'.tr(), small: true, kind: TBtn.danger, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
+              if (l.isCancelled) TButton('lessons.restore.title'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.check, onPressed: () => showRestoreSheet(context, l)),
+              if (l.isPublic || l.isCancelled) TButton('lessons.del.title'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.trash, onPressed: () => showDeleteLessonSheet(context, l)),
               if (past && l.isPublic && report == null)
                 TButton('lessons.lesson.add_report'.tr(), small: true, kind: TBtn.minted, icon: TGlyph.file, onPressed: () => context.push('/admin/lessons/report/${l.id}')),
               TButton('lessons.admin.manage_preacher'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.user,

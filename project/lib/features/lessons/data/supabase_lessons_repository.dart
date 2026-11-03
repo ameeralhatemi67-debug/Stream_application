@@ -187,6 +187,23 @@ class SupabaseLessonsRepository implements LessonsRepository {
   Future<void> withdraw(String requestId) => _rpc('lessons_withdraw', {'p_request': requestId});
 
   @override
+  Future<int> cancelSeries(String seriesId, String reason) async =>
+      (await _rpc('lessons_cancel_series', {'p_series': seriesId, 'p_reason': reason})) as int;
+
+  @override
+  Future<int> restoreLesson(String lessonId, {bool wholeSeries = false}) async =>
+      (await _rpc('lessons_restore_lesson', {'p_lesson': lessonId, 'p_whole_series': wholeSeries})) as int;
+
+  @override
+  Future<void> deleteLesson(String lessonId, {String? reason}) async {
+    await _rpc('lessons_delete_lesson', {'p_lesson': lessonId, 'p_reason': reason});
+  }
+
+  @override
+  Future<int> deleteSeries(String seriesId, {String? reason}) async =>
+      (await _rpc('lessons_delete_series', {'p_series': seriesId, 'p_reason': reason})) as int;
+
+  @override
   Future<int> cancelLesson(String lessonId, String reason) async =>
       (await _rpc('lessons_cancel_lesson', {'p_lesson': lessonId, 'p_reason': reason})) as int;
 

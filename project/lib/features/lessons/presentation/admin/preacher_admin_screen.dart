@@ -248,6 +248,7 @@ class _LessonsAdminPreacherScreenState extends State<LessonsAdminPreacherScreen>
               extra: Wrap(spacing: 6, runSpacing: 6, children: [
                 TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
                 TButton('lessons.mine.cancel_this'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
+                TButton('lessons.del.title'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.trash, onPressed: () => showDeleteLessonSheet(context, l)),
               ])),
       TSectionHead('lessons.preacher_admin.history'.tr(), count: history.length),
       if (history.isEmpty)

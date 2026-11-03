@@ -796,6 +796,89 @@ class DemoLessonsRepository implements LessonsRepository {
   }
 
   @override
+  Future<int> cancelSeries(String seriesId, String reason) async {
+    _need(_admin);
+    final ids = [for (final l in lessons.values) if (l.seriesId == seriesId && l.status == 'approved' && !l.date.isBefore(_today)) l.id];
+    if (ids.isEmpty || reason.trim().isEmpty) throw const LessonsException(LessonsFailure.invalid);
+    final told = <String>{};
+    for (final id in ids) {
+      final l = lessons[id]!;
+      told.addAll(_audience(l).where((p) => p != currentUserId));
+      lessons[id] = l.copyWith(status: 'cancelled', cancelReason: reason);
+    }
+    final first = lessons[ids.first]!;
+    for (final p in told) {
+      _notify(p, 'alert', 'أُلغيت سلسلة: ${first.titleAr}', 'Series cancelled: ${first.title('en')}', '${ids.length} — $reason', '${ids.length}: $reason', '/lessons/series/$seriesId');
+    }
+    _log('cancelSeries', first.titleAr, first.title('en'), preacherId: first.preacherId, note: '${ids.length} sessions. $reason');
+    return ids.length;
+  }
+
+  @override
+  Future<int> restoreLesson(String lessonId, {bool wholeSeries = false}) async {
+    _need(_admin);
+    final l = lessons[lessonId];
+    if (l == null || l.status != 'cancelled') throw const LessonsException(LessonsFailure.invalid);
+    final ids = [
+      for (final x in lessons.values)
+        if (x.id == lessonId || (wholeSeries && l.seriesId != null && x.seriesId == l.seriesId && x.status == 'cancelled' && !x.date.isBefore(_today))) x.id
+    ];
+    for (final id in ids) {
+      final x = lessons[id]!;
+      lessons[id] = x.copyWith(status: 'approved', clearCancel: true);
+      if (!x.date.isBefore(_today)) {
+        for (final p in _audience(x).where((p) => p != currentUserId)) {
+          _notify(p, 'sparkle', 'عاد موعد: ${x.titleAr}', 'Back on: ${x.title('en')}', isoDate(x.date), isoDate(x.date), '/lessons/lesson/$id');
+        }
+      }
+    }
+    _log('restore', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId);
+    return ids.length;
+  }
+
+  @override
+  Future<void> deleteLesson(String lessonId, {String? reason}) async {
+    _need(_admin);
+    final l = lessons[lessonId];
+    if (l == null) throw const LessonsException(LessonsFailure.invalid);
+    final upcoming = l.status == 'approved' && !l.date.isBefore(_today);
+    if (upcoming && (reason ?? '').trim().isEmpty) throw const LessonsException(LessonsFailure.invalid);
+    if (upcoming) {
+      for (final p in _audience(l).where((p) => p != currentUserId)) {
+        _notify(p, 'alert', 'أُزيل موعد: ${l.titleAr}', 'Removed: ${l.title('en')}', reason!, reason, '/lessons');
+      }
+    }
+    lessons.remove(lessonId);
+    final sid = l.seriesId;
+    if (sid != null) {
+      final rest = lessons.values.where((x) => x.seriesId == sid).toList();
+      if (rest.length <= 1) {
+        for (final x in rest) {
+          lessons[x.id] = x.copyWith(clearSeries: true);
+        }
+        series.remove(sid);
+      }
+    }
+    _log('deleteLesson', '${l.titleAr} — ${isoDate(l.date)}', '${l.title('en')}, ${isoDate(l.date)}', preacherId: l.preacherId, note: (reason ?? '').trim());
+  }
+
+  @override
+  Future<int> deleteSeries(String seriesId, {String? reason}) async {
+    _need(_admin);
+    final s = series[seriesId];
+    if (s == null) throw const LessonsException(LessonsFailure.invalid);
+    final ids = [for (final l in lessons.values) if (l.seriesId == seriesId) l.id];
+    final upcoming = ids.any((id) => lessons[id]!.status == 'approved' && !lessons[id]!.date.isBefore(_today));
+    if (upcoming && (reason ?? '').trim().isEmpty) throw const LessonsException(LessonsFailure.invalid);
+    for (final id in ids) {
+      lessons.remove(id);
+    }
+    series.remove(seriesId);
+    _log('deleteSeries', s.titleAr, s.titleEn.isEmpty ? s.titleAr : s.titleEn, preacherId: s.preacherId, note: '${ids.length} sessions');
+    return ids.length;
+  }
+
+  @override
   Future<void> editLesson(String lessonId, Map<String, dynamic> patch) async {
     _need(_admin);
     final l = lessons[lessonId];

@@ -172,15 +172,33 @@ Future<void> showFlagSheet(BuildContext context, Lesson l) {
 }
 
 // ----------------------------------------------------------------- cancel
+/// This session, or every upcoming session of its series: the two choices a
+/// cancel, restore or delete sheet offers for a session in a series.
+Widget _scopeChips(BuildContext context, Lesson l, bool whole, void Function(bool) set, {required bool cancelled}) {
+  final c = context.read<LessonsController>();
+  final n = c.catalog.lessons.values
+      .where((x) => x.seriesId == l.seriesId && (cancelled ? x.isCancelled : x.isPublic) && !x.date.isBefore(c.today))
+      .length;
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: TChips([
+      TChip('lessons.cxl.scope_one'.tr(), key: const ValueKey('scope-one'), selected: !whole, onTap: () => set(false)),
+      TChip('lessons.cxl.scope_series'.tr(args: ['$n']), key: const ValueKey('scope-series'), selected: whole, onTap: () => set(true)),
+    ]),
+  );
+}
+
 Future<void> showCancelSheet(BuildContext context, Lesson l) {
   final c = context.read<LessonsController>();
   var why = 'travel';
+  var whole = false;
   final msg = TextEditingController();
   return showTModal<void>(context,
       title: 'lessons.cxl.title'.tr(),
       subtitle: '${l.title(context.lang)} — ${gregorianLabel(l.date, context.lang)}',
       body: (ctx) => StatefulBuilder(
             builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (l.seriesId != null) _scopeChips(ctx, l, whole, (v) => set(() => whole = v), cancelled: false),
               TChips([
                 for (final r in LessonsVocab.cancelReasons)
                   TChip('lessons.cancel_reason.$r'.tr(), selected: why == r, onTap: () => set(() => why = r)),
@@ -190,7 +208,6 @@ Future<void> showCancelSheet(BuildContext context, Lesson l) {
                   label: '${'lessons.cxl.message'.tr()} (${'lessons.optional'.tr()})',
                   child: TextField(controller: msg, maxLength: 300, decoration: tInput())),
               TCallout(tone: TTone.info, icon: TGlyph.bell, child: Text('lessons.cxl.notify'.tr())),
-              if (l.seriesId != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text('lessons.cxl.series_note'.tr(), style: tBody(13, color: TC.muted))),
             ]),
           ),
       footer: (ctx) => [
@@ -198,8 +215,82 @@ Future<void> showCancelSheet(BuildContext context, Lesson l) {
             TButton('lessons.cxl.confirm'.tr(), kind: TBtn.danger, icon: TGlyph.x, onPressed: () async {
               Navigator.of(ctx).pop();
               final reason = msg.text.trim().isEmpty ? 'lessons.cancel_reason.$why'.tr() : msg.text.trim();
+              if (whole && l.seriesId != null) {
+                final n = await tRun(context, () => c.cancelSeries(l.seriesId!, reason));
+                if (n != null && context.mounted) tToast(context, 'lessons.cxl.series_done'.tr(args: ['$n']));
+                return;
+              }
               final n = await tRun(context, () => c.cancelLesson(l.id, reason));
               if (n != null && context.mounted) tToast(context, 'lessons.cxl.done'.tr(args: [tPlural('people', n)]));
+            }),
+          ]);
+}
+
+/// Puts a cancelled session back; whoever was told it was cancelled is told it is back.
+Future<void> showRestoreSheet(BuildContext context, Lesson l) {
+  final c = context.read<LessonsController>();
+  var whole = false;
+  return showTModal<void>(context,
+      title: 'lessons.restore.title'.tr(),
+      subtitle: '${l.title(context.lang)} — ${gregorianLabel(l.date, context.lang)}',
+      body: (ctx) => StatefulBuilder(
+            builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (l.seriesId != null) _scopeChips(ctx, l, whole, (v) => set(() => whole = v), cancelled: true),
+              TCallout(tone: TTone.info, icon: TGlyph.bell, child: Text('lessons.restore.note'.tr())),
+            ]),
+          ),
+      footer: (ctx) => [
+            TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
+            TButton('lessons.restore.confirm'.tr(), key: const ValueKey('restore-confirm'), kind: TBtn.minted, icon: TGlyph.check, onPressed: () async {
+              Navigator.of(ctx).pop();
+              final n = await tRun(context, () => c.restoreLesson(l.id, wholeSeries: whole));
+              if (n != null && context.mounted) tToast(context, 'lessons.restore.done'.tr(args: ['$n']));
+            }),
+          ]);
+}
+
+/// Removes a session (or its whole series) for good: for a mistake or a wrong
+/// import. An upcoming one needs a reason, which is sent to whoever expected it.
+Future<void> showDeleteLessonSheet(BuildContext context, Lesson l) {
+  final c = context.read<LessonsController>();
+  var whole = false;
+  final msg = TextEditingController();
+  final upcoming = l.isPublic && !l.date.isBefore(c.today);
+  return showTModal<void>(context,
+      title: 'lessons.del.title'.tr(),
+      subtitle: '${l.title(context.lang)} — ${gregorianLabel(l.date, context.lang)}',
+      body: (ctx) => StatefulBuilder(
+            builder: (ctx, set) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (l.seriesId != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: TChips([
+                    TChip('lessons.cxl.scope_one'.tr(), key: const ValueKey('scope-one'), selected: !whole, onTap: () => set(() => whole = false)),
+                    TChip('lessons.del.scope_series'.tr(), key: const ValueKey('scope-series'), selected: whole, onTap: () => set(() => whole = true)),
+                  ]),
+                ),
+              TField(
+                  label: upcoming ? 'lessons.del.reason'.tr() : '${'lessons.del.reason'.tr()} (${'lessons.optional'.tr()})',
+                  required: upcoming,
+                  child: TextField(key: const ValueKey('delete-reason'), controller: msg, maxLength: 300, decoration: tInput())),
+              TCallout(tone: TTone.warning, icon: TGlyph.alert, child: Text('lessons.del.warn'.tr())),
+            ]),
+          ),
+      footer: (ctx) => [
+            TButton('lessons.cancel'.tr(), kind: TBtn.ghost, onPressed: () => Navigator.of(ctx).pop()),
+            TButton('lessons.del.confirm'.tr(), key: const ValueKey('delete-lesson-confirm'), kind: TBtn.danger, icon: TGlyph.trash, onPressed: () async {
+              final reason = msg.text.trim();
+              if (upcoming && reason.isEmpty) return tToast(ctx, 'lessons.del.reason_needed'.tr(), warn: true);
+              Navigator.of(ctx).pop();
+              final done = await tRun<bool>(context, () async {
+                if (whole && l.seriesId != null) {
+                  await c.deleteSeries(l.seriesId!, reason: reason.isEmpty ? null : reason);
+                } else {
+                  await c.deleteLesson(l.id, reason: reason.isEmpty ? null : reason);
+                }
+                return true;
+              });
+              if (done == true && context.mounted) tToast(context, 'lessons.del.done'.tr());
             }),
           ]);
 }

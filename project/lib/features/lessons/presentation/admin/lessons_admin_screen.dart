@@ -547,10 +547,14 @@ class _LessonsListState extends State<_LessonsList> {
     final cancelled = c.publicLessons.where((l) => l.isCancelled && match(l)).toList()..sort(compareLessons);
     final shown = switch (tab) { 'past' => past, 'cancelled' => cancelled, _ => upcoming };
     Widget actions(Lesson l) => Wrap(spacing: 6, runSpacing: 6, children: [
-          if (l.isPublic && !l.date.isBefore(c.today)) ...[
-            TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
-            TButton('lessons.mine.cancel_this'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
-          ],
+          if (l.isPublic)
+            TButton('lessons.lesson.edit'.tr(), key: ValueKey('lesson-edit-${l.id}'), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showEditLessonSheet(context, l)),
+          if (l.isPublic && !l.date.isBefore(c.today))
+            TButton('lessons.mine.cancel_this'.tr(), key: ValueKey('lesson-cancel-${l.id}'), small: true, kind: TBtn.ghost, icon: TGlyph.x, onPressed: () => showCancelSheet(context, l)),
+          if (l.isCancelled)
+            TButton('lessons.restore.title'.tr(), key: ValueKey('lesson-restore-${l.id}'), small: true, kind: TBtn.minted, icon: TGlyph.check, onPressed: () => showRestoreSheet(context, l)),
+          if (l.isPublic || l.isCancelled)
+            TButton('lessons.del.title'.tr(), key: ValueKey('lesson-delete-${l.id}'), small: true, kind: TBtn.ghost, icon: TGlyph.trash, onPressed: () => showDeleteLessonSheet(context, l)),
           if (l.isPublic && l.date.isBefore(c.today))
             c.admin.reports[l.id] != null
                 ? TTag('lessons.lesson.report_done'.tr(args: ['${c.admin.reports[l.id]!.attendance}']), tone: TTone.success, icon: TGlyph.check)

@@ -1078,6 +1078,54 @@ void main() {
       await app.close();
     });
 
+    testWidgets('a whole series is cancelled at once, then restored', (tester) async {
+      final app = await _open(tester, '/admin/lessons/lessons', persona: LessonsDemoPersona.admin, size: _web);
+      final next = _nextTawhid(app.repo);
+      List<Lesson> upcomingOfSeries() => app.repo.lessons.values.where((l) => l.seriesId == 's1' && !l.date.isBefore(lessonsToday())).toList();
+      final n = upcomingOfSeries().where((l) => l.status == 'approved').length;
+      expect(n, greaterThan(1));
+
+      await _tap(tester, find.byKey(ValueKey('lesson-cancel-${next.id}')));
+      await _tap(tester, find.byKey(const ValueKey('scope-series')));
+      await _tap(tester, find.text('lessons.cxl.confirm'.tr()));
+      expect(upcomingOfSeries().where((l) => l.status == 'cancelled').length, n);
+      expect(upcomingOfSeries().where((l) => l.status == 'approved'), isEmpty);
+
+      // Restore one session, then the rest of the series.
+      await _tap(tester, find.text('lessons.status.cancelled'.tr()));
+      await _tap(tester, find.byKey(ValueKey('lesson-restore-${next.id}')));
+      await _tap(tester, find.byKey(const ValueKey('restore-confirm')));
+      expect(app.repo.lessons[next.id]!.status, 'approved');
+      expect(app.repo.lessons[next.id]!.cancelReason, isNull);
+      final other = upcomingOfSeries().firstWhere((l) => l.status == 'cancelled');
+      await _tap(tester, find.byKey(ValueKey('lesson-restore-${other.id}')));
+      await _tap(tester, find.byKey(const ValueKey('scope-series')));
+      await _tap(tester, find.byKey(const ValueKey('restore-confirm')));
+      expect(upcomingOfSeries().where((l) => l.status == 'approved').length, n);
+      await app.close();
+    });
+
+    testWidgets('a session can be deleted: an upcoming one needs a reason, a past one is edited and deleted freely', (tester) async {
+      final app = await _open(tester, '/admin/lessons/lessons', persona: LessonsDemoPersona.admin, size: _web);
+      final single = app.repo.lessons.values.firstWhere((l) => l.seriesId == null && l.status == 'approved' && !l.date.isBefore(lessonsToday()));
+      await _tap(tester, find.byKey(ValueKey('lesson-delete-${single.id}')));
+      await _tap(tester, find.byKey(const ValueKey('delete-lesson-confirm')));
+      // No reason yet: it stays.
+      expect(app.repo.lessons.containsKey(single.id), isTrue);
+      await tester.enterText(find.byKey(const ValueKey('delete-reason')), 'أُدخل بالخطأ');
+      await _tap(tester, find.byKey(const ValueKey('delete-lesson-confirm')));
+      expect(app.repo.lessons.containsKey(single.id), isFalse);
+
+      // A past session shows Edit and Delete too.
+      await _tap(tester, find.text('lessons.mine.past'.tr()));
+      final past = app.repo.lessons.values.firstWhere((l) => l.status == 'approved' && l.date.isBefore(lessonsToday()) && l.date.isAfter(addDays(lessonsToday(), -60)));
+      expect(find.byKey(ValueKey('lesson-edit-${past.id}')), findsOneWidget);
+      await _tap(tester, find.byKey(ValueKey('lesson-delete-${past.id}')));
+      await _tap(tester, find.byKey(const ValueKey('delete-lesson-confirm')));
+      expect(app.repo.lessons.containsKey(past.id), isFalse);
+      await app.close();
+    });
+
     testWidgets('preachers: add one with no account', (tester) async {
       final app = await _open(tester, '/admin/lessons/preachers',
           persona: LessonsDemoPersona.admin, size: _web);
