@@ -5,7 +5,6 @@
 // fetch anything else.
 
 const MAX_HOPS = 6;
-const MAX_BODY = 1_500_000;
 
 const headers = {
   'cache-control': 'no-store',
@@ -30,8 +29,7 @@ const patterns = [
 ];
 
 function place(text: string): {lat: number; lng: number} | null {
-  // A whole page is rarely valid percent-encoding, so decode only what matters.
-  const t = text.replaceAll('&amp;', '&').replaceAll(/%2C/gi, ',').replaceAll(/%40/g, '@');
+  const t = text.replaceAll(/%2C/gi, ',').replaceAll(/%40/g, '@');
   for (const re of patterns) {
     const m = re.exec(t);
     if (!m) continue;
@@ -58,11 +56,11 @@ async function follow(start: URL): Promise<{url: string; lat?: number; lng?: num
       current = new URL(location, current);
       continue;
     }
-    // A place page with no coordinates in its address: its preview image
-    // names the spot.
-    const body = (await res.text()).slice(0, MAX_BODY);
-    const inBody = place(body);
-    return {url: current.toString(), ...(inBody ?? {})};
+    // No coordinates in the address it ended at. The page itself is not read:
+    // its map view can be Google's default (Zurich), and a wrong pin is worse
+    // than none. The admin is asked to paste the long address instead.
+    await res.body?.cancel();
+    return {url: current.toString()};
   }
   return {url: current.toString()};
 }
