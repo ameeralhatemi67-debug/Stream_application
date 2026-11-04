@@ -141,6 +141,10 @@ abstract class LessonsRepository {
   // Admins: mosques
   Future<String> upsertMosque(Map<String, dynamic> mosque);
 
+  /// Follows a shared Google Maps short link on the server and returns the
+  /// place it holds, or null when it holds none (or cannot be reached).
+  Future<(double, double)?> resolveMapLink(String url);
+
   /// Removes a mosque, or with [mergeInto] moves its sessions to that one.
   Future<void> removeMosque(String mosqueId, {String? mergeInto});
 

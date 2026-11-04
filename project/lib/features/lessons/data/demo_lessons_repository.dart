@@ -1527,6 +1527,10 @@ class DemoLessonsRepository implements LessonsRepository {
   Future<void> withdrawMyRequest(String requestId) async => _withdrawOwn(_myCard(), requestId, byLink: false);
 
   // -------------------------------------------------------------- mosques
+  /// There is no server to follow a short link in the sample data.
+  @override
+  Future<(double, double)?> resolveMapLink(String url) async => null;
+
   @override
   Future<String> upsertMosque(Map<String, dynamic> m) async {
     _need(_admin);

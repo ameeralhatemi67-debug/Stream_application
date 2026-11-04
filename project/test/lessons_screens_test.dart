@@ -1069,6 +1069,44 @@ void main() {
       await app.close();
     });
 
+    testWidgets('a mosque without a location gets it from a pasted Google Maps link', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web, setup: (repo) {
+        final m = repo.mosques['m1']!;
+        repo.mosques['m1'] = Mosque(id: m.id, nameAr: m.nameAr, nameEn: m.nameEn, districtId: m.districtId, facilities: m.facilities);
+      });
+      // The filter lists only the mosques with no location, and the card
+      // offers the shortcut instead of a plain edit.
+      await _tap(tester, find.byKey(const ValueKey('mosques-no-location')));
+      expect(find.byKey(const ValueKey('admin-mosque-m1')), findsOneWidget);
+      await _tap(tester, find.byKey(const ValueKey('mosque-set-location-m1')));
+      expect(find.byKey(const ValueKey('mosque-location-set')), findsNothing);
+
+      // Text that holds no place says so; a long Google address sets the pin.
+      await tester.enterText(find.byKey(const ValueKey('mosque-link')), 'https://example.com/not-a-map');
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('mosque-link-problem')), findsOneWidget);
+      await tester.enterText(
+          find.byKey(const ValueKey('mosque-link')), 'https://www.google.com/maps/place/x/@26.3,50.1,17z/data=!8m2!3d26.291234!4d50.205678');
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('mosque-link-problem')), findsNothing);
+      expect(find.byKey(const ValueKey('mosque-location-set')), findsOneWidget);
+
+      await _tap(tester, find.byKey(const ValueKey('mosque-save')));
+      expect(app.repo.mosques['m1']!.latitude, 26.291234);
+      expect(app.repo.mosques['m1']!.longitude, 50.205678);
+      await app.close();
+    });
+
+    testWidgets('a short link the server cannot read tells the admin what to do instead', (tester) async {
+      final app = await _open(tester, '/admin/lessons/mosques', persona: LessonsDemoPersona.admin, size: _web);
+      await _tap(tester, find.descendant(of: find.byKey(const ValueKey('admin-mosque-m1')), matching: find.text('lessons.lesson.edit'.tr())));
+      await tester.enterText(find.byKey(const ValueKey('mosque-link')), 'https://maps.app.goo.gl/AbC123');
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('mosque-link-problem')), findsOneWidget);
+      expect(find.text('lessons.mosques.link_short_failed'.tr()), findsOneWidget);
+      await app.close();
+    });
+
     testWidgets('the activity types are a lesson and a talk, with no lecture', (tester) async {
       final app = await _open(tester, '/admin/lessons/add', persona: LessonsDemoPersona.admin, size: _web);
       expect(find.text('lessons.type.lesson'.tr()), findsWidgets);

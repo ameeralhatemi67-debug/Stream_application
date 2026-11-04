@@ -369,6 +369,7 @@ class LessonsController extends ChangeNotifier {
   Future<void> revokeKey(String keyId) => _write(() => repository.revokeKey(keyId));
 
   Future<String> upsertMosque(Map<String, dynamic> m) => _write(() => repository.upsertMosque(m));
+  Future<(double, double)?> resolveMapLink(String url) => repository.resolveMapLink(url);
   Future<void> removeMosque(String id, {String? mergeInto}) =>
       _write(() => repository.removeMosque(id, mergeInto: mergeInto));
 }

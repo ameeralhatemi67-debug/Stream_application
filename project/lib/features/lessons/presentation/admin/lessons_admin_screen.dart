@@ -603,6 +603,9 @@ class _MosquesState extends State<_Mosques> {
   String view = 'list';
   final search = TextEditingController();
 
+  /// Only the mosques that have no location yet.
+  bool noLocation = false;
+
   @override
   void dispose() {
     search.dispose();
@@ -614,7 +617,10 @@ class _MosquesState extends State<_Mosques> {
     final c = context.watch<LessonsController>();
     final lang = context.lang;
     final q = search.text.trim().toLowerCase();
-    final all = c.catalog.mosques.values.where((m) => q.isEmpty || m.nameAr.toLowerCase().contains(q) || m.nameEn.toLowerCase().contains(q)).toList()
+    final withoutPin = c.catalog.mosques.values.where((m) => !m.hasPin).length;
+    final all = c.catalog.mosques.values
+        .where((m) => (q.isEmpty || m.nameAr.toLowerCase().contains(q) || m.nameEn.toLowerCase().contains(q)) && (!noLocation || !m.hasPin))
+        .toList()
       ..sort((a, b) => a.name(lang).compareTo(b.name(lang)));
     final hidden = all.where((m) => !m.verified).toList();
     Widget card(Mosque m) => TCard(
@@ -651,7 +657,11 @@ class _MosquesState extends State<_Mosques> {
                 style: tBody(12, color: TC.bronze)),
             const SizedBox(height: 8),
             Wrap(spacing: 6, runSpacing: 6, children: [
-              TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showMosqueSheet(context, mosque: m)),
+              // A mosque with no location gets the shortcut that opens the form at it.
+              m.hasPin
+                  ? TButton('lessons.lesson.edit'.tr(), small: true, kind: TBtn.ghost, icon: TGlyph.edit, onPressed: () => showMosqueSheet(context, mosque: m))
+                  : TButton('lessons.mosques.set_location'.tr(),
+                      key: ValueKey('mosque-set-location-${m.id}'), small: true, kind: TBtn.minted, icon: TGlyph.pin, onPressed: () => showMosqueSheet(context, mosque: m)),
               TButton(m.verified ? 'lessons.mosques.hide'.tr() : 'lessons.mosques.show'.tr(), small: true, kind: TBtn.ghost,
                   icon: m.verified ? TGlyph.lock : TGlyph.eye,
                   onPressed: () => tRun(context, () => c.upsertMosque({'id': m.id, 'verified': !m.verified}),
@@ -682,6 +692,14 @@ class _MosquesState extends State<_Mosques> {
       const SizedBox(height: 14),
       if (view == 'map') const MosquesMapView() else if (view == 'lists') const PlaceLists() else ...[
         TSearchBox(key: const ValueKey('mosques-search'), hint: 'lessons.mosques.search'.tr(), controller: search, onChanged: (_) => setState(() {})),
+        if (withoutPin > 0 || noLocation) ...[
+          const SizedBox(height: 10),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TChip('${'lessons.mosques.no_location'.tr()} · $withoutPin',
+                key: const ValueKey('mosques-no-location'), small: true, icon: TGlyph.pin, selected: noLocation, onTap: () => setState(() => noLocation = !noLocation)),
+          ),
+        ],
         const SizedBox(height: 14),
       if (hidden.isNotEmpty) ...[
         TSectionHead('lessons.mosques.hidden_title'.tr(), count: hidden.length),

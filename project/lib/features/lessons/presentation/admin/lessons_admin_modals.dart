@@ -9,10 +9,10 @@ import '../../domain/lessons_names.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
-import '../lessons_map.dart';
 import '../lessons_modals.dart';
 import '../lessons_widgets.dart';
 import '../preacher_form_kit.dart';
+import 'mosque_location_field.dart';
 
 /// The page a preacher's link opens (no account needed).
 String preacherLinkUrl(String token) => lessonsLink('/preacher/$token');
@@ -476,9 +476,12 @@ Future<String?> showMosqueSheet(BuildContext context, {Mosque? mosque, String? c
                         onTap: () => set(() => fac.contains(f) ? fac.remove(f) : fac.add(f))),
                 ]),
                 const SizedBox(height: 12),
-                Text('lessons.mosques.pin'.tr(), style: tBody(13, color: TC.ink2, weight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                SizedBox(height: 260, child: MosquePinPicker(value: pin, onPick: (p) => set(() => pin = p))),
+                MosqueLocationField(
+                  value: pin,
+                  excludeId: m?.id,
+                  searchText: () => [nameAr.text.trim(), c.district(district)?.name(lang) ?? '', cityLabel(inCity)].where((s) => s.isNotEmpty).join(' '),
+                  onChanged: (p) => set(() => pin = p),
+                ),
               ]);
             },
           ),

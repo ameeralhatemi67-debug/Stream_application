@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/streamer_asset_path.dart';
 import '../domain/lessons_dates.dart';
 import '../domain/lessons_models.dart';
+import '../domain/map_link.dart';
 import 'lessons_repository.dart';
 
 /// Lessons on our Supabase project (migrations 20261022125222, 20261029103349).
@@ -393,6 +394,22 @@ class SupabaseLessonsRepository implements LessonsRepository {
   @override
   Future<void> removeMosque(String mosqueId, {String? mergeInto}) =>
       _rpc('lessons_remove_mosque', {'p_mosque': mosqueId, 'p_merge_into': mergeInto});
+
+  @override
+  Future<(double, double)?> resolveMapLink(String url) async {
+    try {
+      final r = await _db.functions.invoke('resolve-map-link', body: {'url': url});
+      final d = r.data;
+      if (d is! Map) return null;
+      final lat = d['lat'], lng = d['lng'];
+      if (lat is num && lng is num) return (lat.toDouble(), lng.toDouble());
+      final resolved = d['url'];
+      return resolved is String ? MapLink.parse(resolved) : null;
+    } catch (_) {
+      // The admin is told to paste the long address instead.
+      return null;
+    }
+  }
 
   // -------------------------------------------------------- preacher links
   @override

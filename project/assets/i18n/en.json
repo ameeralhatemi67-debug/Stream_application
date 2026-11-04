@@ -3038,7 +3038,17 @@
       "remove": "Remove",
       "remove_title": "Remove this mosque?",
       "remove_body": "No lessons use it. It is removed from the directory and the map.",
-      "removed": "Mosque removed"
+      "removed": "Mosque removed",
+      "location": "Mosque location",
+      "link_hint": "Paste a Google Maps link or coordinates",
+      "find_on_google": "Search on Google Maps",
+      "link_steps": "In Google Maps: open the mosque, tap Share, copy the link and paste it here.",
+      "location_set": "Location set",
+      "location_outside": "Outside the map area, but it will be saved.",
+      "link_unreadable": "No location found in this. Paste the place link from Google Maps or its coordinates, or tap the map.",
+      "link_short_failed": "This short link could not be read. Open it in the browser and copy the long address from the address bar, or tap the map.",
+      "set_location": "Set location",
+      "no_location": "No location"
     },
     "stats": {
       "this_month": "This month",

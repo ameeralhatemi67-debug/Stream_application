@@ -10,9 +10,9 @@ import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
-import '../lessons_map.dart';
 import '../lessons_widgets.dart';
 import 'lessons_admin_shell.dart';
+import 'mosque_location_field.dart';
 import 'place_option_widgets.dart';
 
 // ------------------------------------------------------------ add lesson
@@ -373,15 +373,14 @@ class _LessonsAddScreenState extends State<LessonsAddScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            label('lessons.submit.tap_map'.tr()),
-            SizedBox(
+            MosqueLocationField(
+              value: newPin,
               height: 220,
-              child: MosquePinPicker(
-                  value: newPin,
-                  onPick: (p) => setState(() {
-                        newPin = p;
-                        newMosque = LessonsNewMosque(nameAr: newName.text, districtId: newMosque!.districtId, latitude: p.$1, longitude: p.$2);
-                      })),
+              searchText: () => [newName.text.trim(), c.district(newMosque?.districtId)?.name(lang) ?? ''].where((s) => s.isNotEmpty).join(' '),
+              onChanged: (p) => setState(() {
+                newPin = p;
+                newMosque = LessonsNewMosque(nameAr: newName.text, districtId: newMosque!.districtId, latitude: p.$1, longitude: p.$2);
+              }),
             ),
             const SizedBox(height: 8),
             Text('lessons.add.new_mosque_note'.tr(), style: tBody(13, color: TC.muted)),

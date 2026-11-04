@@ -309,16 +309,45 @@ class _ArchPainter extends CustomPainter {
   bool shouldRepaint(_ArchPainter old) => old.hollow != hollow || old.selected != selected;
 }
 
-/// Tap to place a mosque's pin.
-class MosquePinPicker extends StatelessWidget {
-  const MosquePinPicker({super.key, required this.value, required this.onPick});
+/// Tap to place a mosque's pin. [others] are the mosques already on the map
+/// (small, with their name on hover), so an admin sees what is around. The map
+/// moves to [value] when it changes from outside (a pasted link), not on a tap.
+class MosquePinPicker extends StatefulWidget {
+  const MosquePinPicker({super.key, required this.value, required this.onPick, this.others = const []});
   final (double, double)? value;
   final ValueChanged<(double, double)> onPick;
+  final List<MosquePin> others;
+  @override
+  State<MosquePinPicker> createState() => _MosquePinPickerState();
+}
+
+class _MosquePinPickerState extends State<MosquePinPicker> {
+  final _controller = MapController();
+  bool _ready = false, _fromTap = false;
+
+  @override
+  void didUpdateWidget(MosquePinPicker old) {
+    super.didUpdateWidget(old);
+    final v = widget.value;
+    if (v != null && v != old.value && !_fromTap && _ready) {
+      final zoom = _controller.camera.zoom;
+      _controller.move(LatLng(v.$1, v.$2), zoom < 16 ? 16 : zoom);
+    }
+    _fromTap = false;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final value = widget.value;
     if (LessonsMap.debugPlaceholder) {
       return GestureDetector(
-        onTap: () => onPick((26.29, 50.2)),
+        onTap: () => widget.onPick((26.29, 50.2)),
         child: Container(color: const Color(0xFFF4EBDA), alignment: Alignment.center, child: Text(value == null ? 'lessons.submit.tap_map'.tr() : '✓')),
       );
     }
@@ -326,22 +355,37 @@ class MosquePinPicker extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(TC.r),
       child: FlutterMap(
+        mapController: _controller,
         options: MapOptions(
-          initialCenter: value == null ? kTricityOverviewExtent.center : LatLng(value!.$1, value!.$2),
+          initialCenter: value == null ? kTricityOverviewExtent.center : LatLng(value.$1, value.$2),
           initialZoom: value == null ? 11.2 : 15,
           minZoom: 9,
           maxZoom: kMapMaxZoom,
           backgroundColor: const Color(0xFFF4EBDA),
           cameraConstraint: CameraConstraint.contain(bounds: kTricityNavigationExtent.bounds),
           interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
-          onTap: (_, p) => onPick((double.parse(p.latitude.toStringAsFixed(6)), double.parse(p.longitude.toStringAsFixed(6)))),
+          onMapReady: () => _ready = true,
+          onTap: (_, p) {
+            _fromTap = true;
+            widget.onPick((double.parse(p.latitude.toStringAsFixed(6)), double.parse(p.longitude.toStringAsFixed(6))));
+          },
         ),
         children: [
           TricityBasemapLayer(controller: MapPackController.shared),
+          if (widget.others.isNotEmpty)
+            MarkerLayer(markers: [
+              for (final m in widget.others)
+                Marker(
+                  point: LatLng(m.lat, m.lng),
+                  width: 22,
+                  height: 22,
+                  child: Tooltip(message: m.label, child: const TIcon(TGlyph.mosque, size: 22, color: TC.bronze, stroke: 2)),
+                ),
+            ]),
           if (value != null)
             MarkerLayer(markers: [
               Marker(
-                point: LatLng(value!.$1, value!.$2),
+                point: LatLng(value.$1, value.$2),
                 width: 36,
                 height: 36,
                 child: const TIcon(TGlyph.pin, size: 36, color: TC.live, stroke: 2.2),
