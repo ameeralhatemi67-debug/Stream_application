@@ -8,7 +8,20 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## Web start-up speed, round 1, 2026-11-08 (local; committed, not pushed)
+## Web start-up speed, round 1, 2026-11-08 (deployed to the website)
+
+Deployed 2026-11-08 (master `6c280e5`, Vercel `dpl_9oUHHUiJtfgnhFtgSsBmLuDooW1k`). The live site, re-measured at the same emulated speeds as on 2026-11-07, cold and signed out:
+
+| Network | First screen | Streamer list |
+|---|---|---|
+| Fast Wi-Fi | 2.4 → 2.5 s | 4.2 → 2.8 s |
+| Good 4G | 7.2 → 6.0 s | 9.9 → 6.2 s |
+| Good 4G, phone-speed CPU | 12.2 → 9.8 s | 18.1 → 10.0 s |
+| Slow 4G | 29.5 → 24.9 s | 35.9 → 25.6 s |
+| Slow 3G | 102.5 → 87.0 s | 119.8 → 89.5 s |
+| Slow 4G, repeat visit | 1.5 → 1.3 s | 5.1 → 1.9 s |
+
+Admin requests 29 → 0, start-up download 4,266 → 3,855 KB, requests 72 → 37, no failed requests. The local before/after measurement follows.
 
 The website was slow in the owner's team meeting. The cause was measured on the live site (ADR-025): 4.3 MB before anything appears, a signed-out visit sending 29 refused admin requests before the streamer list, a 2 s "are we online" check that called slow networks degraded, and a splash that held every start for 1.35 s steps (and a signed-in start for a dozen requests in a row).
 

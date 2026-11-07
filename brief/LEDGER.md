@@ -902,7 +902,7 @@ Not checked: the notification on the owner's phone; a real `show_live` through F
 
 Website release, same day: pushed master `c570775..df0224a` (3 commits); a scan of the pushed diff found no key files or key patterns. Vercel production `dpl_HqX42wCZCDWNGBY9yA3qvYGCAHTt` READY in about 135 s; the live page's `hadayah-build` meta reads `df0224a14ff4…-20261101183846`, and `firebase-messaging-sw.js` and `en.json` are the new ones. At 18:38:36 UTC the owner's device row was refreshed with the same token, so that phone's app checked in after the push; the test notice is still unread. This note is committed locally, not pushed (a push would redeploy for a docs change).
 
-## RESUME — 2026-11-08 Web start-up speed, round 1 (local; committed, not pushed)
+## RESUME — 2026-11-08 Web start-up speed, round 1 (deployed to the website)
 
 Owner request 2026-11-07, after the website was slow while they presented it to the team: never again, on any network. Diagnosis first, on the live site (headless Chrome, puppeteer, emulated networks; scripts in that session's scratchpad, not committed): cold first frame 2.4 s Wi-Fi, 7.2 s good 4G, 29.5 s slow 4G, 102 s slow 3G; streamer list 4.5 / 9.9 / 35.9 / 120 s; 9.5 s main-thread freeze at 4x CPU. Then "start round 1". Decisions: ADR-025.
 
@@ -915,3 +915,9 @@ Verification: `flutter analyze` 0. Full suite 1,886 passed, 12 skipped, 0 failed
 Not checked: a signed-in start in a browser (no test account; suite and code reading only), a real repeat visit (Chrome does not cache from the local test certificate, so that row was dropped), Safari and Firefox, the deployed site.
 
 Next: owner decides whether to push master (deploys Vercel). After deploying, re-measure the live site at the same speeds. Round 2: split the app script (live studio, map, lessons, profile, organization), drop Flutter's 80-language tables, map tiles by range request instead of the whole 11.8 MB file, an edge-cached public catalog, a `--wasm` trial, an HTML loading screen with progress, and a deploy-time speed check.
+
+Deployment, same day (owner: "Push and re-measure"): pushed master `d557219..6c280e5` (1 commit); a scan of the pushed diff found no key files or key patterns. Vercel production `dpl_9oUHHUiJtfgnhFtgSsBmLuDooW1k` READY in about 117 s; the live page's `hadayah-build` reads `6c280e5624…-20261107220350`, carries the start-up hints (backend preconnect, `main.dart.js` and the three start-up font families), `FontManifest.json` lists only MaterialIcons, IBM Plex Sans Arabic and Reem Kufi, and the new `streamer_offline_sw.js` is served.
+
+Live re-measurement with the 2026-11-07 method (headless Chrome, emulated networks, cold, signed out; one run each, the phone row the median of three, and the repeat visit with the service worker on): first screen Wi-Fi 2.4 → 2.5 s, good 4G 7.2 → 6.0, phone CPU 12.2 → 9.8, slow 4G 29.5 → 24.9, slow 3G 102.5 → 87.0; streamer list 4.2 → 2.8, 9.9 → 6.2, 18.1 → 10.0, 35.9 → 25.6, 119.8 → 89.5; slow 4G repeat visit 5.1 → 1.9 s. Admin requests 29 → 0; bytes before the first frame 4,266 → 3,855 KB; requests 72 → 37; no failed requests in any run.
+
+Not checked: a signed-in start on the live site, Safari and Firefox, real phones. This note is committed locally, not pushed (a push would redeploy for a docs change).
