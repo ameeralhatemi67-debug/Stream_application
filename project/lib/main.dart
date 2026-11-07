@@ -14,6 +14,7 @@ import 'core/services/notifications/notification_models.dart';
 import 'core/services/reminder_push_service.dart';
 import 'core/services/retired_preferences.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/skin_fonts.dart';
 import 'core/providers/app_provider.dart';
 import 'core/providers/app_update_controller.dart';
 import 'core/routing/app_router.dart';
@@ -55,8 +56,19 @@ Future<void> main() async {
     );
   }
 
-  await ReminderPushService.initializeIfConfigured();
+  if (kIsWeb) {
+    // The web downloads Firebase's scripts for this; the first frame does not
+    // wait for them. Push handlers attach when it finishes.
+    unawaited(ReminderPushService.initializeIfConfigured());
+  } else {
+    // On a phone it is local, and a tapped push that started the app is read
+    // right after the first frame.
+    await ReminderPushService.initializeIfConfigured();
+  }
   final skin = await readAppSkin();
+  // Only the Hedayah skin's own heading font, and only for that skin; gold
+  // returns at once (skin_fonts.dart).
+  await SkinFonts.ensureLoaded(skin);
 
   runApp(
     EasyLocalization(

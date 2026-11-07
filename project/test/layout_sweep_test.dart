@@ -111,7 +111,6 @@ void main() {
     await EasyLocalization.ensureInitialized();
     EasyLocalization.logger.enableLevels = [];
     for (final entry in {
-      'IBM Plex Sans': ['assets/fonts/IBMPlexSans-Variable.ttf'],
       'IBM Plex Sans Arabic': ['assets/fonts/IBMPlexSansArabic-400.ttf', 'assets/fonts/IBMPlexSansArabic-700.ttf'],
       'MaterialIcons': ['fonts/MaterialIcons-Regular.otf'],
     }.entries) {

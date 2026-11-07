@@ -81,7 +81,7 @@ abstract final class AppTheme {
     final ar = languageCode == 'ar';
     TextStyle style(double size, double arabicHeight, {bool bold = false, Color color = textPrimary}) => TextStyle(
       fontFamily: HidayahType.text,
-      fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
+      fontFamilyFallback: const ['IBM Plex Sans Arabic'],
       fontSize: size, height: ar ? arabicHeight : 1.4,
       fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
       letterSpacing: 0, color: color,
@@ -122,7 +122,7 @@ abstract final class AppTheme {
     useMaterial3: true,
     brightness: Brightness.light,
     fontFamily: HidayahType.text,
-    fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
+    fontFamilyFallback: const ['IBM Plex Sans Arabic'],
     textTheme: buildTextTheme(locale.languageCode),
     extensions: const [AppSkinTheme(AppSkin.gold)],
     scaffoldBackgroundColor: AppPalette.ivory, canvasColor: bg, cardColor: surface,
@@ -154,7 +154,7 @@ abstract final class AppTheme {
     // Arabic showed as boxes until it arrived (audit 2026-10-21, section 6).
     snackBarTheme: const SnackBarThemeData(backgroundColor: media, contentTextStyle: TextStyle(
       fontFamily: HidayahType.text,
-      fontFamilyFallback: ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
+      fontFamilyFallback: ['IBM Plex Sans Arabic'],
       color: onMedia)),
     elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(
       foregroundColor: onPrimary, backgroundColor: primary, disabledBackgroundColor: disabled,

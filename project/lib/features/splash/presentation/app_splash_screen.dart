@@ -53,37 +53,58 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     _scheduleNavigation();
   }
 
-  void _scheduleNavigation() {
-    _navigationTimer = Timer(const Duration(milliseconds: 1350), () {
-      if (!mounted) return;
-      final provider = context.read<AppProvider>();
-      if (provider.authHydrating || !provider.localStateRestored) {
-        _scheduleNavigation();
-        return;
-      }
-      // Warm up live polling
-      provider.ensureLivePollingActive();
+  /// Shortest time the splash shows, so a cached start does not flash it.
+  static const _minimumShow = Duration(milliseconds: 300);
+  AppProvider? _provider;
+  bool _navigated = false;
 
-      if (provider.googleUserEmail != null &&
-          provider.googleUserEmail!.isNotEmpty) {
-        // After the web sign-in redirect, back to the page that asked. A new
-        // account meets the role picker first, which then takes the page.
-        context.go(provider.needsRoleSelection
-            ? '/feed'
-            : provider.takeSignInReturn() ?? '/feed');
-      } else if (provider.isReturningGuest) {
-        // A guest who already agreed and chose a name on this device is not
-        // walked through the welcome gate again (audit 2026-10-21, P0-2).
-        context.go(provider.takeSignInReturn() ?? '/feed');
-      } else {
-        context.go('/welcome');
-      }
+  /// Opens the next page as soon as the provider is ready. It used to wait a
+  /// fixed 1.35 s, then another 1.35 s for each check that found sign-in
+  /// still loading (2026-11-07 web speed diagnosis).
+  void _scheduleNavigation() {
+    _navigationTimer = Timer(_minimumShow, () {
+      if (!mounted) return;
+      _provider = context.read<AppProvider>()
+        ..addListener(_onProviderChanged);
+      _navigateIfReady();
     });
+  }
+
+  /// A notification can arrive during a build; navigate on the next turn.
+  void _onProviderChanged() {
+    _navigationTimer?.cancel();
+    _navigationTimer = Timer(Duration.zero, _navigateIfReady);
+  }
+
+  void _navigateIfReady() {
+    final provider = _provider;
+    if (!mounted || _navigated || provider == null) return;
+    if (provider.authHydrating || !provider.localStateRestored) return;
+    _navigated = true;
+    provider.removeListener(_onProviderChanged);
+    // Warm up live polling
+    provider.ensureLivePollingActive();
+
+    if (provider.googleUserEmail != null &&
+        provider.googleUserEmail!.isNotEmpty) {
+      // After the web sign-in redirect, back to the page that asked. A new
+      // account meets the role picker first, which then takes the page.
+      context.go(provider.needsRoleSelection
+          ? '/feed'
+          : provider.takeSignInReturn() ?? '/feed');
+    } else if (provider.isReturningGuest) {
+      // A guest who already agreed and chose a name on this device is not
+      // walked through the welcome gate again (audit 2026-10-21, P0-2).
+      context.go(provider.takeSignInReturn() ?? '/feed');
+    } else {
+      context.go('/welcome');
+    }
   }
 
   @override
   void dispose() {
     _navigationTimer?.cancel();
+    _provider?.removeListener(_onProviderChanged);
     _logoPulseController.dispose();
     super.dispose();
   }

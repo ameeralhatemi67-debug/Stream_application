@@ -18,7 +18,18 @@ class ReminderPushService {
   String? _token;
   String _language = 'en';
 
-  static Future<void> initializeIfConfigured() async {
+  static Future<void>? _initialization;
+
+  /// Starts Firebase once; later calls share the same start.
+  ///
+  /// The web does not wait for it before the first frame: there it downloads
+  /// two Firebase scripts from gstatic, one after the other, which held every
+  /// start by two round trips (2026-11-07 diagnosis). [attach] and [sync]
+  /// wait for a start that is still running.
+  static Future<void> initializeIfConfigured() =>
+      _initialization ??= _initialize();
+
+  static Future<void> _initialize() async {
     if (!ReminderFirebaseConfig.configured) return;
     try {
       if (Firebase.apps.isEmpty) {
@@ -29,13 +40,24 @@ class ReminderPushService {
     }
   }
 
+  /// A start that is still running, or a finished future.
+  static Future<void> _settled() => _initialization ?? Future<void>.value();
+
   bool get ready =>
       ReminderFirebaseConfig.configured && Firebase.apps.isNotEmpty;
 
   void attach(
       {required void Function(Map<String, dynamic>) onMessage,
       required void Function(Map<String, dynamic>) onOpen}) {
-    if (!ready) return;
+    if (!ready) {
+      final pending = _initialization;
+      if (pending != null && ReminderFirebaseConfig.configured) {
+        unawaited(pending.then((_) {
+          if (ready) attach(onMessage: onMessage, onOpen: onOpen);
+        }));
+      }
+      return;
+    }
     _messageSubscription ??= FirebaseMessaging.onMessage
         .listen((message) => onMessage(message.data));
     _openedSubscription ??= FirebaseMessaging.onMessageOpenedApp
@@ -64,6 +86,7 @@ class ReminderPushService {
   Future<ReminderPushStatus> sync(
       {required bool requestPermission, required String language}) async {
     _language = language == 'ar' ? 'ar' : 'en';
+    await _settled();
     if (!ready) return ReminderPushStatus.unavailable;
     final accountId = _schedules.client.auth.currentUser?.id;
     if (accountId == null) return ReminderPushStatus.unavailable;
@@ -87,6 +110,7 @@ class ReminderPushService {
   }
 
   Future<void> signOut() async {
+    await _settled();
     if (!ready) return;
     final token = _token;
     if (token != null) {

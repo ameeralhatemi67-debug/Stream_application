@@ -1,12 +1,25 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-11-03
+updated: 2026-11-08
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-025: Web start-up waits only for what the first screen needs (2026-11-08)
+
+Owner request 2026-11-07, after the website was slow during a team meeting: it must not happen again on any network. Measured on the live site with emulated networks: first frame 2.4 s on Wi-Fi, 7.2 s on good 4G, 29.5 s on slow 4G, 102 s on slow 3G; the streamer list 4.5, 9.9, 35.9 and 120 s. Round 1 of the fixes (brief/LEDGER.md, 2026-11-08):
+
+- **No admin reads for a visitor.** `AdminDatabaseService.create()` read five admin tables one after another, and the public catalog waited for it; four start-up loads each built their own copy, so a signed-out visit sent 29 refused requests. With Supabase, `create()` now reads nothing (the on-device fallback still warms its caches), `AppProvider._ensureAdminDb()` shares one copy, and a signed-out `refreshAdminData` reads only the published terms.
+- **The splash holds a signed-in user only for what routing needs.** Admin role, org ownership, a ban and the user's own application are read together; the library, reminders and push, and an admin's queues load after the splash (`_loadSessionExtras`). The device-session check stays in the hold. The splash itself opens the next page when the provider is ready, after 300 ms at least, instead of in steps of 1.35 s.
+- **A slow network is not "offline".** The backend probe waits 10 s, not 2 s, before it reports "degraded" (which hides LIVE and pauses loads, by design). Catalog reads wait 20 s, not 5 s. Hysteresis and loading while degraded were left out: the degraded behaviour is tested product behaviour, and the false trigger was the short timeout.
+- **Start-up fonts are the gold design's only.** IBM Plex Sans is gone: IBM Plex Sans Arabic has every English letter, and Plex Sans only added Cyrillic, Greek and Vietnamese (287 KB on every start). Readex Pro is an asset loaded with the Hedayah skin (`SkinFonts`), since every `fonts:` entry downloads before the first web frame; a saved Hedayah choice still loads it before the first frame.
+- **Firebase does not hold the web's first frame**; push handlers attach when it has started. On a phone it is still awaited, because a tapped push that started the app is read right after the first frame.
+- **The page asks for its files early.** `web/index.html` preconnects to gstatic and fonts.gstatic.com and preloads the translation file for the saved language; `tool/stamp_offline_build.mjs` adds the backend preconnect and preloads `main.dart.js`, `FontManifest.json` and every start-up font, read from the build's own FontManifest.
+- **The offline worker only cuts a slow request off when a saved copy can answer instead.** Without one, the 4 s limit turned slow page loads into browser error pages.
+- **Not done yet (round 2):** splitting the app script, Flutter's 80-language tables, map tiles read by range instead of the whole 11.8 MB file, an edge-cached public catalog, a `--wasm` trial, an HTML loading screen with progress, and a deploy-time speed check.
 
 ## ADR-024: Admins add their own cities, areas, topics, languages and audiences; the admin map uses public tiles (2026-11-03)
 

@@ -145,7 +145,6 @@ void main() {
     for (final pair in [
       ('IBM Plex Sans Arabic', 'assets/fonts/IBMPlexSansArabic-400.ttf'),
       ('IBM Plex Sans Arabic', 'assets/fonts/IBMPlexSansArabic-700.ttf'),
-      ('IBM Plex Sans', 'assets/fonts/IBMPlexSans-Variable.ttf'),
       ('Reem Kufi', 'assets/fonts/ReemKufi-Variable.ttf'),
     ]) {
       await (FontLoader(pair.$1)..addFont(rootBundle.load(pair.$2))).load();

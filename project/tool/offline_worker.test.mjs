@@ -151,8 +151,20 @@ await fetchPage(`${origin}/`, 'unstamped-debug-tab', true);
 networkMode = 'slow';
 assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'unstamped-debug-tab')).text(),
   'code-null', 'unstamped debug entrypoint survives a response slower than the offline timeout');
+// 2026-11-07: with no saved copy to fall back on, a slow network is waited for
+// (the time limit only turned slow loads into browser error pages).
+await (await storage.open(metaName)).delete(`${origin}/__hadayah_offline_active__.json`);
+fetchPage = worker();
+networkMode = 'slow'; networkBuild = 'build-slow';
+assert.equal(await (await fetchPage(`${origin}/`, 'slow-tab', true)).text(), html('build-slow'),
+  'a slow page load without a saved copy is not cut off');
+assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'slow-tab')).text(), 'code-build-slow',
+  'a slow app file without a saved copy is not cut off');
+networkMode = 'offline';
+await assert.rejects(fetchPage(`${origin}/main.dart.js`, 'slow-tab'), /offline/,
+  'with nothing saved, a real failure still fails');
 // WEB-01: the timeout bounds time-to-headers only; bodies stream through untouched.
 assert.ok(!source.slice(source.indexOf('async function boundedFetch'),
     source.indexOf('async function storedResponse')).includes('arrayBuffer'),
   'boundedFetch must not buffer (and so cannot time out) large response bodies');
-console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion, DDC bypass, slow unstamped startup');
+console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion, DDC bypass, slow unstamped startup, slow network without a saved copy');

@@ -18,7 +18,11 @@ class ConnectivityService {
     Future<bool> Function(Uri)? probe,
     Uri? endpoint,
     this.debounce = const Duration(milliseconds: 400),
-    this.probeTimeout = const Duration(seconds: 2),
+    // Ten seconds, not two: on slow mobile data or a crowded Wi-Fi a healthy
+    // backend often takes longer than 2 s to answer, and a timed-out probe
+    // reports "degraded", which hides LIVE badges and pauses catalog loads
+    // (2026-11-07 diagnosis: probes cut off on slow 3G).
+    this.probeTimeout = const Duration(seconds: 10),
     this.pollInterval = const Duration(seconds: 15),
     Timer Function(Duration, void Function())? createTimer,
   })  : _checkConnectivity = checkConnectivity ??

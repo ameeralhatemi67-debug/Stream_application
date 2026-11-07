@@ -93,8 +93,12 @@ self.addEventListener('fetch', (event) => {
   if (/\.dart\.lib\.js(?:\.map)?$|\/(?:dart_sdk|ddc_module_loader|main_module\.bootstrap|stack_trace_mapper)\.js$/.test(url.pathname)) return;
   const result = (async () => {
     if (request.mode === 'navigate') {
+      // The time limit exists to fall back to a saved copy. With none saved
+      // it only turned a slow connection into a browser error page, so the
+      // page then waits for the network like any site (2026-11-07).
+      const saved = (await record(absolute(ACTIVE)))?.cacheName;
       try {
-        const response = await boundedFetch(request);
+        const response = await (saved ? boundedFetch(request) : fetch(request));
         if (!response.ok) throw new Error('navigation unavailable');
         const html = await response.clone().text();
         const buildId = html.match(/<meta name="hadayah-build" content="([a-zA-Z0-9._-]+)">/)?.[1];
@@ -129,8 +133,10 @@ self.addEventListener('fetch', (event) => {
     }
     const stored = await storedResponse(page, request, false);
     if (stored) return stored;
-    // An unprepared update must fail visibly rather than mix app builds.
-    return boundedFetch(request);
+    // An unprepared update must fail visibly rather than mix app builds: it
+    // never answers from another build's copy. Nothing saved can answer, so
+    // no time limit either; one cut slow requests off (2026-11-07).
+    return fetch(request);
   })();
   event.respondWith(result);
 });

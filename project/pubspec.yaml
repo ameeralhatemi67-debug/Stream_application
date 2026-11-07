@@ -117,13 +117,21 @@ flutter:
     - assets/hedayah/wordmark.png
     - assets/images/hadayah_association_logo.png
 
+    # Hedayah skin headings, standing in for the website's Hacen Maghreb as
+    # the identity book does (SIL OFL, assets/fonts/OFL-Readex-Pro.txt). An
+    # asset, not a font: the web downloads every `fonts:` entry before the
+    # first frame, and only the Hedayah skin uses it, so it is loaded when
+    # that skin is chosen (lib/core/theme/skin_fonts.dart).
+    - assets/fonts/ReadexPro-Variable.ttf
+
   fonts:
     # Variable fonts are listed once: the engine downloads and registers every
     # entry and ignores the weight field, so a second entry for the same file
     # was a second download of it on the web (audit 2026-10-21, P0-5).
-    - family: IBM Plex Sans
-      fonts:
-        - asset: assets/fonts/IBMPlexSans-Variable.ttf
+    # Every entry here is downloaded before the web app's first frame. IBM
+    # Plex Sans was dropped on 2026-11-07: IBM Plex Sans Arabic already has
+    # every English letter, and Plex Sans only added Cyrillic, Greek and
+    # Vietnamese (287 KB on every start).
     - family: IBM Plex Sans Arabic
       fonts:
         - asset: assets/fonts/IBMPlexSansArabic-400.ttf
@@ -133,11 +141,6 @@ flutter:
     - family: Reem Kufi
       fonts:
         - asset: assets/fonts/ReemKufi-Variable.ttf
-    # Hedayah skin headings, standing in for the website's Hacen Maghreb as
-    # the identity book does (SIL OFL, assets/fonts/OFL-Readex-Pro.txt).
-    - family: Readex Pro
-      fonts:
-        - asset: assets/fonts/ReadexPro-Variable.ttf
 
 
 # Launcher, adaptive and web icons, built by `dart run flutter_launcher_icons`

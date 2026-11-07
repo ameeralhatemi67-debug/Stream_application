@@ -42,7 +42,7 @@ void main() {
       expect(theme.textTheme.bodyLarge!.height, lang == 'ar' ? 1.8 : 1.4);
       expect(theme.textTheme.titleLarge!.height, lang == 'ar' ? 1.6 : 1.4);
     }
-    for (final name in ['IBMPlexSans-Variable.ttf', 'IBMPlexSansArabic-400.ttf', 'IBMPlexSansArabic-700.ttf']) {
+    for (final name in ['IBMPlexSansArabic-400.ttf', 'IBMPlexSansArabic-700.ttf']) {
       expect(File('assets/fonts/$name').lengthSync(), greaterThan(200000));
     }
   });

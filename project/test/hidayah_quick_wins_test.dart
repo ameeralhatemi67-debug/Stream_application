@@ -665,7 +665,7 @@ void main() {
               .contentTextStyle!;
       expect(style.fontFamily, family, reason: lang);
       expect(style.fontFamilyFallback,
-          containsAll(['IBM Plex Sans Arabic', 'IBM Plex Sans']));
+          contains('IBM Plex Sans Arabic'));
       expect(style.color, isNotNull);
     }
   });

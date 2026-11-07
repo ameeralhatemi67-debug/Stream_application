@@ -1,12 +1,30 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-11-01
+updated: 2026-11-08
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Web start-up speed, round 1, 2026-11-08 (local; committed, not pushed)
+
+The website was slow in the owner's team meeting. The cause was measured on the live site (ADR-025): 4.3 MB before anything appears, a signed-out visit sending 29 refused admin requests before the streamer list, a 2 s "are we online" check that called slow networks degraded, and a splash that held every start for 1.35 s steps (and a signed-in start for a dozen requests in a row).
+
+Round 1, measured locally before and after with the same server and emulated networks (one run each; the phone row is three runs each):
+
+| Network | First frame | Streamer list |
+|---|---|---|
+| Fast Wi-Fi | 3.2 → 1.4 s | 4.5 → 1.6 s |
+| Good 4G | 5.8 → 4.9 s | 8.2 → 5.1 s |
+| Good 4G, phone-speed CPU | 9.8 → 8.9 s | 14.6 → 9.1 s |
+| Slow 4G | 25.5 → 21.6 s | 31.8 → 22.4 s |
+| Slow 3G | 93 → 77 s | 108 → 80 s |
+
+Admin requests from a visitor: 29 → 0. Start-up download: 2.23 → 1.83 MB, plus the 1.6 MB graphics engine both need.
+
+**Not checked:** a signed-in start (needs an account; covered by the suite and code reading), a real repeat visit (the local test certificate stops Chrome caching), Safari and Firefox, and the deployed site (nothing pushed). **Still slow:** a first visit on slow 4G stays above 20 s and phones still freeze for about 8 s at start; that is round 2 (splitting the app script, the map file, an HTML loading screen).
 
 ## Lesson alerts reach the phone, 2026-11-01 (deployed: server, push sender, website)
 

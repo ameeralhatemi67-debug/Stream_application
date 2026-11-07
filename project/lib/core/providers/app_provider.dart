@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
+import '../theme/skin_fonts.dart';
 import '../widgets/interactive_toast_overlay.dart';
 import '../services/notifications/notification_models.dart';
 import '../services/youtube_api_service.dart';
@@ -71,20 +72,20 @@ class AppProvider extends ChangeNotifier {
   Future<List<Map<String, dynamic>>> searchAdminUsers(
       String query, int offset) async {
     if (!isAdminUser) throw StateError('Not permitted');
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     return _adminDbService!.searchAdminUsers(query, offset);
   }
 
   Future<Map<String, dynamic>> loadAdminUserDetail(String id) async {
     if (!isAdminUser) throw StateError('Not permitted');
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     return _adminDbService!.loadAdminUserDetail(id);
   }
 
   Future<void> updateAdminAccount(
       String id, String action, String reason) async {
     if (!isAdminUser) throw StateError('Not permitted');
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.updateAdminAccount(id, action, reason);
     if (action == 'delete_account') purgeDeletedAccountFromCaches(id);
     await _refreshBannedUsers();
@@ -101,7 +102,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> setStreamDiscovery(
       String profileId, bool hidden, String reason) async {
     if (!isAdminUser) throw StateError('Not permitted');
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.setStreamDiscovery(profileId, hidden, reason);
     await refreshAdminData();
   }
@@ -198,6 +199,18 @@ class AppProvider extends ChangeNotifier {
   final YouTubeApiService _youTubeService;
   final SupabaseAuthService _authService;
   AdminDatabaseService? _adminDbService;
+  Future<AdminDatabaseService>? _adminDbCreating;
+
+  /// The one shared database service. Start-up asks for it from several loads
+  /// at once, and `_adminDbService ??= await AdminDatabaseService.create()`
+  /// built one copy per caller (four on every start, 2026-11-07 diagnosis).
+  Future<AdminDatabaseService> _ensureAdminDb() async {
+    final existing = _adminDbService;
+    if (existing != null) return existing;
+    final created =
+        await (_adminDbCreating ??= AdminDatabaseService.create());
+    return _adminDbService ??= created;
+  }
 
   // Admin Hub, Verification & Governance State
   List<BroadcasterApplicationModel> _applications = [];
@@ -644,33 +657,18 @@ class AppProvider extends ChangeNotifier {
           prefs.getBool('has_completed_role_selection_${user.id}') ?? false;
       await _flushPendingConsentIfAny(user.id);
       if (_authGeneration != generation) return;
-      await _refreshAdminRoleFromBackend();
-      if (_authGeneration != generation) return;
-      await _refreshPermittedAdminOrgsFromBackend();
-      if (_authGeneration != generation) return;
-      await _refreshCurrentUserBanStatus();
-      if (_authGeneration != generation) return;
-      await loadViewerLibrary();
-      if (_authGeneration != generation) return;
-      unawaited(_loadPushPreferences());
-      try {
-        await refreshScheduleReminders();
-        final language = await _savedAppLanguage();
-        unawaited(syncReminderPush(
-            requestPermission: await shouldAskForPush(user.id),
-            language: language));
-      } catch (e) {
-        // An older backend may not have the new migration yet. Sign-in must
-        // remain usable while Upcoming Live reports its own unavailable state.
-        debugPrint('Schedule reminders unavailable: $e');
-      }
-      if (_authGeneration != generation) return;
-      await refreshMyApplicationAndStreamerStatus();
+      // What the router needs before it lets a signed-in user past the
+      // splash (roles, org ownership, a ban, the role picker). The four reads
+      // are independent, so they run together; one after another they held
+      // every signed-in start for a dozen round trips (2026-11-07 diagnosis).
+      await Future.wait<void>([
+        _refreshAdminRoleFromBackend(),
+        _refreshPermittedAdminOrgsFromBackend(),
+        _refreshCurrentUserBanStatus(),
+        refreshMyApplicationAndStreamerStatus(),
+      ]);
       if (_authGeneration != generation) return;
       _isStreamerModeEnabled = isApprovedStreamer;
-      if (_isAdminFromRoles) {
-        await refreshAdminData();
-      }
       // Multi-device broadcaster collision check -- only meaningful once we
       // know this account is actually an approved streamer (see
       // initDeviceSession doc). Fires on every session application, not just
@@ -690,6 +688,39 @@ class AppProvider extends ChangeNotifier {
         notifyListeners();
       }
     }
+    if (_authGeneration == generation && _sessionUserId == user.id) {
+      unawaited(_loadSessionExtras(user, generation));
+    }
+  }
+
+  /// What a signed-in start loads once the user is past the splash: the
+  /// library, reminders and push, and an admin's queues. No route or
+  /// privilege depends on them; they used to run inside the sign-in hold,
+  /// one after another, before the first screen (2026-11-07 diagnosis).
+  Future<void> _loadSessionExtras(User user, int generation) async {
+    Future<void> guarded(String what, Future<void> Function() load) async {
+      try {
+        await load();
+      } catch (e) {
+        debugPrint('Session $what not loaded: $e');
+      }
+    }
+
+    unawaited(_loadPushPreferences());
+    await Future.wait<void>([
+      guarded('library', loadViewerLibrary),
+      guarded('reminders', () async {
+        // An older backend may not have the new migration yet. Sign-in must
+        // remain usable while Upcoming Live reports its own unavailable state.
+        await refreshScheduleReminders();
+        if (_authGeneration != generation) return;
+        final language = await _savedAppLanguage();
+        unawaited(syncReminderPush(
+            requestPermission: await shouldAskForPush(user.id),
+            language: language));
+      }),
+      if (_isAdminFromRoles) guarded('admin data', refreshAdminData),
+    ]);
   }
 
   /// Creates this user's profiles row on their very first sign-in. Existing
@@ -817,6 +848,9 @@ class AppProvider extends ChangeNotifier {
   Future<void> setAppSkin(AppSkin skin) async {
     if (skin == _appSkin) return;
     _appSkin = skin;
+    // Readex Pro loads with the Hedayah skin, not at start-up; headings
+    // re-lay out when it arrives (skin_fonts.dart).
+    unawaited(SkinFonts.ensureLoaded(skin));
     notifyListeners();
     await saveAppSkin(skin);
   }
@@ -1010,7 +1044,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> _refreshPermittedAdminOrgsFromBackend() async {
     final generation = _authGeneration;
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       final ids = await _adminDbService!.loadPermittedAdminOrgIds();
       if (_authGeneration != generation) return;
       _permittedAdminOrgIds = ids;
@@ -1502,7 +1536,7 @@ class AppProvider extends ChangeNotifier {
       _remoteBroadcasterSession = null;
 
       if (userId != null) {
-        _adminDbService ??= await AdminDatabaseService.create();
+        if (_adminDbService == null) await _ensureAdminDb();
         var claimed = false;
         if (!_viewerDeviceChoice) {
           try {
@@ -2240,10 +2274,14 @@ class AppProvider extends ChangeNotifier {
     if (user == null) return;
     final wasApproved = isApprovedStreamer;
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      var isStreamer = await _adminDbService!.checkIsProfileStreamer(user.id);
-      final myApp = await _adminDbService!.loadMyApplication(user.id);
-      final profile = await _adminDbService!.loadOwnProfile(user.id);
+      final db = _adminDbService ?? await _ensureAdminDb();
+      // Three independent reads of this account's own rows, issued together.
+      final (streamerFlag, myApp, profile) = await (
+        db.checkIsProfileStreamer(user.id),
+        db.loadMyApplication(user.id),
+        db.loadOwnProfile(user.id),
+      ).wait;
+      var isStreamer = streamerFlag;
       if (_authGeneration != generation) return;
       if (profile != null) {
         _personalBroadcastApproved = profile['personal_broadcast_approved'] == true;
@@ -2578,6 +2616,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
+  static const Duration _catalogReadTimeout = Duration(seconds: 20);
 
   Future<void> loadVerifiedStreamersFromBackend() {
     if (_disposed || !isOnline) return Future<void>.value();
@@ -2608,7 +2647,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _fetchVerifiedStreamers(int epoch) async {
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       final now = DateTime.now();
       if (_lastLiveFlagSweepAt == null ||
           now.difference(_lastLiveFlagSweepAt!) >= _liveFlagSweepInterval) {
@@ -2621,14 +2660,16 @@ class AppProvider extends ChangeNotifier {
         unawaited(_adminDbService!.sweepStaleLiveFlags());
       }
       // The broadcast-session read is independent of the profile reads, so it
-      // runs beside them (audit NET-04).
+      // runs beside them (audit NET-04). Twenty seconds, not five: on slow 3G
+      // one request (with its CORS preflight) can take over 5 s, and a cut-off
+      // read left a first-time visitor with an empty feed (2026-11-07).
       final sessionsRead = _organizationBroadcastService
           .sessions()
-          .timeout(const Duration(seconds: 5))
+          .timeout(_catalogReadTimeout)
         ..ignore();
       final backendStreamers = await _adminDbService!
           .loadVerifiedStreamersFromBackend(requireSuccess: true)
-          .timeout(const Duration(seconds: 5));
+          .timeout(_catalogReadTimeout);
       final sessions = await sessionsRead;
       if (_disposed || epoch != _catalogEpoch || !isOnline) return;
       _broadcastSessions=List.unmodifiable(sessions);
@@ -2878,8 +2919,16 @@ class AppProvider extends ChangeNotifier {
   /// from the Supabase backend.
   Future<void> refreshAdminData({bool includePublicCatalog = true}) async {
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      final db = _adminDbService!;
+      final db = _adminDbService ?? await _ensureAdminDb();
+      if (db.usesSupabase && _authService.currentSession == null) {
+        // Signed out, only the published terms are readable. The other
+        // tables answer 401, and every visitor paid those refused round trips
+        // on start-up (2026-11-07 diagnosis).
+        _termsAndConditions = await db.loadTerms();
+        if (includePublicCatalog) await loadVerifiedStreamersFromBackend();
+        notifyListeners();
+        return;
+      }
       // Five independent reads, issued together (audit NET-05).
       final (applications, _, terms, analytics, auditLogs, affiliations) = await (
         db.loadApplications(),
@@ -3133,7 +3182,7 @@ class AppProvider extends ChangeNotifier {
       return;
     }
     _lastViewerCountFetch = now;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final counts = await _adminDbService!.fetchViewerCounts(ids);
     if (counts.isEmpty) return;
     _platformViewerCounts.addAll(counts);
@@ -3581,7 +3630,7 @@ class AppProvider extends ChangeNotifier {
       {required String reason}) async {
     final isOrganization = getStreamerById(streamerId)?.isOrganization ?? false;
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       await _adminDbService!.revokeBroadcasterApproval(
           streamerId: streamerId,
           isOrganization: isOrganization,
@@ -4028,7 +4077,7 @@ class AppProvider extends ChangeNotifier {
     required Uint8List fileBytes,
     String contentType = 'image/jpeg',
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     return _adminDbService!.uploadStreamerAsset(
       fileName: fileName,
       fileBytes: fileBytes,
@@ -4071,7 +4120,7 @@ class AppProvider extends ChangeNotifier {
       await validateChannelConfiguration(
           application.youtubeChannelUrl, application.youtubeHandle);
     }
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final generation = _authGeneration;
     final saved = await _adminDbService!.saveBroadcasterProfile(application);
     if (_authGeneration != generation) {
@@ -4095,7 +4144,7 @@ class AppProvider extends ChangeNotifier {
       final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl, requireUrl: true)!;
       application = application.copyWith(youtubeChannelUrl: channel.url, youtubeHandle: channel.stored);
     }
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.submitApplication(application);
     _applications = List.from(await _adminDbService!.loadApplications());
 
@@ -4175,7 +4224,7 @@ class AppProvider extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
 
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.submitAffiliationRequest(req);
     _affiliationRequests = List.from(await _adminDbService!.loadAffiliationRequests());
 
@@ -4189,7 +4238,7 @@ class AppProvider extends ChangeNotifier {
       _answerAffiliation(requestId, AffiliationStatus.declined);
 
   Future<void> _answerAffiliation(String id, AffiliationStatus status) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.updateAffiliationRequestStatus(id, status);
     _affiliationRequests = List.from(await _adminDbService!.loadAffiliationRequests());
     await refreshOrgMemberships();
@@ -4963,7 +5012,7 @@ class AppProvider extends ChangeNotifier {
         _authService.currentSession?.user.id == userId;
     try {
       if (userId != null) {
-        _adminDbService ??= await AdminDatabaseService.create();
+        if (_adminDbService == null) await _ensureAdminDb();
         if (!current()) return;
         if (previous == null) {
           await _adminDbService!.addBookmark(entry);
@@ -5002,7 +5051,7 @@ class AppProvider extends ChangeNotifier {
     bool current() => !_disposed && _authGeneration == generation &&
         _authService.currentSession?.user.id == userId;
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       if (!current()) return;
       final entries = await _adminDbService!.loadBookmarks();
       final resolved = {for (final entry in entries) entry.id: entry};
@@ -5055,7 +5104,7 @@ class AppProvider extends ChangeNotifier {
     final generation = _authGeneration;
     final userId = _authService.currentSession?.user.id;
     if (userId == null) return;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final follows = await _adminDbService!.loadFollowedTargetIds();
     if (_authGeneration != generation) return;
     _followedStreamerIds
@@ -5169,7 +5218,7 @@ class AppProvider extends ChangeNotifier {
     }
     _followsInFlight.add(streamerId);
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       final saved = wasFollowing
           ? await _adminDbService!.removeFollow(streamerId)
           : await _adminDbService!.addFollow(streamerId);
@@ -5670,7 +5719,7 @@ class AppProvider extends ChangeNotifier {
     if (idx == -1) return false;
 
     final app = _applications[idx];
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
 
     // Stage 1: Update Application Status and Backend Profile
     onProgress?.call(
@@ -5699,7 +5748,7 @@ class AppProvider extends ChangeNotifier {
     String? realOrgId;
     if (applicantProfileId != null) {
       try {
-        _adminDbService ??= await AdminDatabaseService.create();
+        if (_adminDbService == null) await _ensureAdminDb();
         if (app.isOrganization) {
           realOrgId = await _adminDbService!
               .createOrganizationFromApplication(app, applicantProfileId);
@@ -5808,7 +5857,7 @@ class AppProvider extends ChangeNotifier {
     if (idx == -1) return false;
 
     final app = _applications[idx];
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final reviewer = _googleUserName ?? 'Administrator';
     final updated = await _adminDbService!.updateApplicationStatus(
       applicationId,
@@ -5834,7 +5883,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> deleteBroadcasterApplication(String applicationId) async {
     final idx = _applications.indexWhere((a) => a.id == applicationId);
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final success = await _adminDbService!.deleteApplication(applicationId);
     if (success) {
       if (idx != -1) _applications.removeAt(idx);
@@ -5845,7 +5894,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> reverseApprovedApplication(String eventId, String reason) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.reverseApprovedApplication(eventId, reason);
     _applications = List.from(await _adminDbService!.loadApplications());
     await _refreshApplicationReviewEvents();
@@ -5855,7 +5904,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> approveRejectedApplication(String applicationId,
       {String? adminNotes}) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final restored =
         await _adminDbService!.restoreApplicationToQueue(applicationId);
     _applications = [
@@ -5928,14 +5977,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> updateTermsAndConditions(
       TermsAndConditionsModel newTerms) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.saveTerms(newTerms);
     _termsAndConditions = newTerms;
     notifyListeners();
   }
 
   Future<void> updateViewerAnalytics(ViewerAnalyticsModel newAnalytics) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.saveAnalytics(newAnalytics);
     _viewerAnalytics = newAnalytics;
     notifyListeners();
@@ -5957,7 +6006,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> recordOrgAuditAction(OrgAuditLogEntry entry) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.recordAuditLog(entry);
     _auditLogs.insert(0, entry);
     notifyListeners();
@@ -5972,7 +6021,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> ensureOrgDataLoaded(String orgId) async {
     if (_orgDataLoaded.contains(orgId)) return;
     _orgDataLoaded.add(orgId);
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       // _streamers only gets a real org appended at the moment its
       // application is approved, in that same session (see
@@ -6061,7 +6110,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> ensureRoleManagementDataLoaded() async {
     if (_roleManagementLoaded) return;
     _roleManagementLoaded = true;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       final assignments = await _adminDbService!.loadAdminRoleAssignments();
       final permissions = await _adminDbService!.loadUserPermissionsByProfile();
@@ -6074,7 +6123,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshRoleManagementData() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     _roleAssignments = await _adminDbService!.loadAdminRoleAssignments();
     _userPermissionsByProfile =
         await _adminDbService!.loadUserPermissionsByProfile();
@@ -6097,7 +6146,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> refreshAdminEmailGrants() async {
     if (!isMasterAdmin) return;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _adminEmailGrants = await _adminDbService!.loadAdminEmailGrants();
       notifyListeners();
@@ -6110,7 +6159,7 @@ class AppProvider extends ChangeNotifier {
   /// account exists (returns true), otherwise at its first sign-in. Also
   /// changes an existing line. Throws on failure.
   Future<bool> setAdminAccess(String email, String access) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final granted = await _adminDbService!.setAdminEmailAccess(email, access);
     await Future.wait(
         [refreshAdminEmailGrants(), if (granted) _refreshRoleManagementData()]);
@@ -6119,7 +6168,7 @@ class AppProvider extends ChangeNotifier {
 
   /// Removes a line and the access it gave.
   Future<void> removeAdminEmail(String email) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.removeAdminEmailGrant(email);
     await Future.wait([refreshAdminEmailGrants(), _refreshRoleManagementData()]);
   }
@@ -6131,7 +6180,7 @@ class AppProvider extends ChangeNotifier {
     required String role,
     String? organizationId,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.revokeUserRole(
       profileId: profileId,
       role: role,
@@ -6145,7 +6194,7 @@ class AppProvider extends ChangeNotifier {
     required String capability,
     required bool granted,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.setUserPermission(
       profileId: profileId,
       capability: capability,
@@ -6166,7 +6215,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> ensureChatReportsLoaded() async {
     if (_chatReportsLoaded) return;
     _chatReportsLoaded = true;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _chatReports = await _adminDbService!.loadChatReports();
       notifyListeners();
@@ -6222,7 +6271,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshChatReports() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _chatReports = await _adminDbService!.loadChatReports();
       notifyListeners();
@@ -6234,7 +6283,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> dismissChatReport(String reportId) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.dismissChatReport(reportId);
     await _refreshChatReports();
   }
@@ -6251,7 +6300,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> refreshMutedChattersAuditLog() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _mutedChattersAuditLog =
           await _adminDbService!.loadMutedChattersAuditLog();
@@ -6267,7 +6316,7 @@ class AppProvider extends ChangeNotifier {
   /// since Realtime replicates the DELETE to every subscribed client
   /// regardless of which client issued it.
   Future<void> deleteChatMessageAndResolveReport(ChatReportModel report) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.deleteChatMessageAndResolveReport(
       messageId: report.messageId,
       reportId: report.id,
@@ -6281,7 +6330,7 @@ class AppProvider extends ChangeNotifier {
     ChatReportModel report, {
     double? muteDurationHours,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.muteChatSenderAndResolveReport(
       streamId: report.streamId,
       senderId: report.reportedSenderId,
@@ -6303,7 +6352,7 @@ class AppProvider extends ChangeNotifier {
     required String reason,
     DateTime? expiresAt,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.banAccountPlatformWide(
       profileId: report.reportedSenderId,
       email: report.reportedEmail ?? report.reportedDisplayName,
@@ -6346,7 +6395,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _refreshAcademicCategories() async {
     final generation = ++_categoryRequestGeneration;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       final categories =
           await _adminDbService!.loadAcademicCategories(requireSuccess: true);
@@ -6363,13 +6412,13 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> saveAcademicCategory(AcademicCategoryModel category) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.saveAcademicCategory(category);
     await _refreshAcademicCategories();
   }
 
   Future<void> deleteAcademicCategory(String id) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.deleteAcademicCategory(id);
     await _refreshAcademicCategories();
   }
@@ -6394,7 +6443,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshTags() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _approvedTags = await _adminDbService!.loadApprovedTagNames();
       if (isAdminUser) {
@@ -6420,7 +6469,7 @@ class AppProvider extends ChangeNotifier {
   /// "Inspect Broadcasters"drill-down data for one tag (Task 12).
   Future<List<TaggedBroadcasterSummary>> loadBroadcastersForTag(
       String tagName) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       return await _adminDbService!.loadBroadcastersForTag(tagName);
     } catch (e) {
@@ -6432,18 +6481,18 @@ class AppProvider extends ChangeNotifier {
   /// Submits a new tag from the streamer application form as pending review
   /// (Task 12) -- a no-op if it already exists in any status.
   Future<void> submitPendingTag(String tag) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.submitPendingTag(tag);
   }
 
   Future<void> approveTag(String name) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.setTagStatus(name, TagStatus.approved);
     await _refreshTags();
   }
 
   Future<void> blacklistTag(String name) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.setTagStatus(name, TagStatus.blacklisted);
     await _refreshTags();
   }
@@ -6452,7 +6501,7 @@ class AppProvider extends ChangeNotifier {
     required String oldName,
     required String newName,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.mergeRenameTag(oldName: oldName, newName: newName);
     await _refreshTags();
   }
@@ -6517,7 +6566,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshBannedUsers() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _bannedUsers = await _adminDbService!.loadBannedUsers();
       notifyListeners();
@@ -6531,7 +6580,7 @@ class AppProvider extends ChangeNotifier {
     required String reason,
     DateTime? expiresAt,
   }) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final profile = await _adminDbService!.findProfileByEmail(email);
     if (profile == null) {
       throw Exception('No account found for "$email".');
@@ -6546,7 +6595,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> unbanAccount(String profileId) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.unbanAccount(profileId);
     await _refreshBannedUsers();
   }
@@ -6565,7 +6614,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshStreamModerators() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _streamModerators = await _adminDbService!.loadStreamModerators();
       notifyListeners();
@@ -6575,7 +6624,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> revokeStreamModeratorById(String id) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.revokeStreamModeratorById(id);
     await _refreshStreamModerators();
   }
@@ -6586,7 +6635,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> deleteAllMyMessages() async {
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       await _adminDbService!.deleteAllMyMessages();
       return true;
     } catch (e) {
@@ -6597,7 +6646,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> deleteMyMessagesForStream(String streamId) async {
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       await _adminDbService!.deleteMyMessagesForStream(streamId);
       return true;
     } catch (e) {
@@ -6607,7 +6656,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<List<String>> loadMyMessageStreamIds() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     return _adminDbService!.loadMyMessageStreamIds();
   }
 
@@ -6626,7 +6675,7 @@ class AppProvider extends ChangeNotifier {
     final streamer = getStreamerById(streamerId);
     if (streamer == null) return false;
     try {
-      _adminDbService ??= await AdminDatabaseService.create();
+      if (_adminDbService == null) await _ensureAdminDb();
       await _adminDbService!.setStreamerHiddenFromMap(
         streamerId: streamerId,
         isOrganization: streamer.isOrganization,
@@ -6719,7 +6768,7 @@ class AppProvider extends ChangeNotifier {
     final retryAfter = _placeholderRetryAfter[key];
     if (retryAfter != null && DateTime.now().isBefore(retryAfter)) return;
     if (!_placeholderLookupsDone.add(key)) return;
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       final url = await _adminDbService!.loadApprovedPlaceholderUrl(
         streamerId: streamerId,
@@ -6747,7 +6796,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> refreshCustomPlaceholders() async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     try {
       _pendingCustomPlaceholders =
           await _adminDbService!.loadPendingCustomPlaceholders();
@@ -6855,7 +6904,7 @@ class AppProvider extends ChangeNotifier {
       return existingApproved;
     }
 
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     final created = await _adminDbService!.submitCustomPlaceholder(
       placeholderType: placeholderType,
       fileName: fileName,
@@ -6884,7 +6933,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> approveCustomPlaceholder(
       StreamerCustomPlaceholderModel placeholder) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.approveCustomPlaceholder(placeholder.id);
     // The approved artwork becomes live immediately, so refresh the playback
     // cache entry rather than leaving a stale "no custom card"miss behind.
@@ -6912,7 +6961,7 @@ class AppProvider extends ChangeNotifier {
     if (trimmed.isEmpty) {
       throw Exception('A rejection reason is required.');
     }
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.rejectCustomPlaceholder(
       placeholderId: placeholder.id,
       reason: trimmed,
@@ -6931,25 +6980,25 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _writeThroughOrgSpeaker(String orgId, OrgSpeakerModel speaker) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.upsertOrgSpeaker(orgId, speaker);
     _realOrgSpeakers.remove(orgId);
   }
 
   Future<void> _writeThroughOrgVenue(String orgId, OrgVenueBranchModel venue) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.upsertOrgVenue(orgId, venue);
     _realOrgVenues.remove(orgId);
   }
 
   Future<void> _writeThroughDeleteOrgSpeaker(String orgId, String speakerId) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.deleteOrgSpeaker(speakerId);
     _realOrgSpeakers.remove(orgId);
   }
 
   Future<void> _writeThroughDeleteOrgVenue(String orgId, String venueId) async {
-    _adminDbService ??= await AdminDatabaseService.create();
+    if (_adminDbService == null) await _ensureAdminDb();
     await _adminDbService!.deleteOrgVenue(venueId);
     _realOrgVenues.remove(orgId);
   }

@@ -129,18 +129,27 @@ class AdminDatabaseService {
 
   SupabaseClient get _client => _injectedClient ?? Supabase.instance.client;
 
+  /// Whether reads go to Supabase (false: the on-device fallback store).
+  bool get usesSupabase => _useSupabase;
+
   /// Factory constructor to initialize with SharedPreferences (used as the
   /// fallback store when Supabase isn't available).
+  ///
+  /// With Supabase it reads nothing: each refresh asks for the rows it needs.
+  /// It used to read five admin tables here one after another, and the
+  /// public catalog waited for this, so a signed-out visitor's first screen
+  /// sat behind refused requests (web speed diagnosis, 2026-11-07). The
+  /// on-device fallback still warms its caches, which costs no network.
   static Future<AdminDatabaseService> create() async {
     try {
       WidgetsFlutterBinding.ensureInitialized();
       final prefs = await SharedPreferences.getInstance();
       final service = AdminDatabaseService(prefs);
-      await service._init();
+      if (!service._useSupabase) await service._init();
       return service;
     } catch (e) {
       final fallback = AdminDatabaseService(null);
-      await fallback._init();
+      if (!fallback._useSupabase) await fallback._init();
       return fallback;
     }
   }

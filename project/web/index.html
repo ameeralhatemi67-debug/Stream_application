@@ -16,6 +16,35 @@
   -->
   <base href="$FLUTTER_BASE_HREF">
 
+  <!--
+    Start-up speed (2026-11-07): open the CDN connections now, while the page
+    is still loading, instead of when the engine first asks. gstatic serves
+    the graphics engine (a script, then a CORS fetch, hence two) and
+    Firebase's scripts; fonts.gstatic.com Flutter's fallback font. A release
+    build also adds the backend, main.dart.js and the start-up fonts here
+    (tool/stamp_offline_build.mjs).
+  -->
+  <link rel="preconnect" href="https://www.gstatic.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    // The app reads its translations only after it has started; asking now
+    // saves a round trip before the first screen. Same choice as the app:
+    // the saved language (easy_localization's "locale"), Arabic otherwise.
+    (function () {
+      var lang = 'ar';
+      try {
+        if (/^"en/.test(localStorage.getItem('flutter.locale') || '')) lang = 'en';
+      } catch (e) {}
+      var link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      link.href = 'assets/assets/i18n/' + lang + '.json';
+      document.head.appendChild(link);
+    })();
+  </script>
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <!-- One description, Arabic first (the app's default language). -->

@@ -125,7 +125,6 @@ void main() {
   setUpAll(() async {
     await initializeTestLocalization();
     for (final font in {
-      'IBM Plex Sans': ['assets/fonts/IBMPlexSans-Variable.ttf'],
       'IBM Plex Sans Arabic': [
         'assets/fonts/IBMPlexSansArabic-400.ttf',
         'assets/fonts/IBMPlexSansArabic-700.ttf'

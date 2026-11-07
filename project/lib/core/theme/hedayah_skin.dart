@@ -49,7 +49,7 @@ abstract final class HedayahSkin {
 
   static const display = 'Readex Pro';
   static const text = 'IBM Plex Sans Arabic';
-  static const fallback = ['IBM Plex Sans Arabic', 'IBM Plex Sans'];
+  static const fallback = ['IBM Plex Sans Arabic'];
 
   static const radiusPill = 25.0, radiusCard = 15.0, radiusSheet = 20.0;
   static const radiusField = 12.0;
