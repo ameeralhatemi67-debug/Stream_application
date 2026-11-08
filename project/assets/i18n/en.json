@@ -186,6 +186,8 @@
     "no_venue_location": "This venue has no pinned location yet, so directions aren't available.",
     "picker_use_my_location": "Use my current location",
     "location_service_off": "Location is turned off on this device. Turn it on, then try again.",
+    "location_disclosure_title": "Use your location?",
+    "location_disclosure_body": "Hadayah Live reads your precise location once, only when you tap this button, to move the map pin to where you are. Nothing is sent to our servers until you confirm the point, and then only that venue point is saved and shown publicly on the map. We never read your location in the background.",
     "location_permission_denied": "Location access was not allowed. You can still place the pin on the map.",
     "location_outside": "Your current location is outside the supported map area. Place the pin on the map instead.",
     "location_unavailable": "Your location could not be found. Try again or place the pin on the map.",

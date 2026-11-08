@@ -146,6 +146,36 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
         action: action,
       ));
 
+  Future<bool> _confirmLocationDisclosure() async {
+    if (!mounted) return false;
+    final accepted = await showCaDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => CaDialog(
+        title: 'map.location_disclosure_title'.tr(),
+        body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const CaIcon(CaGlyph.pin, color: Canopy.brandGreen, size: 32),
+              const SizedBox(height: AppTheme.spaceMd),
+              Text('map.location_disclosure_body'.tr(),
+                  style: Theme.of(dialogContext).textTheme.bodyMedium),
+            ]),
+        actions: [
+          CaButton(
+              label: 'design_ui.not_now'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.of(dialogContext).pop(false)),
+          CaButton(
+              label: 'design_ui.continue'.tr(),
+              onPressed: () => Navigator.of(dialogContext).pop(true)),
+        ],
+      ),
+    );
+    return accepted ?? false;
+  }
+
   /// Uses the device location only while choosing a point, and only after
   /// the user asks for it: permission is requested here, never at start-up.
   Future<void> _useMyLocation() async {
@@ -158,6 +188,9 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
       }
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
+        // Google Play User Data policy: explain what is read and why, and get
+        // a clear yes, immediately before the system permission prompt.
+        if (!await _confirmLocationDisclosure()) return;
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
