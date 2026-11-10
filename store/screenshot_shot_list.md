@@ -6,10 +6,10 @@ Status: 2026-10-16. The feature graphic and an icon fix are made; the screenshot
 
 | Asset | File | Play requirement | Status |
 | --- | --- | --- | --- |
-| Feature graphic | `store/assets/feature_graphic_1024x500.png` (source: `feature_graphic.html`) | 1024 x 500, PNG or JPEG, no transparency | Done, 24-bit, 1024 x 500. |
-| App icon | `store/assets/icon_512_fullbleed.png` | 512 x 512, 32-bit PNG, up to 1 MB, full square | Use this one. The older `icon_512.png` has pre-rounded black corners, which Play's own rounding then shows as dark marks; the new file fills the corners with the icon's mint colour. |
+| Feature graphic | `store/assets/feature_graphic_1024x500_gold.png` (source: `feature_graphic_gold.html`) | 1024 x 500, PNG or JPEG, no transparency | Done, 24-bit, 1024 x 500. |
+| App icon | `store/assets/play_icon_512_gold.png` | 512 x 512, 32-bit PNG, up to 1 MB, full square | Use this one. The older `icon_512.png` has pre-rounded black corners, which Play's own rounding then shows as dark marks; the new file fills the corners with the icon's mint colour. |
 
-The feature graphic holds the name in Arabic and English and "Live lectures, Channels, Venues". To change the wording, edit `feature_graphic.html` and run the Chrome command written in its first comment.
+The feature graphic holds the name in Arabic and English and "Live lectures, Channels, Venues". To change the wording, edit `feature_graphic_gold.html` and run the Chrome command written in its first comment.
 
 ## 2. Screenshot rules (Play)
 
