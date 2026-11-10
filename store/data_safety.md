@@ -13,7 +13,7 @@ Play Console > Policy > App content > Data safety.
 | Does your app collect or share any of the required user data types? | **Yes** | Account, chat, location, device and media data below. |
 | Is all of the user data collected by your app encrypted in transit? | **Yes** | Cleartext traffic is off (`usesCleartextTraffic="false"`); Supabase, Google and YouTube are HTTPS; RTMPS is used for ingest. |
 | Do you provide a way for users to request that their data be deleted? | **Yes** | In-app Settings > Delete My Account, and the web page. |
-| Deletion URL | `https://stream-application-ten.vercel.app/delete-account.html` | Also states what is deleted. |
+| Deletion URL | `https://live.hedayh.org.sa/delete-account.html` | Also states what is deleted. |
 | Independent security review (optional badge) | No | Not done. |
 | Committed to the Play Families Policy | Not applicable | Target audience is not children (see below). |
 

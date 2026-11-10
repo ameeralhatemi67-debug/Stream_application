@@ -29,9 +29,9 @@ Choose: "All or some functionality in my app is restricted" and add one set of c
 > 3. Chat and reporting: open any live room or recorded video that has chat, send a message, then long-press a message to report or block it.
 > 4. Broadcasting from the phone: in the feed tap Go Live, choose the phone camera (Open Camera), allow camera and microphone, confirm the quality, then tap Go Live. A notification "You're broadcasting live" stays while the app is in the background. Tap End to stop. The test YouTube channel is already connected (Settings > YouTube connections). Broadcast to this test channel only.
 > 5. Organizations: Settings > Organizations > open the test organization. You can see its members and permissions, YouTube connections, and "Shows and assignments" where a show can be scheduled and started.
-> 6. Account and data: Settings > Privacy > Download My Data; Settings > Delete My Account (please do not delete the test account). Public deletion page: https://stream-application-ten.vercel.app/delete-account.html
+> 6. Account and data: Settings > Privacy > Download My Data; Settings > Delete My Account (please do not delete the test account). Public deletion page: https://live.hedayh.org.sa/delete-account.html
 >
-> Camera, microphone and location are requested only when you use those features. The privacy policy is at https://stream-application-ten.vercel.app/privacy.html.
+> Camera, microphone and location are requested only when you use those features. The privacy policy is at https://live.hedayh.org.sa/privacy.html.
 
 **Username:** the reviewer Google address.
 **Password:** type it in Play Console only.

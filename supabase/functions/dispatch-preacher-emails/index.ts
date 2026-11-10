@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
   const apiKey = env('RESEND_API_KEY');
   const from = env('EMAIL_FROM');
   if (!apiKey || !from) return new Response('Email sender not configured', { status: 503 });
-  const site = env('PUBLIC_SITE_URL') || 'https://stream-application-ten.vercel.app';
+  const site = env('PUBLIC_SITE_URL') || 'https://live.hedayh.org.sa';
   const replyTo = env('EMAIL_REPLY_TO');
 
   const { data, error } = await db.rpc('claim_preacher_emails', { p_limit: 25 });

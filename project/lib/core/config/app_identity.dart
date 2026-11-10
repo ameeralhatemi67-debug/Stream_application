@@ -2,14 +2,15 @@
 ///
 /// The public pages all live on one origin (the web app's own domain) because
 /// Google sign-in verification requires the privacy policy to be on the same
-/// domain as the app's home page. When a custom domain replaces the Vercel
-/// address, change [websiteUrl] only; the page URLs derive from it.
+/// domain as the app's home page. Since 2026-11-10 that domain is
+/// live.hedayh.org.sa; to move again, change [websiteUrl] only (the page URLs
+/// derive from it).
 abstract final class AppIdentity {
   static const applicationId = 'sa.hadayah.streamer_app';
   static const nameEn = 'Hadayah Live';
   static const nameAr = 'منصة هدايه';
-  static const supportEmail = 'ameeralhatemi67@gmail.com';
-  static const websiteUrl = 'https://stream-application-ten.vercel.app';
+  static const supportEmail = 'livesupport@hedayh.org.sa';
+  static const websiteUrl = 'https://live.hedayh.org.sa';
   /// Static home page for Google verification and the store listing. The web
   /// root is the Flutter app itself, which has no crawlable text.
   static const homePageUrl = '$websiteUrl/about.html';

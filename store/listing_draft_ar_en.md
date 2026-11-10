@@ -14,8 +14,8 @@ Before pasting: check every sentence against the signed build and the screenshot
 | Category | Education |
 | Tags (pick up to 5 that Play offers) | Education, Video, Lectures, Live streaming, Religion/Culture if offered |
 | Contact email | the support address from `AppIdentity.supportEmail` |
-| Website | https://stream-application-ten.vercel.app |
-| Privacy policy | https://stream-application-ten.vercel.app/privacy.html |
+| Website | https://live.hedayh.org.sa |
+| Privacy policy | https://live.hedayh.org.sa/privacy.html |
 | Default language | Arabic (add English as a translation) |
 
 ## English (en-US)

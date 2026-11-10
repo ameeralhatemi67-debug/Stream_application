@@ -7,10 +7,10 @@ Status: 2026-10-16, ready to paste. The owner submits it in Google Cloud Console
 | Item | Value |
 | --- | --- |
 | App name | Hadayah Live (منصة هدايه) |
-| Application home page | https://stream-application-ten.vercel.app |
-| Privacy policy | https://stream-application-ten.vercel.app/privacy.html |
+| Application home page | https://live.hedayh.org.sa |
+| Privacy policy | https://live.hedayh.org.sa/privacy.html |
 | Terms of service (optional field) | Leave empty until counsel approves terms; in-app terms exist (Settings > Governance). |
-| Authorized domain | `stream-application-ten.vercel.app` is a shared `vercel.app` domain. Google may refuse to verify ownership of a domain you do not control. **Buy a domain** (for example `hadayah.app`), point the Vercel project at it, verify it in Google Search Console, and change `AppIdentity.websiteUrl` (one line) before submitting. |
+| Authorized domain | `hedayh.org.sa` (the association's own domain, verified in Google Search Console). The app is served from `live.hedayh.org.sa` since 2026-11-10; `AppIdentity.websiteUrl` points there. |
 | Support / developer contact email | the address in `AppIdentity.supportEmail` |
 | Android package | `sa.hadayah.streamer_app` |
 | Android sign-in return scheme | `sa.hadayah.streamerapp://login-callback` (note: no underscore; this differs from the package name on purpose) |
