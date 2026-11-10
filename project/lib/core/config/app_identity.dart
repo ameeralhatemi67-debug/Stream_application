@@ -14,6 +14,7 @@ abstract final class AppIdentity {
   /// root is the Flutter app itself, which has no crawlable text.
   static const homePageUrl = '$websiteUrl/about.html';
   static const privacyPolicyUrl = '$websiteUrl/privacy.html';
+  static const termsUrl = '$websiteUrl/terms.html';
   static const deleteAccountUrl = '$websiteUrl/delete-account.html';
   static String name(String languageCode) => languageCode == 'ar' ? nameAr : nameEn;
 }
