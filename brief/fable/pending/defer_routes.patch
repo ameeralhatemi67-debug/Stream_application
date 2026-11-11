@@ -1,0 +1,98 @@
+diff --git a/project/lib/core/routing/app_router.dart b/project/lib/core/routing/app_router.dart
+index ec522ae..dbed14b 100644
+--- a/project/lib/core/routing/app_router.dart
++++ b/project/lib/core/routing/app_router.dart
+@@ -19,12 +19,18 @@ import 'lantern/lantern_not_found_page.dart';
+ import '../../features/auth/presentation/welcome_screen.dart';
+ import '../../features/auth/presentation/viewer_setup_screen.dart';
+ import '../../features/auth/presentation/role_select_screen.dart';
+-import '../../features/auth/presentation/streamer_apply_screen.dart';
++// Loaded on demand, like the admin surfaces below: a visitor who only
++// watches never opens the application, the settings or the organization
++// pages, so their code is not part of the first download (ADR-025,
++// round 2).
++import '../../features/auth/presentation/streamer_apply_screen.dart'
++    deferred as streamer_apply;
+ import '../../features/auth/presentation/application_pending_screen.dart';
+ import '../../features/map/presentation/spatial_map_screen.dart';
+ import '../../features/discovery/presentation/discovery_feed_screen.dart';
+ import '../../features/profile/presentation/broadcaster_profile_screen.dart';
+-import '../../features/profile/presentation/settings_screen.dart';
++import '../../features/profile/presentation/settings_screen.dart'
++    deferred as settings;
+ import '../../features/live_stream/presentation/live_broadcast_screen.dart';
+ // Admin surfaces are loaded on demand (deferred) so every visitor does not
+ // download the admin hub and organization management code (audit WEB-04).
+@@ -33,10 +39,13 @@ import '../../features/admin/presentation/admin_hub_screen.dart'
+ import '../../features/admin/presentation/org_admin_screen.dart'
+     deferred as org_admin;
+ import '../../features/organization/presentation/org_invitation_screen.dart';
+-import '../../features/organization/presentation/channel_connections_screen.dart';
++import '../../features/organization/presentation/channel_connections_screen.dart'
++    deferred as channel_connections;
+ import '../../features/organization/presentation/channel_consent_return_screen.dart';
+-import '../../features/organization/presentation/organization_shows_screen.dart';
+-import '../../features/organization/presentation/organization_hub_screen.dart';
++import '../../features/organization/presentation/organization_shows_screen.dart'
++    deferred as organization_shows;
++import '../../features/organization/presentation/organization_hub_screen.dart'
++    deferred as organization_hub;
+ import '../../features/splash/presentation/app_splash_screen.dart';
+ import '../../features/auth/presentation/screens/account_banned_screen.dart';
+ import '../../features/web/presentation/hidayah_web_header.dart';
+@@ -269,12 +278,17 @@ class AppRouter {
+           GoRoute(
+               parentNavigatorKey: _rootNavigatorKey,
+               path: '/shows',
+-              builder: (context, state) => OrganizationShowsScreen(
+-                  initialOrganizationId: state.uri.queryParameters['org'])),
++              builder: (context, state) => _Deferred(
++                  loader: organization_shows.loadLibrary,
++                  builder: () => organization_shows.OrganizationShowsScreen(
++                      initialOrganizationId:
++                          state.uri.queryParameters['org']))),
+           GoRoute(
+               parentNavigatorKey: _rootNavigatorKey,
+               path: '/organizations',
+-              builder: (context, state) => const OrganizationHubScreen()),
++              builder: (context, state) => _Deferred(
++                  loader: organization_hub.loadLibrary,
++                  builder: () => organization_hub.OrganizationHubScreen())),
+           GoRoute(
+             parentNavigatorKey: _rootNavigatorKey,
+             path: '/login-callback',
+@@ -309,7 +323,9 @@ class AppRouter {
+             parentNavigatorKey: _rootNavigatorKey,
+             path: '/streamer-apply',
+             name: 'streamer-apply',
+-            builder: (context, state) => const StreamerApplyScreen(),
++            builder: (context, state) => _Deferred(
++                loader: streamer_apply.loadLibrary,
++                builder: () => streamer_apply.StreamerApplyScreen()),
+           ),
+           GoRoute(
+             parentNavigatorKey: _rootNavigatorKey,
+@@ -565,7 +581,9 @@ class AppRouter {
+             parentNavigatorKey: _rootNavigatorKey,
+             path: '/settings',
+             name: 'settings',
+-            builder: (context, state) => const SettingsScreen(),
++            builder: (context, state) => _Deferred(
++                loader: settings.loadLibrary,
++                builder: () => settings.SettingsScreen()),
+           ),
+           GoRoute(
+             parentNavigatorKey: _rootNavigatorKey,
+@@ -598,8 +616,10 @@ class AppRouter {
+           GoRoute(
+               path: '/channels',
+               parentNavigatorKey: _rootNavigatorKey,
+-              builder: (context, state) => ChannelConnectionsScreen(
+-                  returnStatus: state.uri.queryParameters['status'])),
++              builder: (context, state) => _Deferred(
++                  loader: channel_connections.loadLibrary,
++                  builder: () => channel_connections.ChannelConnectionsScreen(
++                      returnStatus: state.uri.queryParameters['status']))),
+           GoRoute(
+               path: '/channel-connected',
+               parentNavigatorKey: _rootNavigatorKey,

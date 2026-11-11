@@ -1,101 +1,68 @@
-# Handoff 3: Lantern and Arch run, state on 2026-11-11 (second session)
+# Handoff 4: Lantern and Arch run, stopped on 2026-11-11 at the owner's request
 
-This file is the state of the run. The owner's brief is the authority:
-`brief/prompts/FABLE_LANTERN_SKIN_RELEASE_PROMPT.md` in the main checkout
-(untracked there). To continue in a new session: paste that brief, then say
-*read `brief/fable/HANDOFF.md` in the worktree `.claude/worktrees/fable-lantern`
-and continue*.
+The owner stopped the run because the session was near its limits. Nothing is broken. All work is committed locally on `fable/lantern-skin`. Nothing was pushed, deployed or applied to hosted Supabase. No key or secret was created or changed.
 
-Nothing was pushed. No hosted migration was applied. No edge function was
-deployed. No key or secret was created or changed.
+**To continue:** start a new session, paste the owner's brief (`brief/prompts/FABLE_LANTERN_SKIN_RELEASE_PROMPT.md` in the main checkout, untracked there), then say: *read `brief/fable/HANDOFF.md` in the worktree `.claude/worktrees/fable-lantern` and continue*. The brief is the authority. This file only adds the state.
 
 ## 1. Where the work is
 
 | Thing | Place |
 |---|---|
-| Work branch | `fable/lantern-skin` (from `master` `77bcff0`) |
+| Work branch | `fable/lantern-skin` (from `master` `77bcff0`), about 45 commits |
 | Worktree | `.claude/worktrees/fable-lantern` (Flutter app in `project/`) |
 | Main checkout | on `master`, holds the owner's uncommitted studio work. **Do not touch it.** |
-| Design source | main checkout, untracked: `brief/design/lantern_and_arch/source_parts/` |
-| Build guide for the skin | `project/lib/core/widgets/lantern/README.md`; decision record ADR-026 in `Core_files/decisions.md` |
-| Map of the old code | `brief/fable/scratch/CODE_MAP.md` |
+| Report for the owner | `brief/fable/FINAL_REPORT.md`: a **draft**, see section 4 |
+| Build guide, decision record | `project/lib/core/widgets/lantern/README.md`, ADR-026 in `Core_files/decisions.md` |
 | Play findings | `brief/fable/ANDROID_PLAY_STATUS.md` |
-| Progress table | `brief/fable/PROGRESS.md` |
+| Design source | main checkout, untracked: `brief/design/lantern_and_arch/source_parts/` |
 
-Always start shell commands with an absolute `cd` to the worktree. The shell
-directory drifts.
+Always start shell commands with an absolute `cd` to the worktree. The shell directory drifts.
 
 ## 2. Rules that stay in force (short form)
 
-- No cost of any kind. Never push. Commit locally on `fable/lantern-skin` only.
-- No hosted migration, no edge function deploy, no change to secrets, `.env` files, signing keys or store credentials. Never create, print or commit a key.
-- Gold & black and Hedayah must look and behave exactly as on `master`.
-- One screen never mixes widgets from two skins.
-- Gates: `flutter analyze` 0 issues, full `flutter test` green, catalogs key-symmetric, RTL by `Directionality`, AA contrast, calm motion respected.
-- Ask the owner before: push, deploy, hosted migration, deleting data or branches, anything that costs money, any message to real people.
+No cost of any kind. Never push. Commit locally on `fable/lantern-skin` only. No hosted migration, no edge function deploy, no change to secrets, signing keys or store credentials. Gold & black and Hedayah must look and behave exactly as on `master`. Ask the owner before: push, deploy, hosted migration, deleting data, branches or worktrees, anything that costs money, any message to real people.
 
-## 3. Done and committed in this session
+## 3. What is done and committed
 
-| Commit | Content | Tests |
-|---|---|---|
-| `435bc76` | Map: Lantern search, filters, layer chips, zoom, legend, list, connection line, credit and map details; 400 px side panel on the website layout; sheets open over the whole app; the failing test fixed (it tapped a pin under the search) | `lantern_map_test` 39 |
-| `f321beb` | ADR-026, progress file, Play status header | |
-| `937109c` | Helper A merged: the older kits (`ds/*`, website kit, lessons kit) draw as Lantern under Lantern (`lantern_compat.dart`) | `lantern_compat_test` 148 |
-| `a94480f` to `8887d85` | Helper B merged: Lantern lessons home, calendar, lesson, preacher, mosque and series pages | `lantern_lessons_test` 38 |
-| `4af19ce` | Broadcast studio: one night page, status card, three steps, hold to go live and hold to end | `lantern_studio_test` 13 |
-| `b2bd83a` | **The surprise:** an invitation picture for a lesson (1080 x 1350, made on the device), from the lesson's share sheet | `lantern_poster_test` 5 |
-| `f861945` | Report a broadcast or a channel: migration `20261111120000_content_reports.sql`, service, provider methods, Lantern report sheet, Report in the live room | `lantern_report_test` 12 |
+Lantern views exist for: opening screen, Discover, live and audio rooms, map (pins, place cards, all controls, side panel), lessons (home, calendar, lesson, preacher, mosque, series), broadcast studio, channel page, broadcaster application and its status page, settings (with the Appearance pane), welcome and consent, notifications, saved items, role choice, suspended account, page not found, admin frame with overview, verification queue and chat reports, organization home, shows and YouTube connections. The older kits draw as Lantern pieces under Lantern (`lantern_compat.dart`).
 
-Full suite after the studio: **2,238 passed, 0 failed** (54 skipped are picture
-tests that need a folder). It has not been re-run after `b2bd83a` and
-`f861945`; their own tests and the Lantern files pass.
+New under Lantern only: the invitation picture for a lesson (the surprise, `lantern_poster.dart`), Report for a broadcast or a channel (live room and channel page) with a queue in the admin moderation tab, hold-to-confirm for go live, end and delete account.
 
-## 4. Running when this was written
+All three helpers of this session (H1 settings and sign-in, H2 channel and application, H3 admin and organizations) are merged. Their worktrees still exist and are no longer needed.
 
-Two helpers (Opus), each in its own worktree created from `b2bd83a`. Their
-briefs are in the session scratchpad and may be gone later; the scope is:
+## 4. Open right now: do these first, in this order
 
-- **H1**: settings (category list, Appearance pane with day, night, follow the device, calm motion; delete account as press-and-hold), welcome and sign-in with the consent dialog, notifications drawer, bookmarks, page not found. Strings `30_account.json`, test `lantern_account_test.dart`.
-- **H2**: channel page, then the broadcaster application with inline errors and its status page. Strings `40_channel.json`, `41_apply.json`, tests `lantern_channel_test.dart`, `lantern_apply_test.dart`.
+1. **Run the full suite on the branch tip.** The last full run that passed was before the admin and organization merge: 2,390 passed, 0 failed (65 skipped are picture tests). After that merge the analyzer reports 0 issues and the helper's own tests passed in its worktree (`lantern_admin_test` 35, `lantern_org_test` 31), but **no clean full run was made**. A full run that also held an uncommitted router change failed 49 tests; 30 were in `lessons_screens_test.dart` and came from that router change; the other 19 were not identified. So expect either 0 failures or a small number from the last merge.
+   From `project/`: `flutter test --reporter expanded 2>&1 | tr '\r' '\n' | grep -E "\[E\]$|tests passed|tests failed"` (about 6 minutes; do not edit `lib/` while it runs).
+2. **Decide the speed change** in `brief/fable/pending/defer_routes.patch` (not applied). It loads five pages on demand in `app_router.dart`: settings, broadcaster application, organization home, shows, YouTube connections. Measured on commit `53034f0`: main web script 6,846 KB (1,942 KB compressed) without it, 6,518 KB (1,854 KB) with it; `master` is 6,259 KB (1,771 KB). Apply with `git apply brief/fable/pending/defer_routes.patch` from `project/`, run the full suite, commit as `perf(web)` only if it is green. A wider version (eleven pages, adding the "my lessons" pages, the preacher pages, viewer set-up and the invitation page) broke tests: a page loaded on demand shows a spinner that never settles under `pumpAndSettle`. Do not use `dart format` on `app_router.dart` (it reformats the whole file).
+3. **Repeat the old-design proof on the tip.** `bash brief/tools/skin_proof.sh "<repo>/.claude/worktrees/skin-proof-master" <output folder>`. The clean `master` copy is already prepared there. The last proof (at `a0a007a`, before the three helper merges) gave 34 of 38 identical; the 4 others were the Settings design tile (intended) and one countdown minute on the map. Put the pairs under `brief/fable/skin_regression/` (do not commit the pictures; commit `result.txt`).
+4. **Finish `brief/fable/FINAL_REPORT.md`.** It is complete except these markers: `TBD-SUITE` (twice), `TBD-ANDROID`, `TBD-PROOF`, `TBD-EMULATOR-PAIRS`, `TBD-WEB`, `TBD-WEBGZ`, `TBD-ANDROID-DETAIL`, `TBD-COMMITS`. Section 5 of the report describes the eleven-page change: correct it to what is finally committed (five pages, or none). Then publish it as a private artifact for the owner.
+5. **Android emulator pass** in three designs (not started). No signed bundle is possible: `project/android/key.properties` does not exist and the owner must run `brief\launch\make_upload_key.ps1` himself. A debug build can use `--dart-define-from-file` pointing at the main checkout's `project/dart_define.local.json` (never print or copy that file). Emulator `Pixel_5`, SDK on `D:\app\Android\Sdk`; it allows `adb root`, so the design can be set by writing `flutter.app_skin` in the app's shared preferences. Do not sign in with a real account.
+6. Docs: a RESUME block in `brief/LEDGER.md`; `Core_files/STATUS.md` already has a Lantern section (check its wording against the final numbers); `brief/fable/PROGRESS.md` is one step behind this file.
 
-If a new session finds them unmerged: `git worktree list`, look for the two
-newest `agent-*` worktrees, read `git log d82e114..HEAD` there, cherry-pick
-onto `fable/lantern-skin`, run `python brief/tools/merge_lantern_i18n.py`,
-then the analyzer and the tests.
+## 5. Waiting for the owner
 
-## 5. Still to do, in order
+- **Migration `supabase/migrations/20261111120000_content_reports.sql`** is not applied anywhere and was not run on a local stack (Docker was not running). Until it is applied, Report answers "could not be sent".
+- **Report in the older designs.** Google's reviewer sees gold & black, the default, which has no Report for a broadcast or a channel. The owner's rule forbids new features there, so it was not built. It needs his decision.
+- **Merge order.** His uncommitted work on `master` touches `app_provider.dart` and `rtmp_ip_dialog.dart`; this branch changes both.
+- The signing key (above), and the open design questions (listed in section 9 of the report).
 
-1. Merge H1 and H2 after reading their diffs. Add the Report action to the channel page (`showLanternReportSheet`, kind `channel`).
-2. Admin hub (rail, KPI cards, batch bar, pipeline), organization hub, chat moderation dialogs, and a **queue for content reports** (the provider has `loadContentReports` and `dismissContentReport`; no screen reads them yet).
-3. Lessons pages that still draw the older widgets under Lantern: `/lessons/me`, `/lessons/me/notifications`, `/lessons/me/saved`, `/lessons/apply`, `/lessons/me/preacher`. `PhoneBroadcastScreen` (the camera screen) has no Lantern view either.
-4. Speed work for all skins with before and after numbers (ADR-025 round 2). Nothing measured yet.
-5. Android: no signed AAB is possible (`project/android/key.properties` does not exist; the owner runs `brief\launch\make_upload_key.ps1`). Still to do: emulator pass in three skins (`Pixel_5`, SDK on `D:\app\Android\Sdk`), "use my location" after the manifest change, 16 KB check, version code.
-6. Proof that the old skins did not change: run `SKIN_REGRESSION_DIR=<dir> flutter test test/skin_regression_capture_test.dart` on a `master` worktree and on the branch in the same minute, then `python brief/tools/compare_skin_captures.py <before> <after>`. Emulator pairs under `brief/fable/skin_regression/`.
-7. Docs: `STATUS.md`, `LEDGER.md` RESUME block, a contrast test (`test/lantern_contrast_test.dart` is named in a comment but not written).
-8. `brief/fable/FINAL_REPORT.md` and the private artifact.
+## 6. Not built
 
-## 6. Waiting for the owner
-
-- **Migration `20261111120000_content_reports.sql`** is written but was not run anywhere: Docker was not running, so not even on a local stack. Until it is applied, the Report action answers "could not be sent".
-- The data export function (`20261015172851`) does not yet include the reports a person filed in `content_reports`.
-- Open design questions and the defaults chosen: day is the default appearance; the arch is the signature frame; drawn reactions; labelled role chips; no new font files; no speaking signal in audio rooms; no locate button and no Now / Tonight / This week control on the map; press-and-hold for go live (from a laptop), end a broadcast, and delete account.
+Twelve admin tabs, `/org-admin`, the organization invitation page and members list, the "my lessons" pages, the preacher application and link pages, the lessons admin, viewer set-up and the phone camera screen still draw the older widgets under Lantern (restyled by the shared kit). A corner player that keeps playing. The map's locate button and Now / Tonight / This week control. Speed work beyond the web script size. The data export does not include filed content reports.
 
 ## 7. Tools and traps
 
-- Quiet test runner: `FT_TAIL=200 bash ../brief/fable/scratch/ft.sh test/<file>` from `project/`. With no file it runs the whole suite (about 6 minutes). Do not edit `lib/` while it runs.
-- Lantern pictures: `LANTERN_CAPTURE_DIR=<dir> flutter test test/lantern_capture_test.dart` (optional `LANTERN_CAPTURE_ONLY=map-`). The studio and the poster write theirs from `lantern_studio_test.dart` and `lantern_poster_test.dart` with the same variable.
+- Quiet runner for single files: `FT_TAIL=200 bash ../brief/fable/scratch/ft.sh test/<file>` from `project/`. For the whole suite use the command in section 4, because the quiet runner cuts off failure names.
+- Lantern pictures: `LANTERN_CAPTURE_DIR=<dir> flutter test test/lantern_capture_test.dart` (optional `LANTERN_CAPTURE_ONLY=map-,settings-`); the studio and the poster write theirs from their own test files with the same variable.
 - Strings: add `brief/tools/lantern_i18n/NN_area.json`, then `python brief/tools/merge_lantern_i18n.py` from the worktree root. Never hand-merge the catalogs.
-- Write long scripts with a file, not a shell heredoc (quotes break them).
-- `git add <paths>`. Never `git add brief/fable` as a whole (`shots/` holds pictures). The three `project/windows/flutter/generated_*` files are generated: do not commit them.
-- `LLattice` is already a `Positioned.fill`: put it straight into a `Stack`.
-- A studio test needs the fixture `test/support/studio_fixture.dart` (a signed-in broadcaster on the device that holds the broadcast); without it the studio forgets the destination on every provider update.
-- `lanternToast` is a snack bar: it does not show over an open sheet. Say a failure inside the sheet.
-- Machine: 15 GB of memory. One heavy job at a time (full suite, Gradle, emulator); at most two helpers that run Flutter tools.
+- To merge a helper: cherry-pick its commits; on a catalog conflict take ours, run the merge tool, `git add` the two catalogs, `git cherry-pick --continue`.
+- Write long scripts to a file, not a shell heredoc. `git add <paths>`, never `git add brief/fable` as a whole. The three `project/windows/flutter/generated_*` files are generated: do not commit them.
+- `LLattice` is already a `Positioned.fill`. `LNightBand` gives night colours only to widgets built with a context inside it (use a `Builder`). `lanternToast` is a snack bar and does not show over an open sheet.
+- White text on the night state colours fails AA: use `LanternTokens.liveFill`, `okFill`, `audioFill` (see `test/lantern_contrast_test.dart`).
+- A studio test needs `test/support/studio_fixture.dart`. Map tests depend on the time of day: never assume a single pin is on screen.
+- Machine: 15 GB of memory. One heavy job at a time; at most two or three helpers that run Flutter tools.
 
-## 8. Known risks to report to the owner
+## 8. Left on disk
 
-- The owner's uncommitted studio work on `master` touches `app_provider.dart` and `rtmp_ip_dialog.dart`, which this branch also changes. Commit or set that work aside before a merge.
-- The "mini player" only leaves a way back; playback stops. A corner player that keeps playing is not built.
-- The audio stage draws over the YouTube player (also in the old skins): a YouTube terms risk.
-- `privacy.html` has no YouTube API Services statement.
-- For a new Play app Google makes its own signing key by default. The owner must choose "use your own key" before the first release if he wants his own.
+Worktrees under `.claude/worktrees/`: `agent-a042ac1f6af7bfaa3`, `agent-a4b85e7d6e6275098`, `agent-a9df4d30dc21a16a3`, `agent-a4177b3f1a2a45439`, `agent-aaeda783fc87b3ff3` (helpers, all merged) and `skin-proof-master` (a clean `master` with the capture test copied in and a web build). Removing them needs the owner's word.
