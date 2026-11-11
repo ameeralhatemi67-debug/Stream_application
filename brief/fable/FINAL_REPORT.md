@@ -1,10 +1,8 @@
 # Lantern and Arch: report for the owner
 
-> **DRAFT, not final.** The run was stopped on 2026-11-11 before the last checks. Every place marked `TBD-` still needs a result, and section 5 describes a speed change that is not committed yet. See `brief/fable/HANDOFF.md`, section 4.
+Written 2026-11-12. Branch `fable/lantern-skin`, in the worktree `.claude/worktrees/fable-lantern`. Nothing was pushed. Nothing was deployed. No migration was applied to the hosted database. No key or secret was created, printed or changed.
 
-Written 2026-11-11. Branch `fable/lantern-skin`, in the worktree `.claude/worktrees/fable-lantern`. Nothing was pushed. Nothing was deployed. No migration was applied to the hosted database. No key or secret was created, printed or changed.
-
-**In short.** The third design, Lantern and Arch, is built for almost every screen of the app and is chosen in Settings → Design. Gold & black is still the default. The two older designs are unchanged: pictures of 19 screens in both of them, taken on `master` and on this branch at the same minute, are identical except the new tile in Settings → Design. The full test suite passes (TBD-SUITE). Three things are not done: a signed app bundle (it needs your key), a real run of the new database table (it needs your approval), and the Android emulator pass (TBD-ANDROID).
+**In short.** The third design, Lantern and Arch, is built for almost every screen of the app and is chosen in Settings → Design. Gold & black is still the default. The two older designs are unchanged: pictures of 19 screens in both of them, taken on `master` and on this branch at the same minute, are identical except the new tile in Settings → Design. The full test suite passes: 2,456 tests passed and 0 failed (65 more are picture tests that only run on request). All three designs were run on the Android emulator from a real Android build, with no error in the device log. Two things are not done: a signed app bundle (it needs your key), and a real run of the new database table (it needs your approval).
 
 **Four decisions are waiting for you.** They are in section 7, first table.
 
@@ -21,6 +19,8 @@ Written 2026-11-11. Branch `fable/lantern-skin`, in the worktree `.claude/worktr
 - Code: `project/lib/core/widgets/lantern/lantern_poster.dart`. Tests: `project/test/lantern_poster_test.dart` (5).
 
 A sample is at `brief/fable/shots/poster-en.png` after you run the picture command in section 2.
+
+Pictures of the Lantern design running on the Android emulator (opening screen, Discover, map, place card, channel, replay, lessons; day and night; Arabic and English) are in `brief/fable/shots/emulator/`. They are on this computer only and are not committed.
 
 ---
 
@@ -103,11 +103,13 @@ bash brief/tools/skin_proof.sh <a checkout of master> <output folder>
 
 The two runs must share the clock, because lesson and map screens show countdowns.
 
-**Result.** TBD-PROOF
+**Result (2026-11-12, on the last code commit).** 36 of the 38 pictures are identical, pixel for pixel. The 2 that differ are the phone Settings page in gold & black and in Hedayah. The only difference is the new "Lantern and Arch" tile in Settings → Design, which moves the rows below it down. That change is intended: it is how a person chooses the new design. The pictures are in `brief/fable/skin_regression/tip_36308b5/` (`before/`, `after/`, `diff/`) on this computer; the result list is committed as `brief/fable/skin_regression/RESULT.md`.
 
-**Tests.** The whole existing suite passes on the branch (TBD-SUITE). `lantern_isolation_test.dart` fails if any Lantern widget is built on a screen of an older design.
+**Tests.** The whole suite passes on the branch: 2,456 passed, 0 failed. `lantern_isolation_test.dart` fails if any Lantern widget is built on a screen of an older design.
 
-**Not done.** The brief asked for before and after screenshots on the Android emulator. TBD-EMULATOR-PAIRS
+**On the Android emulator.** I built the Android app from `master` and from this branch with the same settings, installed each on the same emulator (Pixel 5), and opened the same five screens as a guest in gold & black and in Hedayah, in Arabic: Discover, the map, lessons, a channel page, and a replay. Discover, the map and lessons are identical, pixel for pixel, in both designs. The channel page differs only inside its cover, which has a slowly moving pattern: two pictures of the same build taken four seconds apart differ in the same area. The replay differs only inside the YouTube player (the video frame). The pairs are in `brief/fable/skin_regression/emulator/` (`before/` is `master`, `after/` is the branch).
+
+**Not covered on the emulator.** Settings and the admin page need a signed-in account, and I did not sign in with a real account. No channel was live at the time, so the live room and the audio room were not opened on the emulator. The test pictures above cover Settings, the admin page and both rooms.
 
 ---
 
@@ -118,13 +120,22 @@ The two runs must share the clock, because lesson and map screens show countdown
 | Build | Main script | Compressed |
 |---|---|---|
 | `master` | 6,259 KB | 1,771 KB |
-| This branch before the change below (one commit before the last merge) | 6,846 KB | 1,942 KB |
-| The same commit, with eleven pages loaded on demand | 6,518 KB | 1,854 KB |
-| The final branch | TBD-WEB | TBD-WEBGZ |
+| This branch, before the change below | 6,913 KB | 1,944 KB |
+| This branch, final (with the change below) | 6,433 KB | 1,814 KB |
 
-**What the numbers say.** The new design adds code that every visitor downloads, whichever design they use. **Change made (all designs):** eleven pages that a visitor who only watches never opens are now downloaded when they are opened, not at the start: settings, the broadcaster application, the viewer set-up, the three organization pages, the invitation page, the three "my lessons" pages, the preacher application and the preacher's page. On the same commit this took 328 KB (88 KB compressed) off the main script. On a phone the pages are already in the app, so nothing changes there. The change is in `project/lib/core/routing/app_router.dart` only.
+**What the numbers say.** The new design adds code that every visitor downloads, whichever design they use. **Change made (all designs):** twelve pages that a visitor who only watches never opens are now downloaded when they are opened, not at the start: settings, the broadcaster application, the viewer set-up, the three organization pages, the invitation page, the three "my lessons" pages, the preacher application and the preacher's page. This took 480 KB (130 KB compressed) off the main script. The new design now costs a web visitor 174 KB more than `master` (43 KB compressed, about 2.4%). A page that was already opened builds at once the next time, without a loading frame; this also applies to the admin pages, which were already loaded on demand. On a phone the pages are already in the app, so nothing changes there. The change is in `project/lib/core/routing/app_router.dart`, with one new test file (`project/test/flutter_test_config.dart`) that loads these pages before each test file runs.
 
-**Not measured, and not done.** Cold start on Android, memory, rebuild counts, frame times, the app bundle's size, and the network work of ADR-025 round 2 (map tiles by range, a cached public catalog, a `--wasm` trial). A release build needs your key, and the time went to the screens. Section 8 lists these as the next speed work.
+**Measured: the Android app, on the emulator.** A signed release build needs your key, so I measured a profile build (the same compiled code as a release build, with measuring tools left in) for one processor type, on the Pixel 5 emulator. The emulator is much slower than a phone, so read the two columns against each other, not as phone numbers.
+
+| | `master` | This branch |
+|---|---|---|
+| Cold start to the first frame, middle value of 7 starts | 5.28 s (5.05 to 5.67) | 5.53 s (5.22 to 6.52) |
+| Compiled app code (`libapp.so`) | 19.9 MB | 22.2 MB |
+| Install file (profile, one processor type) | 56.8 MB | 59.1 MB |
+
+The new design adds 2.3 MB of compiled code and about a quarter of a second to a cold start on the emulator. The second number is close to the spread between runs, so treat it as "no clear change" until it is measured on a real phone.
+
+**Not measured, and not done.** Memory, rebuild counts and frame times; the size of the real app bundle (it needs your key); cold start on a real phone; and the network work of ADR-025 round 2 (map tiles by range, a cached public catalog, a `--wasm` trial). The time went to the screens. Section 8 lists these as the next speed work.
 
 ---
 
@@ -150,7 +161,13 @@ The full status, with Google's pages and the date each was read, is `brief/fable
 6. Upload to closed testing and fill the forms from `store/`.
 7. Twelve testers must stay opted in for 14 days in a row before you can apply for production. Recruit 15 to 20.
 
-**Not checked on a device in this run.** TBD-ANDROID-DETAIL
+**Checked on the Android emulator in this run (2026-11-12, Pixel 5, guest, real data from the hosted backend).**
+- The Android build of this branch installs over the `master` build and starts in all three designs. The device log shows no Flutter error and no crash.
+- Lantern: the opening screen, Discover (day, night, Arabic, English), the map (a group of 4 places zoomed until it split; a pin opened the new place card), the channel page, a replay, and the lessons home.
+- Gold & black and Hedayah: Discover, the map, lessons, a channel page and a replay, the same as on `master` (section 4).
+- A replay failed once with a network error and played after Retry. The error page and its Retry button worked.
+
+**Not checked on a device.** A signed release build. Sign-in, Settings, the studio, the admin page and phone broadcasting (they need an account; I did not sign in with a real one). A live room and an audio room (no channel was live). "Use my location" on the map. These need your test accounts and a real phone; the steps are in `brief/launch/02_TESTING_PLAN.md`.
 
 ---
 
@@ -171,7 +188,8 @@ The full status, with Google's pages and the date each was read, is `brief/fable
 - **A corner player that keeps playing.** Leaving a room still stops playback and leaves a way back, as in the older designs.
 - **From the design, left out because the app has no data for it:** the Now / Tonight / This week control and the locate button on the map; charts and "days to review" in the admin overview; a speaking signal in audio rooms; "draft saved" in the application.
 - **The data export** (`20261015172851`) does not yet include the reports a person filed in the new table.
-- Speed work beyond section 5, and the Android device checks in section 6.
+- Speed work beyond section 5, and the device checks listed as "not checked" in section 6.
+- In the night look the map itself keeps its light colours; only the controls around it are dark.
 
 ### Known weak points
 
@@ -199,7 +217,7 @@ All are free unless marked.
 8. Make Lantern the default after one release with both, and retire one older design. Three designs cost testing time on every change.
 
 **Speed**
-9. Load the Lantern screens of the studio and the application on demand as well; then split the map and the lessons the same way.
+9. Load the broadcast studio on demand as well; then split the map and the lessons the same way.
 10. Read map tiles by range instead of downloading the whole 11.8 MB file (ADR-025 round 2).
 11. Measure cold start and memory on a real mid-range Android phone with a release build.
 
@@ -244,7 +262,7 @@ Each is one place in the code and easy to change.
 
 ## 10. Commits, the migration, and how to review and merge
 
-**Commits.** TBD-COMMITS commits on `fable/lantern-skin`, on top of `master` `77bcff0`. See them with:
+**Commits.** 47 commits on `fable/lantern-skin`, on top of `master` `77bcff0`. See them with:
 
 ```bash
 git log --oneline 77bcff0..fable/lantern-skin
@@ -260,6 +278,8 @@ git diff 77bcff0..fable/lantern-skin -- project/lib ':!project/lib/**/lantern/**
 ```
 
 The second command shows only the changes to files the older designs use. They are additions behind `context.isLanternSkin`, the router change of section 5, and the report service.
+
+**One thing I changed on the emulator.** While I set the design from the command line, one failed step emptied the app's stored settings on the Pixel 5 emulator. The app then started as on a first run, and I entered again as a guest with the display name "Tester". No account was involved. If you kept a guest set-up on that emulator, it is gone.
 
 **To merge and push** (pushing `master` deploys the website):
 

@@ -51,16 +51,18 @@ This file is the state of the run. Update it after each step. Remove notes that 
 | 5b. Lessons home, calendar, lesson, preacher, mosque, series | done by helpers, merged (see below) |
 | 5c. Shared kits (`Ca*`, `Hidayah*`, `T*`) draw as Lantern under the Lantern skin | done by a helper, merged (see below) |
 | 5d. Broadcast studio (one page, three steps, hold to go live and to end) | done, commit `4af19ce` |
-| 6. Settings, notifications, bookmarks, welcome, states and 404 | helper H1 running |
-| 7. Channel page, broadcaster application | helper H2 running |
-| 7a. Admin hub, organization hub, moderation dialogs, content report queue | pending |
-| 7b. Report action for a broadcast and a channel | done for the live room, commit `f861945`; the migration is not applied anywhere; the channel page and the admin queue are pending |
+| 6. Settings, notifications, bookmarks, welcome, states and 404 | done by helper H1, merged |
+| 7. Channel page, broadcaster application | done by helper H2, merged |
+| 7a. Admin frame, overview, verification queue, moderation; organization home, shows, YouTube connections | done by helper H3, merged |
+| 7b. Report action for a broadcast and a channel, with the admin queue | done; the migration is not applied anywhere |
 | 7c. The surprise: an invitation picture for a lesson | done, commit `b2bd83a` |
-| 8. Optimizations with before and after numbers | pending |
+| 8. Optimizations with before and after numbers | done for the web script (twelve pages load on demand: 6,913 → 6,433 KB, 1,944 → 1,814 KB compressed; `master` 6,259 / 1,771). Android measured on the emulator only: cold start 5.28 s on `master`, 5.53 s on the branch (middle of 7); compiled code 19.9 → 22.2 MB. Memory, frame times and ADR-025 round 2 are not done |
 | 9. Play requirements check | done by helper, merged (`c1c2635`..`9761a7e`); status in `brief/fable/ANDROID_PLAY_STATUS.md` |
-| 9. Release build, emulator pass in three skins | pending |
-| 10. Proof that old skins did not change | pending (method below) |
-| 11. Final report and artifact | pending |
+| 9. Release build, emulator pass in three skins | emulator pass done 2026-11-12 with a profile build, as a guest; no signed bundle (the owner's key is missing) |
+| 10. Proof that old skins did not change | done 2026-11-12: 36 of 38 test pictures identical, the 2 others are the Settings design tile; emulator pairs identical for Discover, map and lessons (`brief/fable/skin_regression/RESULT.md`) |
+| 11. Final report and artifact | done 2026-11-12 |
+
+Full suite on the tip, 2026-11-12: 2,456 passed, 0 failed, 65 skipped. What is left is in `brief/fable/HANDOFF.md`, sections 3 and 4.
 
 ## Helpers (each in its own worktree and branch)
 
