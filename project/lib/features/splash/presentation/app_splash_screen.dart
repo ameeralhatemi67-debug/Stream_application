@@ -10,6 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../core/widgets/hedayah/hedayah_kit.dart';
+import 'lantern/lantern_opening_view.dart';
 
 /// Clean, stutter-free App Startup Splash Screen.
 /// Displays high-fidelity branding, warms up provider services,
@@ -51,6 +52,62 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     );
 
     _scheduleNavigation();
+    _startLanternOpening();
+  }
+
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026): its opening screen plays a short drawing, so
+  // it shows a little longer, says when the network is slow or absent, and
+  // can be skipped. The other designs keep the 300 ms below.
+  // ---------------------------------------------------------------------
+  bool get _lantern => context.read<AppProvider>().appSkin == AppSkin.lantern;
+  Timer? _lanternSlowTimer;
+  bool _lanternSlow = false, _lanternRetrying = false;
+
+  void _startLanternOpening() {
+    if (!_lantern) return;
+    // The pulse belongs to the other designs' splash.
+    _logoPulseController.stop();
+    _lanternSlowTimer = Timer(LanternOpening.slowAfter, () {
+      if (mounted && !_navigated) setState(() => _lanternSlow = true);
+    });
+  }
+
+  Duration _showFor() {
+    if (!_lantern) return _minimumShow;
+    final calm = context.read<AppProvider>().lanternCalmMotion ||
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    return calm ? LanternOpening.minimumShowCalm : LanternOpening.minimumShow;
+  }
+
+  void _lanternSkip() {
+    _navigationTimer?.cancel();
+    _provider ??= context.read<AppProvider>()..addListener(_onProviderChanged);
+    _navigateIfReady();
+  }
+
+  /// "Continue with what loaded": offered only once this device's own state
+  /// is read, so a first visit still meets the welcome page. Sign-in may
+  /// still be loading; the router checks again when it arrives.
+  void _lanternContinue() {
+    final provider = context.read<AppProvider>();
+    if (_navigated || !provider.localStateRestored) return;
+    _navigated = true;
+    _provider?.removeListener(_onProviderChanged);
+    provider.ensureLivePollingActive();
+    final known = (provider.googleUserEmail ?? '').isNotEmpty ||
+        provider.isReturningGuest;
+    context.go(known ? '/feed' : '/welcome');
+  }
+
+  Future<void> _lanternRetry() async {
+    if (_lanternRetrying) return;
+    setState(() => _lanternRetrying = true);
+    await context.read<AppProvider>().refreshConnectivityNow();
+    if (!mounted) return;
+    setState(() => _lanternRetrying = false);
+    _lanternSkip();
   }
 
   /// Shortest time the splash shows, so a cached start does not flash it.
@@ -62,7 +119,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
   /// fixed 1.35 s, then another 1.35 s for each check that found sign-in
   /// still loading (2026-11-07 web speed diagnosis).
   void _scheduleNavigation() {
-    _navigationTimer = Timer(_minimumShow, () {
+    _navigationTimer = Timer(_showFor(), () {
       if (!mounted) return;
       _provider = context.read<AppProvider>()
         ..addListener(_onProviderChanged);
@@ -104,6 +161,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
   @override
   void dispose() {
     _navigationTimer?.cancel();
+    _lanternSlowTimer?.cancel();
     _provider?.removeListener(_onProviderChanged);
     _logoPulseController.dispose();
     super.dispose();
@@ -111,6 +169,20 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      final (online, restored) = context.select<AppProvider, (bool, bool)>(
+          (p) => (p.isOnline, p.localStateRestored));
+      return LanternOpeningView(
+          state: !online
+              ? LanternOpeningState.offline
+              : _lanternSlow
+                  ? LanternOpeningState.slow
+                  : LanternOpeningState.opening,
+          retrying: _lanternRetrying,
+          onSkip: _lanternSkip,
+          onContinue: restored ? _lanternContinue : null,
+          onRetry: _lanternRetry);
+    }
     if (context.isHedayahSkin) return const _HedayahSplash();
     return Scaffold(
       backgroundColor: AppTheme.bg,

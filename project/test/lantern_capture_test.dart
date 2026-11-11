@@ -10,6 +10,7 @@ import 'package:streamer_app/core/widgets/app_logo.dart';
 import 'package:streamer_app/core/widgets/lantern/lantern.dart';
 import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart';
 import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
+import 'package:streamer_app/features/splash/presentation/lantern/lantern_opening_view.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/lantern_harness.dart';
@@ -143,6 +144,47 @@ void main() {
         image.dispose();
       });
       await app.close();
+    });
+  }
+
+  // Screens that are easier to show on their own than through the router.
+  final pieces = <(String, Size, String, Widget)>[
+    ('opening-phone-ar', phone, 'ar', const LanternOpeningView()),
+    ('opening-laptop-en', laptop, 'en', const LanternOpeningView()),
+    (
+      'opening-phone-ar-slow',
+      phone,
+      'ar',
+      LanternOpeningView(
+          state: LanternOpeningState.slow, onContinue: () {}, onSkip: () {})
+    ),
+    (
+      'opening-phone-en-offline',
+      phone,
+      'en',
+      LanternOpeningView(state: LanternOpeningState.offline, onRetry: () {})
+    ),
+  ];
+  for (final (name, size, lang, widget) in pieces) {
+    final wanted = _only.isEmpty || _only.any(name.contains);
+    testWidgets('capture $name', skip: _dir == null || !wanted, (tester) async {
+      await pumpLanternWidget(tester, RepaintBoundary(child: widget),
+          size: size, lang: lang);
+      final context = tester.element(find.byType(RepaintBoundary).first);
+      await tester.runAsync(() async {
+        await precacheImage(const AssetImage(LLogo.wordmark), context);
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pump(const Duration(milliseconds: 200));
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byType(RepaintBoundary).first);
+      await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        await File('$_dir/$name.png').writeAsBytes(bytes!.buffer.asUint8List());
+        image.dispose();
+      });
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }
 }

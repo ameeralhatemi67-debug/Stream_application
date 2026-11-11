@@ -3495,6 +3495,18 @@
       "next_broadcast": "Next broadcast",
       "sign_in_title": "Sign in to set a reminder",
       "sign_in_body": "Reminders are saved to your account, so they reach every phone you sign in on."
+    },
+    "opening": {
+      "label": "Opening {}",
+      "subtitle": "Live lectures and lessons · Eastern Province",
+      "step_live": "Getting live broadcasts and tonight's lessons…",
+      "step_order": "Ordering lessons by prayer time…",
+      "step_ready": "Ready",
+      "slow": "The network is slow. Still loading the broadcasts…",
+      "continue": "Continue with what loaded",
+      "offline": "No internet connection",
+      "retry": "Try again",
+      "skip": "Skip"
     }
   }
 }
