@@ -71,6 +71,14 @@ class LanternPhoneBar extends StatelessWidget
                             builder: (context, _) =>
                                 LLogo(height: 34, onDark: t.night)),
                         const Spacer(),
+                        // Saved items stay one tap away on a phone, as in the
+                        // older designs; the design sheet draws only the bell
+                        // and the gear.
+                        LIconButton(
+                            icon: LGlyph.bookmark,
+                            label: 'nav.bookmarks'.tr(),
+                            iconSize: 22,
+                            onPressed: () => openLanternBookmarks(context)),
                         LIconButton(
                             icon: LGlyph.bell,
                             label: 'nav.notifications'.tr(),

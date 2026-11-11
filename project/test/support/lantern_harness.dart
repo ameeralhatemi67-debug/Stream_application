@@ -42,13 +42,17 @@ AppProvider lanternProvider(
     String liveId = 'stream-lantern-1'}) {
   final provider = AppProvider()..restoreAppSkin(skin, appearance: appearance);
   for (final (i, s) in mockStreamers.indexed) {
-    provider.addStreamerForTests(i == 0 && live
-        ? s.copyWith(
-            isCurrentlyLive: true,
-            broadcastType:
-                audio ? BroadcastType.liveAudio : BroadcastType.liveVideo,
-            activeStreamId: liveId)
-        : s);
+    provider.addStreamerForTests(!live
+        // Nothing is live: the sample channels that are live by default
+        // are switched off too.
+        ? s.copyWith(isCurrentlyLive: false)
+        : i == 0
+            ? s.copyWith(
+                isCurrentlyLive: true,
+                broadcastType:
+                    audio ? BroadcastType.liveAudio : BroadcastType.liveVideo,
+                activeStreamId: liveId)
+            : s);
   }
   return provider;
 }
@@ -146,6 +150,10 @@ class LanternApp {
     await it.settle();
     return it;
   }
+
+  /// The page on top, whether it was reached with go or push.
+  String get location =>
+      router.routerDelegate.currentConfiguration.last.matchedLocation;
 
   /// A few frames, without waiting for endless animations to finish.
   Future<void> settle([int frames = 8]) async {

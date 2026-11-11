@@ -3470,6 +3470,31 @@
       "system": "Follow the device",
       "calm": "Calm motion",
       "calm_hint": "Stops moving decoration: counters, sweeps, rising reactions. The app works the same."
+    },
+    "time": {
+      "in_minutes": "in {} min",
+      "in_hours": "in {} h {} min",
+      "now": "now"
+    },
+    "discover": {
+      "also_live": "Also live",
+      "live_count_label": "{} live",
+      "soon_title": "Starting soon",
+      "soon_sub": "Scheduled broadcasts. One tap sets a reminder.",
+      "starts_in": "Starts in",
+      "scheduled": "Scheduled",
+      "remind": "Remind me",
+      "reminder_on": "Reminder on",
+      "lessons_sub": "Approved lessons in the mosques of Al Khobar, Dhahran and Dammam, in prayer order.",
+      "viewers_unknown": "Viewer count not available yet",
+      "open_channel": "Open the channel of {}",
+      "open_room": "Open the room: {}",
+      "you_are_live": "You are live now",
+      "back_to_room": "Open my room",
+      "map_pins": "{} places on the map",
+      "next_broadcast": "Next broadcast",
+      "sign_in_title": "Sign in to set a reminder",
+      "sign_in_body": "Reminders are saved to your account, so they reach every phone you sign in on."
     }
   }
 }
