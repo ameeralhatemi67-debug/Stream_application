@@ -16,6 +16,7 @@ import 'package:streamer_app/features/lessons/domain/lessons_models.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_names.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/calendar_view.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lantern_lessons_parts.dart';
+import 'package:streamer_app/features/lessons/presentation/lantern/lesson_view.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lessons_home_view.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
 
@@ -23,6 +24,9 @@ import 'support/lantern_harness.dart';
 import 'support/localized_app.dart';
 
 /// The mosque-lessons pages in the Lantern and Arch design (ADR-026).
+bool sameDayAs(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
 const _phone = Size(390, 844), _laptop = Size(1440, 900);
 
 /// Never answers: the programme stays loading.
@@ -397,7 +401,7 @@ void main() {
       await app.close();
     });
 
-    testWidgets('loading and failure states', (tester) async {
+    testWidgets('calendar loading and failure states', (tester) async {
       final slow = await _start(tester,
           location: '/lessons/calendar', repo: _SlowRepo());
       expect(find.byKey(const ValueKey('lantern-lessons-loading')),
@@ -408,6 +412,86 @@ void main() {
       expect(find.byKey(const ValueKey('lantern-lessons-error')),
           findsOneWidget);
       await down.close();
+    });
+  });
+
+  group('Lesson page', () {
+    String seriesLesson(LessonsController c) =>
+        '/lessons/lesson/${c.upcoming.firstWhere((l) => l.seriesId != null && !sameDayAs(l.date, c.today)).id}';
+
+    testWidgets('lays out in both languages, layouts and appearances',
+        (tester) async {
+      await _layoutEverywhere(tester, seriesLesson, view: LanternLessonView);
+    });
+
+    testWidgets('shows facts, actions, series, preacher, mosque and prayers',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', size: _laptop, persona: LessonsDemoPersona.viewer);
+      await app.push(seriesLesson(app.lessons));
+      expect(find.byType(LFactTile), findsNWidgets(3));
+      expect(find.byType(LPrayerStrip), findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-lesson-remind')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-lesson-share')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-lesson-upcoming')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-lesson-flag')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-lesson-admin')), findsNothing);
+      expect(find.byType(LanternWebHeader), findsOneWidget);
+      expect(find.byType(LanternWebFooter), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('Remind me, Follow and Report call the controller',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', persona: LessonsDemoPersona.viewer);
+      final route = seriesLesson(app.lessons);
+      final l = app.lessons.lesson(route.split('/').last)!;
+      await app.push(route);
+      expect(find.byType(LanternPageBar), findsOneWidget);
+      await _tap(app, find.byKey(const ValueKey('lantern-lesson-remind')));
+      await _tap(app, find.byKey(const ValueKey('lantern-remind-30')));
+      expect(app.lessons.reminderLead(l.id), '30');
+      await _tap(app, find.byKey(ValueKey('lantern-follow-preacher-${l.preacherId}')));
+      expect(app.lessons.isFollowing('preacher', l.preacherId), isTrue);
+      await _tap(app, find.byKey(const ValueKey('lantern-lesson-share')));
+      expect(find.text('lessons.share.copy'.tr()), findsOneWidget);
+      await _tap(app, find.byTooltip('Close'));
+      expect(find.text('lessons.share.copy'.tr()), findsNothing);
+      final repo = app.lessons.repository as DemoLessonsRepository;
+      final before = repo.flags.length;
+      // Let the toasts go: they float over the end of the page.
+      await tester.pump(const Duration(seconds: 6));
+      await app.settle();
+      await _tap(app, find.byKey(const ValueKey('lantern-lesson-flag')));
+      await _tap(app, find.text('lessons.flag.send'.tr()));
+      expect(repo.flags.length, before + 1);
+      await app.close();
+    });
+
+    testWidgets('a cancelled session is struck through and says so',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', persona: LessonsDemoPersona.admin);
+      final route = seriesLesson(app.lessons);
+      await tester.runAsync(
+          () => app.lessons.cancelLesson(route.split('/').last, 'Travel'));
+      await app.push(route);
+      expect(find.byKey(const ValueKey('lantern-lesson-cancelled')), findsOneWidget);
+      final title =
+          tester.widget<Text>(find.byKey(const ValueKey('lantern-lesson-title')));
+      expect(title.style?.decoration, TextDecoration.lineThrough);
+      expect(find.byKey(const ValueKey('lantern-lesson-admin')), findsOneWidget);
+      expect(find.text('lessons.restore.title'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('an unknown lesson is not found', (tester) async {
+      final app = await _start(tester, location: '/lessons/lesson/no-such-lesson');
+      expect(find.byKey(const ValueKey('lantern-lesson-missing')), findsOneWidget);
+      await _tap(app, find.text('lessons.see_all'.tr()));
+      expect(app.router.routeInformationProvider.value.uri.path, '/lessons/calendar');
+      await app.close();
     });
   });
 }

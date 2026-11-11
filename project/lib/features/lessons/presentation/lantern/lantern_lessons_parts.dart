@@ -1048,16 +1048,16 @@ final _fsi = String.fromCharCode(0x2068), _pdi = String.fromCharCode(0x2069);
 /// The drawn map of the teaser: streets, the coast, mosque arches and live
 /// dots. A picture, not the map; tapping opens the map.
 class LMapArt extends StatelessWidget implements LanternSkinWidget {
-  const LMapArt({super.key, this.height = 260});
+  const LMapArt({super.key, this.height = 260, this.radius = Lantern.radiusCard});
 
-  final double height;
+  final double height, radius;
 
   @override
   Widget build(BuildContext context) {
     final t = context.lt;
     return ExcludeSemantics(
         child: ClipRRect(
-            borderRadius: BorderRadius.circular(Lantern.radiusCard),
+            borderRadius: BorderRadius.circular(radius),
             child: SizedBox(
                 height: height,
                 child: CustomPaint(

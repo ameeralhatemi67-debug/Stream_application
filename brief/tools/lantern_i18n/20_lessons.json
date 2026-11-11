@@ -8,7 +8,10 @@
         "at_mosques": "On now at mosques: {}"
       },
       "lesson": {
-        "cancel_told": "Everyone with a reminder was told."
+        "cancel_told": "Everyone with a reminder was told.",
+        "not_found_body": "It may have been removed or its link changed.",
+        "available": "Available",
+        "not_available": "Not available"
       }
     }
   },
@@ -21,7 +24,10 @@
         "at_mosques": "يقام الآن في المساجد: {}"
       },
       "lesson": {
-        "cancel_told": "أبلغنا كل من فعّل التذكير."
+        "cancel_told": "أبلغنا كل من فعّل التذكير.",
+        "not_found_body": "ربما حُذف أو تغيّر رابطه.",
+        "available": "متوفر",
+        "not_available": "غير متوفر"
       }
     }
   }

@@ -3596,7 +3596,10 @@
         "at_mosques": "On now at mosques: {}"
       },
       "lesson": {
-        "cancel_told": "Everyone with a reminder was told."
+        "cancel_told": "Everyone with a reminder was told.",
+        "not_found_body": "It may have been removed or its link changed.",
+        "available": "Available",
+        "not_available": "Not available"
       }
     }
   }

@@ -9,6 +9,8 @@ import '../../domain/lessons_models.dart';
 import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
+import '../../../../core/theme/app_theme.dart' show LanternContext;
+import '../lantern/lesson_view.dart';
 import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_modals.dart';
@@ -50,6 +52,7 @@ class LessonScreen extends StatelessWidget {
     final c = context.watch<LessonsController>();
     final l = c.lesson(id);
     final lang = context.lang, wide = context.wide;
+    if (l == null && context.isLanternSkin) return const LanternLessonMissing();
     if (l == null) {
       return LessonsPage(title: 'lessons.nav.lesson'.tr(), children: [
         c.loading ? const Center(child: CircularProgressIndicator(color: TC.gold)) : TEmpty(title: 'lessons.lesson.not_found'.tr()),
@@ -64,6 +67,21 @@ class LessonScreen extends StatelessWidget {
     final report = c.admin.reports[l.id];
     final channel = preacherChannel(context, p);
     final liveNow = c.isLiveNow(l);
+    if (context.isLanternSkin) {
+      return LanternLessonView(
+          lesson: l,
+          preacher: p,
+          mosque: m,
+          district: d,
+          prayer: pt,
+          series: s,
+          sessions: sibs,
+          past: past,
+          admin: admin,
+          report: report,
+          channel: channel,
+          liveNow: liveNow);
+    }
 
     final facts = [
       _Fact(TGlyph.calendar, 'lessons.lesson.date'.tr(), '${relativeDayLabel(l.date, lang) == weekdayName(l.date, lang) ? '' : '${relativeDayLabel(l.date, lang)} · '}${weekdayName(l.date, lang)} ${gregorianLabel(l.date, lang)}',
