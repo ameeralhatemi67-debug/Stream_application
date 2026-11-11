@@ -14,6 +14,7 @@ import 'package:streamer_app/features/lessons/data/demo_lessons_repository.dart'
 import 'package:streamer_app/features/lessons/data/lessons_repository.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_models.dart';
 import 'package:streamer_app/features/lessons/domain/lessons_names.dart';
+import 'package:streamer_app/features/lessons/presentation/lantern/calendar_view.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lantern_lessons_parts.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lessons_home_view.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
@@ -285,6 +286,128 @@ void main() {
             reason: skin.id);
         await app.close();
       }
+    });
+  });
+
+  group('Lessons calendar', () {
+    int count(WidgetTester tester) {
+      final text = tester
+          .widget<Text>(find.byKey(const ValueKey('lantern-calendar-count')))
+          .data!;
+      return int.parse(RegExp(r'\d+').firstMatch(text)!.group(0)!);
+    }
+
+    testWidgets('lays out in both languages, layouts and appearances',
+        (tester) async {
+      await _layoutEverywhere(tester, (_) => '/lessons/calendar',
+          view: LanternLessonsCalendar);
+    });
+
+    testWidgets('the strip picks a day, All and 2 weeks', (tester) async {
+      final app = await _start(tester, location: '/lessons/calendar');
+      final all = count(tester);
+      expect(all, app.lessons.upcoming.length);
+      final today = app.lessons.today;
+      await _tap(app,
+          find.byKey(ValueKey('lantern-day-${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}')));
+      final todays = app.lessons.upcoming
+          .where((l) =>
+              l.date.year == today.year &&
+              l.date.month == today.month &&
+              l.date.day == today.day)
+          .length;
+      expect(count(tester), todays);
+      await _tap(app, find.byKey(const ValueKey('lantern-day-two-weeks')));
+      expect(count(tester), lessThanOrEqualTo(all));
+      await _tap(app, find.byKey(const ValueKey('lantern-day-all')));
+      expect(count(tester), all);
+      await app.close();
+    });
+
+    testWidgets('the website panel filters live and clears', (tester) async {
+      final app =
+          await _start(tester, location: '/lessons/calendar', size: _laptop);
+      expect(find.byKey(const ValueKey('lantern-calendar-filter-panel')),
+          findsOneWidget);
+      final all = count(tester);
+      await _tap(app, find.byKey(const ValueKey('lantern-filter-live')));
+      final streamed = app.lessons.upcoming.where((l) => l.streamed).length;
+      expect(count(tester), streamed);
+      expect(find.text('lessons.calendar.clear_n'.tr(args: ['1'])),
+          findsOneWidget);
+      await _tap(app, find.byKey(const ValueKey('lantern-filter-clear')));
+      expect(count(tester), all);
+      await app.close();
+    });
+
+    testWidgets('phones filter in a sheet; Show results applies',
+        (tester) async {
+      final app = await _start(tester, location: '/lessons/calendar');
+      expect(find.byKey(const ValueKey('lantern-calendar-filter-panel')),
+          findsNothing);
+      await _tap(app, find.byKey(const ValueKey('lantern-calendar-filters')));
+      await _tap(app, find.byKey(const ValueKey('lantern-filter-series')));
+      await _tap(app, find.byKey(const ValueKey('lantern-calendar-show')));
+      final series =
+          app.lessons.upcoming.where((l) => l.seriesId != null).length;
+      expect(count(tester), series);
+      await app.close();
+    });
+
+    testWidgets('honours the route filter, and the empty state clears it',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons/calendar?mosque=no-such-mosque', size: _laptop);
+      expect(find.byKey(const ValueKey('lantern-calendar-empty')),
+          findsOneWidget);
+      await _tap(app, find.text('lessons.calendar.clear'.tr()));
+      expect(count(tester), app.lessons.upcoming.length);
+      await app.close();
+
+      final urdu = await _start(tester, location: '/lessons/calendar?lang=ur');
+      final ur = urdu.lessons.upcoming
+          .where((l) => l.language == 'ur' || l.interpretation == 'ur')
+          .length;
+      expect(count(tester), ur);
+      await urdu.close();
+    });
+
+    testWidgets('the week grid lays lessons out by prayer', (tester) async {
+      final app = await _start(tester, location: '/lessons/calendar');
+      await _tap(app, find.text('lessons.calendar.week'.tr()));
+      expect(find.byKey(const ValueKey('lantern-calendar-grid')),
+          findsOneWidget);
+      final first = app.lessons.upcoming.first;
+      expect(find.byKey(ValueKey('lantern-grid-${first.id}')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('past lessons take Did you attend? through the controller',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons/calendar', persona: LessonsDemoPersona.viewer);
+      await _tap(app, find.text('lessons.calendar.past'.tr()));
+      final past = app.lessons.pastWhere((_) => true);
+      expect(past, isNotEmpty);
+      final l = past.first;
+      final was = app.lessons.attended(l.id);
+      await _tap(app, find.byKey(ValueKey('lantern-attend-${l.id}')));
+      expect(app.lessons.attended(l.id), !was);
+      await app.close();
+    });
+
+    testWidgets('loading and failure states', (tester) async {
+      final slow = await _start(tester,
+          location: '/lessons/calendar', repo: _SlowRepo());
+      expect(find.byKey(const ValueKey('lantern-lessons-loading')),
+          findsOneWidget);
+      await slow.close();
+      final down = await _start(tester,
+          location: '/lessons/calendar', repo: _DownRepo());
+      expect(find.byKey(const ValueKey('lantern-lessons-error')),
+          findsOneWidget);
+      await down.close();
     });
   });
 }

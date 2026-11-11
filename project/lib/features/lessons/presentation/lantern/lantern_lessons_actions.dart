@@ -20,6 +20,11 @@ import '../lessons_widgets.dart' show prayerLabel;
 /// the same controller method as the older pages (lessons_modals.dart,
 /// lessons_widgets.dart); only the sheets and the toasts are drawn anew.
 
+/// Sheets open on the root navigator: inside the tab frame the floating
+/// navigation would otherwise cover their bottom.
+BuildContext overTabs(BuildContext context) =>
+    Navigator.of(context, rootNavigator: true).context;
+
 /// Runs a write and reports a failure as a Lantern toast. Null on failure.
 Future<T?> lRun<T>(BuildContext context, Future<T> Function() call,
     {String? success}) async {
@@ -92,7 +97,7 @@ Future<void> showLanternRemindSheet(BuildContext context, Lesson l) {
     }
   }
 
-  return showLanternSheet<void>(context,
+  return showLanternSheet<void>(overTabs(context),
       title: 'lessons.remind.title'.tr(),
       body: (ctx) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,7 +140,7 @@ Future<void> showLanternShareSheet(BuildContext context, Lesson l) {
   final c = context.read<LessonsController>();
   final lang = context.locale.languageCode;
   final text = lessonShareText(c, l, lang);
-  return showLanternSheet<void>(context,
+  return showLanternSheet<void>(overTabs(context),
       title: 'lessons.share.title'.tr(),
       body: (ctx) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -185,7 +190,7 @@ Future<void> showLanternFlagSheet(BuildContext context, Lesson l) {
   final c = context.read<LessonsController>();
   var kind = 'time';
   final msg = TextEditingController();
-  return showLanternSheet<void>(context,
+  return showLanternSheet<void>(overTabs(context),
       title: 'lessons.flag.title'.tr(),
       body: (ctx) => StatefulBuilder(
           builder: (ctx, set) => Column(

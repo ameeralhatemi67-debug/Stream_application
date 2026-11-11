@@ -9,6 +9,8 @@ import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_names.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
+import '../../../../core/theme/app_theme.dart' show LanternContext;
+import '../lantern/calendar_view.dart';
 import '../lessons_kit.dart';
 import '../lessons_shell.dart';
 import '../lessons_widgets.dart';
@@ -41,6 +43,29 @@ class _LessonsScreenState extends State<LessonsScreen> {
     final matched = base.where((l) => f.matches(l, c.catalog)).toList();
     final shown = day == null ? matched : matched.where((l) => sameDay(l.date, day!)).toList();
     final days = [for (var i = 0; i < 14; i++) addDays(c.today, i)];
+    if (context.isLanternSkin) {
+      return LanternLessonsCalendar(
+          filter: f,
+          past: past,
+          weekGrid: weekGrid,
+          day: day,
+          search: search,
+          matched: matched,
+          shown: shown,
+          days: days,
+          onFilter: (v) => setState(() => f = v),
+          onPast: (v) => setState(() {
+                past = v;
+                day = null;
+              }),
+          onWeekGrid: (v) => setState(() => weekGrid = v),
+          onDay: (v) => setState(() => day = v),
+          onClear: () => setState(() {
+                f = LessonFilter.none;
+                search.clear();
+                day = null;
+              }));
+    }
 
     final dayStrip = past
         ? null
