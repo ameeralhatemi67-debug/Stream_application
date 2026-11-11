@@ -9,13 +9,12 @@
   YouTube embeds, OpenStreetMap tile server), so this should require zero
   further changes for normal operation.
 
-  Note on the RTMP "Local OBS" testing feature (rtmp_ip_dialog.dart): RTMP is not
-  HTTP, and Android's Network Security Config governs HTTP(S)/socket traffic made
-  through Android's own network stack (HttpURLConnection, OkHttp, WebView) — it
-  does not apply to flutter_vlc_player's own RTMP networking. If a real device
-  test shows local RTMP preview breaking after this change, that's independent
-  of this file and would need investigating in the VLC player adapter instead —
-  don't loosen this config to "fix" an RTMP issue without confirming that first.
+  Note on RTMP (updated 2026-11-11): RTMP is not HTTP. This file governs HTTP(S)
+  made through Android's own network stack (HttpURLConnection, OkHttp, WebView). It
+  does not govern the raw sockets RootEncoder opens for phone broadcasting
+  (RtmpPublisherBridge). Phone broadcasts to YouTube use RTMPS (AppProvider checks
+  for an rtmps:// YouTube ingest address). flutter_vlc_player is no longer a
+  dependency. Don't loosen this config to "fix" an RTMP issue.
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">

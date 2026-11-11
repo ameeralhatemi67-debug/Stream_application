@@ -11,8 +11,8 @@ plugins {
 
 // --- Release signing (Publishing Readiness Audit, Phase 7; gate G8) --------------------------
 // Loads real upload-key credentials from android/key.properties, which is NOT committed to git
-// (already covered by android/.gitignore). See doc/Audit/07_Platform_Build_Readiness.md for the
-// keytool command that generates the upload keystore and the key.properties format.
+// (already covered by android/.gitignore). The owner creates both with
+// brief/launch/make_upload_key.ps1 (brief/launch/01_OWNER_STEPS.md section 6).
 //
 // Fails closed: a release build without key.properties now stops with an explanation instead of
 // quietly signing with the debug keystore. A debug-signed artifact is indistinguishable from a
@@ -157,8 +157,8 @@ gradle.taskGraph.whenReady {
     if (assemblingRelease && !hasReleaseSigning) {
         throw GradleException(
             "Release signing is not configured: android/key.properties is missing. " +
-                "Create the upload keystore and key.properties as described in " +
-                "doc/Audit/07_Platform_Build_Readiness.md, then build again. " +
+                "Create the upload keystore and key.properties with " +
+                "brief/launch/make_upload_key.ps1 (run it yourself), then build again. " +
                 "Never commit the keystore or key.properties."
         )
     }

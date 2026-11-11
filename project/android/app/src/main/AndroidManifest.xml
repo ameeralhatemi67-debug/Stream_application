@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- CAMERA permission removed (Publishing Readiness Audit, Phase 2/7): the app only ever
@@ -36,10 +37,29 @@
     <!-- Foreground only: asked when the user picks a location ("use my location"). -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Play review readiness 2026-11-11. CAMERA implies android.hardware.camera and
+         android.hardware.camera.autofocus, and RECORD_AUDIO implies
+         android.hardware.microphone, all as required. Google Play would then hide the
+         app from tablets and other devices without a rear camera or a microphone, yet
+         most people only watch. Only phone broadcasting needs them, so they are
+         optional here. On a device without a rear camera, RearCameraSource throws and
+         RtmpPublisherBridge answers ENCODER_FAILED (read from the code, not yet tried
+         on such a device). -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <!-- No Android backup (2026-11-11). Shared preferences hold the Supabase session
+         (refresh token), this phone's device ID for the one-broadcaster rule, and
+         Firebase's push registration. A restore on another phone would copy all three,
+         which Android's backup guide says to exclude. allowBackup="false" stops cloud
+         backup; data_extraction_rules.xml also stops device-to-device transfer, which
+         allowBackup alone does not stop on Android 12 and later. -->
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false">
         <activity
@@ -128,6 +148,15 @@
             android:name=".streaming.RtmpForegroundService"
             android:exported="false"
             android:foregroundServiceType="camera|microphone" />
+        <!-- The geolocator plugin declares a "location" foreground service for
+             background position streams. The app never starts it: it reads one
+             position with getCurrentPosition() when the user taps "use my location",
+             with the app on screen. Removed (2026-11-11) so the merged manifest
+             declares no location foreground service, which Play Console would
+             otherwise ask about in its foreground-service form. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
