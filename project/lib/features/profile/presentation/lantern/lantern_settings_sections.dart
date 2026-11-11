@@ -160,7 +160,7 @@ class _Preview extends CustomPainter {
     }
     final card = Paint()..color = LanternTokens.white;
     final shade = Paint()
-      ..color = const Color(0x14000000)
+      ..color = LanternTokens.ink.withValues(alpha: .08)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
     final radius = Radius.circular(skin == AppSkin.gold ? 5 : 8);
     for (var i = 0; i < 2; i++) {

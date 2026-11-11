@@ -13,7 +13,11 @@ import 'package:streamer_app/features/notifications/presentation/lantern/lantern
 import 'package:streamer_app/features/profile/models/upcoming_schedule.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/routing/lantern/lantern_not_found_page.dart';
+import 'package:streamer_app/features/auth/presentation/lantern/lantern_banned_view.dart';
 import 'package:streamer_app/features/auth/presentation/lantern/lantern_consent_dialog.dart';
+import 'package:streamer_app/features/auth/presentation/lantern/lantern_role_select_view.dart';
+import 'package:streamer_app/features/auth/presentation/role_select_screen.dart';
+import 'package:streamer_app/features/auth/presentation/screens/account_banned_screen.dart';
 import 'package:streamer_app/features/auth/presentation/lantern/lantern_welcome_view.dart';
 import 'package:streamer_app/features/auth/presentation/welcome_screen.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
@@ -695,6 +699,69 @@ void main() {
       await app.settle(3);
       expect(find.byKey(const ValueKey('lantern-bookmarks-failed')),
           findsNothing);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+  });
+
+  group('role select and suspended account', () {
+    for (final lang in ['en', 'ar']) {
+      for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+        for (final night in [false, true]) {
+          testWidgets(
+              'role select lays out ($lang, $label, ${night ? 'night' : 'day'})',
+              (tester) async {
+            await pumpLanternWidget(tester, const RoleSelectScreen(),
+                lang: lang,
+                size: size,
+                provider: lanternProvider(
+                    appearance: night
+                        ? LanternAppearance.night
+                        : LanternAppearance.day));
+            expect(tester.takeException(), isNull);
+            expect(find.byType(LanternRoleSelectView), findsOneWidget);
+            expect(find.byKey(const ValueKey('role-select-viewer')),
+                findsOneWidget);
+            expect(find.byKey(const ValueKey('role-select-broadcaster')),
+                findsOneWidget);
+            expect(find.byKey(const Key('role-select-preacher')),
+                findsOneWidget);
+            expect(_olderKit, findsNothing);
+          });
+
+          testWidgets(
+              'the suspended page lays out ($lang, $label, ${night ? 'night' : 'day'})',
+              (tester) async {
+            await pumpLanternWidget(tester, const AccountBannedScreen(),
+                lang: lang,
+                size: size,
+                provider: lanternProvider(
+                    appearance: night
+                        ? LanternAppearance.night
+                        : LanternAppearance.day));
+            await settle(tester, 2);
+            expect(tester.takeException(), isNull);
+            expect(find.byType(LanternBannedView), findsOneWidget);
+            expect(find.byKey(const ValueKey('lantern-banned-sign-out')),
+                findsOneWidget);
+            expect(_olderKit, findsNothing);
+          });
+        }
+      }
+    }
+
+    testWidgets('choosing the viewer role goes on to Discover',
+        (tester) async {
+      final provider = lanternProvider();
+      final app = await LanternApp.start(tester,
+          provider: provider, size: phone, location: '/role-select');
+      expect(find.byType(LanternRoleSelectView), findsOneWidget);
+      await tester.tap(find.descendant(
+          of: find.byKey(const ValueKey('role-select-viewer')),
+          matching: find.byType(LButton)));
+      await app.settle();
+      expect(provider.hasCompletedRoleSelection, isTrue);
+      expect(app.location, '/feed');
       expect(tester.takeException(), isNull);
       await app.close();
     });
