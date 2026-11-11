@@ -3765,6 +3765,10 @@
       "hold_delete": "Hold to delete",
       "hold_ban": "Hold to ban",
       "hold_hint": "Press and hold the button to confirm."
+    },
+    "org": {
+      "setup_count": "{done} of {total} done",
+      "no_presenters": "No member can present this format yet."
     }
   }
 }

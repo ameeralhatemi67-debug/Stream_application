@@ -115,6 +115,8 @@ void main() {
           '/profile/${provider.streamers.first.streamerId}',
           '/settings',
           '/organizations',
+          '/shows',
+          '/channels',
           '/admin',
           '/admin/lessons',
           '/streamer-apply',

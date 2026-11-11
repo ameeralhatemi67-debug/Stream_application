@@ -1,0 +1,14 @@
+{
+  "en": {
+    "org": {
+      "setup_count": "{done} of {total} done",
+      "no_presenters": "No member can present this format yet."
+    }
+  },
+  "ar": {
+    "org": {
+      "setup_count": "اكتمل {done} من {total}",
+      "no_presenters": "لا يوجد عضو يستطيع تقديم هذا النوع بعد."
+    }
+  }
+}
