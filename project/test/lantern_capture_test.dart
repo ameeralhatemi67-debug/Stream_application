@@ -39,7 +39,8 @@ typedef LanternShot = ({
   bool night,
   String who,
   bool audio,
-  bool live
+  bool live,
+  List<String> taps
 });
 
 LanternShot lanternShot(String name, String route,
@@ -48,7 +49,8 @@ LanternShot lanternShot(String name, String route,
         bool night = false,
         String who = 'guest',
         bool audio = false,
-        bool live = true}) =>
+        bool live = true,
+        List<String> taps = const []}) =>
     (
       name: name,
       route: route,
@@ -57,7 +59,8 @@ LanternShot lanternShot(String name, String route,
       night: night,
       who: who,
       audio: audio,
-      live: live
+      live: live,
+      taps: taps
     );
 
 final shots = <LanternShot>[
@@ -78,6 +81,26 @@ final shots = <LanternShot>[
   lanternShot('room-audio-phone-ar', '/live/lanternLive', audio: true),
   lanternShot('room-audio-laptop-en', '/live/lanternLive',
       size: laptop, lang: 'en', audio: true),
+  lanternShot('map-phone-ar-day', '/map'),
+  lanternShot('map-phone-en-night', '/map', lang: 'en', night: true),
+  lanternShot('map-phone-ar-channel', '/map',
+      taps: ['lantern-map-list-button', 'lantern-map-row-s-']),
+  lanternShot('map-phone-en-mosque', '/map',
+      lang: 'en', taps: ['lantern-map-list-button', 'lantern-map-row-m-']),
+  lanternShot('map-phone-ar-list', '/map', taps: ['lantern-map-list-button']),
+  lanternShot('map-phone-ar-filters', '/map',
+      taps: ['lantern-map-filter-button']),
+  lanternShot('map-phone-en-legend', '/map',
+      lang: 'en', taps: ['lantern-map-legend-button']),
+  lanternShot('map-tablet-ar-day', '/map', size: tablet),
+  lanternShot('map-laptop-ar-day', '/map', size: laptop),
+  lanternShot('map-laptop-en-night', '/map',
+      size: laptop,
+      lang: 'en',
+      night: true,
+      taps: ['lantern-map-legend-button', 'lantern-map-row-s-']),
+  lanternShot('map-laptop-ar-mosque', '/map',
+      size: laptop, taps: ['lantern-map-row-m-']),
 ];
 
 void main() {
@@ -138,6 +161,19 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 300));
       });
       await app.settle(10);
+      // Each entry is the start of a key; the first widget with it is tapped.
+      for (final prefix in s.taps) {
+        final target = find.byWidgetPredicate((w) {
+          final key = w.key;
+          return key is ValueKey<String> && key.value.startsWith(prefix);
+        });
+        if (target.evaluate().isEmpty) {
+          debugPrint('CAPTURE ${s.name}: nothing to tap for $prefix');
+          continue;
+        }
+        await tester.tap(target.first, warnIfMissed: false);
+        await app.settle(10);
+      }
       // A build or layout error shows in the picture; say what it was.
       final error = tester.takeException();
       if (error != null) debugPrint('CAPTURE ${s.name}: $error');

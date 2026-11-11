@@ -1290,6 +1290,9 @@ Future<T?> showLanternSheet<T>(BuildContext context,
       context: context,
       isScrollControlled: scrollControlled,
       useSafeArea: true,
+      // Over the whole app: a sheet opened from a tab must cover the
+      // floating navigation, not slide in under it.
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       barrierColor: context.lt.scrim,
       builder: (sheetContext) => LanternSurface(

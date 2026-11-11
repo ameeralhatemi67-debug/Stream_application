@@ -119,33 +119,37 @@ class LanternApp {
     final app = provider ?? lanternProvider(skin: skin);
     final lessons = LessonsController(DemoLessonsRepository(persona: persona));
     final router = AppRouter.build(app)..go(location);
-    await tester.pumpWidget(EasyLocalization(
-        key: UniqueKey(),
-        supportedLocales: const [Locale('en'), Locale('ar')],
-        startLocale: Locale(lang),
-        saveLocale: false,
-        path: 'assets/i18n',
-        assetLoader: const DirectJsonAssetLoader(),
-        child: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<AppProvider>.value(value: app),
-              ChangeNotifierProvider<LessonsController>.value(value: lessons),
-            ],
-            child: Builder(builder: (context) {
-              final skin =
-                  context.select<AppProvider, AppSkin>((p) => p.appSkin);
-              return MaterialApp.router(
-                  debugShowCheckedModeBanner: false,
-                  routerConfig: router,
-                  theme: AppTheme.forLocale(context.locale, skin: skin),
-                  locale: context.locale,
-                  supportedLocales: context.supportedLocales,
-                  localizationsDelegates: context.localizationDelegates,
-                  builder: (context, child) => MediaQuery(
-                      data: MediaQuery.of(context)
-                          .copyWith(disableAnimations: calm),
-                      child: child!));
-            }))));
+    // The outer boundary lets a picture include sheets and dialogs, which
+    // open over the whole app.
+    await tester.pumpWidget(RepaintBoundary(
+        child: EasyLocalization(
+            key: UniqueKey(),
+            supportedLocales: const [Locale('en'), Locale('ar')],
+            startLocale: Locale(lang),
+            saveLocale: false,
+            path: 'assets/i18n',
+            assetLoader: const DirectJsonAssetLoader(),
+            child: MultiProvider(
+                providers: [
+                  ChangeNotifierProvider<AppProvider>.value(value: app),
+                  ChangeNotifierProvider<LessonsController>.value(
+                      value: lessons),
+                ],
+                child: Builder(builder: (context) {
+                  final skin =
+                      context.select<AppProvider, AppSkin>((p) => p.appSkin);
+                  return MaterialApp.router(
+                      debugShowCheckedModeBanner: false,
+                      routerConfig: router,
+                      theme: AppTheme.forLocale(context.locale, skin: skin),
+                      locale: context.locale,
+                      supportedLocales: context.supportedLocales,
+                      localizationsDelegates: context.localizationDelegates,
+                      builder: (context, child) => MediaQuery(
+                          data: MediaQuery.of(context)
+                              .copyWith(disableAnimations: calm),
+                          child: child!));
+                })))));
     final it = LanternApp._(tester, app, lessons, router);
     await it.settle();
     return it;

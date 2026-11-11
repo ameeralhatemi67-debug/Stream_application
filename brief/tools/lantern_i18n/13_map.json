@@ -19,7 +19,17 @@
       "legend_group": "Several places: tap to come closer",
       "zoom_in": "Zoom in",
       "zoom_out": "Zoom out",
-      "saved_venue": "Saved place, shown without a connection"
+      "saved_venue": "Saved place, shown without a connection",
+      "eyebrow": "Eastern Province",
+      "title": "Lecture map",
+      "lead": "Mosques, halls and centres that host lectures across the Eastern Province.",
+      "on_map": "{} on the map",
+      "channels_head": "Scholars and channels",
+      "filters": "Filters",
+      "city": "City",
+      "topic": "Topic",
+      "clear_search": "Clear the search",
+      "list": "Places on the map"
     }
   },
   "ar": {
@@ -42,7 +52,17 @@
       "legend_group": "عدة مواقع: اضغط للاقتراب",
       "zoom_in": "تكبير",
       "zoom_out": "تصغير",
-      "saved_venue": "موقع محفوظ، يظهر بلا اتصال"
+      "saved_venue": "موقع محفوظ، يظهر بلا اتصال",
+      "eyebrow": "المنطقة الشرقية",
+      "title": "خريطة المحاضرات",
+      "lead": "مساجد وقاعات ومراكز تستضيف المحاضرات في أنحاء المنطقة الشرقية.",
+      "on_map": "{} على الخريطة",
+      "channels_head": "المحاضرون والقنوات",
+      "filters": "التصفية",
+      "city": "المدينة",
+      "topic": "الموضوع",
+      "clear_search": "مسح البحث",
+      "list": "الأماكن على الخريطة"
     }
   }
 }

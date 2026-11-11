@@ -164,12 +164,16 @@ class LanternMosquePin extends StatelessWidget implements LanternSkinWidget {
             const Positioned(
                 top: -9, child: LStar(size: 9, color: Color(0xFF805B1B))),
         ]);
+    // "Wednesday · 5:15 PM" does not fit the box: a later day shows the day
+    // alone. The spoken name and the place card keep the time.
+    final label =
+        m.status == MosqueStatus.week ? m.chip.split(' · ').first : m.chip;
     return _PinBox(
         semantics:
             '${'lantern.map.mosque_pin'.tr(args: [m.label, '${m.count}'])}${m.chip.isEmpty ? '' : ', ${m.chip}'}',
         onTap: onTap,
         pin: Padding(padding: const EdgeInsets.only(top: 8), child: arch),
-        label: m.chip.isEmpty ? null : _PinLabel(m.chip, tone: tone));
+        label: m.chip.isEmpty ? null : _PinLabel(label, tone: tone));
   }
 }
 

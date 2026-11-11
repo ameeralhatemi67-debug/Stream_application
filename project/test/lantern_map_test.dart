@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -11,12 +13,23 @@ import 'package:streamer_app/features/lessons/domain/lessons_rules.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_in_app.dart';
 import 'package:streamer_app/features/lessons/presentation/lessons_map.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
+import 'package:streamer_app/core/widgets/language_switcher.dart';
+import 'package:streamer_app/features/map/models/map_models.dart';
+import 'package:streamer_app/features/map/presentation/lantern/lantern_map_chrome.dart';
 import 'package:streamer_app/features/map/presentation/lantern/lantern_map_pins.dart';
 import 'package:streamer_app/features/map/presentation/lantern/lantern_place_card.dart';
 import 'package:streamer_app/features/map/presentation/map_cluster_layout.dart';
+import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/map/presentation/web/map_web_panel.dart';
+import 'package:streamer_app/features/map/presentation/widgets/city_selector_dropdown.dart';
 import 'package:streamer_app/features/map/presentation/widgets/map_cluster_badge.dart';
+import 'package:streamer_app/features/map/presentation/widgets/map_status_details.dart';
 import 'package:streamer_app/features/map/presentation/widgets/marker_summary_card.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
+import 'package:streamer_app/features/map/presentation/widgets/streamer_sliding_drawer.dart';
+import 'package:streamer_app/features/map/presentation/widgets/top_spatial_search_bar.dart';
+import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
+import 'package:streamer_app/features/map/services/map_pack_controller.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
@@ -417,6 +430,30 @@ void main() {
   });
 
   group('in the app', () {
+    // A pin under the search or a card cannot be tapped; take one that can.
+    Finder tappablePin() {
+      for (final type in [LanternStreamerPin, LanternMosquePin]) {
+        final pins = find.byType(type).hitTestable();
+        if (pins.evaluate().isNotEmpty) return pins.first;
+      }
+      fail('no pin can be tapped');
+    }
+
+    Finder onMap(Type type) => find.descendant(
+        of: find.byType(SpatialMapScreen), matching: find.byType(type));
+
+    Finder rows(String kind) => find.byWidgetPredicate((w) {
+          final key = w.key;
+          return key is ValueKey<String> &&
+              key.value.startsWith('lantern-map-row-$kind-');
+        });
+
+    double zoomOf(WidgetTester tester) => tester
+        .widget<FlutterMap>(find.byType(FlutterMap))
+        .mapController!
+        .camera
+        .zoom;
+
     for (final (label, size) in [
       ('phone', const Size(390, 844)),
       ('laptop', const Size(1440, 900))
@@ -454,10 +491,7 @@ void main() {
           size: const Size(390, 844), lang: 'en', location: '/map');
       await app.settle(12);
       tester.takeException();
-      final pin = find.byType(LanternStreamerPin).evaluate().isNotEmpty
-          ? find.byType(LanternStreamerPin).first
-          : find.byType(LanternMosquePin).first;
-      await tester.tap(pin, warnIfMissed: false);
+      await tester.tap(tappablePin());
       await app.settle(10);
       tester.takeException();
       expect(
@@ -468,5 +502,370 @@ void main() {
       expect(find.byType(MapMosqueCard), findsNothing);
       await app.close();
     });
+
+    for (final lang in ['en', 'ar']) {
+      testWidgets('a phone: only Lantern controls around the map ($lang)',
+          (tester) async {
+        final app = await LanternApp.start(tester,
+            size: const Size(390, 844), lang: lang, location: '/map');
+        await app.settle(12);
+        expect(tester.takeException(), isNull);
+        for (final type in [
+          TopSpatialSearchBar,
+          CitySelectorDropdown,
+          TopicSelectorDropdown,
+          MapLayerSwitch,
+          MapAttributionRail,
+          MapConnectionChip,
+          MapNowPill,
+          MapWebPanel,
+          StreamerSlidingDrawer,
+          LanguageSwitcher,
+        ]) {
+          expect(onMap(type), findsNothing, reason: '$type');
+        }
+        expect(find.byType(LanternMapSearch), findsOneWidget);
+        expect(find.byType(LanternMapControls), findsOneWidget);
+        expect(find.byType(LanternMapAttribution), findsOneWidget);
+        expect(find.byType(LanternMapPanel), findsNothing);
+        // The credit stays clear of the floating navigation.
+        expect(
+            tester.getRect(find.byType(LanternMapAttribution)).bottom,
+            lessThanOrEqualTo(
+                tester.getRect(find.byType(LanternBottomNav)).top + 1));
+        await app.close();
+      });
+
+      testWidgets('the website layout: the panel beside the map ($lang)',
+          (tester) async {
+        final app = await LanternApp.start(tester,
+            size: const Size(1440, 900), lang: lang, location: '/map');
+        await app.settle(12);
+        expect(tester.takeException(), isNull);
+        expect(find.byType(LanternMapPanel), findsOneWidget);
+        expect(onMap(MapWebPanel), findsNothing);
+        expect(onMap(TopSpatialSearchBar), findsNothing);
+        final panel = tester.getRect(find.byType(LanternMapPanel));
+        final map = tester.getRect(find.byType(FlutterMap));
+        expect(panel.width, Lantern.sideChat);
+        // The panel is on the start side, so it mirrors in Arabic.
+        if (lang == 'ar') {
+          expect(panel.left, greaterThanOrEqualTo(map.right - 1));
+        } else {
+          expect(panel.right, lessThanOrEqualTo(map.left + 1));
+        }
+        // The buttons are on the end side of the map.
+        final controls = tester.getRect(find.byType(LanternMapControls));
+        expect((lang == 'ar' ? controls.left - map.left : map.right - controls.right),
+            lessThan(40));
+        await app.close();
+      });
+    }
+
+    testWidgets('a row of the panel selects its place and opens its card',
+        (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(1440, 900), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      expect(find.text('Lecture map'), findsOneWidget);
+      expect(find.text('Scholars and channels'), findsOneWidget);
+      expect(rows('s'), findsWidgets);
+      await tester.tap(rows('s').first);
+      await app.settle(4);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(LanternStreamerPlaceCard), findsOneWidget);
+      // The card sits at the start of the map, not over the panel.
+      expect(tester.getRect(find.byType(LanternStreamerPlaceCard)).left,
+          greaterThanOrEqualTo(Lantern.sideChat));
+      await app.close();
+    });
+
+    testWidgets('the legend: a card on the website layout, a sheet on a phone',
+        (tester) async {
+      var app = await LanternApp.start(tester,
+          size: const Size(1440, 900), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      const button = ValueKey('lantern-map-legend-button');
+      await tester.tap(find.byKey(button));
+      await app.settle(2);
+      expect(find.byType(LanternMapLegendCard), findsOneWidget);
+      expect(find.text('A mosque with lessons'), findsOneWidget);
+      await tester.tap(find.byKey(button));
+      await app.settle(2);
+      expect(find.byType(LanternMapLegendCard), findsNothing);
+      await app.close();
+
+      app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      await tester.tap(find.byKey(button));
+      await app.settle(6);
+      expect(find.byType(LanternMapLegendCard), findsNothing);
+      expect(find.byType(LanternMapLegend), findsOneWidget);
+      expect(find.text('What the markers mean'), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('closer and farther move the camera one step', (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      final start = zoomOf(tester);
+      await tester.tap(find.byKey(const ValueKey('lantern-map-zoom-in')));
+      await app.settle(10);
+      expect(zoomOf(tester), closeTo(start + 1, .01));
+      await tester.tap(find.byKey(const ValueKey('lantern-map-zoom-out')));
+      await app.settle(10);
+      expect(zoomOf(tester), closeTo(start, .01));
+      await app.close();
+    });
+
+    testWidgets('a phone: the filters are a sheet and a city applies at once',
+        (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      final start = zoomOf(tester);
+      await tester
+          .tap(find.byKey(const ValueKey('lantern-map-filter-button')));
+      await app.settle(6);
+      expect(find.byKey(const ValueKey('lantern-map-filter-sheet')),
+          findsOneWidget);
+      expect(find.text('All three cities'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('lantern-map-city-khobar')));
+      await app.settle(10);
+      expect(tester.takeException(), isNull);
+      expect(
+          tester
+              .widget<LChip>(
+                  find.byKey(const ValueKey('lantern-map-city-khobar')))
+              .selected,
+          isTrue);
+      // The camera framed the city: closer than the three-city view.
+      expect(zoomOf(tester), greaterThan(start));
+      await app.close();
+    });
+
+    testWidgets('a phone: the list is a sheet and a row opens its card',
+        (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      await tester.tap(find.byKey(const ValueKey('lantern-map-list-button')));
+      await app.settle(6);
+      expect(
+          find.byKey(const ValueKey('lantern-map-list-sheet')), findsOneWidget);
+      await tester.tap(rows('s').first);
+      await app.settle(10);
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('lantern-map-list-sheet')), findsNothing);
+      expect(find.byType(LanternStreamerPlaceCard), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('search finds a city view and a broadcaster', (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      final field = find.byKey(const ValueKey('lantern-map-search'));
+      final start = zoomOf(tester);
+      await tester.enterText(
+          find.descendant(of: field, matching: find.byType(TextField)),
+          'Khobar');
+      await app.settle(3);
+      expect(find.byKey(const ValueKey('lantern-map-search-results')),
+          findsOneWidget);
+      expect(find.text('City view'), findsOneWidget);
+      await tester.tap(find.text('City view'));
+      await app.settle(10);
+      expect(find.byKey(const ValueKey('lantern-map-search-results')),
+          findsNothing);
+      expect(zoomOf(tester), greaterThan(start));
+
+      final name = app.provider.filteredStreamers.first.fullNameEn;
+      await tester.enterText(
+          find.descendant(of: field, matching: find.byType(TextField)), name);
+      await app.settle(3);
+      await tester.tap(find
+          .descendant(
+              of: find.byKey(const ValueKey('lantern-map-search-results')),
+              matching: find.byType(LPressable))
+          .first);
+      await app.settle(10);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(LanternStreamerPlaceCard), findsOneWidget);
+
+      await tester.enterText(
+          find.descendant(of: field, matching: find.byType(TextField)),
+          'zzzzqq');
+      await app.settle(3);
+      expect(find.text('No current map results'), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('without a connection: one line with Retry, and the details',
+        (tester) async {
+      final app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en', location: '/map');
+      await app.settle(12);
+      tester.takeException();
+      expect(find.byType(LanternMapConnection), findsNothing);
+      app.provider.debugSetOnlineForTests(false);
+      await app.settle(6);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(LanternMapConnection), findsOneWidget);
+      expect(onMap(MapConnectionChip), findsNothing);
+      expect(find.widgetWithText(LButton, 'Retry'), findsOneWidget);
+      // No broadcaster is shown as live from a saved list.
+      expect(find.text('LIVE'), findsNothing);
+      await tester.tap(find.byTooltip('Map details and credits'));
+      await app.settle(6);
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('lantern-map-details')), findsOneWidget);
+      expect(find.text('Credits'), findsOneWidget);
+      await app.close();
+    });
   });
+
+  group('the pieces around the map', () {
+    for (final (lang, night) in [
+      ('en', false),
+      ('ar', false),
+      ('en', true),
+      ('ar', true)
+    ]) {
+      testWidgets('they lay out with large text ($lang, night $night)',
+          (tester) async {
+        await pumpLanternWidget(
+            tester,
+            MediaQuery.withClampedTextScaling(
+                minScaleFactor: 1.3,
+                maxScaleFactor: 1.3,
+                child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const LanternMapCounts(total: 12, onSite: 2, live: 3),
+                          const SizedBox(height: 8),
+                          const Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: LanternMapNowPill(onSite: 2, live: 3)),
+                          const SizedBox(height: 8),
+                          LanternMapEmptyNotice(
+                              online: true, retrying: false, onRetry: () {}),
+                          const SizedBox(height: 8),
+                          LanternMapConnection(
+                              label: 'Offline · venues saved 2026-11-10 21:05',
+                              retrying: false,
+                              onRetry: () {},
+                              onDetails: () {}),
+                          const SizedBox(height: 8),
+                          LanternMapOfflineHint(
+                              evicted: false, onPrepare: () {}, onDismiss: () {}),
+                          const SizedBox(height: 8),
+                          LanternMapLegendCard(onClose: () {}),
+                          const SizedBox(height: 8),
+                          Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: LanternMapAttribution(
+                                  credit: '© OpenStreetMap contributors',
+                                  url: 'https://www.openstreetmap.org/copyright',
+                                  onDetails: () {})),
+                          const SizedBox(height: 8),
+                          LanternMapLayerChips(
+                              value: MapLayers.all, onChanged: (_) {}),
+                          const SizedBox(height: 8),
+                          LanternMapFilters(
+                              wrap: true,
+                              cityId: kLanternAllCities,
+                              onCity: (_) {},
+                              topics: lessonTopicCategories(),
+                              topicId: 'all',
+                              onTopic: (_) {}),
+                        ]))),
+            lang: lang,
+            night: night,
+            size: const Size(360, 1500));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+
+    testWidgets('the stored map cannot be used: say so, offer a retry and the list',
+        (tester) async {
+      var listed = 0;
+      final pack = MapPackController(bundle: _NoPackBundle(), useWebStore: false);
+      await tester.runAsync(pack.ensureOpened);
+      await pumpLanternWidget(
+          tester,
+          Center(
+              child: LanternMapPackStatus(
+                  controller: pack, onShowList: () => listed++)));
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('lantern-map-pack-problem')),
+          findsOneWidget);
+      expect(find.text("The map can't be shown"), findsOneWidget);
+      expect(find.widgetWithText(LButton, 'Try again'), findsOneWidget);
+      await tester.tap(find.widgetWithText(LButton, 'Places on the map'));
+      expect(listed, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a saved place without a connection: what is held, and the way',
+        (tester) async {
+      final marker = MapMarkerModel.fromStreamer(mockStreamers.first);
+      await pumpLanternWidget(
+          tester,
+          Builder(
+              builder: (context) => Center(
+                  child: LButton(
+                      label: 'open',
+                      onPressed: () =>
+                          showLanternCachedPlace(context, marker)))));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('lantern-map-cached-place')),
+          findsOneWidget);
+      expect(find.text(marker.getLocalizedName('en')), findsOneWidget);
+      expect(
+          find.text("Full details and live status aren't available offline."),
+          findsOneWidget);
+      expect(find.widgetWithText(LButton, 'Open in Maps'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('the list with nothing in it offers the three cities',
+        (tester) async {
+      var all = 0;
+      await pumpLanternWidget(
+          tester,
+          LanternMapPlaceList(
+              mosques: const [],
+              streamers: const [],
+              onMosque: (_) {},
+              onStreamer: (_) {},
+              onShowAll: () => all++));
+      expect(find.byKey(const ValueKey('lantern-map-list-empty')),
+          findsOneWidget);
+      await tester.tap(find.widgetWithText(LButton, 'Show all three cities'));
+      expect(all, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+}
+
+/// A bundle with no map files, so the stored map reports a problem.
+class _NoPackBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async =>
+      throw FlutterError('Unable to load asset: $key');
 }
