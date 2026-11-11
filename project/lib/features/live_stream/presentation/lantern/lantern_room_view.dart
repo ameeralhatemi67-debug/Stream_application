@@ -70,6 +70,7 @@ class LanternRoom {
     this.onRequestJoin,
     this.onShare,
     this.onDirections,
+    this.onReport,
   });
 
   final String streamId;
@@ -136,6 +137,9 @@ class LanternRoom {
       onRequestJoin,
       onShare,
       onDirections;
+
+  /// Report this broadcast to the platform's admins. Null on one's own.
+  final VoidCallback? onReport;
 
   bool get live => streamer.isLiveForRoom && !interrupted;
 }
@@ -305,6 +309,12 @@ class _TopBar extends StatelessWidget {
                   icon: LGlyph.share,
                   label: 'lantern.room.share'.tr(),
                   onPressed: room.onShare),
+            if (room.onReport != null)
+              LIconButton(
+                  key: const ValueKey('lantern-room-report'),
+                  icon: LGlyph.flag,
+                  label: 'lantern.report.action_stream'.tr(),
+                  onPressed: room.onReport),
             if (room.onStudio != null) ...[
               const SizedBox(width: 4),
               LButton(
@@ -360,6 +370,9 @@ class _More extends StatelessWidget {
               if (room.onStudio != null)
                 item(LGlyph.settings, 'lantern.room.studio'.tr(),
                     room.onStudio!),
+              if (room.onReport != null)
+                item(LGlyph.flag, 'lantern.report.action_stream'.tr(),
+                    room.onReport!),
             ],
         child: SizedBox.square(
             dimension: Lantern.target,

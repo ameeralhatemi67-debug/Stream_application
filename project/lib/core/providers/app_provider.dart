@@ -22,6 +22,7 @@ import '../../features/organization/models/org_invitation.dart';
 import '../../features/live_stream/models/broadcast_session.dart';
 import '../services/upcoming_schedule_service.dart';
 import '../services/hidden_content_service.dart';
+import '../services/content_report_service.dart';
 import '../services/reminder_push_service.dart';
 import '../config/reminder_firebase_config.dart';
 import '../services/connectivity_service.dart';
@@ -428,6 +429,7 @@ class AppProvider extends ChangeNotifier {
   final Set<String> _loadingUpcoming = {};
   final UpcomingScheduleService _upcomingService;
   final HiddenContentService _hiddenContentService;
+  final ContentReportService _contentReportService;
   late final ReminderPushService _reminderPush =
       ReminderPushService(_upcomingService);
   ReminderPushStatus _reminderPushStatus = ReminderPushStatus.unavailable;
@@ -462,10 +464,12 @@ class AppProvider extends ChangeNotifier {
       YouTubeApiService? youTubeService,
       UpcomingScheduleService? upcomingService,
       HiddenContentService? hiddenContentService,
+      ContentReportService? contentReportService,
       OrganizationBroadcastService? organizationBroadcastService})
       : _organizationBroadcastService = organizationBroadcastService ?? OrganizationBroadcastService(),
         _upcomingService = upcomingService ?? UpcomingScheduleService(),
         _hiddenContentService = hiddenContentService ?? HiddenContentService(),
+        _contentReportService = contentReportService ?? ContentReportService(),
         _youTubeService = youTubeService ?? YouTubeApiService(),
         _adminDbService = adminDbService,
         _authService = authService ?? SupabaseAuthService(),
@@ -6234,6 +6238,67 @@ class AppProvider extends ChangeNotifier {
   // ==========================================
   // Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1)
   // ==========================================
+
+  // Reports of a broadcast or a channel (content_reports). Google Play asks
+  // for a way to report content and its publisher inside the app; chat
+  // messages already had one. Only the Lantern design shows the action so
+  // far.
+
+  /// Sends a report as the signed-in person. Never throws: the outcome says
+  /// what to tell them.
+  Future<ContentReportOutcome> submitContentReport(
+      {required ContentReportKind kind,
+      required String channelProfileId,
+      required String reason,
+      String? streamId,
+      String? note}) async {
+    if (currentUserId == null) return ContentReportOutcome.signIn;
+    if (!ContentReportReason.all.contains(reason) ||
+        (kind == ContentReportKind.stream && (streamId ?? '').isEmpty)) {
+      return ContentReportOutcome.failed;
+    }
+    try {
+      await _contentReportService.submit(
+          kind: kind,
+          channelProfileId: channelProfileId,
+          streamId: kind == ContentReportKind.stream ? streamId : null,
+          reason: reason,
+          note: note);
+      return ContentReportOutcome.sent;
+    } on PostgrestException catch (e) {
+      debugPrint('submitContentReport refused: ${e.code}');
+      return switch (e.code) {
+        '23505' => ContentReportOutcome.already,
+        '53400' => ContentReportOutcome.tooMany,
+        _ => ContentReportOutcome.failed,
+      };
+    } catch (e) {
+      debugPrint('submitContentReport failed: $e');
+      return ContentReportOutcome.failed;
+    }
+  }
+
+  /// The queue of content reports, for admin tiers. Empty for anyone else
+  /// (row-level security), and empty when it cannot be read.
+  Future<List<ContentReport>> loadContentReports() async {
+    try {
+      return await _contentReportService.loadOpen();
+    } catch (e) {
+      debugPrint('loadContentReports failed: $e');
+      return const [];
+    }
+  }
+
+  /// Clears a report after an admin acted on it. False when it failed.
+  Future<bool> dismissContentReport(String id) async {
+    try {
+      await _contentReportService.dismiss(id);
+      return true;
+    } catch (e) {
+      debugPrint('dismissContentReport failed: $e');
+      return false;
+    }
+  }
 
   List<ChatReportModel> get chatReports => List.unmodifiable(_chatReports);
 

@@ -49,6 +49,8 @@ import '../../web/presentation/hidayah_web_kit.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/config/app_identity.dart';
 import '../../../core/widgets/lantern/lantern.dart';
+import '../../../core/services/content_report_service.dart';
+import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
 import 'lantern/lantern_room_view.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
@@ -1237,7 +1239,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 isUsableVenuePoint(streamer.latitude, streamer.longitude)
                     ? () =>
                         VenueNavigationSheet.show(context, streamer: streamer)
-                    : null));
+                    : null,
+            // Anyone but the broadcaster can report the broadcast.
+            onReport: appProvider.isOwnStreamerProfile(streamer.streamerId)
+                ? null
+                : () => showLanternReportSheet(context,
+                    kind: ContentReportKind.stream,
+                    channelProfileId: streamer.channelProfileId,
+                    streamId: widget.streamId,
+                    name: title)));
   }
 
   Widget _buildVideoViewport(AppProvider appProvider, StreamerModel streamer,
