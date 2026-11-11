@@ -14,6 +14,7 @@ import '../../../live_stream/services/live_chat_controller.dart'
 import '../../../../core/widgets/lantern/lantern.dart'
     show LGlyph, LanternContext, lanternToast;
 import '../lantern/lantern_chat_reports.dart';
+import '../../../moderation/presentation/content_report_sheet.dart';
 
 /// Platform-Wide Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1).
 /// Admin-tier surface (any AdminHubScreen viewer, not Master-Admin-only like
@@ -357,6 +358,10 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: CustomScrollView(slivers: [
+        // Reported broadcasts and channels, on the platform-wide tab only.
+        // The section draws nothing while there are none.
+        if (widget.streamId == null)
+          const SliverToBoxAdapter(child: ContentReportsSection()),
         SliverToBoxAdapter(
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

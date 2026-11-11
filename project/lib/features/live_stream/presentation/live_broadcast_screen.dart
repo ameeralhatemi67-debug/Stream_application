@@ -50,6 +50,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/config/app_identity.dart';
 import '../../../core/widgets/lantern/lantern.dart';
 import '../../../core/services/content_report_service.dart';
+import '../../moderation/presentation/content_report_sheet.dart';
 import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
 import 'lantern/lantern_room_view.dart';
 import 'lantern/lantern_chat_moderation.dart';
@@ -1000,7 +1001,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       appProvider.isStreamerModeEnabled
                   ? () => LiveBroadcasterStudioSheet.show(context,
                       openedFromVideo: true)
-                  : null));
+                  : null,
+              // Anyone but the broadcaster can report the broadcast.
+              onReport: appProvider.isOwnStreamerProfile(streamer.streamerId)
+                  ? null
+                  : () => showContentReportSheet(context,
+                      kind: ContentReportKind.stream,
+                      channelProfileId: streamer.channelProfileId,
+                      streamId: widget.streamId,
+                      name: streamer.getLocalizedTitle(langCode))));
     }
     return Scaffold(
       backgroundColor: Canopy.forestDeep,
@@ -1036,6 +1045,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         onPressed: () => LiveBroadcasterStudioSheet.show(
                             context,
                             openedFromVideo: true)),
+                  // Anyone but the broadcaster can report the broadcast.
+                  if (!appProvider.isOwnStreamerProfile(streamer.streamerId))
+                    CaIconButton(
+                        key: const ValueKey('room-report'),
+                        icon: CaGlyph.alert,
+                        glass: true,
+                        label: 'lantern.report.action_stream'.tr(),
+                        onPressed: () => showContentReportSheet(context,
+                            kind: ContentReportKind.stream,
+                            channelProfileId: streamer.channelProfileId,
+                            streamId: widget.streamId,
+                            name: streamer.getLocalizedTitle(langCode))),
                   const SizedBox(width: AppTheme.spaceSm),
                 ]),
       body: SafeArea(

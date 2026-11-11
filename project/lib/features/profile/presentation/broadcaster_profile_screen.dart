@@ -34,6 +34,7 @@ import '../../web/presentation/hidayah_web_header.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import 'web/profile_web_parts.dart';
 import '../../../core/services/content_report_service.dart';
+import '../../moderation/presentation/content_report_sheet.dart';
 import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
 import 'lantern/lantern_channel_view.dart';
 
@@ -439,6 +440,28 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                 glass: true,
                                                 onPressed: () => _shareChannel(
                                                     streamer, lang)),
+                                          // Anyone but the channel's owner
+                                          // can report it.
+                                          if (!own)
+                                            CaIconButton(
+                                                key: const ValueKey(
+                                                    'channel-report'),
+                                                bare: true,
+                                                icon: CaGlyph.alert,
+                                                label:
+                                                    'lantern.report.action_channel'
+                                                        .tr(),
+                                                glass: true,
+                                                onPressed: () =>
+                                                    showContentReportSheet(
+                                                        context,
+                                                        kind: ContentReportKind
+                                                            .channel,
+                                                        channelProfileId: streamer
+                                                            .channelProfileId,
+                                                        name: streamer
+                                                            .getLocalizedName(
+                                                                lang))),
                                         ])))))))))),
         // The card rises over the green panel, so the panel keeps its height and
         // everything below the card moves up with it.
