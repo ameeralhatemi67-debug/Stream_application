@@ -1,0 +1,28 @@
+{
+  "en": {
+    "lessons": {
+      "crumb": "Where you are",
+      "now": "Now",
+      "on_now": "On now",
+      "home": {
+        "at_mosques": "On now at mosques: {}"
+      },
+      "lesson": {
+        "cancel_told": "Everyone with a reminder was told."
+      }
+    }
+  },
+  "ar": {
+    "lessons": {
+      "crumb": "موقعك في الصفحات",
+      "now": "الآن",
+      "on_now": "يقام الآن",
+      "home": {
+        "at_mosques": "يقام الآن في المساجد: {}"
+      },
+      "lesson": {
+        "cancel_told": "أبلغنا كل من فعّل التذكير."
+      }
+    }
+  }
+}

@@ -3567,6 +3567,37 @@
       "topic": "الموضوع",
       "clear_search": "مسح البحث",
       "list": "الأماكن على الخريطة"
+    },
+    "studio": {
+      "network": "الاتصال",
+      "network_good": "جيد",
+      "network_unstable": "غير مستقر",
+      "network_off": "بلا اتصال",
+      "step_done": "تم",
+      "step_next": "التالي",
+      "sender": "الإرسال من",
+      "format": "الصيغة",
+      "quality": "جودة الصورة",
+      "hold_start": "اضغط مطولًا لبدء البث",
+      "hold_end": "اضغط مطولًا لإنهاء البث",
+      "hold_cancel_show": "اضغط مطولًا لإلغاء العرض",
+      "key_hidden": "مفتاح البث مخفي",
+      "copied": "تم نسخ مفتاح البث",
+      "server": "الخادم",
+      "private_recording": "التسجيل",
+      "local_unavailable": "غير متاح على هذا الجهاز",
+      "rotate": "أدر الهاتف"
+    },
+    "lessons": {
+      "crumb": "موقعك في الصفحات",
+      "now": "الآن",
+      "on_now": "يقام الآن",
+      "home": {
+        "at_mosques": "يقام الآن في المساجد: {}"
+      },
+      "lesson": {
+        "cancel_told": "أبلغنا كل من فعّل التذكير."
+      }
     }
   }
 }

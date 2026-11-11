@@ -3567,6 +3567,37 @@
       "topic": "Topic",
       "clear_search": "Clear the search",
       "list": "Places on the map"
+    },
+    "studio": {
+      "network": "Connection",
+      "network_good": "Good",
+      "network_unstable": "Unstable",
+      "network_off": "Offline",
+      "step_done": "done",
+      "step_next": "Next",
+      "sender": "Sending from",
+      "format": "Format",
+      "quality": "Picture quality",
+      "hold_start": "Hold to go live",
+      "hold_end": "Hold to end the broadcast",
+      "hold_cancel_show": "Hold to cancel the show",
+      "key_hidden": "The stream key is hidden",
+      "copied": "Stream key copied",
+      "server": "Server",
+      "private_recording": "Recording",
+      "local_unavailable": "Not available on this device",
+      "rotate": "Rotate the phone"
+    },
+    "lessons": {
+      "crumb": "Where you are",
+      "now": "Now",
+      "on_now": "On now",
+      "home": {
+        "at_mosques": "On now at mosques: {}"
+      },
+      "lesson": {
+        "cancel_told": "Everyone with a reminder was told."
+      }
     }
   }
 }
