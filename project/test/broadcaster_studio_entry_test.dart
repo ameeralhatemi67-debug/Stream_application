@@ -164,14 +164,16 @@ class _Broadcasts extends OrganizationBroadcastService {
     channelId:'UC_test',title:'Confirmed channel',status:'connected',revision:2);
   int creates=0,prepares=0;
   String? createdTitle;
-  bool failPrepare=false,failEnd=false;
+  bool failPrepare=false,failEnd=false,rejectPrepare=false;
+  /// What row security returns: an admin also reads other accounts' channels.
+  List<ChannelConnection> readable=const [destination];
   Completer<void>? startGate;
   Object? startError;
   final actions=<String>[];
   Map<String,dynamic> row={'id':'session','owner_id':'c','org_id':null,'state':'scheduled',
     'revision':1,'title_en':'A show','title_ar':'برنامج','broadcast_type':'liveVideo','accepted_at':'2026-10-01',
     'sender_mode':'obs_laptop','stream_id':'abcdefghijk'};
-  @override Future<List<ChannelConnection>> connections() async=>[destination];
+  @override Future<List<ChannelConnection>> connections() async=>readable;
   @override Future<List<OrgMembership>> memberships({String? organizationId}) async=>[];
   @override Future<List<BroadcastSession>> sessions({String? organizationId,bool mine=false}) async=>creates==0?[]:[BroadcastSession.fromRow(row)];
   int reads=0;
@@ -184,6 +186,8 @@ class _Broadcasts extends OrganizationBroadcastService {
   @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
     actions.add(action);
     if(action=='prepare') {
+      // The server refuses before binding the session to any channel.
+      if(rejectPrepare)throw const FunctionException(status:403,details:{'error':'session_operation_unavailable'});
       prepares++;row['channel_connection_id']='connection';row['sender_mode']=sender;row['state']='preparing';
       if(failPrepare)throw const FunctionException(status:409,details:{'error':'feed_creation_unresolved'});
       return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmps.youtube.com/live2','ingest_key':'test-only-key'};
@@ -230,6 +234,45 @@ void main() {
     p.applyDeviceSessions([]);
     expect(restored.session,isNull);expect(p.publishingSession,isNull);expect(p.phoneBroadcastStreamKey,isEmpty);
     restored.dispose();p.dispose();await db.devices.close();
+  });
+
+  test("another account's channel is never offered, even to an admin who can read it",()async {
+    const foreign=ChannelConnection(id:'foreign',ownerId:'x',organizationId:null,
+      channelId:'UC_foreign',title:'Someone else',status:'connected',revision:1);
+    final db=_StudioDb(), broadcasts=_Broadcasts()..readable=const [foreign,_Broadcasts.destination];
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p);
+    await studio.load();
+    expect(p.channelConnections.map((c)=>c.id),['connection']);
+    expect(studio.destinations.map((c)=>c.id),['connection']);
+    expect(studio.destination?.id,'connection');
+    expect(studio.simplePersonalDestination,isTrue);expect(studio.confirmed,isTrue);
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('a session the server refused before binding a channel does not lock the studio',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts()..rejectPrepare=true;
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p);
+    await studio.load();
+    studio.sender='phone_direct';
+    expect(await studio.prepare('First','liveVideo'),isFalse);
+    expect(studio.errorKey,'organization_v1.authorization_failed');
+    expect(studio.frozen,isFalse,reason:'Options and destination stay open to fix');
+    studio.dispose();
+    // Reopening reuses the unprepared session instead of freezing on it.
+    broadcasts.rejectPrepare=false;
+    final reopened=BroadcastPublishingController(p);
+    await reopened.load();
+    expect(reopened.frozen,isFalse);
+    expect(reopened.destination?.id,'connection');
+    expect(reopened.takeRestoredTitle(),broadcasts.row['title_en']);
+    reopened.sender='obs_laptop';
+    expect(await reopened.prepare('Second','liveAudio'),isTrue);
+    expect(broadcasts.creates,1,reason:'The same session is reused');
+    expect(broadcasts.updates.last,('Second','liveAudio'));
+    expect(reopened.frozen,isTrue);
+    reopened.dispose();p.dispose();await db.devices.close();
   });
 
   test('an empty title falls back to the channel name and still prepares',()async {

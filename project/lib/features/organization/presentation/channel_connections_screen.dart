@@ -90,6 +90,57 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen>
       }
     });
   }
+  Widget _channelDetails(ChannelConnection c) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(c.title, style: Theme.of(context).textTheme.bodyMedium),
+            Text(c.channelId, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppTheme.spaceSm),
+            CaStatusChip(
+                kind: c.connected ? CaStatusKind.verified : CaStatusKind.offline,
+                label: 'organization_v1.channel_${c.status}'.tr()),
+          ]);
+
+  /// One card per place this account can broadcast to: the channel linked to
+  /// it, if any, and the way to link, change or unlink it.
+  Widget _destination(
+      {required String title,
+      required CaGlyph icon,
+      String? role,
+      ChannelConnection? channel,
+      required VoidCallback onConnect}) {
+    final linked = channel != null && channel.status != 'disconnected';
+    return OrganizationDetailRow(
+        title: title,
+        details: linked
+            ? _channelDetails(channel)
+            : role == null
+                ? CaIcon(icon)
+                : OrganizationChip(label: role, icon: icon),
+        action: Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            children: [
+              CaButton(
+                  onPressed: _busy ? null : onConnect,
+                  variant: linked && channel.connected
+                      ? CaButtonVariant.secondary
+                      : CaButtonVariant.primary,
+                  label: (linked
+                          ? 'organization_v1.reconnect'
+                          : 'organization_v1.connect')
+                      .tr(),
+                  icon: CaGlyph.video),
+              if (linked)
+                CaButton(
+                    variant: CaButtonVariant.text,
+                    onPressed: _busy
+                        ? null
+                        : () => _run((p) => p.disconnectYouTubeChannel(channel.id)),
+                    label: 'organization_v1.disconnect'.tr()),
+            ]));
+  }
+
   @override
   Widget build(BuildContext context) {
     final (channels, memberships, personal) = context.select<AppProvider,
@@ -138,50 +189,32 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen>
               if (_error != null)
                 CaBanner(message: _error!, kind: CaBannerKind.error),
               if (personal)
-                OrganizationDetailRow(
+                _destination(
                     title: 'organization_v1.personal_destination'.tr(),
-                    details: const CaIcon(CaGlyph.user),
-                    action: CaButton(
-                        onPressed: _busy ? null : () => _connect(null),
-                        label: 'organization_v1.connect'.tr(),
-                        icon: CaGlyph.video)),
-              ...owners.map((m) => OrganizationDetailRow(
+                    icon: CaGlyph.user,
+                    channel: channels
+                        .where((c) => c.organizationId == null)
+                        .firstOrNull,
+                    onConnect: () => _connect(null)),
+              ...owners.map((m) => _destination(
                   title: context.locale.languageCode == 'ar'
                       ? m.organizationNameAr
                       : m.organizationNameEn,
-                  details: OrganizationChip(
-                      label: 'organization_v1.${m.roleValue}'.tr(),
-                      icon: CaGlyph.home),
-                  action: CaButton(
-                      onPressed:
-                          _busy ? null : () => _connect(m.organizationId),
-                      label: 'organization_v1.connect'.tr(),
-                      icon: CaGlyph.video))),
-              ...channels.map((c) => OrganizationDetailRow(
-                  title: c.title,
-                  details: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(c.channelId,
-                            style: Theme.of(context).textTheme.bodySmall),
-                        const SizedBox(height: AppTheme.spaceSm),
-                        CaStatusChip(
-                            kind: c.connected
-                                ? CaStatusKind.verified
-                                : CaStatusKind.offline,
-                            label: 'organization_v1.channel_${c.status}'.tr()),
-                      ]),
-                  action: c.ownerId !=
-                          context.read<AppProvider>().currentUserSessionId
-                      ? null
-                      : CaButton(
-                          variant: CaButtonVariant.text,
-                          onPressed: _busy
-                              ? null
-                              : () =>
-                                  _run((p) => p.disconnectYouTubeChannel(c.id)),
-                          label: 'organization_v1.disconnect'.tr()))),
-              if (channels.isEmpty && !_busy)
+                  icon: CaGlyph.home,
+                  role: 'organization_v1.${m.roleValue}'.tr(),
+                  channel: channels
+                      .where((c) => c.organizationId == m.organizationId)
+                      .firstOrNull,
+                  onConnect: () => _connect(m.organizationId))),
+              // Channels of organizations this account belongs to without
+              // owning them: shown, but only their owner links or unlinks them.
+              ...channels
+                  .where((c) =>
+                      c.organizationId != null &&
+                      !owners.any((m) => m.organizationId == c.organizationId))
+                  .map((c) => OrganizationDetailRow(
+                      title: c.title, details: _channelDetails(c))),
+              if (channels.isEmpty && !personal && owners.isEmpty && !_busy)
                 CaCard(child: Text('organization_v1.no_channel'.tr())),
             ])));
   }

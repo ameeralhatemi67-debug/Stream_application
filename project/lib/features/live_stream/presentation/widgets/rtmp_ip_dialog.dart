@@ -132,6 +132,11 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
   Future<void> _load() async {
     try {
       await _studio.load();
+      final restoredTitle = _studio.takeRestoredTitle();
+      if (restoredTitle != null && _title.text.isEmpty &&
+          restoredTitle != _defaultTitle) {
+        _title.text = restoredTitle;
+      }
       if (mounted) setState(() => _loadError = null);
       _prewarm();
     } catch (_) {
@@ -885,8 +890,16 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                         ],
                                         if (frozen)
                                           OutlinedButton(
+                                              key: const Key('studio-end'),
                                               onPressed:
                                                   operationBusy ? null : _end,
+                                              // Always readable on the dark
+                                              // studio: it is the way out of a
+                                              // prepared session.
+                                              style: OutlinedButton.styleFrom(
+                                                  foregroundColor: Canopy.paper,
+                                                  side: const BorderSide(
+                                                      color: Canopy.mist)),
                                               child: Text(
                                                   'organization_v1.end'.tr())),
                                         if (live)

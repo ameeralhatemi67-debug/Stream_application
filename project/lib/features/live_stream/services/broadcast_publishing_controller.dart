@@ -35,11 +35,16 @@ class BroadcastPublishingController extends ChangeNotifier {
   _Warm? _warm;
   Future<void>? _warming;
   Future<void>? _discarding;
-  bool get frozen => session?.frozen == true || _createdId != null;
+  /// Locked only once the server has tied the session to a channel. A session
+  /// created but never prepared (its preparation failed, or the app closed
+  /// first) keeps every option open and is reused by the next Preview.
+  bool get frozen => session?.frozen == true;
   bool get operating => busy || provider.broadcastOperationBusy;
   List<ChannelConnection> get destinations => provider.channelConnections.where((c) =>
     c.id == destination?.id || c.connected && (c.organizationId == null
-      ? provider.personalBroadcastApproved : provider.orgMemberships.any((m) =>
+      // Only the presenter's own channel: the server refuses anyone else's.
+      ? provider.personalBroadcastApproved && c.ownerId == provider.currentUserSessionId
+      : provider.orgMemberships.any((m) =>
         // Only organizations the rollout flag or pilot list has enabled; the
         // server refuses the start otherwise.
         m.organizationId == c.organizationId && m.active && m.v1Enabled &&
@@ -72,7 +77,7 @@ class BroadcastPublishingController extends ChangeNotifier {
         ['scheduled', 'preparing', 'live', 'ending'].contains(s.state)).toList();
     final id = session?.id ?? _createdId ?? provider.publishingSession?.id;
     final restored = id == null
-        ? rows.where((s) => s.active || (s.organizationId == null && s.state == 'scheduled')).firstOrNull
+        ? rows.where((s) => s.active || (s.organizationId == null && s.state == 'scheduled' && !_expired(s))).firstOrNull
         : await provider.loadBroadcastSession(id);
     if (_disposed || generation != _generation) return;
     if (id == null && restored != null && _warm == null && _reusableWarm(restored)) {
@@ -88,9 +93,16 @@ class BroadcastPublishingController extends ChangeNotifier {
       session = restored;
       _createdId = restored.id;
       hideReplay = restored.hideReplay;
-      destination = provider.channelConnections.where((c) => c.id == restored.channelConnectionId ||
-          (restored.channelConnectionId == null && c.organizationId == restored.organizationId)).firstOrNull;
-      if (restored.frozen) sender = restored.senderMode;
+      // A bound session keeps its channel; an unbound one goes to the
+      // presenter's own channel for its organization (or personal) only.
+      destination = restored.channelConnectionId != null
+          ? provider.channelConnections.where((c) => c.id == restored.channelConnectionId).firstOrNull
+          : destinations.where((c) => c.organizationId == restored.organizationId).firstOrNull;
+      if (restored.frozen) {
+        sender = restored.senderMode;
+      } else if (restored.organizationId == null) {
+        _title = restored.titleEn;
+      }
     } else if (id != null) {
       session = null; _createdId = null; ingestUrl = ''; ingestKey = ''; confirmed = false;
     }
@@ -101,6 +113,13 @@ class BroadcastPublishingController extends ChangeNotifier {
     if (simplePersonalDestination) confirmed = true;
     notifyListeners();
   }
+
+  /// The title of a reused personal session, for the studio's title field.
+  String? _title;
+  String? takeRestoredTitle() { final title = _title; _title = null; return title; }
+
+  static bool _expired(BroadcastSession s) =>
+      s.endUtc != null && !s.endUtc!.isAfter(DateTime.now().toUtc().add(const Duration(minutes: 2)));
 
   bool _reusableWarm(BroadcastSession s) => s.organizationId == null && s.state == 'preparing' &&
       s.senderMode == 'phone_direct' && s.deviceId == provider.currentDeviceSession?.deviceId &&
@@ -199,7 +218,15 @@ class BroadcastPublishingController extends ChangeNotifier {
         if (pending != null) await pending;
         if (_disposed || generation != _generation) { _createdId=null; return false; }
         // Keep allocation when preparation fails or its response is lost.
-        final id = session?.id ?? (_createdId ??= await provider.createPersonalBroadcast(title, type));
+        final reused = session?.id ?? _createdId;
+        final id = reused ?? (_createdId = await provider.createPersonalBroadcast(title, type));
+        if (_disposed || generation != _generation) { _createdId=null; return false; }
+        // A reused personal session that was never prepared takes the title
+        // and video/audio choice made now.
+        if (reused != null && destination!.organizationId == null && session?.frozen != true &&
+            (session == null || session!.state == 'scheduled')) {
+          session = BroadcastSession.fromRow(await provider.updatePersonalBroadcast(id, title, type));
+        }
         if (_disposed || generation != _generation) { _createdId=null; return false; }
         final result = await provider.prepareBroadcast(id, sender, destination!);
         if (_disposed || generation != _generation) { _createdId=null; return false; }
@@ -222,6 +249,15 @@ class BroadcastPublishingController extends ChangeNotifier {
       if (!_disposed && generation == _generation) {
         session = provider.publishingSession ?? session;
         errorKey = OrganizationBroadcastService.errorKey(error);
+        // Read back what the server holds, so the studio shows the real
+        // state (bound to the channel, or still open to change).
+        final id = session?.id ?? _createdId;
+        if (id != null) {
+          try {
+            final fresh = await provider.loadBroadcastSession(id);
+            if (!_disposed && generation == _generation && fresh != null) session = fresh;
+          } catch (_) {}
+        }
       }
       return false;
     } finally {

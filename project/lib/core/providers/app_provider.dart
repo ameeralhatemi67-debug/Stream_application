@@ -1071,7 +1071,26 @@ class AppProvider extends ChangeNotifier {
   List<OrgMembership> _orgMemberships = [];
   List<OrgMembership> get orgMemberships => _orgMemberships;
   List<ChannelConnection> _channelConnections = [];
-  List<ChannelConnection> get channelConnections => _channelConnections;
+  (List<ChannelConnection>, List<OrgMembership>, String?, List<ChannelConnection>)? _ownChannels;
+
+  /// The channels this account may broadcast to: its own personal channel and
+  /// the channels of organizations it belongs to. Row security also lets an
+  /// admin read everyone's channels; those are never offered here, since the
+  /// server refuses to publish to a channel the account does not own.
+  List<ChannelConnection> get channelConnections {
+    final me = currentUserSessionId;
+    final cached = _ownChannels;
+    if (cached != null && identical(cached.$1, _channelConnections) &&
+        identical(cached.$2, _orgMemberships) && cached.$3 == me) {
+      return cached.$4;
+    }
+    final own = List<ChannelConnection>.unmodifiable(_channelConnections.where((c) =>
+        c.organizationId == null
+            ? me != null && c.ownerId == me
+            : _orgMemberships.any((m) => m.organizationId == c.organizationId && m.active)));
+    _ownChannels = (_channelConnections, _orgMemberships, me, own);
+    return own;
+  }
 
   Future<void> refreshChannelConnections() async {
     final generation = _authGeneration;
