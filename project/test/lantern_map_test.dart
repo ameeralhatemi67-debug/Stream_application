@@ -431,12 +431,38 @@ void main() {
 
   group('in the app', () {
     // A pin under the search or a card cannot be tapped; take one that can.
-    Finder tappablePin() {
+    Finder? singlePin() {
       for (final type in [LanternStreamerPin, LanternMosquePin]) {
         final pins = find.byType(type).hitTestable();
         if (pins.evaluate().isNotEmpty) return pins.first;
       }
-      fail('no pin can be tapped');
+      return null;
+    }
+
+    // What the map shows changes with the time of day. When every place is
+    // inside a group, come closer through a group until one stands alone.
+    Future<Finder> tappablePin(WidgetTester tester, LanternApp app) async {
+      for (var i = 0; i < 8; i++) {
+        final pin = singlePin();
+        if (pin != null) return pin;
+        final groups = find.byType(LanternBubblePin).hitTestable();
+        if (groups.evaluate().isEmpty) {
+          await tester
+              .tap(find.byKey(const ValueKey('lantern-map-zoom-in')));
+        } else {
+          await tester.tap(groups.first);
+        }
+        await app.settle(10);
+        // Places that never come apart open a short list: take the first.
+        final list = find.byKey(const ValueKey('lantern-map-place-list'));
+        if (list.evaluate().isNotEmpty) {
+          await tester.tap(
+              find.descendant(of: list, matching: find.byType(LRow)).first);
+          await app.settle(10);
+          break;
+        }
+      }
+      return singlePin() ?? (throw TestFailure('no pin can be tapped'));
     }
 
     Finder onMap(Type type) => find.descendant(
@@ -491,7 +517,11 @@ void main() {
           size: const Size(390, 844), lang: 'en', location: '/map');
       await app.settle(12);
       tester.takeException();
-      await tester.tap(tappablePin());
+      final card = find.byWidgetPredicate((w) =>
+          w is LanternStreamerPlaceCard || w is LanternMosquePlaceCard);
+      final pin = await tappablePin(tester, app);
+      // The short list of a shared spot has already opened a card.
+      if (card.evaluate().isEmpty) await tester.tap(pin);
       await app.settle(10);
       tester.takeException();
       expect(
