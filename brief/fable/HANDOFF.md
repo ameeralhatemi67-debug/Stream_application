@@ -8,7 +8,7 @@ The run's own work is finished. What is left needs the owner (section 3) or is l
 
 | Thing | Place |
 |---|---|
-| Work branch | `fable/lantern-skin` (from `master` `77bcff0`), 47 commits |
+| Work branch | `fable/lantern-skin` (from `master` `77bcff0`), 50 commits |
 | Worktree | `.claude/worktrees/fable-lantern` (Flutter app in `project/`) |
 | Main checkout | on `master`, holds the owner's uncommitted studio work. **Do not touch it.** |
 | Report for the owner | `brief/fable/FINAL_REPORT.md` (final); the same text is the private doc https://claude.ai/artifact/GTkLmFWtF5ggWM8vnTxW5E (edit both when the report changes) |
@@ -21,15 +21,15 @@ Always start shell commands with an absolute `cd` to the worktree. The shell dir
 
 ## 2. State on 2026-11-12
 
-- Full suite on the tip: 2,456 passed, 0 failed, 65 skipped (picture tests). Analyzer: 0 issues.
+- Full suite on the tip: 2,474 passed, 0 failed, 65 skipped (picture tests). Analyzer: 0 issues.
+- Report for a broadcast or a channel is in all three designs since 2026-11-12 (the owner said "Yes, add it"). Older designs: `lib/features/moderation/presentation/content_report_sheet.dart` (the sheet and the admin list), a `CaGlyph.alert` button in the channel top bar, the room's top bar and the website room layout. Tests: `test/content_report_older_designs_test.dart` (18).
 - Speed change committed (`perf(web)`): twelve pages load on demand. Main web script 6,913 KB → 6,433 KB (1,944 → 1,814 KB compressed); `master` is 6,259 KB (1,771 KB).
-- Older designs: 36 of 38 test pictures identical to `master`; the 2 others are the phone Settings page with the new design tile (intended). On the emulator Discover, map and lessons are pixel-identical.
+- Older designs: 28 of 38 test pictures identical to `master`; the 10 others are the phone Settings page with the new design tile (2) and the screens with the new Report button (8), all intended. On the emulator Discover, map and lessons are pixel-identical (taken before the Report button).
 - Android emulator (profile build, guest): all three designs start and run; no Flutter error in the device log. Cold start, middle of 7: `master` 5.28 s, branch 5.53 s. Compiled code 19.9 MB → 22.2 MB.
 
 ## 3. Waiting for the owner
 
 - **Migration `supabase/migrations/20261111120000_content_reports.sql`** is not applied anywhere and was not run on a local stack (Docker is not running on this machine). Until it is applied, Report answers "could not be sent".
-- **Report in the older designs.** Google's reviewer sees gold & black, the default, which has no Report for a broadcast or a channel. The owner's rule forbids new features there, so it was not built. It needs his decision.
 - **Merge order.** His uncommitted work on `master` touches `app_provider.dart` and `rtmp_ip_dialog.dart`; this branch changes both.
 - **The signing key.** `project/android/key.properties` does not exist; the owner runs `brief\launch\make_upload_key.ps1` himself. No signed bundle exists.
 - The open design questions (section 9 of the report).
@@ -37,7 +37,7 @@ Always start shell commands with an absolute `cd` to the worktree. The shell dir
 
 ## 4. Not built, not checked
 
-Not built: twelve admin tabs, `/org-admin`, the organization invitation page and members list, the "my lessons" pages, the preacher application and link pages, the lessons admin, viewer set-up and the phone camera screen still draw the older widgets under Lantern (restyled by the shared kit). A corner player that keeps playing. The map's locate button and Now / Tonight / This week control. A dark map for the night look. The data export does not include filed content reports.
+Not built: twelve admin tabs, `/org-admin`, the organization invitation page and members list, the "my lessons" pages, the preacher application and link pages, the lessons admin, viewer set-up and the phone camera screen still draw the older widgets under Lantern (restyled by the shared kit). A corner player that keeps playing. The map's locate button and Now / Tonight / This week control. A dark map for the night look. A Report button for one recording (a recording is reported through its channel). The data export does not include filed content reports.
 
 Not checked on a device: a signed release build; sign-in, Settings, the studio, the admin page and phone broadcasting (they need an account); a live room and an audio room (no channel was live); "use my location"; memory and frame times.
 

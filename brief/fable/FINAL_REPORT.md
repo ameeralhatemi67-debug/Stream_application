@@ -2,9 +2,9 @@
 
 Written 2026-11-12. Branch `fable/lantern-skin`, in the worktree `.claude/worktrees/fable-lantern`. Nothing was pushed. Nothing was deployed. No migration was applied to the hosted database. No key or secret was created, printed or changed.
 
-**In short.** The third design, Lantern and Arch, is built for almost every screen of the app and is chosen in Settings → Design. Gold & black is still the default. The two older designs are unchanged: pictures of 19 screens in both of them, taken on `master` and on this branch at the same minute, are identical except the new tile in Settings → Design. The full test suite passes: 2,456 tests passed and 0 failed (65 more are picture tests that only run on request). All three designs were run on the Android emulator from a real Android build, with no error in the device log. Two things are not done: a signed app bundle (it needs your key), and a real run of the new database table (it needs your approval).
+**In short.** The third design, Lantern and Arch, is built for almost every screen of the app and is chosen in Settings → Design. Gold & black is still the default. The two older designs changed in two places only, both intended: the new tile in Settings → Design, and a Report button for a broadcast or a channel, which you approved on 2026-11-12 so that Google's reviewer finds it in the default design. Pictures of 19 screens in both older designs, taken on `master` and on this branch at the same minute, show no other difference. The full test suite passes: 2,474 tests passed and 0 failed (65 more are picture tests that only run on request). All three designs were run on the Android emulator from a real Android build, with no error in the device log. Two things are not done: a signed app bundle (it needs your key), and a real run of the new database table (it needs your approval).
 
-**Four decisions are waiting for you.** They are in section 7, first table.
+**Three decisions are waiting for you.** They are in section 7, first table.
 
 ---
 
@@ -45,7 +45,7 @@ Then:
 7. A channel page: Follow, reminder, the four tabs, and the flag button (Report).
 8. Signed in as a broadcaster: the studio from the channel page. "Hold to go live" and "Hold to end" need a press of about one second.
 9. Signed in as an admin: `/admin`. The rail has four groups. The verification queue has checkboxes and a batch bar. The moderation tab has two parts: chat messages, and broadcasts and channels.
-10. Switch back to Gold & black and to Hedayah. They must look exactly as before.
+10. Switch back to Gold & black and to Hedayah. They must look as before, with one addition: a warning-sign button on a channel page and in a live room. It opens "Report this channel" or "Report this broadcast".
 
 ### Pictures without running the app
 
@@ -82,14 +82,16 @@ Every screen below has a phone layout and a website layout (1024 px and wider), 
 | Settings, sign-in and the rest | Category list with panes, the Appearance pane, delete account as press-and-hold; welcome and consent; notifications; saved items; role choice; suspended account; page not found | `lantern_account_test` 68 |
 | Admin | Night rail with four groups, overview cards, verification queue with batch actions and the five-stage approval, chat report queue, content report queue | `lantern_admin_test` 35 |
 | Organizations | Organization home, shows and assignments with the schedule editor, YouTube connections | `lantern_org_test` 31 |
-| Reports | Report a broadcast or a channel; admin queue | `lantern_report_test` 19 |
+| Reports | Report a broadcast or a channel; admin queue. In all three designs since 2026-11-12 | `lantern_report_test` 19, `content_report_older_designs_test` 18 |
 | Invitation picture | Section 1 | `lantern_poster_test` 5 |
 | Contrast | Every colour pairing the kit uses, by the WCAG formula | `lantern_contrast_test` 9 |
 | Isolation | No Lantern widget is built under an older design | `lantern_isolation_test` |
 
 How the new design is kept apart from the older ones is written down as ADR-026 in `Core_files/decisions.md`. The build guide for anyone who adds a Lantern screen is `project/lib/core/widgets/lantern/README.md`.
 
-**New features that exist only in Lantern:** the opening screen; full-screen rooms; the map grouping and place cards; the 14-day strip and week grid; hold-to-confirm for going live, ending and deleting an account; inline errors in the application; the Appearance pane; the invitation picture; Report for a broadcast or a channel with its admin queue.
+**New features that exist only in Lantern:** the opening screen; full-screen rooms; the map grouping and place cards; the 14-day strip and week grid; hold-to-confirm for going live, ending and deleting an account; inline errors in the application; the Appearance pane; the invitation picture.
+
+**The one new feature in all three designs: Report for a broadcast or a channel** (your decision of 2026-11-12). In gold & black and Hedayah it is a warning-sign button in the top bar of a channel page and of a live or audio room, and beside "Keep watching in the corner" in the website layout of a room. It opens a list of seven reasons; one tap sends the report, in the same way those designs already report a chat message. A guest is asked to sign in. The owner of a channel does not see the button on their own channel. Admins see the reports at the top of the chat moderation tab; that part draws nothing while there are no reports. The Lantern design keeps its own sheet (with an optional note) and its own queue.
 
 ---
 
@@ -103,11 +105,13 @@ bash brief/tools/skin_proof.sh <a checkout of master> <output folder>
 
 The two runs must share the clock, because lesson and map screens show countdowns.
 
-**Result (2026-11-12, on the last code commit).** 36 of the 38 pictures are identical, pixel for pixel. The 2 that differ are the phone Settings page in gold & black and in Hedayah. The only difference is the new "Lantern and Arch" tile in Settings → Design, which moves the rows below it down. That change is intended: it is how a person chooses the new design. The pictures are in `brief/fable/skin_regression/tip_36308b5/` (`before/`, `after/`, `diff/`) on this computer; the result list is committed as `brief/fable/skin_regression/RESULT.md`.
+**Result before Report was added to the older designs (2026-11-12).** 36 of the 38 pictures were identical, pixel for pixel. The 2 that differed are the phone Settings page in gold & black and in Hedayah. The only difference is the new "Lantern and Arch" tile in Settings → Design, which moves the rows below it down. That change is intended: it is how a person chooses the new design. The pictures are in `brief/fable/skin_regression/tip_36308b5/` on this computer.
 
-**Tests.** The whole suite passes on the branch: 2,456 passed, 0 failed. `lantern_isolation_test.dart` fails if any Lantern widget is built on a screen of an older design.
+**Result with Report in the older designs (2026-11-12, the final code).** 28 of the 38 pictures are identical. The 10 that differ are the 2 Settings pictures above, and 8 pictures where the new Report button sits: the live room on a phone and on a laptop, the audio room on a phone, and the channel page on a phone, in each of the two designs. In each of the 8 the difference is confined to the row of action buttons (one more button, and on a phone the room's title has less room). The pictures are in `brief/fable/skin_regression/with_report/` (`before/`, `after/`, `diff/`) on this computer; the result list is committed as `brief/fable/skin_regression/RESULT.md`.
 
-**On the Android emulator.** I built the Android app from `master` and from this branch with the same settings, installed each on the same emulator (Pixel 5), and opened the same five screens as a guest in gold & black and in Hedayah, in Arabic: Discover, the map, lessons, a channel page, and a replay. Discover, the map and lessons are identical, pixel for pixel, in both designs. The channel page differs only inside its cover, which has a slowly moving pattern: two pictures of the same build taken four seconds apart differ in the same area. The replay differs only inside the YouTube player (the video frame). The pairs are in `brief/fable/skin_regression/emulator/` (`before/` is `master`, `after/` is the branch).
+**Tests.** The whole suite passes on the branch: 2,474 passed, 0 failed. `lantern_isolation_test.dart` fails if any Lantern widget is built on a screen of an older design.
+
+**On the Android emulator.** I built the Android app from `master` and from this branch with the same settings, installed each on the same emulator (Pixel 5), and opened the same five screens as a guest in gold & black and in Hedayah, in Arabic: Discover, the map, lessons, a channel page, and a replay. Discover, the map and lessons are identical, pixel for pixel, in both designs. The channel page differs only inside its cover, which has a slowly moving pattern: two pictures of the same build taken four seconds apart differ in the same area. The replay differs only inside the YouTube player (the video frame). The pairs are in `brief/fable/skin_regression/emulator/` (`before/` is `master`, `after/` is the branch). These emulator pairs were taken before the Report button was added, so the channel page and the room in them do not show it yet.
 
 **Not covered on the emulator.** Settings and the admin page need a signed-in account, and I did not sign in with a real account. No channel was live at the time, so the live room and the audio room were not opened on the emulator. The test pictures above cover Settings, the admin page and both rooms.
 
@@ -150,7 +154,7 @@ The full status, with Google's pages and the date each was read, is `brief/fable
 - Drafts for every Play Console form are in `store/`.
 
 **Changed in this run**
-- Google's user-content rule asks for a way to report content and its publisher, not only chat messages. That now exists, in Lantern only (see the first decision in section 7).
+- Google's user-content rule asks for a way to report content and its publisher, not only chat messages. That now exists in all three designs, so the reviewer finds it in gold & black. It works only after the migration is applied (the first decision in section 7).
 
 **You must do, in this order**
 1. Create your key: run `brief\launch\make_upload_key.ps1` yourself, in your own PowerShell. Keep the file and the password in two safe places.
@@ -178,15 +182,15 @@ The full status, with Google's pages and the date each was read, is `brief/fable
 | # | Decision | Why it matters | My advice |
 |---|---|---|---|
 | 1 | Apply the migration `supabase/migrations/20261111120000_content_reports.sql` | Until it is applied, the Report action answers "could not be sent". It was not run anywhere, not even on a local database, because Docker was not running on this machine. | Start Docker, run `npx supabase start` and `npx supabase db push` locally first, then apply it to hosted. |
-| 2 | Report in the older designs | Google's reviewer opens the app in gold & black, the default. Gold & black has no way to report a broadcast or a channel. Your rule says the older designs get no new features. | Allow this one exception, or make Lantern the default before the review. I did not build it, because your rule forbids it without your word. |
-| 3 | Merge order | Your uncommitted studio work on `master` touches `app_provider.dart` and `rtmp_ip_dialog.dart`. This branch changes both. | Commit your work first. Then merge this branch and resolve those two files. |
-| 4 | The open design questions | Section 9 lists the default I chose for each. | Read section 9 and tell me which to change. |
+| 2 | Merge order | Your uncommitted studio work on `master` touches `app_provider.dart` and `rtmp_ip_dialog.dart`. This branch changes both. | Commit your work first. Then merge this branch and resolve those two files. |
+| 3 | The open design questions | Section 9 lists the default I chose for each. | Read section 9 and tell me which to change. |
 
 ### Not built
 
 - **Screens still drawn by the older widgets under Lantern.** They are restyled by the shared kit, so they are one design, but they do not have their own Lantern layout: twelve admin tabs (registry, organizations management, analytics, terms, custom cards, categories, tags, banned accounts, roles, user directory, safety, testing tools); `/org-admin`; the organization invitation page and the members list; the "my lessons" pages, the preacher application and the preacher's link page; the lessons admin; the viewer set-up; the phone camera screen used while broadcasting.
 - **A corner player that keeps playing.** Leaving a room still stops playback and leaves a way back, as in the older designs.
 - **From the design, left out because the app has no data for it:** the Now / Tonight / This week control and the locate button on the map; charts and "days to review" in the admin overview; a speaking signal in audio rooms; "draft saved" in the application.
+- **Report for one recording.** A broadcast can be reported while it is live, and a channel at any time. A single recording has no Report button of its own in any design; a viewer reports it through its channel.
 - **The data export** (`20261015172851`) does not yet include the reports a person filed in the new table.
 - Speed work beyond section 5, and the device checks listed as "not checked" in section 6.
 - In the night look the map itself keeps its light colours; only the controls around it are dark.
@@ -205,7 +209,7 @@ The full status, with Google's pages and the date each was read, is `brief/fable
 All are free unless marked.
 
 **Before the Play review**
-1. Decide item 2 of section 7 (Report in the default design). Without it the review can fail on the user-content rule.
+1. Apply the migration before you submit (item 1 of section 7). Report is now in the default design, but it answers "could not be sent" until the table exists. Then send one test report and clear it from the admin tab, and keep a screenshot for Google's moderation form.
 2. Add the YouTube API Services statement to `privacy.html`, with links to Google's privacy policy and the YouTube Terms. YouTube's terms require it.
 3. The audio stage draws over the YouTube player, in all designs. YouTube's terms forbid drawing over the player. Move the player off screen at 200 × 200 px or show it.
 4. Prepare the reviewer account from `store/reviewer_access.md` and test it on a real phone.
@@ -262,7 +266,7 @@ Each is one place in the code and easy to change.
 
 ## 10. Commits, the migration, and how to review and merge
 
-**Commits.** 47 commits on `fable/lantern-skin`, on top of `master` `77bcff0`. See them with:
+**Commits.** 50 commits on `fable/lantern-skin`, on top of `master` `77bcff0`. See them with:
 
 ```bash
 git log --oneline 77bcff0..fable/lantern-skin
@@ -277,7 +281,7 @@ git diff 77bcff0..fable/lantern-skin --stat
 git diff 77bcff0..fable/lantern-skin -- project/lib ':!project/lib/**/lantern/**'
 ```
 
-The second command shows only the changes to files the older designs use. They are additions behind `context.isLanternSkin`, the router change of section 5, and the report service.
+The second command shows only the changes to files the older designs use. They are additions behind `context.isLanternSkin`, the router change of section 5, the report service, and the Report button with its sheet and admin list for the older designs (`lib/features/moderation/presentation/content_report_sheet.dart`).
 
 **One thing I changed on the emulator.** While I set the design from the command line, one failed step emptied the app's stored settings on the Pixel 5 emulator. The app then started as on a first run, and I entered again as a guest with the display name "Tester". No account was involved. If you kept a guest set-up on that emulator, it is gone.
 

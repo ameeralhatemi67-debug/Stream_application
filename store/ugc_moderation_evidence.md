@@ -19,6 +19,8 @@ The current server-side controls and local P6 tests are evidence of implementati
 
 Google's UGC policy (answer 9876937) and its guidance (answer 12923286), read 2026-11-11, say: users accept terms of use before they create or upload content, and that step cannot be skipped; the terms define objectionable content and are separate from the privacy policy; the app has in-app reporting and blocking; apps with public content offer report and block for both users and content; moderation is ongoing.
 
+Update 2026-11-12: on the branch `fable/lantern-skin` a broadcast and a channel can be reported in all three designs, and admins see those reports in the moderation tab. It needs the migration `20261111120000_content_reports.sql`, which is not applied yet. A single recording is reported through its channel. The rest of this paragraph describes `master`.
+
 What the code has today: report a chat message, block a user from chat, the admin chat moderation queue, mutes and bans. What it lacks: a way to report a live stream, a recording, a channel or a profile. The string `report_stream` ("Report Stream") exists in `en.json`, but no screen uses it. Live streams and channels are public content, so this is the largest UGC gap for review. Suggested fix (not made here, it is in `project/lib`): a "Report" item on the live room, the channel page and the profile, writing to a reports table the admin queue already reads.
 
 ## Owner evidence still needed
