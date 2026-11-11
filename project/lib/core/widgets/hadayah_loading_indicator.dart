@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'lantern/lantern.dart';
 
 /// Four outlined capsules from the owner's loading motion specification.
 class HadayahLoadingIndicator extends StatefulWidget {
@@ -38,6 +39,19 @@ class _HadayahLoadingIndicatorState extends State<HadayahLoadingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      // The capsules' controller is created lazily; create it now and keep
+      // it still, so dispose() does not create it unmounted.
+      if (_motion.isAnimating) _motion.stop();
+      return Semantics(
+          label: 'common.loading'.tr(),
+          child: SizedBox.square(
+              dimension: 36,
+              child: Center(
+                  child: LStarLoader(
+                      size: 28,
+                      color: widget.color ?? widget.valueColor?.value))));
+    }
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       label: 'common.loading'.tr(),

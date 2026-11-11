@@ -1,0 +1,32 @@
+{
+  "en": {
+    "account": {
+      "categories": "Settings categories",
+      "new": "New",
+      "guest_hint": "Sign in to follow broadcasters and save lessons.",
+      "master_admin": "Master admin",
+      "admin": "Admin",
+      "offline": "Offline",
+      "changes_requested": "Changes requested before verification.",
+      "welcome_terms": "By continuing you agree to the terms of service and the privacy policy.",
+      "not_found_title": "We could not find this page",
+      "not_found_body": "The link may have moved, or the broadcast may have ended. Go back to Discover, or look in Lessons or on the map.",
+      "unread": "unread"
+    }
+  },
+  "ar": {
+    "account": {
+      "categories": "فئات الإعدادات",
+      "new": "جديد",
+      "guest_hint": "سجّل الدخول لتتابع المحاضرين وتحفظ الدروس.",
+      "master_admin": "مشرف عام",
+      "admin": "مشرف",
+      "offline": "غير متصل",
+      "changes_requested": "طُلبت تعديلات قبل التوثيق.",
+      "welcome_terms": "بالمتابعة توافق على شروط الخدمة وسياسة الخصوصية.",
+      "not_found_title": "لم نجد هذه الصفحة",
+      "not_found_body": "ربما نُقل الرابط أو انتهى البث. عُد إلى صفحة الاكتشاف، أو ابحث في الدروس أو على الخريطة.",
+      "unread": "غير مقروء"
+    }
+  }
+}

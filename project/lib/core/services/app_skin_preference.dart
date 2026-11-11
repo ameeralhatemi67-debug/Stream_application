@@ -34,3 +34,48 @@ Future<void> saveAppSkin(AppSkin skin, {SharedPreferences? store}) async {
     debugPrint('App skin not saved: $error');
   }
 }
+
+/// Day or night for the Lantern and Arch design, read with the skin before
+/// the first frame so the opening screen does not flip.
+Future<LanternAppearance> readLanternAppearance(
+    {SharedPreferences? store}) async {
+  try {
+    final preferences = store ?? await SharedPreferences.getInstance();
+    return LanternAppearance.parse(
+        preferences.getString(LanternAppearance.preferenceKey));
+  } catch (error) {
+    debugPrint('Lantern appearance not read: $error');
+    return LanternAppearance.fallback;
+  }
+}
+
+Future<void> saveLanternAppearance(LanternAppearance appearance,
+    {SharedPreferences? store}) async {
+  try {
+    final preferences = store ?? await SharedPreferences.getInstance();
+    await preferences.setString(
+        LanternAppearance.preferenceKey, appearance.name);
+  } catch (error) {
+    debugPrint('Lantern appearance not saved: $error');
+  }
+}
+
+Future<bool> readLanternCalmMotion({SharedPreferences? store}) async {
+  try {
+    final preferences = store ?? await SharedPreferences.getInstance();
+    return preferences.getBool(LanternAppearance.calmMotionKey) ?? false;
+  } catch (error) {
+    debugPrint('Lantern calm motion not read: $error');
+    return false;
+  }
+}
+
+Future<void> saveLanternCalmMotion(bool calm,
+    {SharedPreferences? store}) async {
+  try {
+    final preferences = store ?? await SharedPreferences.getInstance();
+    await preferences.setBool(LanternAppearance.calmMotionKey, calm);
+  } catch (error) {
+    debugPrint('Lantern calm motion not saved: $error');
+  }
+}

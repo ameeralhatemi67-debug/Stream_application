@@ -14,6 +14,7 @@ import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/consent_dialog.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
 import 'hedayah_welcome_view.dart';
+import 'lantern/lantern_welcome_view.dart';
 
 /// Master Welcome & Authentication Landing Screen
 class WelcomeScreen extends StatefulWidget {
@@ -157,6 +158,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternWelcomeView(
+          loading: _isLoading,
+          registrationsOpen: _flags.registrationsOpen,
+          showApple: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
+          onGoogle: _handleGoogleAuth,
+          onApple: _handleAppleAuth,
+          onGuest: _continueAsGuest);
+    }
     if (context.isHedayahSkin) {
       return HedayahWelcomeView(
           loading: _isLoading,

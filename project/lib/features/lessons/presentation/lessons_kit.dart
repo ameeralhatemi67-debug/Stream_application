@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hedayah/hedayah_pattern.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import '../../../core/widgets/lantern/lantern_compat.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import '../data/lessons_repository.dart';
 import 'lessons_icons.dart';
@@ -69,6 +71,10 @@ String lessonsError(Object e) => e is LessonsException && _hints.contains(e.deta
 const _hints = {'no_email', 'already_preacher', 'pending', 'not_preacher'};
 
 void tToast(BuildContext context, String message, {bool warn = false, String? actionLabel, VoidCallback? onAction}) {
+  if (context.isLanternSkin) {
+    return lanternToast(context, message,
+        warn: warn, actionLabel: onAction == null ? null : actionLabel ?? '', onAction: onAction);
+  }
   final m = ScaffoldMessenger.maybeOf(context);
   if (m == null) return;
   m.hideCurrentSnackBar();
@@ -118,6 +124,16 @@ class TButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LButton(
+          label: label,
+          onPressed: onPressed,
+          kind: lanternTButtonKind(kind),
+          size: small ? LButtonSize.small : large ? LButtonSize.large : LButtonSize.medium,
+          icon: lanternGlyphOrNullT(icon),
+          trailing: lanternGlyphOrNullT(iconEnd),
+          expand: expand);
+    }
     final enabled = onPressed != null;
     final (Color? bg, Gradient? grad, Color fg, Color? border) = switch (kind) {
       TBtn.minted => (null, HidayahGradients.minted, TC.ink, null),
@@ -172,7 +188,14 @@ class TIconButton extends StatelessWidget {
   final int? badge;
   final Color color;
   @override
-  Widget build(BuildContext context) => Tooltip(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternCountIconButton(
+          icon: lanternGlyphForT(glyph),
+          label: tooltip,
+          onPressed: onPressed,
+          badge: badge,
+          color: color == TC.ink2 ? null : color)
+      : Tooltip(
         message: tooltip,
         child: InkResponse(
           onTap: onPressed,
@@ -208,6 +231,9 @@ class TTag extends StatelessWidget {
   final TGlyph? icon;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LTag(label, tone: lanternTone(tone), icon: lanternGlyphOrNullT(icon));
+    }
     final (bg, fg) = toneColors(tone);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
@@ -226,7 +252,9 @@ class TTag extends StatelessWidget {
 class TLiveTag extends StatelessWidget {
   const TLiveTag({super.key});
   @override
-  Widget build(BuildContext context) => TTag('lessons.lesson.live'.tr(), tone: TTone.live, icon: TGlyph.radio);
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LBadge('lessons.lesson.live'.tr(), kind: LBadgeKind.live)
+      : TTag('lessons.lesson.live'.tr(), tone: TTone.live, icon: TGlyph.radio);
 }
 
 class TChip extends StatelessWidget {
@@ -238,6 +266,9 @@ class TChip extends StatelessWidget {
   final int? count;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LChip(label: label, selected: selected, onTap: onTap, icon: lanternGlyphOrNullT(icon), count: count, dense: small);
+    }
     // Hedayah skin (ADR-016): the chosen chip is a gold pill with ink.
     final hedayah = context.isHedayahSkin;
     final fg = selected ? (hedayah ? HedayahSkin.ink : HidayahGold.g200) : TC.ink2;
@@ -286,7 +317,9 @@ class TChips extends StatelessWidget {
   const TChips(this.children, {super.key});
   final List<Widget> children;
   @override
-  Widget build(BuildContext context) => Wrap(spacing: 6, runSpacing: 6, children: children);
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Wrap(spacing: 8, runSpacing: 8, children: children)
+      : Wrap(spacing: 6, runSpacing: 6, children: children);
 }
 
 class TSegOption<T> {
@@ -305,6 +338,19 @@ class TSeg<T> extends StatelessWidget {
   final bool full, small, dark;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      final seg = LSegmented<T>(
+          segments: [
+            for (final o in options)
+              (value: o.value, label: o.count == null ? o.label : '${o.label} · ${o.count}', icon: lanternGlyphOrNullT(o.icon)),
+          ],
+          value: value,
+          onChanged: onChanged,
+          expand: full,
+          dense: small);
+      final bar = dark ? LanternSurface(night: true, child: seg) : seg;
+      return full ? bar : SingleChildScrollView(scrollDirection: Axis.horizontal, child: bar);
+    }
     Widget item(TSegOption<T> o) {
       final on = o.value == value;
       final fg = on ? HidayahGold.g200 : (dark ? TC.onNight2 : TC.ink2);
@@ -351,7 +397,9 @@ class TTabs<T> extends StatelessWidget {
   final T value;
   final ValueChanged<T> onChanged;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternTabBar<T>(options: options, value: value, onChanged: onChanged)
+      : Container(
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TC.hair))),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -395,7 +443,14 @@ class TCard extends StatelessWidget {
   final Color color;
   final bool highlight;
   @override
-  Widget build(BuildContext context) => Material(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LCard(
+          onTap: onTap,
+          padding: padding,
+          selected: highlight,
+          color: color == TC.card ? null : color == TC.tint || color == TC.page ? context.lt.sunk : color,
+          child: child)
+      : Material(
         color: Colors.transparent,
         child: Ink(
           decoration: BoxDecoration(
@@ -422,7 +477,11 @@ class TNight extends StatelessWidget {
   final BorderRadius? radius;
   final EdgeInsetsGeometry padding;
   @override
-  Widget build(BuildContext context) => ClipRRect(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? ClipRRect(
+          borderRadius: radius ?? BorderRadius.zero,
+          child: LNightBand(padding: padding, child: child))
+      : ClipRRect(
         borderRadius: radius ?? BorderRadius.zero,
         child: context.isHedayahSkin
             ? ColoredBox(
@@ -454,6 +513,9 @@ class TEyebrow extends StatelessWidget {
   final TGlyph? icon;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternEyebrow(text, onNight: onNight, icon: lanternGlyphOrNullT(icon));
+    }
     final c = onNight ? TC.onNightGold : TC.bronze;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       if (icon != null) ...[TIcon(icon!, size: 13, color: c), const SizedBox(width: 6)] else ...[
@@ -472,7 +534,9 @@ class TSectionHead extends StatelessWidget {
   final Widget? action;
   final String? sub, eyebrow;
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternSectionHeading(title, count: count, action: action, sub: sub, eyebrow: eyebrow)
+      : Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(
@@ -503,6 +567,9 @@ class TPageHead extends StatelessWidget {
   final List<Widget> actions;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternPageHeading(eyebrow: eyebrow, title: title, subtitle: subtitle, actions: actions);
+    }
     final text = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (eyebrow != null) ...[TEyebrow(eyebrow!), const SizedBox(height: 6)],
       Text(title, style: tDisplay(context.wide ? 34 : 26)),
@@ -530,7 +597,15 @@ class TEmpty extends StatelessWidget {
   final Widget? action;
   final bool ok;
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Center(
+          child: LEmptyState(
+              title: title,
+              body: body,
+              action: action,
+              icon: lanternGlyphForT(icon),
+              tone: ok ? LTone.ok : LTone.gold))
+      : Padding(
         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
         child: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -559,7 +634,9 @@ class TMeter extends StatelessWidget {
   const TMeter({super.key, required this.value, required this.max});
   final int value, max;
   @override
-  Widget build(BuildContext context) => ClipRRect(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LProgress(max == 0 ? 0 : (value / max).clamp(0, 1).toDouble(), height: 6)
+      : ClipRRect(
         borderRadius: BorderRadius.circular(3),
         child: SizedBox(
           height: 6,
@@ -583,6 +660,9 @@ class TCallout extends StatelessWidget {
   final Widget? action;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternCallout(tone: lanternTone(tone), icon: lanternGlyphForT(icon), action: action, child: child);
+    }
     final (bg, fg) = toneColors(tone);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -606,6 +686,16 @@ class TAvatar extends StatelessWidget {
   static final _titles = RegExp(r'^(الشيخ|د\.|أ\.|م\.|Sheikh|Dr\.|Ustadha|Eng\.)\s+');
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      final ringed = live || ring;
+      return SizedBox.square(
+          dimension: ringed ? size + 5 : size,
+          child: Center(
+              child: LAvatar(
+                  name: name,
+                  size: ringed ? size - 3 : size,
+                  ring: live ? LRing.live : ring ? LRing.admin : LRing.none)));
+    }
     final n = name.replaceFirst(_titles, '').trim();
     final initial = n.isEmpty ? '?' : String.fromCharCode(n.runes.first);
     final core = Container(
@@ -641,6 +731,9 @@ class TCover extends StatelessWidget {
   final bool compact;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternCover(seed: seed, glyph: lanternGlyphForT(glyph), word: word, tags: tags, aspect: aspect, compact: compact);
+    }
     final h = seed.codeUnits.fold<int>(0, (a, c) => (a * 31 + c) & 0x7fffffff);
     final gx = -.7 + (h % 70) / 50, gy = -.8 + ((h >> 3) % 50) / 50;
     return AspectRatio(
@@ -693,7 +786,16 @@ class TToggleRow extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final TGlyph? icon;
   @override
-  Widget build(BuildContext context) => Opacity(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Opacity(
+          opacity: enabled ? 1 : .5,
+          child: LRow(
+              title: label,
+              subtitle: desc != null && desc!.isNotEmpty ? desc : null,
+              icon: lanternGlyphOrNullT(icon),
+              onTap: enabled ? () => onChanged(!value) : null,
+              trailing: LSwitch(value: value, onChanged: enabled ? onChanged : null, label: label)))
+      : Opacity(
         opacity: enabled ? 1 : .5,
         child: MergeSemantics(
           child: InkWell(
@@ -732,7 +834,18 @@ class TField extends StatelessWidget {
   final bool required;
   final Widget child;
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          Text.rich(TextSpan(text: label, children: [if (required) TextSpan(text: ' *', style: TextStyle(color: context.lt.liveText))]),
+              style: Lantern.textStyle(13, color: context.lt.muted, weight: FontWeight.w600, height: 1.4)),
+          const SizedBox(height: 8),
+          child,
+          if (hint != null)
+            Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(hint!, style: Lantern.textStyle(12.5, color: context.lt.muted, height: 1.4))),
+        ])
+      : Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
         Text.rich(TextSpan(text: label, children: [if (required) const TextSpan(text: ' *', style: TextStyle(color: TC.dangerFg))]),
             style: tBody(13, color: TC.ink2, weight: FontWeight.w700, height: 1.4)),
         const SizedBox(height: 6),
@@ -741,7 +854,9 @@ class TField extends StatelessWidget {
       ]);
 }
 
-InputDecoration tInput({String? hint, Widget? prefix, Widget? suffix}) => InputDecoration(
+InputDecoration tInput({String? hint, Widget? prefix, Widget? suffix}) => ActiveSkin.current == AppSkin.lantern
+    ? lanternInputDecoration(hint: hint, prefix: prefix, suffix: suffix)
+    : InputDecoration(
       hintText: hint,
       isDense: true,
       filled: true,
@@ -765,7 +880,19 @@ class TSearchBox extends StatelessWidget {
   final bool readOnly;
   final Widget? trailing;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternInput(
+          pill: true,
+          hint: hint,
+          icon: LGlyph.search,
+          controller: controller,
+          onChanged: onChanged,
+          onSubmitted: onSubmitted,
+          textInputAction: onSubmitted == null ? null : TextInputAction.search,
+          onTap: onTap,
+          readOnly: readOnly,
+          trailing: trailing)
+      : Container(
         height: 46,
         decoration: BoxDecoration(
             color: context.isHedayahSkin ? HedayahSkin.paper : TC.tint,
@@ -800,7 +927,9 @@ class TStatTiles extends StatelessWidget {
   final List<(String, String)> items;
   final bool big;
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, c) {
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternStatTiles(items, big: big)
+      : LayoutBuilder(builder: (context, c) {
         final cols = c.maxWidth >= 560 ? items.length : 2;
         final w = (c.maxWidth - (cols - 1) * 10) / cols;
         return Wrap(spacing: 10, runSpacing: 10, children: [
@@ -829,7 +958,9 @@ class TOptionRow extends StatelessWidget {
   final VoidCallback onTap;
   final TGlyph? leading;
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternOptionRow(title: title, subtitle: subtitle, selected: selected, onTap: onTap, leading: lanternGlyphOrNullT(leading))
+      : Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Material(
           color: Colors.transparent,
@@ -873,6 +1004,15 @@ class TOptionRow extends StatelessWidget {
 /// A sheet on phones, a dialog on wide screens.
 Future<T?> showTModal<T>(BuildContext context,
     {required String title, String? subtitle, required WidgetBuilder body, List<Widget> Function(BuildContext)? footer, bool wide = false}) {
+  if (context.isLanternSkin) {
+    return showLanternTModal<T>(context,
+        title: title,
+        subtitle: subtitle,
+        body: body,
+        footer: footer,
+        wide: wide,
+        dialog: context.wide || MediaQuery.sizeOf(context).width >= 720);
+  }
   Widget frame(BuildContext ctx, {required bool sheet}) => Directionality(
         textDirection: Directionality.of(context),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -994,7 +1134,9 @@ class TStepper extends StatelessWidget {
   final int current;
   final ValueChanged<int>? onTap;
   @override
-  Widget build(BuildContext context) => Row(children: [
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternStepDots(labels: labels, current: current, onTap: onTap)
+      : Row(children: [
         for (var i = 0; i < labels.length; i++)
           Expanded(
             child: InkWell(

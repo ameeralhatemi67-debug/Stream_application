@@ -5,6 +5,8 @@ import '../../theme/app_theme.dart';
 import 'ca_icon.dart';
 import 'ca_focus_ring.dart';
 import '../phone_input_guard.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 
 class CaChip extends StatelessWidget {
   const CaChip(
@@ -19,6 +21,13 @@ class CaChip extends StatelessWidget {
   final ValueChanged<bool>? onSelected;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LChip(
+          label: label,
+          selected: selected,
+          icon: lanternGlyphOrNull(icon),
+          onTap: onSelected == null ? null : () => onSelected!(!selected));
+    }
     // Hedayah skin: the chosen chip is the website's gold pill with ink text.
     final hedayah = context.isHedayahSkin;
     final selectedInk = hedayah ? HedayahSkin.ink : HidayahGold.g200;
@@ -159,8 +168,14 @@ class CaSegmentedTabs extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      LayoutBuilder(builder: (context, constraints) {
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternSegmentedTabs(
+          labels: labels,
+          index: index,
+          onChanged: onChanged,
+          dark: dark,
+          disabledIndices: disabledIndices)
+      : LayoutBuilder(builder: (context, constraints) {
         final style = Theme.of(context).textTheme.labelMedium!;
         final direction = Directionality.of(context);
         final width = constraints.maxWidth - AppTheme.spaceSm;
@@ -300,6 +315,35 @@ class CaInput extends StatelessWidget {
   final FocusNode? focusNode;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return PhoneInputGuard(
+          showHint: !readOnly,
+          builder: (context, blocked) => LanternInput(
+              label: showLabel ? label : null,
+              semanticsLabel: label == hint ? null : label,
+              hint: hint,
+              helper: helper,
+              error: error,
+              controller: controller,
+              focusNode: focusNode,
+              icon: lanternGlyphOrNull(icon),
+              trailing: trailing,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              onTapOutside:
+                  !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                      ? (_) => FocusManager.instance.primaryFocus?.unfocus()
+                      : null,
+              validator: validator,
+              enabled: enabled,
+              readOnly: readOnly || blocked,
+              autofocus: autofocus && !blocked,
+              obscure: obscureText,
+              keyboardType: keyboardType,
+              maxLength: maxLength,
+              maxLines: maxLines,
+              textDirection: textDirection));
+    }
     // Hedayah skin: white fields on a hairline, the website's quiet inputs.
     final hedayah = context.isHedayahSkin;
     final radius = BorderRadius.circular(
@@ -439,7 +483,34 @@ class CaSearchField extends StatelessWidget {
   final VoidCallback? onFilter;
   final bool enabled, readOnly;
   @override
-  Widget build(BuildContext context) => CaInput(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? PhoneInputGuard(
+          showHint: !readOnly,
+          builder: (context, blocked) => LanternInput(
+              pill: true,
+              semanticsLabel: label == hint ? null : label,
+              hint: hint,
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              enabled: enabled,
+              readOnly: readOnly || blocked,
+              icon: LGlyph.search,
+              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (onClear != null)
+                  LIconButton(
+                      icon: LGlyph.close,
+                      label: clearLabel ??
+                          MaterialLocalizations.of(context)
+                              .deleteButtonTooltip,
+                      onPressed: onClear),
+                LIconButton(
+                    icon: LGlyph.filter,
+                    label: filterLabel,
+                    onPressed: enabled ? onFilter : null),
+              ])))
+      : CaInput(
       label: label,
       hint: hint,
       controller: controller,
@@ -470,7 +541,9 @@ class CaSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
   @override
-  Widget build(BuildContext context) => CaFocusRing(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LSwitch(value: value, onChanged: onChanged, label: '')
+      : CaFocusRing(
       child: Switch(
           value: value,
           onChanged: onChanged,

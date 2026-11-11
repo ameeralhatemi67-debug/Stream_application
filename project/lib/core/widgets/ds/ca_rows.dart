@@ -4,6 +4,8 @@ import '../../theme/app_theme.dart';
 import 'ca_cards.dart';
 import 'ca_icon.dart';
 import 'ca_focus_ring.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 
 class CaStepper extends StatelessWidget {
   const CaStepper({super.key, required this.steps, required this.index})
@@ -15,6 +17,10 @@ class CaStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     final statement = 'ds.step_of'
         .tr(args: ['${index + 1}', '${steps.length}', steps[index]]);
+    if (context.isLanternSkin) {
+      return LanternStepBars(
+          count: steps.length, index: index, statement: statement);
+    }
     return Semantics(
         value: statement,
         child: ExcludeSemantics(
@@ -47,7 +53,9 @@ class CaKpiTile extends StatelessWidget {
   final String label;
   final String? value, unit, reason;
   @override
-  Widget build(BuildContext context) => CaCard(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternKpiTile(label: label, value: value, unit: unit, reason: reason)
+      : CaCard(
       variant: CaCardVariant.flat,
       child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -95,8 +103,25 @@ class CaSettingsRow extends StatelessWidget {
   final VoidCallback? onTap;
   final bool divider;
   @override
-  Widget build(BuildContext context) =>
-      Column(mainAxisSize: MainAxisSize.min, children: [
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Column(mainAxisSize: MainAxisSize.min, children: [
+          if (divider) const SizedBox(height: 8),
+          LRow(
+              title: title,
+              subtitle: subtitle,
+              icon: lanternGlyphOrNull(icon),
+              trailing: badge == null
+                  ? trailing
+                  : Row(mainAxisSize: MainAxisSize.min, children: [
+                      badge!,
+                      if (trailing != null) ...[
+                        const SizedBox(width: 8),
+                        trailing!
+                      ],
+                    ]),
+              onTap: onTap),
+        ])
+      : Column(mainAxisSize: MainAxisSize.min, children: [
         if (divider)
           const Divider(height: CanopySize.stroke, color: Canopy.hairline),
         CaFocusRing(
@@ -159,7 +184,10 @@ class CaQualityPresets<T> extends StatelessWidget {
   final T value;
   final ValueChanged<T>? onChanged;
   @override
-  Widget build(BuildContext context) => IntrinsicHeight(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternQualityPresets<T>(
+          options: options, value: value, onChanged: onChanged)
+      : IntrinsicHeight(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         for (var i = 0; i < options.length; i++) ...[
           if (i > 0) const SizedBox(width: AppTheme.spaceSm),
@@ -235,6 +263,10 @@ class CaBanner extends StatelessWidget {
   final bool busy;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LBanner(message,
+          tone: lanternBannerTone(kind), action: action, busy: busy);
+    }
     final foreground = switch (kind) {
       CaBannerKind.warning => Canopy.warning,
       CaBannerKind.error => Canopy.liveCrimson,

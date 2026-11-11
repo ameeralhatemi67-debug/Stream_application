@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-/// The two designs a device can show (ADR-016). Gold & black is the app's own
-/// design and the default; the Hedayah skin follows the association's
-/// identity (hedayh.org.sa): white and mist grounds, flat gold bands with the
-/// owner's lattice pattern, slate, pill buttons and Readex Pro headings.
+/// The designs a device can show (ADR-016, ADR-026). Gold & black is the
+/// app's own design and the default; the Hedayah skin follows the
+/// association's identity (hedayh.org.sa): white and mist grounds, flat gold
+/// bands with the owner's lattice pattern, slate, pill buttons and Readex Pro
+/// headings. Lantern and Arch is the third: linen by day and ink by night,
+/// the arch frame and the eight-point star, with screens of its own.
 ///
 /// The skin rides on the theme ([AppSkinTheme]), so any widget can ask for it
 /// with [AppSkinContext.isHedayahSkin] and rebuilds when it changes.
 enum AppSkin {
   gold('gold-black'),
-  hedayah('hedayah-skin');
+  hedayah('hedayah-skin'),
+  lantern('lantern-arch');
 
   const AppSkin(this.id);
 
@@ -18,11 +21,39 @@ enum AppSkin {
 
   static const preferenceKey = 'app_skin';
 
-  /// Reads a stored value or a link parameter; "hedayah" and "gold" work too.
+  /// Reads a stored value or a link parameter; "hedayah", "gold" and
+  /// "lantern" work too.
   static AppSkin? tryParse(String? value) => switch (value?.trim()) {
         'hedayah-skin' || 'hedayah' => AppSkin.hedayah,
         'gold-black' || 'gold' => AppSkin.gold,
+        'lantern-arch' || 'lantern' => AppSkin.lantern,
         _ => null,
+      };
+}
+
+/// Day or night for the Lantern and Arch design (the other two designs have
+/// one look). Per device, chosen in Settings; [day] until the owner decides
+/// otherwise (an open question in the identity handoff).
+enum LanternAppearance {
+  day,
+  night,
+  system;
+
+  static const preferenceKey = 'lantern_appearance';
+
+  /// Calm motion for the Lantern design, beside the device's own setting.
+  static const calmMotionKey = 'lantern_calm_motion';
+
+  static const fallback = LanternAppearance.day;
+
+  static LanternAppearance parse(String? value) => LanternAppearance.values
+      .firstWhere((a) => a.name == value?.trim(), orElse: () => fallback);
+
+  /// Whether night colours apply, given the device's own brightness.
+  bool isNight(Brightness platform) => switch (this) {
+        LanternAppearance.day => false,
+        LanternAppearance.night => true,
+        LanternAppearance.system => platform == Brightness.dark,
       };
 }
 
@@ -54,4 +85,8 @@ extension AppSkinContext on BuildContext {
       Theme.of(this).extension<AppSkinTheme>()?.skin ?? AppSkin.gold;
 
   bool get isHedayahSkin => skin == AppSkin.hedayah;
+
+  /// Gold & black or Hedayah: the two designs that share their screens.
+  /// Lantern and Arch has screens of its own.
+  bool get isClassicSkin => skin != AppSkin.lantern;
 }

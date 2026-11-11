@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_skin.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import '../../../core/widgets/lantern/lantern_compat.dart';
 
 /// Lessons's stroke icons (24 px grid, 1.8 stroke), the set the reviewed
 /// prototype uses. Directional ones mirror in right-to-left layouts.
@@ -105,6 +107,12 @@ class TIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LIcon(lanternGlyphForT(glyph),
+          size: size,
+          color: color ?? IconTheme.of(context).color ?? context.lt.fg,
+          label: semanticLabel);
+    }
     final c = color ?? IconTheme.of(context).color ?? const Color(0xFF151D24);
     final hedayah = context.isHedayahSkin;
     final asset = hedayah ? _hedayahIcons[glyph] : null;

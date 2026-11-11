@@ -33,6 +33,9 @@ import 'settings/blocked_accounts_sheet.dart';
 import 'widgets/broadcaster_application_sheet.dart';
 import 'widgets/custom_stream_cards_section.dart';
 import 'widgets/viewer_profile_editor_dialog.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import 'lantern/lantern_settings_sections.dart';
+import 'lantern/lantern_settings_view.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -76,6 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     // context.read for the instance the many _build* helpers below need (they
     // call mutation methods like setRoleMode/signOut/loginWithGoogle directly
     // on it). context.select registers this screen's rebuild dependency on
@@ -439,6 +443,281 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ])));
       }),
     );
+  }
+
+  /// Lantern and Arch (ADR-026): the same sections, state and actions, drawn
+  /// with the Lantern kit by [LanternSettingsView].
+  Widget _buildLantern(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    context.select<AppProvider, Object?>((p) => (
+          p.userProfile,
+          p.isStreamerModeEnabled,
+          p.isLoggedInStreamer,
+          p.googleUserEmail,
+          p.googleUserName,
+          p.isBroadcastingLive,
+          p.isPermittedAdmin,
+          p.hasAdminPage,
+          p.isMasterAdmin,
+          p.isApprovedStreamer,
+          p.myApplication,
+          p.myOrganizationInvitations.length,
+        ));
+    final categories = <LanternSettingsCategory>[
+      (
+        id: 'account',
+        label: 'settings.desktop_account'.tr(),
+        icon: LGlyph.person,
+        children: _buildLanternAccount(context, provider),
+      ),
+      (
+        id: 'design',
+        label: 'skin.title'.tr(),
+        icon: LGlyph.sparkles,
+        children: const [AppearanceSettingsSection(), LanternLanguageGroup()],
+      ),
+      (
+        id: 'notifications',
+        label: 'nav.notifications'.tr(),
+        icon: LGlyph.bell,
+        children: [
+          const NotificationSettingsSection(),
+          LanternSettingsGroup(
+              title: 'settings.blocked_accounts_title'.tr(),
+              children: [
+                LRow(
+                    key: const ValueKey('lantern-settings-blocked'),
+                    icon: LGlyph.ban,
+                    title: 'settings.blocked_accounts_title'.tr(),
+                    subtitle: 'settings.blocked_accounts_hint'.tr(),
+                    onTap: () => BlockedAccountsSheet.show(context)),
+              ]),
+        ],
+      ),
+      (
+        id: 'lessons',
+        label: 'nav.lessons'.tr(),
+        icon: LGlyph.book,
+        children: const [LanternLessonsSettings()],
+      ),
+      if (provider.isLoggedInStreamer)
+        (
+          id: 'privacy',
+          label: 'settings.desktop_privacy'.tr(),
+          icon: LGlyph.lock,
+          children: const [
+            PrivacySettingsSection(privacyOnly: true),
+            PrivacySettingsSection(dangerOnly: true),
+          ],
+        ),
+      (
+        id: 'terms',
+        label: 'settings.desktop_legal'.tr(),
+        icon: LGlyph.scale,
+        children: [
+          const LegalSettingsSection(),
+          if (provider.isPermittedAdmin || provider.hasAdminPage)
+            LanternSettingsGroup(children: [
+              if (provider.isPermittedAdmin)
+                LRow(
+                    key: const ValueKey('lantern-settings-org-admin'),
+                    icon: LGlyph.org,
+                    title: 'settings.org_management_title'.tr(),
+                    subtitle: 'settings.org_management_desc'.tr(),
+                    onTap: () => context.push('/org-admin')),
+              if (provider.hasAdminPage)
+                LRow(
+                    key: const ValueKey('lantern-settings-admin'),
+                    icon: LGlyph.shield,
+                    title: 'settings.admin_hub_title'.tr(),
+                    subtitle: 'settings.admin_hub_desc'.tr(),
+                    onTap: () => context.push('/admin')),
+            ]),
+        ],
+      ),
+      (
+        id: 'about',
+        label: 'settings.desktop_about'.tr(),
+        icon: LGlyph.info,
+        children: const [AboutSettingsSection()],
+      ),
+    ];
+    return LanternSettingsView(
+        categories: categories,
+        selected: _desktopSection,
+        onSelect: (i) => setState(() => _desktopSection = i));
+  }
+
+  List<Widget> _buildLanternAccount(
+      BuildContext context, AppProvider provider) {
+    final profile = provider.userProfile;
+    final isAr = context.locale.languageCode == 'ar';
+    final signedIn = provider.isLoggedInStreamer;
+    final approved = provider.isApprovedStreamer;
+    final streamerMode = provider.isStreamerModeEnabled;
+    final streamer = streamerMode && approved;
+    final name = isAr ? profile.nameAr : profile.nameEn;
+    final avatar = profile.avatarUrl.trim();
+    final invitations = provider.myOrganizationInvitations.length;
+    return [
+      LanternAccountCard(
+          guest: !signedIn,
+          name: signedIn
+              ? (name.isNotEmpty ? name : provider.googleUserName ?? '')
+              : 'settings.guest_not_signed_in'.tr(),
+          email: signedIn
+              ? provider.googleUserEmail
+              : 'lantern.account.guest_hint'.tr(),
+          handle: approved ? _displayHandle(provider, profile) : null,
+          image: signedIn && avatar.isNotEmpty
+              ? buildSafeImageProvider(path: avatar)
+              : null,
+          verified: signedIn && profile.isVerifiedScholar,
+          admin: provider.hasAdminPage,
+          roles: [
+            if (signedIn)
+              approved
+                  ? ('organization_v1.broadcaster'.tr(), LTone.live, LGlyph.mic)
+                  : ('settings.viewer_badge'.tr(), LTone.neutral, LGlyph.person),
+            if (provider.isMasterAdmin)
+              ('lantern.account.master_admin'.tr(), LTone.gold, LGlyph.verified)
+            else if (provider.hasAdminPage)
+              ('lantern.account.admin'.tr(), LTone.gold, LGlyph.shield),
+            if (provider.isPermittedAdmin)
+              ('design_ui.organization_admin'.tr(), LTone.mod, LGlyph.org),
+          ],
+          actionLabel: signedIn
+              ? 'settings.edit_profile'.tr()
+              : 'settings.signin_as_streamer'.tr(),
+          onAction: signedIn
+              ? () => _lanternEditProfile(provider)
+              : () => _lanternSignIn(provider)),
+      if (signedIn)
+        LanternSettingsGroup(
+            key: const ValueKey('lantern-settings-role'),
+            title: 'settings.role_mode_title'.tr(),
+            children: [
+              LRow(
+                  icon: streamer ? LGlyph.video : LGlyph.eye,
+                  title: streamer
+                      ? 'settings.role_streamer_active'.tr()
+                      : 'settings.role_viewer_active'.tr(),
+                  subtitle: approved
+                      ? (streamer
+                          ? 'settings.role_streamer_desc'.tr()
+                          : 'settings.role_viewer_desc'.tr())
+                      : 'design_copy.viewer_mode_streamer_studio_unlocked_upon_broadcaster_verificatio'
+                          .tr(),
+                  trailing: LSwitch(
+                      key: const ValueKey('lantern-settings-role-switch'),
+                      value: streamer,
+                      label: 'settings.role_mode_title'.tr(),
+                      onChanged: approved ? provider.setRoleMode : null)),
+              if (!streamer)
+                LRow(
+                    key: const ValueKey('lantern-settings-apply-stream'),
+                    icon: LGlyph.verified,
+                    title: 'role_select.streamer_btn'.tr(),
+                    subtitle: 'broadcast_approval_required'.tr(),
+                    // Push, so Back returns to Settings; only a pending
+                    // application shows the waiting screen.
+                    onTap: () => context.push(provider.myApplication?.status ==
+                            ApplicationStatus.pending
+                        ? '/application-pending'
+                        : '/streamer-apply')),
+            ]),
+      const ApplicationSettingsSection(),
+      if (signedIn || streamerMode)
+        LanternSettingsGroup(
+            key: const ValueKey('lantern-settings-links'),
+            children: [
+              if (signedIn)
+                LRow(
+                    icon: LGlyph.org,
+                    title: 'organization_v1.organizations'.tr(),
+                    subtitle: invitations > 0
+                        ? 'organization_v1.invitations_waiting'
+                            .tr(namedArgs: {'count': '$invitations'})
+                        : 'organization_v1.organizations_hint'.tr(),
+                    onTap: () => context.push('/organizations')),
+              if (streamerMode) ...[
+                LRow(
+                    icon: LGlyph.link,
+                    title: 'organization_v1.channels'.tr(),
+                    subtitle: 'organization_v1.channel_consent_hint'.tr(),
+                    onTap: () => context.push('/channels')),
+                LRow(
+                    key: const ValueKey('lantern-settings-studio'),
+                    icon: LGlyph.settings,
+                    title: 'design_copy.broadcaster_studio_preferences'.tr(),
+                    trailing: provider.isBroadcastingLive
+                        ? LBadge('web.badge_live'.tr(),
+                            kind: LBadgeKind.live, small: true)
+                        : LBadge('lantern.account.offline'.tr(),
+                            kind: LBadgeKind.off, small: true),
+                    onTap: () => _showBroadcasterStudioPreferencesSheet(
+                        context, provider)),
+              ],
+            ]),
+      if (signedIn)
+        LanternSettingsGroup(
+            key: const ValueKey('lantern-settings-sign-out'),
+            children: [
+              LRow(
+                  key: const ValueKey('lantern-settings-sign-out-row'),
+                  icon: LGlyph.logout,
+                  danger: true,
+                  arrow: false,
+                  title: 'settings.sign_out'.tr(),
+                  onTap: () async {
+                    await provider.signOut();
+                    if (context.mounted) context.go('/welcome');
+                  }),
+              LRow(
+                  icon: LGlyph.phone,
+                  arrow: false,
+                  title: 'sign_out_other_devices'.tr(),
+                  onTap: () async {
+                    try {
+                      await provider.signOutOtherDevices();
+                    } catch (_) {
+                      if (context.mounted) {
+                        lanternToast(context, 'broadcast_state_failed'.tr(),
+                            warn: true);
+                      }
+                    }
+                  }),
+            ]),
+    ];
+  }
+
+  /// "Edit Account Profile" as the older card has it: the broadcaster form
+  /// for an approved channel, the viewer editor for everyone else.
+  void _lanternEditProfile(AppProvider provider) {
+    if (provider.isApprovedStreamer) {
+      BroadcasterApplicationSheet.show(
+        context,
+        application: provider.myApplication,
+        editingProfile: true,
+      );
+    } else {
+      ViewerProfileEditorDialog.show(context);
+    }
+  }
+
+  /// Only the browser opens here; sign-in completes (or is refused) later.
+  Future<void> _lanternSignIn(AppProvider provider) async {
+    try {
+      await provider.loginWithGoogle();
+      if (mounted) {
+        lanternToast(context, 'settings.opening_google_sign_in'.tr(),
+            icon: LGlyph.external);
+      }
+    } catch (_) {
+      if (mounted) {
+        lanternToast(context, 'auth_welcome.sign_in_failed'.tr(), warn: true);
+      }
+    }
   }
 
   Widget _buildUserProfileHeaderCard(
@@ -823,6 +1102,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: onTap);
 
   void _showModalSheet(BuildContext context, Widget child, String title) {
+    if (context.isLanternSkin) {
+      showLanternSheet<void>(context, title: title, body: (_) => child);
+      return;
+    }
     showCaSheet<void>(context, title: title, body: child);
   }
 
@@ -837,6 +1120,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showBroadcasterStudioPreferencesSheet(
       BuildContext context, AppProvider provider) {
+    if (context.isLanternSkin) {
+      _showModalSheet(
+          context,
+          Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const BroadcastingSettingsSection(),
+                const SizedBox(height: 14),
+                LRow(
+                    icon: LGlyph.image,
+                    title: 'settings.custom_cards_section'.tr(),
+                    subtitle: 'settings.custom_cards_desc'.tr(),
+                    onTap: () => CustomStreamCardsSection.show(context)),
+              ]),
+          'design_copy.broadcaster_studio_preferences'.tr());
+      return;
+    }
     _showModalSheet(
       context,
       Column(

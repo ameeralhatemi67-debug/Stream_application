@@ -49,6 +49,9 @@ class _LessonsTabState extends State<LessonsTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Lantern and Arch (ADR-026): the tab frame draws the bars; the page
+    // shows its own loading and failure states.
+    if (context.isLanternSkin) return widget.child;
     final body = _LessonsGate(child: widget.child);
     if (context.wide) return Material(color: context.pageGround, child: body);
     return Scaffold(

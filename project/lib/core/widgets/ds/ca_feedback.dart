@@ -8,6 +8,8 @@ import 'ca_cards.dart';
 import 'ca_button.dart';
 import 'ca_icon.dart';
 import 'canopy_content_motion.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 
 /// Who sent a chat message, as far as its look goes. The avatar ring carries
 /// the role, so a message needs no name or badge of its own: broadcasters wear
@@ -89,6 +91,20 @@ class _CaChatBubbleState extends State<CaChatBubble>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternChatBubble(
+          name: widget.name,
+          message: widget.message,
+          time: widget.time,
+          avatarUrl: widget.avatarUrl,
+          isOwn: widget.isOwn,
+          role: widget.role,
+          pending: widget.pending,
+          handRaised: widget.handRaised,
+          dark: widget.dark,
+          showIdentity: widget.showIdentity,
+          onAvatarTap: widget.onAvatarTap);
+    }
     final dark = widget.dark;
     final textTheme = Theme.of(context).textTheme;
     final foreground = dark ? Canopy.paper : Canopy.ink;
@@ -284,7 +300,18 @@ class CaToast extends StatelessWidget {
                         onActionPressed?.call();
                       }))));
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternToastCard(
+          title: title,
+          message: message,
+          icon: icon,
+          error: error,
+          onTap: onTap,
+          onDismissed: onDismissed,
+          actionLabel: actionLabel,
+          onActionPressed: onActionPressed,
+          dismissLabel: dismissLabel)
+      : Semantics(
       liveRegion: true,
       container: true,
       child: TweenAnimationBuilder<double>(
@@ -446,7 +473,14 @@ class _CaSkeletonState extends State<CaSkeleton>
                                   decoration: BoxDecoration(
                                       gradient: CanopyGradients.skeleton))))))));
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternSkeleton(
+          shape: widget.shape,
+          lines: widget.lines,
+          width: widget.width,
+          height: widget.height,
+          label: widget.label)
+      : Semantics(
       label: widget.label ?? 'ds.loading'.tr(),
       child: ExcludeSemantics(
           child: RepaintBoundary(
@@ -499,7 +533,13 @@ class CaEmptyState extends StatelessWidget {
   final Widget? action;
   final CaGlyph icon;
   @override
-  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LEmptyState(
+          title: title,
+          body: body,
+          action: action,
+          icon: lanternGlyphFor(icon))
+      : TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: CanopyMotion.reduced(context)
           ? CanopyMotion.none

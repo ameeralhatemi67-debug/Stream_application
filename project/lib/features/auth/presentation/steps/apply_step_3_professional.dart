@@ -10,6 +10,7 @@ import '../../../../core/providers/app_provider.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
+import '../lantern/lantern_apply_steps.dart';
 
 enum YoutubeVerificationState {
   unverified,
@@ -287,8 +288,57 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     }
   }
 
+  // Lantern and Arch (ADR-026): the same choices, YouTube check, fields and
+  // tags, drawn by LanternApplyProfessional.
+  Widget _buildLantern(BuildContext context) {
+    final approved =
+        context.select<AppProvider, List<String>>((p) => p.approvedTags);
+    return LanternApplyProfessional(
+        isOrganization: widget.isOrganization,
+        organizationsOpen: widget.organizationApplicationsOpen,
+        organizationOnly: widget.organizationOnly,
+        onOrganizationOnly: widget.onOrganizationOnlyChanged,
+        orgName: widget.orgNameController,
+        affiliation: widget.affiliationController,
+        youtube: widget.youtubeController,
+        youtubeCheck: widget.youtubeController.text.isEmpty
+            ? LanternYoutubeCheck.none
+            : switch (_ytState) {
+                YoutubeVerificationState.checking =>
+                  LanternYoutubeCheck.checking,
+                YoutubeVerificationState.verifiedOnline =>
+                  LanternYoutubeCheck.verified,
+                YoutubeVerificationState.formatAccepted =>
+                  LanternYoutubeCheck.formatOk,
+                YoutubeVerificationState.invalidFormat =>
+                  LanternYoutubeCheck.invalid,
+                YoutubeVerificationState.unverified => LanternYoutubeCheck.none,
+              },
+        youtubeMessage: _ytFeedbackMessage,
+        onYoutubeChanged: _scheduleYoutubeVerification,
+        categories: [
+          for (final e in defaultCategoryOptions.entries) (e.key, e.value),
+          for (final c in _customCategories) (c, c),
+        ],
+        selectedCategories: widget.selectedCategories,
+        onCategory: _toggleCategory,
+        onAddCategory: _showAddCustomFieldDialog,
+        tags: approved,
+        selectedTags: widget.selectedTags,
+        pendingTags:
+            widget.selectedTags.where((t) => !approved.contains(t)).toList(),
+        onTag: widget.onTagToggled,
+        customTag: _customTagController,
+        onSubmitTag: _submitCustomTag,
+        onType: (isOrg) => isOrg && !widget.organizationApplicationsOpen
+            ? ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('application.organization_coming_soon'.tr())))
+            : widget.onTypeChanged(isOrg));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isPhone = screenWidth < 600;
 

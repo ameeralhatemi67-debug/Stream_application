@@ -21,6 +21,11 @@ import '../models/chat_report_model.dart';
 import '../models/tag_moderation_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
+import '../../moderation/presentation/lantern/lantern_reports_queue.dart';
+import 'lantern/lantern_admin_frame.dart';
+import 'lantern/lantern_admin_overview.dart';
+import 'lantern/lantern_review_actions.dart';
+import 'lantern/lantern_verification_queue.dart';
 import 'widgets/chat_moderation_view.dart';
 import 'widgets/custom_placeholder_review_view.dart';
 import 'widgets/academic_categories_view.dart';
@@ -304,6 +309,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           initialIndex: index,
           vsync: this);
     }
+    if (context.isLanternSkin) return _buildLantern(context, provider, isAr);
 
     // Access Guard
     if (!provider.isAdminUser) {
@@ -380,7 +386,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         const OrgManagementView(orgId: 'org_dalilk_04'),
         _buildViewerAnalyticsTab(context, provider, isAr),
         _buildTermsGovernanceTab(context, provider, isAr),
-        const ChatModerationView(),
+        // Lantern and Arch adds the queue of reported broadcasts and
+        // channels beside the chat reports (ADR-026).
+        context.isLanternSkin
+            ? const LanternModerationTab(chat: ChatModerationView())
+            : const ChatModerationView(),
         const CustomPlaceholderReviewView(),
         const AcademicCategoriesView(),
         const TagModerationView(),
@@ -417,6 +427,119 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         Expanded(child: views),
       ]),
     );
+  }
+
+  // Lantern and Arch (ADR-026): the same tabs, controller and actions in the
+  // Lantern frame. Overview and the verification queue have Lantern views;
+  // the other tabs keep their widgets.
+  Widget _buildLantern(BuildContext context, AppProvider provider, bool isAr) {
+    if (!provider.isAdminUser) return const LanternAdminDenied();
+    final views = TabBarView(
+      controller: _tabController,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _buildLanternOverview(provider),
+        _buildLanternQueue(context, provider),
+        _buildStreamersRegistryTab(context, provider, isAr),
+        const OrgManagementView(orgId: 'org_dalilk_04'),
+        _buildViewerAnalyticsTab(context, provider, isAr),
+        _buildTermsGovernanceTab(context, provider, isAr),
+        const LanternModerationTab(chat: ChatModerationView()),
+        const CustomPlaceholderReviewView(),
+        const AcademicCategoriesView(),
+        const TagModerationView(),
+        const BannedAccountsView(),
+        if (kDebugMode) _buildTestingToolsTab(context, provider),
+        if (_isMasterAdminForTabs) const RolePermissionManagementView(),
+        const AdminUserDirectoryView(),
+        const AdminSafetyView(),
+      ],
+    );
+    return LanternAdminFrame(
+        tabs: lanternAdminTabs(provider,
+            master: _isMasterAdminForTabs, debug: kDebugMode),
+        controller: _tabController,
+        onSelect: (i) => _tabController.animateTo(i),
+        child: views);
+  }
+
+  Widget _buildLanternOverview(AppProvider provider) => LanternAdminOverview(
+      broadcasters: provider.streamers.length,
+      verifiedScholars: provider.streamers
+          .where((s) => !s.isOrganization && s.isVerified)
+          .length,
+      organizations: provider.streamers.where((s) => s.isOrganization).length,
+      pending: provider.pendingApplications.length,
+      onReview: () => _tabController.animateTo(1),
+      onMap: () => context.go('/map'),
+      onTerms: () => _tabController.animateTo(5));
+
+  Widget _buildLanternQueue(BuildContext context, AppProvider provider) {
+    void approve(BroadcasterApplicationModel app) =>
+        lanternApproveApplication(context, provider, app);
+    void reject(BroadcasterApplicationModel app) =>
+        lanternRejectApplication(context, provider, app);
+    void remove(BroadcasterApplicationModel app) =>
+        lanternRemoveApplication(context, provider, app);
+    return LanternVerificationQueue(
+        rows: verificationQueueRows(provider.applications),
+        filter: _applicationFilter,
+        onFilter: (status) => setState(() => _applicationFilter = status),
+        search: _appSearchController,
+        onSearchChanged: () => setState(() {}),
+        showLog: _showReviewLog,
+        onShowLog: (log) => setState(() => _showReviewLog = log),
+        selected: _selectedApplicationIds,
+        onSelect: (id, on) => setState(() => on
+            ? _selectedApplicationIds.add(id)
+            : _selectedApplicationIds.remove(id)),
+        onSelectAll: (ids, on) => setState(() => on
+            ? _selectedApplicationIds.addAll(ids)
+            : _selectedApplicationIds.removeWhere(ids.contains)),
+        onClearSelection: () => setState(() => _selectedApplicationIds.clear()),
+        onRefresh: () => provider.refreshAdminData(),
+        onInspect: (app) => showLanternApplicationDetails(
+            context, provider, app,
+            onApprove: () => approve(app),
+            onReject: () => reject(app),
+            onRemove: () => remove(app)),
+        onApprove: approve,
+        onReject: reject,
+        onRemove: remove,
+        onApproveSelected: () => lanternApproveSelected(
+            context,
+            provider,
+            _selectedApplicationIds.toList(),
+            () {
+              if (mounted) setState(() => _selectedApplicationIds.clear());
+            }),
+        onRejectSelected: () => lanternRejectSelected(
+            context,
+            provider,
+            _selectedApplicationIds.toList(),
+            () {
+              if (mounted) setState(() => _selectedApplicationIds.clear());
+            }),
+        events: provider.applicationReviewEvents,
+        isReversible: (event) {
+          // The rule of the older review log.
+          final events = provider.applicationReviewEvents;
+          final action = event['action'] as String? ?? '';
+          final id = event['application_id'] as String? ?? '';
+          final latest = events.firstWhere(
+              (e) => e['application_id'] == id && e['action'] != 'removed',
+              orElse: () => event);
+          final current =
+              provider.applications.where((a) => a.id == id).firstOrNull;
+          final localOnly =
+              (event['id'] as String? ?? '').startsWith('local-');
+          return !localOnly &&
+              latest['id'] == event['id'] &&
+              (action == 'approved' || action == 'rejected') &&
+              (current == null || current.status.name == action);
+        },
+        onEventDetails: (event) => showLanternReviewEvent(context, event),
+        onReverse: (event) => lanternReverseReview(context, provider, event));
   }
 
   Widget _buildNavigation(AppProvider provider, {bool closeDrawer = false}) {

@@ -19,6 +19,7 @@ import '../models/org_membership.dart';
 import 'channel_consent_return_screen.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart'
     show FeatureInProgressModal;
+import 'lantern/lantern_channels_view.dart';
 
 class ChannelConnectionsScreen extends StatefulWidget {
   const ChannelConnectionsScreen({super.key, this.returnStatus});
@@ -141,8 +142,34 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen>
             ]));
   }
 
+  // Lantern and Arch (ADR-026): the same loads and consent flow, drawn by
+  // LanternChannelsView.
+  Widget _buildLantern(BuildContext context) {
+    final (channels, memberships, personal) = context.select<AppProvider,
+            (List<ChannelConnection>, List<OrgMembership>, bool)>(
+        (p) => (
+              p.channelConnections,
+              p.orgMemberships,
+              p.personalBroadcastApproved
+            ));
+    return LanternChannelsView(
+        returnStatus: widget.returnStatus,
+        busy: _busy,
+        error: _error,
+        personal: personal,
+        owners: memberships.where((m) => m.canManageChannel).toList(),
+        channels: channels,
+        currentUserId: context.read<AppProvider>().currentUserSessionId,
+        canGoBack: Navigator.canPop(context),
+        onClose: () => context.go('/settings'),
+        onRefresh: _refresh,
+        onConnect: _connect,
+        onDisconnect: (c) => _run((p) => p.disconnectYouTubeChannel(c.id)));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final (channels, memberships, personal) = context.select<AppProvider,
             (List<ChannelConnection>, List<OrgMembership>, bool)>(
         (p) => (

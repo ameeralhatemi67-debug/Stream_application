@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../lantern/lantern_banned_view.dart';
 
 /// Cluster 4 Task 16: full-screen block shown instead of the app when
 /// `AppProvider.isCurrentUserBanned` is true. `AppRouter`'s redirect guard
@@ -51,6 +52,15 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
       });
     }
 
+    if (context.isLanternSkin) {
+      return LanternBannedView(
+          reason: reason,
+          supportEmail: 'support@streamer.app',
+          onSignOut: () async {
+            await context.read<AppProvider>().signOut();
+            if (context.mounted) context.go('/welcome');
+          });
+    }
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: SafeArea(

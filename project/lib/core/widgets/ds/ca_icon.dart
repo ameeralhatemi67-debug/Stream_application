@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import 'ca_focus_ring.dart';
 import '../language_switcher.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 
 /// Exported Identity Lab glyphs; decorative SVGs inherit the control's label.
 enum CaGlyph {
@@ -75,6 +77,10 @@ class CaIcon extends StatelessWidget {
   final String? label;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LIcon(lanternGlyphFor(glyph),
+          size: size, color: lanternIconColor(context, color), label: label);
+    }
     // The Hedayah skin has its own set (same names) and draws the default
     // brand colour in its icon gold.
     final hedayah = context.isHedayahSkin;
@@ -118,6 +124,14 @@ class CaIconButton extends StatelessWidget {
   final bool on;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LIconButton(
+          icon: lanternGlyphFor(icon),
+          label: label,
+          onPressed: onPressed,
+          glass: glass,
+          on: on);
+    }
     final color = glass ? Canopy.paper : Canopy.brandGreen;
     return Semantics(
         button: true,
@@ -175,7 +189,9 @@ class CaLanguageChip extends StatelessWidget {
   /// Glyph only, without the glass circle behind it.
   final bool bare;
   @override
-  Widget build(BuildContext context) => compact
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternLanguageControl(compact: compact || bare, glass: glass)
+      : compact
       ? Center(
           child: SizedBox.square(
               dimension: CanopySize.target,

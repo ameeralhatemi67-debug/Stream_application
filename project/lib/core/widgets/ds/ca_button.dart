@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import '../../theme/app_theme.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 import 'ca_icon.dart';
 import 'canopy_content_motion.dart';
 
@@ -118,6 +120,26 @@ class _CaButtonState extends State<CaButton>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      // The hold controller is created lazily; create it here, while the
+      // element is active, so dispose() does not create it unmounted.
+      if (_hold.isAnimating) _hold.stop();
+      return widget.holdToConfirm
+          ? LHoldButton(
+              label: widget.label,
+              onConfirmed: widget.onPressed ?? () {},
+              enabled: widget.onPressed != null,
+              loading: widget.loading,
+              kind: lanternButtonKind(widget.variant),
+              icon: lanternGlyphOrNull(widget.icon))
+          : LButton(
+              label: widget.label,
+              onPressed: widget.onPressed,
+              loading: widget.loading,
+              kind: lanternButtonKind(widget.variant),
+              icon: lanternGlyphOrNull(widget.icon),
+              trailing: lanternGlyphOrNull(widget.trailingIcon));
+    }
     final reduced = CanopyMotion.reduced(context);
     final active = _enabled || widget.loading;
     final primary = widget.variant == CaButtonVariant.primary;

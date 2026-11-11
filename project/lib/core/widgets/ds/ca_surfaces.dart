@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'canopy_lattice_background.dart';
 import '../../theme/app_theme.dart';
 import 'ca_icon.dart';
+import '../lantern/lantern_compat.dart';
 
 enum CaSheetJob { standard, confirmation, studio }
 
@@ -41,7 +42,18 @@ class CaSheet extends StatelessWidget {
   /// button are drawn without a circle or pill behind them.
   final bool bareChrome;
   @override
-  Widget build(BuildContext context) => ClipRRect(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternSheetFrame(
+          title: title,
+          body: body,
+          actions: actions,
+          headerStatus: headerStatus,
+          onClose: onClose,
+          scrollBody: scrollBody,
+          handle: handle,
+          shortHeight: CanopySize.shortSurfaceHeight,
+          language: CaLanguageChip(compact: bareChrome, bare: bareChrome))
+      : ClipRRect(
       borderRadius: BorderRadius.circular(CanopyRadius.sheetTop),
       child: Material(
           color: Canopy.paper,
@@ -158,7 +170,19 @@ class CaDialog extends StatelessWidget {
   final List<Widget> actions;
   final VoidCallback? onClose;
   @override
-  Widget build(BuildContext context) => Dialog(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternDialogFrame(
+          title: title,
+          titleWidget: titleWidget,
+          body: body,
+          actions: actions,
+          onClose: onClose,
+          maxWidth: MediaQuery.sizeOf(context).width >= CanopyWindow.expanded
+              ? CanopySize.sheetMax
+              : CanopySize.dialogCompactMax,
+          shortHeight: CanopySize.shortSurfaceHeight,
+          reflowTextScale: CanopySize.dialogReflowTextScale)
+      : Dialog(
       backgroundColor: Canopy.transparent,
       elevation: 0,
       surfaceTintColor: Canopy.transparent,

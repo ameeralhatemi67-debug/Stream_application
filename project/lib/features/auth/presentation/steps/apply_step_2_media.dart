@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../widgets/image_arrange_modal.dart';
+import '../lantern/lantern_apply_steps.dart';
 
 /// Step 2: Broadcaster Media Assets (Profile Photo & Banner with Auto-Fit & Repositioning)
 class ApplyStep2Media extends StatefulWidget {
@@ -244,8 +245,33 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
     );
   }
 
+  // Lantern and Arch (ADR-026): the same pictures, picking and arranging,
+  // drawn by LanternApplyMedia.
+  Widget _buildLantern(BuildContext context) {
+    final hasBanner = widget.bannerPath != null ||
+        (widget.bannerBytes != null && widget.bannerBytes!.isNotEmpty);
+    final hasAvatar = widget.avatarPath != null || widget.avatarBytes != null;
+    return LanternApplyMedia(
+        banner: hasBanner
+            ? buildSafeImageProvider(
+                path: widget.bannerPath, bytes: widget.bannerBytes)
+            : null,
+        avatar: hasAvatar
+            ? buildSafeImageProvider(
+                path: widget.avatarPath, bytes: widget.avatarBytes)
+            : null,
+        name: '',
+        onPickBanner: _pickBanner,
+        onPickAvatar: _pickAvatar,
+        onArrangeBanner: () => _openArrangeModal(false),
+        onArrangeAvatar: () => _openArrangeModal(true),
+        bannerError: _bannerError,
+        avatarError: _avatarError);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final avatarProvider = buildSafeImageProvider(
       path: widget.avatarPath,
       bytes: widget.avatarBytes,

@@ -66,9 +66,14 @@ Future<void> main() async {
     await ReminderPushService.initializeIfConfigured();
   }
   final skin = await readAppSkin();
-  // Only the Hedayah skin's own heading font, and only for that skin; gold
-  // returns at once (skin_fonts.dart).
+  // Only the Hedayah and Lantern skins' heading font, and only for them;
+  // gold returns at once (skin_fonts.dart).
   await SkinFonts.ensureLoaded(skin);
+  // Lantern and Arch only: day or night, and calm motion (ADR-026).
+  final lantern = skin == AppSkin.lantern;
+  final appearance =
+      lantern ? await readLanternAppearance() : LanternAppearance.fallback;
+  final calmMotion = lantern && await readLanternCalmMotion();
 
   runApp(
     EasyLocalization(
@@ -80,16 +85,27 @@ Future<void> main() async {
       // count above 2 to "other", which never selects Arabic's few/many forms
       // (audit 2026-10-21, section 5.3).
       ignorePluralRules: false,
-      child: StreamerApp(initialSkin: skin),
+      child: StreamerApp(
+          initialSkin: skin,
+          initialAppearance: appearance,
+          initialCalmMotion: calmMotion),
     ),
   );
 }
 
 class StreamerApp extends StatefulWidget {
-  const StreamerApp({super.key, this.initialSkin = AppSkin.gold});
+  const StreamerApp(
+      {super.key,
+      this.initialSkin = AppSkin.gold,
+      this.initialAppearance = LanternAppearance.fallback,
+      this.initialCalmMotion = false});
 
   /// The design saved on this device (or named by a web link).
   final AppSkin initialSkin;
+
+  /// Lantern and Arch only: day or night, and calm motion, as saved.
+  final LanternAppearance initialAppearance;
+  final bool initialCalmMotion;
 
   @override
   State<StreamerApp> createState() => _StreamerAppState();
@@ -113,7 +129,10 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _appProvider = AppProvider()..restoreAppSkin(widget.initialSkin);
+    _appProvider = AppProvider()
+      ..restoreAppSkin(widget.initialSkin,
+          appearance: widget.initialAppearance,
+          calmMotion: widget.initialCalmMotion);
     // Start real-time live viewer polling now that the provider exists.
     // This is intentionally NOT done inside AppProvider's constructor so that
     // widget tests (which use their own AppProvider instances) stay free of

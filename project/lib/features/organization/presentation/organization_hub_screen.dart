@@ -19,6 +19,15 @@ import '../models/org_membership.dart';
 import 'org_membership_panel.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/lantern/lantern.dart'
+    show
+        LButton,
+        LButtonKind,
+        LanternPageBar,
+        LanternSurface,
+        lanternToast,
+        showLanternDialog;
+import 'lantern/lantern_org_hub.dart';
 
 /// Every account's organization home: invitations addressed to it, the
 /// organizations it belongs to (with rollout availability, pending ownership
@@ -123,8 +132,118 @@ class _OrganizationHubScreenState extends State<OrganizationHubScreen> {
             )));
   }
 
+  // Lantern and Arch (ADR-026): the same loads and actions, with Lantern
+  // dialogs, toasts and pages.
+  Future<void> _answerLantern(OrgInvitation invitation, bool accept) async {
+    final ok = await _run((p) async {
+      await p.answerOrganizationInvite(invitation.id, accept);
+      await p.refreshOrganizationInvitations();
+    });
+    if (ok && mounted) {
+      lanternToast(
+          context,
+          (accept
+                  ? 'organization_v1.invite_accepted'
+                  : 'organization_v1.invite_declined')
+              .tr());
+    }
+  }
+
+  Future<void> _acceptTransferLantern(OrgMembership m) async {
+    final confirmed = await showLanternDialog<bool>(context,
+        title: 'organization_v1.accept_transfer'.tr(),
+        body: (dialog) => Text('organization_v1.transfer_accept_hint'.tr(),
+            style: Lantern.textStyle(14.5,
+                color: dialog.lt.muted, height: 1.5)),
+        actions: (dialog) => [
+              LButton(
+                  label: 'organization_v1.close'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialog, false)),
+              LButton(
+                  key: const ValueKey('lantern-org-transfer-confirm'),
+                  label: 'organization_v1.accept_transfer'.tr(),
+                  onPressed: () => Navigator.pop(dialog, true)),
+            ]);
+    if (confirmed != true || !mounted) return;
+    final ok = await _run((p) => p.transferOrganizationOwner(m.organizationId));
+    // The incoming owner must reconnect the organization channel themselves.
+    if (ok && mounted) context.push('/channels');
+  }
+
+  void _openMembersLantern(OrgMembership m, String language) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LanternSurface(
+            child: Builder(
+                builder: (page) => Scaffold(
+                    backgroundColor: page.lt.bg,
+                    appBar: LanternPageBar(
+                        title: language == 'ar'
+                            ? m.organizationNameAr
+                            : m.organizationNameEn,
+                        onBack: () => Navigator.of(page).maybePop()),
+                    body: SingleChildScrollView(
+                        child: OrgMembershipPanel(
+                            orgId: m.organizationId)))))));
+  }
+
+  void _openEventLantern(OrgEvent event) {
+    final provider = context.read<AppProvider>();
+    if (!event.read) provider.markNotificationAsRead('org:${event.id}');
+    if (event.kind == 'invitation' &&
+        event.invitationId != null &&
+        !provider.myOrganizationInvitations
+            .any((i) => i.id == event.invitationId)) {
+      return; // Already answered or expired; the card above is the source of truth.
+    }
+    context.push(event.route);
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final (memberships, invitations, events, channels) = context.select<
+        AppProvider,
+        (
+          List<OrgMembership>,
+          List<OrgInvitation>,
+          List<OrgEvent>,
+          List<ChannelConnection>
+        )>((p) => (
+          p.orgMemberships,
+          p.myOrganizationInvitations,
+          p.organizationEvents,
+          p.channelConnections
+        ));
+    final language = context.locale.languageCode;
+    return LanternOrganizationHub(
+        busy: _busy,
+        loaded: _loaded,
+        error: _error,
+        invitations: invitations,
+        memberships: memberships
+            .where((m) => m.status != OrgMembershipStatus.revoked)
+            .toList(),
+        connectedOrganizations: {
+          for (final c in channels)
+            if (c.connected && c.organizationId != null) c.organizationId!
+        },
+        events: events,
+        onRefresh: _refresh,
+        onAnswer: _answerLantern,
+        onShows: (m) => context.push(Uri(
+            path: '/shows',
+            queryParameters: {'org': m.organizationId}).toString()),
+        onMembers: (m) => _openMembersLantern(m, language),
+        onChannel: () => context.push('/channels'),
+        onAcceptTransfer: _acceptTransferLantern,
+        onCancelTransfer: (m) =>
+            _run((p) => p.cancelOrganizationTransfer(m.organizationId)),
+        onMarkAllRead: () => _run((p) => p.markOrganizationEventsRead()),
+        onEvent: _openEventLantern);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final (memberships, invitations, events, channels) = context.select<
         AppProvider,
         (

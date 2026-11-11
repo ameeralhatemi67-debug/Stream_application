@@ -11,6 +11,10 @@ import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../live_stream/services/live_chat_controller.dart'
     show ChatReportReason;
+import '../../../../core/widgets/lantern/lantern.dart'
+    show LGlyph, LanternContext, lanternToast;
+import '../lantern/lantern_chat_reports.dart';
+import '../../../moderation/presentation/content_report_sheet.dart';
 
 /// Platform-Wide Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1).
 /// Admin-tier surface (any AdminHubScreen viewer, not Master-Admin-only like
@@ -263,8 +267,77 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     );
   }
 
+  // Lantern and Arch (ADR-026): the same reports, search and actions, with
+  // Lantern cards, dialogs and toasts.
+  Future<void> _runLantern(ChatReportModel report,
+      Future<void> Function() action, String successMessage) async {
+    setState(() => _actingOnReportIds.add(report.id));
+    try {
+      await action();
+      if (mounted) lanternToast(context, successMessage);
+    } catch (e) {
+      if (mounted) {
+        lanternToast(context, 'moderation.failed'.tr(),
+            warn: true, icon: LGlyph.warn);
+      }
+    } finally {
+      if (mounted) setState(() => _actingOnReportIds.remove(report.id));
+    }
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    final reports = context
+        .select<AppProvider, List<ChatReportModel>>((p) => p.chatReports)
+        .where((r) => widget.streamId == null || r.streamId == widget.streamId)
+        .toList();
+    final query = _searchController.text.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? reports
+        : reports.where((r) {
+            return r.reportedDisplayName.toLowerCase().contains(query) ||
+                r.reporterDisplayName.toLowerCase().contains(query) ||
+                r.streamId.toLowerCase().contains(query) ||
+                r.reason.toLowerCase().contains(query) ||
+                r.messageBody.toLowerCase().contains(query);
+          }).toList();
+    final muted = widget.streamId == null
+        ? context.select<AppProvider, List<ChatMuteAuditEntry>>(
+            (p) => p.mutedChattersAuditLog)
+        : null;
+    return LanternChatReportsQueue(
+        reports: reports,
+        shown: filtered,
+        search: _searchController,
+        onSearchChanged: () => setState(() {}),
+        scoped: widget.streamId != null,
+        mutedLog: muted,
+        acting: _actingOnReportIds,
+        canBan: provider.isAdminUser,
+        reasonLabel: _reasonLabel,
+        onDismiss: (report) => _runLantern(
+            report,
+            () => provider.dismissChatReport(report.id),
+            'moderation.dismissed'.tr()),
+        onMute: (report, hours) => _runLantern(
+            report,
+            () => provider.muteChatSenderAndResolveReport(report,
+                muteDurationHours: hours),
+            'moderation.muted'.tr()),
+        onBan: (report, reason) => _runLantern(
+            report,
+            () => provider.banChatSenderAndResolveReport(report,
+                reason: reason),
+            'moderation.banned'.tr()),
+        onDelete: (report) => _runLantern(
+            report,
+            () => provider.deleteChatMessageAndResolveReport(report),
+            'moderation.deleted'.tr()));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final provider = context.read<AppProvider>();
     final reports = context
         .select<AppProvider, List<ChatReportModel>>((p) => p.chatReports)
@@ -285,6 +358,10 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: CustomScrollView(slivers: [
+        // Reported broadcasts and channels, on the platform-wide tab only.
+        // The section draws nothing while there are none.
+        if (widget.streamId == null)
+          const SliverToBoxAdapter(child: ContentReportsSection()),
         SliverToBoxAdapter(
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

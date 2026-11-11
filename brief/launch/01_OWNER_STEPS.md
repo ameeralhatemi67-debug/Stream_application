@@ -25,6 +25,7 @@ Some steps take days or weeks and you cannot speed them up. Start them in week 1
 - [ ] **Account type: personal or organization.**
   - *Personal:* $25, your government ID, fast to open. A personal account opened after November 13, 2023 **must** run a closed test with at least 12 testers for 14 days in a row before it can publish.
   - *Organization:* needs a registered entity and a D-U-N-S number. It is exempt from the 12-tester rule and shows an organization name as the developer, which fits a platform like Hadayah.
+  - *2026-11-11:* Google's testing page (answer 14151465) speaks only of personal accounts created after November 13, 2023. It does not say anything about organization accounts. Check the Play Console dashboard: if it shows the closed-test requirement, it applies to you.
 - [ ] **Organization broadcasting at launch: on or off.** Recommended: launch with it **off**, run the 3-show pilot privately, and switch it on later from Admin → Safety. If you want it on at launch, the full organization test section in 02 becomes a release gate.
 - [ ] **Reminders and push notifications at launch: in or hidden.** They need a Firebase project (section 4). If you don't set Firebase up, tell Claude to hide the reminder bell for v1.0.
 - [ ] **Production backend.** Decide whether Supabase project `zkkmfjsjouqzibvnzkau` (streamer_app) *is* production. Its region can't be changed later without a new project, and its region matters for the Saudi PDPL (cross-border data).
@@ -102,7 +103,7 @@ The old key is still in git history, so treat it as leaked.
 
 **Detailed click-by-click version: [04_FIREBASE_REMINDERS_SETUP.md](04_FIREBASE_REMINDERS_SETUP.md).** It also covers the reminder schedule (Vault + cron) and the end-to-end test.
 
-No Firebase project exists yet, so no reminder or push can reach a phone today.
+*2026-11-11:* done. Firebase accepted a real test push on 2026-11-01 (`brief/LEDGER.md`). The steps below stay for reference.
 
 1. [ ] <https://console.firebase.google.com> → **Add project**. Use the same Google Cloud project as above if you like.
 2. [ ] **Add an Android app**, package `sa.hadayah.streamer_app`. Download nothing into git. You only need the values in step 4.
@@ -177,6 +178,8 @@ Release builds refuse to run until this exists.
 
 *2026-10-26:* if the app is first shared as an APK from the website ([05_APK_RELEASE.md](05_APK_RELEASE.md)), this key signs every APK install, so it must also become the **Play app signing key**: in Play Console choose "use my own key" and upload it, or APK users will have to uninstall to move to Play.
 
+*2026-11-11:* Google now gives every new app a Google-generated signing key by default. Change that choice **before the first release**, on the app's signing page in Play Console. After a release goes out, the signing key is very hard to change. Google cannot give you a copy of the key later, so your backup is the only one.
+
 **Easiest way (2026-10-16):** run `powershell -ExecutionPolicy Bypass -File brief\launch\make_upload_key.ps1` from the repo root in your own terminal. It asks for the password (never typed into chat), creates `%USERPROFILE%\hadayah-keys\upload-keystore.jks` and `project\android\key.properties`, and prints the SHA-1 for section 3b. The manual steps below do the same thing.
 
 1. [ ] In a terminal (Java's `keytool` comes with Android Studio):
@@ -247,7 +250,7 @@ Play Console → **Create app**: name *منصة هدايه* (max 30 characters),
 ## 8. Upload, closed test and production
 
 1. [ ] **Internal testing** track → create a release → upload the `.aab` Claude built → add yourself and your testers' emails → install from the Play link on your phones. This is the first time the real Play-signed app runs.
-2. [ ] Play Console → Test and release → **App integrity** → copy the **app signing key SHA-1**. Add it to the API key in section 3b.
+2. [ ] Play Console → Test and release → **App integrity** → check that the **app signing key SHA-1** is the one `make_upload_key.ps1` printed. If you chose "use my own key", they match. (Since 2026-10-26 no Google API key in the phone app uses this fingerprint, so there is nothing to add in section 3b.)
 3. [ ] **Closed testing** (required for a new personal account):
    - Create a closed track and a Google Group or email list with **at least 12 real testers**, people who will actually open and use the app. Messages, opt-in steps and the 14-day task list: [06_CLOSED_TEST_TESTERS.md](06_CLOSED_TEST_TESTERS.md).
    - Keep at least 12 opted in for **14 days in a row**. If the number drops below 12, the count starts again.

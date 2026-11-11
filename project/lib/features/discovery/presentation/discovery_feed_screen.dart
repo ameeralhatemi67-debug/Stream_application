@@ -29,6 +29,12 @@ import 'bookmarks_sheet.dart';
 import 'web/discovery_web_view.dart';
 import '../../lessons/presentation/lessons_in_app.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
+import '../../../core/routing/sign_in_prompt.dart';
+import '../../../core/services/reminder_push_service.dart';
+import '../../../core/services/upcoming_schedule_service.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import '../../profile/models/upcoming_schedule.dart';
+import 'lantern/lantern_discover_view.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
   const DiscoveryFeedScreen({super.key});
@@ -200,8 +206,137 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
     context.read<AppProvider>().setSearchQuery('');
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The same catalog, filters and timers as
+  // above; LanternDiscoverView draws them. "Starting soon" also needs the
+  // planned broadcasts, read once for every channel as the map does.
+  // ---------------------------------------------------------------------
+  List<UpcomingSchedule> _lanternSchedules = const [];
+  DateTime? _lanternSchedulesAt;
+  bool _lanternSchedulesLoading = false;
+
+  void _loadLanternSchedules() {
+    final at = _lanternSchedulesAt;
+    if (_lanternSchedulesLoading ||
+        (at != null &&
+            DateTime.now().difference(at) < const Duration(minutes: 5)) ||
+        !context.read<AppProvider>().isOnline) {
+      return;
+    }
+    _lanternSchedulesLoading = true;
+    () async {
+      try {
+        final schedules = await UpcomingScheduleService().loadForMap();
+        if (mounted) setState(() => _lanternSchedules = schedules);
+      } catch (e) {
+        // Discover works without it; the section stays hidden.
+        debugPrint('Discover schedules failed: $e');
+      } finally {
+        _lanternSchedulesAt = DateTime.now();
+        _lanternSchedulesLoading = false;
+      }
+    }();
+  }
+
+  Future<void> _lanternRemind(StreamerModel streamer) async {
+    final provider = context.read<AppProvider>();
+    final id = streamer.channelProfileId;
+    if (!provider.isLoggedInStreamer) {
+      final signIn = await showLanternDialog<bool>(context,
+          title: 'lantern.discover.sign_in_title'.tr(),
+          body: (context) => Text('lantern.discover.sign_in_body'.tr(),
+              style: Lantern.textStyle(15, color: context.lt.muted)),
+          actions: (context) => [
+                LButton(
+                    label: 'upcoming.cancel'.tr(),
+                    kind: LButtonKind.ghost,
+                    onPressed: () => Navigator.pop(context, false)),
+                LButton(
+                    label: 'upcoming.sign_in'.tr(),
+                    onPressed: () => Navigator.pop(context, true)),
+              ]);
+      if (signIn == true && mounted) {
+        await openSignIn(context, returnTo: '/feed');
+      }
+      return;
+    }
+    try {
+      await provider.toggleReminder(id, language: context.locale.languageCode);
+      if (!mounted) return;
+      final on = provider.hasReminder(id);
+      // Say what changed; if notifications are blocked, say that instead,
+      // because the reminder cannot arrive.
+      final blocked =
+          on && provider.reminderPushStatus != ReminderPushStatus.granted;
+      final key = !on
+          ? 'upcoming.reminder_removed'
+          : provider.reminderPushStatus == ReminderPushStatus.granted
+              ? 'upcoming.reminder_saved'
+              : provider.reminderPushStatus == ReminderPushStatus.notGranted
+                  ? 'upcoming.permission_denied'
+                  : 'upcoming.permission_unavailable';
+      lanternToast(context, key.tr(), icon: LGlyph.bell, warn: blocked);
+    } catch (_) {
+      if (mounted) {
+        lanternToast(context, 'upcoming.save_failed'.tr(), warn: true);
+      }
+    }
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final selectedCategory =
+        context.select<AppProvider, String>((p) => p.currentCategoryFilter);
+    final displayed = context
+        .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
+    final categories = context.select<AppProvider, List<AcademicCategoryModel>>(
+        (p) => p.academicCategories);
+    final tag = context.select<AppProvider, String>((p) => p.selectedTagFilter);
+    final online = context.select<AppProvider, bool>((p) => p.isOnline);
+    final loading = context.select<AppProvider, bool>((p) =>
+        p.isLoadingPublicCatalog &&
+        !p.hasPublicCatalogSnapshot &&
+        p.streamers.isEmpty);
+    final (ownLiveId, total, reminders) =
+        context.select<AppProvider, (String?, int, bool)>((p) => (
+              p.isStreamerModeEnabled && p.isBroadcastingLive
+                  ? p.activeStreamId
+                  : null,
+              p.streamers.length,
+              p.remindersAvailable
+            ));
+    final live = online
+        ? displayed.where((s) => s.isCurrentlyLive).toList()
+        : <StreamerModel>[];
+    _loadLanternSchedules();
+    final next = online
+        ? nextLiveByChannel(_lanternSchedules, DateTime.now())
+        : const <String, ({UpcomingSchedule schedule, DateTime start})>{};
+    return LanternDiscoverView(
+        displayed: displayed,
+        live: live,
+        categories: categories,
+        selectedCategory: selectedCategory,
+        onCategory: (id) => context.read<AppProvider>().setCategoryFilter(id),
+        searchController: _searchController,
+        searchFocus: _searchFocusNode,
+        onSearchChanged: _onSearchChanged,
+        onClearSearch: _clearSearch,
+        onFilters: () => TagsFilterBottomSheet.show(context),
+        tagActive: tag != 'all',
+        loading: loading,
+        onRefresh: () => context
+            .read<AppProvider>()
+            .refreshCatalogIfOlderThan(Duration.zero),
+        soon: lanternSoonOf(displayed, next, DateTime.now()),
+        nextLive: {for (final e in next.entries) e.key: e.value.start},
+        onRemind: reminders ? _lanternRemind : null,
+        ownLiveId: ownLiveId == null || ownLiveId.isEmpty ? null : ownLiveId,
+        totalChannels: total);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final selectedCategory =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
     final displayed = context

@@ -8,16 +8,21 @@ import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_focus_ring.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/hedayah/hedayah_kit.dart';
+import '../../../../core/widgets/lantern/lantern_base.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../lantern/lantern_settings_sections.dart';
+import '../lantern/lantern_settings_view.dart';
 
-/// Settings → Design: the app's gold & black design or the Hedayah skin
-/// (ADR-016), per device. Each choice is a small picture of itself.
+/// Settings → Design: the app's gold & black design, the Hedayah skin
+/// (ADR-016) or Lantern and Arch (ADR-026), per device. Each choice is a
+/// small picture of itself.
 class AppearanceSettingsSection extends StatelessWidget {
   const AppearanceSettingsSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final skin = context.select<AppProvider, AppSkin>((p) => p.appSkin);
+    if (context.isLanternSkin) return _buildLantern(context, skin);
     final hedayah = context.isHedayahSkin;
     return CaCard(
         key: const ValueKey('settings-design'),
@@ -34,25 +39,66 @@ class AppearanceSettingsSection extends StatelessWidget {
           const SizedBox(height: AppTheme.spaceXs),
           Text('skin.hint'.tr(), style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: AppTheme.spaceMd),
+          // Two tiles to a row, as when there were two designs: the third
+          // sits on a second row, so the first two keep their size.
           Semantics(
               explicitChildNodes: true,
-              child:
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                for (final option in AppSkin.values) ...[
-                  if (option != AppSkin.values.first)
-                    const SizedBox(width: AppTheme.spaceMd),
-                  Expanded(
-                      child: _SkinTile(
-                          skin: option,
-                          selected: option == skin,
-                          onTap: () => _choose(context, option))),
-                ],
-              ])),
+              child: LayoutBuilder(builder: (context, box) {
+                const gap = AppTheme.spaceMd;
+                final width = (box.maxWidth - gap) / 2;
+                return Wrap(spacing: gap, runSpacing: gap, children: [
+                  for (final option in AppSkin.values)
+                    SizedBox(
+                        width: width,
+                        child: _SkinTile(
+                            skin: option,
+                            selected: option == skin,
+                            onTap: () => _choose(context, option))),
+                ]);
+              })),
         ]));
   }
 
-  static String nameOf(AppSkin skin) =>
-      (skin == AppSkin.hedayah ? 'skin.hedayah' : 'skin.gold').tr();
+  /// Lantern and Arch (ADR-026): the three designs as tiles, then Lantern's
+  /// own appearance (day, night or the device's) and calm motion.
+  Widget _buildLantern(BuildContext context, AppSkin skin) {
+    final (appearance, calm) =
+        context.select<AppProvider, (LanternAppearance, bool)>(
+            (p) => (p.lanternAppearance, p.lanternCalmMotion));
+    final provider = context.read<AppProvider>();
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LanternSkinTiles(
+              options: [
+                for (final option in AppSkin.values)
+                  (skin: option, name: nameOf(option), hint: hintOf(option)),
+              ],
+              current: skin,
+              onChoose: (option) => _choose(context, option)),
+          const SizedBox(height: 22),
+          LanternAppearanceGroup(
+              appearance: appearance,
+              calm: calm,
+              onAppearance: provider.setLanternAppearance,
+              onCalm: provider.setLanternCalmMotion),
+        ]);
+  }
+
+  static String nameOf(AppSkin skin) => switch (skin) {
+        AppSkin.gold => 'skin.gold',
+        AppSkin.hedayah => 'skin.hedayah',
+        AppSkin.lantern => 'lantern.skin_name',
+      }
+          .tr();
+
+  static String hintOf(AppSkin skin) => switch (skin) {
+        AppSkin.gold => 'skin.gold_hint',
+        AppSkin.hedayah => 'skin.hedayah_hint',
+        AppSkin.lantern => 'lantern.skin_hint',
+      }
+          .tr();
 
   Future<void> _choose(BuildContext context, AppSkin skin) async {
     final provider = context.read<AppProvider>();
@@ -114,9 +160,14 @@ class _SkinTile extends StatelessWidget {
                                           BorderRadius.circular(radius - 4),
                                       child: AspectRatio(
                                           aspectRatio: 1.35,
-                                          child: skin == AppSkin.hedayah
-                                              ? const _HedayahPreview()
-                                              : const _GoldPreview())),
+                                          child: switch (skin) {
+                                            AppSkin.gold =>
+                                              const _GoldPreview(),
+                                            AppSkin.hedayah =>
+                                              const _HedayahPreview(),
+                                            AppSkin.lantern =>
+                                              const _LanternPreview(),
+                                          })),
                                   const SizedBox(height: AppTheme.spaceSm),
                                   Row(children: [
                                     _RadioMark(
@@ -133,10 +184,7 @@ class _SkinTile extends StatelessWidget {
                                   ]),
                                   const SizedBox(height: 2),
                                   Text(
-                                      (skin == AppSkin.hedayah
-                                              ? 'skin.hedayah_hint'
-                                              : 'skin.gold_hint')
-                                          .tr(),
+                                      AppearanceSettingsSection.hintOf(skin),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall),
@@ -210,6 +258,46 @@ class _HedayahPreview extends StatelessWidget {
       ]));
 }
 
+/// Linen page under a night band that carries the arch and the star. Drawn
+/// with a painter, not with Lantern widgets: this tile also shows in the two
+/// older designs, which never build one (ADR-026).
+class _LanternPreview extends StatelessWidget {
+  const _LanternPreview();
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+      color: LanternTokens.day.bg,
+      child: const Column(children: [
+        Expanded(
+            flex: 5,
+            child: ColoredBox(
+                color: LanternTokens.nightGround,
+                child: Center(
+                    child: CustomPaint(
+                        size: Size(22, 26), painter: _LanternMark())))),
+        Expanded(flex: 6, child: _Cards(pill: true, round: true)),
+      ]));
+}
+
+class _LanternMark extends CustomPainter {
+  const _LanternMark();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawPath(lanternArchPath(rect, bottom: 3),
+        Paint()..shader = Lantern.goldFill.createShader(rect));
+    const star = Size.square(9);
+    canvas
+      ..translate((size.width - star.width) / 2, size.height * .46)
+      ..drawPath(
+          lanternStarPath(star), Paint()..color = LanternTokens.nightGround);
+  }
+
+  @override
+  bool shouldRepaint(_LanternMark oldDelegate) => false;
+}
+
 class _Pill extends StatelessWidget {
   const _Pill({this.gradient, this.color});
 
@@ -227,9 +315,12 @@ class _Pill extends StatelessWidget {
 }
 
 class _Cards extends StatelessWidget {
-  const _Cards({this.pill = false});
+  const _Cards({this.pill = false, this.round = false});
 
   final bool pill;
+
+  /// Lantern and Arch: rounder cards.
+  final bool round;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -241,7 +332,7 @@ class _Cards extends StatelessWidget {
               child: DecoratedBox(
                   decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(round ? 8 : 5),
                       boxShadow: const [
                 BoxShadow(color: Color(0x14000000), blurRadius: 4)
               ]))),

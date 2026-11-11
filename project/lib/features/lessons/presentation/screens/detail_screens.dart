@@ -9,6 +9,11 @@ import '../../domain/lessons_models.dart';
 import '../../domain/lessons_rules.dart';
 import '../../domain/lessons_vocab.dart';
 import '../../state/lessons_controller.dart';
+import '../../../../core/theme/app_theme.dart' show LanternContext;
+import '../lantern/lesson_view.dart';
+import '../lantern/mosque_view.dart';
+import '../lantern/preacher_view.dart';
+import '../lantern/series_view.dart';
 import '../lessons_kit.dart';
 import '../lessons_map.dart';
 import '../lessons_modals.dart';
@@ -50,6 +55,7 @@ class LessonScreen extends StatelessWidget {
     final c = context.watch<LessonsController>();
     final l = c.lesson(id);
     final lang = context.lang, wide = context.wide;
+    if (l == null && context.isLanternSkin) return const LanternLessonMissing();
     if (l == null) {
       return LessonsPage(title: 'lessons.nav.lesson'.tr(), children: [
         c.loading ? const Center(child: CircularProgressIndicator(color: TC.gold)) : TEmpty(title: 'lessons.lesson.not_found'.tr()),
@@ -64,6 +70,21 @@ class LessonScreen extends StatelessWidget {
     final report = c.admin.reports[l.id];
     final channel = preacherChannel(context, p);
     final liveNow = c.isLiveNow(l);
+    if (context.isLanternSkin) {
+      return LanternLessonView(
+          lesson: l,
+          preacher: p,
+          mosque: m,
+          district: d,
+          prayer: pt,
+          series: s,
+          sessions: sibs,
+          past: past,
+          admin: admin,
+          report: report,
+          channel: channel,
+          liveNow: liveNow);
+    }
 
     final facts = [
       _Fact(TGlyph.calendar, 'lessons.lesson.date'.tr(), '${relativeDayLabel(l.date, lang) == weekdayName(l.date, lang) ? '' : '${relativeDayLabel(l.date, lang)} · '}${weekdayName(l.date, lang)} ${gregorianLabel(l.date, lang)}',
@@ -340,9 +361,19 @@ class LessonSeriesScreen extends StatelessWidget {
     final c = context.watch<LessonsController>();
     final s = c.seriesOf(id);
     final lang = context.lang;
+    if (s == null && context.isLanternSkin) return const LanternSeriesMissing();
     if (s == null) return LessonsPage(title: 'lessons.nav.series'.tr(), children: [TEmpty(title: 'lessons.lesson.not_found'.tr())]);
     final sessions = c.sessionsOf(s.id);
     final next = sessions.where((x) => !x.date.isBefore(c.today) && x.isPublic).firstOrNull;
+    if (context.isLanternSkin) {
+      return LanternSeriesView(
+          series: s,
+          subtitle:
+              '${c.preacher(s.preacherId)?.name(lang) ?? ''} · ${c.mosque(s.mosqueId)?.name(lang) ?? ''} · ${sessions.isEmpty ? '' : 'lessons.time.every'.tr(args: [weekdayName(sessions.first.date, lang)])} ${slotLabel(s.slot)}',
+          sessions: sessions,
+          done: sessions.where((x) => x.date.isBefore(c.today)).length,
+          next: next);
+    }
     return LessonsPage(title: 'lessons.nav.series'.tr(), children: [
       TPageHead(
         eyebrow: 'lessons.lesson.series'.tr(),
@@ -375,6 +406,7 @@ class _PreacherScreenState extends State<PreacherScreen> {
     final c = context.watch<LessonsController>();
     final p = c.preacher(widget.id);
     final lang = context.lang;
+    if (p == null && context.isLanternSkin) return const LanternPreacherMissing();
     if (p == null) return LessonsPage(title: 'lessons.nav.preacher'.tr(), children: [TEmpty(title: 'lessons.lesson.not_found'.tr())]);
     final up = c.upcomingWhere((l) => l.preacherId == p.id);
     final past = c.pastWhere((l) => l.preacherId == p.id);
@@ -382,6 +414,18 @@ class _PreacherScreenState extends State<PreacherScreen> {
     final places = {...up, ...past}.map((l) => c.mosque(l.mosqueId)).whereType<Mosque>().toSet().toList();
     final channel = preacherChannel(context, p);
     final bio = p.bio(lang).isNotEmpty ? p.bio(lang) : 'lessons.preacher.bio_default'.tr(args: ['lessons.programme'.tr()]);
+    if (context.isLanternSkin) {
+      return LanternPreacherView(
+          preacher: p,
+          upcoming: up,
+          past: past,
+          series: series,
+          places: places,
+          channel: channel,
+          bio: bio,
+          tab: tab,
+          onTab: (v) => setState(() => tab = v));
+    }
     final header = TCard(
       child: Wrap(spacing: 20, runSpacing: 16, crossAxisAlignment: WrapCrossAlignment.center, children: [
         resolveImageProviderOrNull(p.photoUrl) == null
@@ -463,10 +507,12 @@ class MosqueScreen extends StatelessWidget {
     final c = context.watch<LessonsController>();
     final m = c.mosque(id);
     final lang = context.lang;
+    if (m == null && context.isLanternSkin) return const LanternMosqueMissing();
     if (m == null) return LessonsPage(title: 'lessons.nav.mosque'.tr(), children: [TEmpty(title: 'lessons.lesson.not_found'.tr())]);
     final d = c.district(m.districtId);
     final items = c.upcomingWhere((l) => l.mosqueId == m.id);
     final week = [for (var i = 0; i < 7; i++) addDays(c.today, i)];
+    if (context.isLanternSkin) return LanternMosqueView(mosque: m, district: d, lessons: items, week: week);
     return LessonsPage(title: 'lessons.nav.mosque'.tr(), children: [
       TPageHead(
         eyebrow: d == null ? null : '${d.name(lang)} · ${cityLabel(d.city)}',

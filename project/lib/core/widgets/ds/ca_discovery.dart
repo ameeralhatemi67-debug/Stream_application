@@ -7,6 +7,7 @@ import 'ca_cards.dart';
 import 'ca_button.dart';
 import 'canopy_content_motion.dart';
 import 'ca_icon.dart';
+import '../lantern/lantern_compat.dart';
 
 /// One live feature, with intrinsic text height above the class minimum.
 class CaHeroCard extends StatefulWidget {
@@ -46,7 +47,20 @@ class _CaHeroCardState extends State<CaHeroCard> {
   }
 
   @override
-  Widget build(BuildContext context) => MouseRegion(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternHeroCard(
+          title: widget.title,
+          presenter: widget.presenter,
+          action: widget.action,
+          height: widget.height,
+          imageUrl: widget.imageUrl,
+          onTap: widget.onTap,
+          audio: widget.audio,
+          showAction: widget.showAction,
+          viewerLabel: widget.viewerLabel,
+          viewerCount: widget.viewerCount,
+          viewerSuffix: widget.viewerSuffix)
+      : MouseRegion(
       onHover: kIsWeb &&
               MediaQuery.sizeOf(context).width >= CanopyWindow.expanded &&
               !CanopyMotion.reduced(context)
@@ -163,7 +177,18 @@ class CaChipRow extends StatelessWidget {
   const CaChipRow({super.key, required this.children});
   final List<Widget> children;
   @override
-  Widget build(BuildContext context) => ShaderMask(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: Lantern.gutter),
+          child: Row(children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              children[i],
+            ]
+          ]))
+      : ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (bounds) => CanopyGradients.edgeFade.createShader(bounds),
       child: SingleChildScrollView(

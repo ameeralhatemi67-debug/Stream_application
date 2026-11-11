@@ -18,6 +18,9 @@ import '../models/org_membership.dart';
 import '../../admin/presentation/widgets/chat_moderation_view.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/lantern/lantern.dart'
+    show LanternPageBar, LanternSurface, showLanternDialog;
+import 'lantern/lantern_org_shows.dart';
 
 class OrganizationShowsScreen extends StatefulWidget {
   const OrganizationShowsScreen({super.key, this.initialOrganizationId});
@@ -88,6 +91,93 @@ class _ShowsState extends State<OrganizationShowsScreen> {
     if (mounted) await _load();
   }
 
+  // Lantern and Arch (ADR-026): the same sessions, rules and actions in
+  // LanternShowsView; the editor opens as a Lantern dialog.
+  Future<void> _editLantern(
+      {BroadcastSession? session, bool series = false}) async {
+    if (_org == null) return;
+    final members =
+        await context.read<AppProvider>().organizationMembers(_org!);
+    if (!mounted) return;
+    await showLanternDialog<void>(context,
+        title: 'organization_v1.schedule'.tr(),
+        maxWidth: 520,
+        body: (_) => _ScheduleEditor(
+            org: _org!, members: members, session: session, series: series));
+    if (mounted) await _load();
+  }
+
+  void _moderateLantern(BroadcastSession s, String language) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LanternSurface(
+            child: Builder(
+                builder: (page) => Scaffold(
+                    backgroundColor: page.lt.bg,
+                    appBar: LanternPageBar(
+                        title: s.title(language),
+                        onBack: () => Navigator.of(page).maybePop()),
+                    body: ChatModerationView(streamId: s.id))))));
+  }
+
+  Widget _buildLantern(BuildContext context, List<OrgMembership> organizations,
+      OrgMembership? selected, bool manage, String? user) {
+    final language = context.locale.languageCode;
+    final p = context.read<AppProvider>();
+    return LanternShowsView(
+        organizations: organizations,
+        selected: organizations.any((m) => m.organizationId == _org)
+            ? _org
+            : null,
+        onSelect: (v) {
+          setState(() => _org = v);
+          _load();
+        },
+        busy: _busy,
+        error: _error,
+        notEnabled: selected != null && !selected.v1Enabled,
+        canSchedule: manage,
+        items: [
+          // The rules of the older cards, one by one.
+          for (final s in _sessions)
+            (
+              session: s,
+              moderate: organizations.any((m) =>
+                  m.organizationId == s.organizationId && m.canModerate),
+              answer:
+                  s.presenterId == user && s.state == 'awaiting_acceptance',
+              edit: manage &&
+                  ['draft', 'awaiting_acceptance', 'scheduled']
+                      .contains(s.state),
+              replaceSeries: manage &&
+                  ['draft', 'awaiting_acceptance', 'scheduled']
+                      .contains(s.state) &&
+                  s.scheduleId != null,
+              end: (manage || s.presenterId == user) &&
+                  [
+                    'draft',
+                    'awaiting_acceptance',
+                    'scheduled',
+                    'preparing',
+                    'live',
+                    'ending'
+                  ].contains(s.state),
+              cancelSeries: manage && s.scheduleId != null && !s.active,
+              open: s.live || s.replayWatchable,
+            ),
+        ],
+        onRefresh: _load,
+        onSchedule: () => _editLantern(),
+        onStudio: () => LiveBroadcasterStudioSheet.show(context),
+        onModerate: (s) => _moderateLantern(s, language),
+        onAnswer: (s, accept) =>
+            _run(() => p.answerBroadcastAssignment(s, accept)),
+        onEdit: (s, series) => _editLantern(session: s, series: series),
+        onEnd: (s) => _run(() => p.endOrganizationSession(s)),
+        onCancelSeries: (s) =>
+            _run(() => p.cancelOrganizationSchedule(s.scheduleId!)),
+        onOpen: (s) => context.push('/live/${s.id}'));
+  }
+
   @override
   Widget build(BuildContext context) {
     final (members, user) =
@@ -111,6 +201,9 @@ class _ShowsState extends State<OrganizationShowsScreen> {
       });
     }
     final language = context.locale.languageCode;
+    if (context.isLanternSkin) {
+      return _buildLantern(context, organizations, selected, manage, user);
+    }
     return Scaffold(
         appBar: OrganizationAppBar(context: context,
             title: Text('organization_v1.shows'.tr()),
@@ -401,8 +494,75 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
     }
   }
 
+  // Lantern and Arch (ADR-026): the same values and save, drawn by
+  // LanternScheduleForm.
+  Future<void> _pickDateLantern() async {
+    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final first = DateTime(now.year, now.month, now.day);
+    final date = await showDatePicker(
+        builder: (context, child) => PhoneInputGuard(
+            showHint: false, builder: (_, blocked) => child!),
+        context: context,
+        initialEntryMode: context.isPhoneLandscape
+            ? DatePickerEntryMode.calendarOnly
+            : DatePickerEntryMode.calendar,
+        firstDate: first,
+        lastDate: first.add(const Duration(days: 365)),
+        initialDate: _date.isBefore(first) ? first : _date);
+    if (date != null && mounted) setState(() => _date = date);
+  }
+
+  Future<void> _pickTimeLantern() async {
+    final time = await showTimePicker(
+        builder: (context, child) => PhoneInputGuard(
+            showHint: false, builder: (_, blocked) => child!),
+        context: context,
+        initialEntryMode: context.isPhoneLandscape
+            ? TimePickerEntryMode.dialOnly
+            : TimePickerEntryMode.dial,
+        initialTime: _time);
+    if (time != null && mounted) setState(() => _time = time);
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final presenters = widget.members
+        .where((m) =>
+            m.active &&
+                (_audio
+                    ? m.permissions.canGoAudioOnly
+                    : m.permissions.canGoLiveVideo) ||
+            m.profileId == _presenter)
+        .toList();
+    return LanternScheduleForm(
+        occurrence: widget.session != null && !widget.series,
+        titleEn: _en,
+        titleAr: _ar,
+        presenters: presenters,
+        presenter: _presenter,
+        onPresenter: (v) => setState(() => _presenter = v),
+        venues: context.read<AppProvider>().getOrganizationVenues(widget.org),
+        venue: _venue,
+        onVenue: (v) => setState(() => _venue = v),
+        audio: _audio,
+        onAudio: (v) => setState(() => _audio = v),
+        weekly: _weekly,
+        onWeekly: (v) => setState(() => _weekly = v),
+        days: _days,
+        onDay: (day, on) =>
+            setState(() => on ? _days.add(day) : _days.remove(day)),
+        dateLabel: DateFormat.yMd(context.locale.languageCode).format(_date),
+        onPickDate: _pickDateLantern,
+        timeLabel: _time.format(context),
+        onPickTime: _pickTimeLantern,
+        busy: _busy,
+        error: _error,
+        onClose: () => Navigator.pop(context),
+        onSave: _save);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final presenters = widget.members
         .where((m) =>
             m.active &&

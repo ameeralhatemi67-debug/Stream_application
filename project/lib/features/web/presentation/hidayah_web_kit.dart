@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/hedayah/hedayah_pattern.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import '../../../core/widgets/lantern/lantern_compat.dart';
 
 /// The Hidayah Gold *website* layouts (owner review 2026-10-19) replace the
 /// app-on-a-laptop layout only when the gold palette is on and the window is
@@ -30,7 +32,9 @@ abstract final class HidayahText {
   /// Reem Kufi in gold & black; the Hedayah skin's Readex Pro (ADR-016).
   static TextStyle display(double size,
           {Color color = HidayahGold.s900, FontWeight weight = FontWeight.w600}) =>
-      ActiveSkin.hedayah
+      ActiveSkin.current == AppSkin.lantern
+          ? Lantern.displayStyle(size, color: color, weight: weight, height: 1.3)
+          : ActiveSkin.hedayah
           ? HedayahSkin.displayStyle(size,
               color: color, weight: weight, height: 1.3)
           : TextStyle(
@@ -45,7 +49,9 @@ abstract final class HidayahText {
           {Color color = HidayahGold.s700,
           FontWeight weight = FontWeight.w400,
           double height = 1.6}) =>
-      TextStyle(
+      ActiveSkin.current == AppSkin.lantern
+          ? Lantern.textStyle(size, color: color, weight: weight, height: height)
+          : TextStyle(
           fontFamily: HidayahType.text,
           fontSize: size,
           fontWeight: weight,
@@ -54,6 +60,10 @@ abstract final class HidayahText {
 
   /// Small caps label; Arabic gets no tracking or upper-casing.
   static TextStyle eyebrow(BuildContext context, Color color) {
+    if (context.isLanternSkin) {
+      return Lantern.textStyle(12.5,
+          color: color, weight: FontWeight.w700, height: 1.4);
+    }
     final ar = Localizations.localeOf(context).languageCode == 'ar';
     return TextStyle(
         fontFamily: HidayahType.text,
@@ -99,7 +109,9 @@ class HidayahLattice extends StatelessWidget {
   final Color color;
   final double opacity;
   @override
-  Widget build(BuildContext context) => IgnorePointer(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternLatticePaint(opacity: opacity * .8)
+      : IgnorePointer(
       child: RepaintBoundary(
           child: CustomPaint(
               size: Size.infinite,
@@ -180,7 +192,11 @@ class HidayahNightBand extends StatelessWidget {
   final bool lattice;
   final BorderRadius? radius;
   @override
-  Widget build(BuildContext context) => ClipRRect(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? ClipRRect(
+          borderRadius: radius ?? BorderRadius.zero,
+          child: LNightBand(latticeOpacity: lattice ? .1 : 0, child: child))
+      : ClipRRect(
       borderRadius: radius ?? BorderRadius.zero,
       child: context.isHedayahSkin
           ? ColoredBox(
@@ -232,6 +248,19 @@ class _HidayahButtonState extends State<HidayahButton> {
   bool _hover = false;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LButton(
+          label: widget.label,
+          onPressed: widget.onPressed,
+          icon: lanternGlyphOrNull(widget.icon),
+          size: widget.compact ? LButtonSize.small : LButtonSize.medium,
+          expand: widget.expand,
+          kind: switch (widget.kind) {
+            HidayahButtonKind.gold => LButtonKind.primary,
+            HidayahButtonKind.ghost => LButtonKind.secondary,
+            HidayahButtonKind.onDark => LButtonKind.dark,
+          });
+    }
     final enabled = widget.onPressed != null;
     final gold = widget.kind == HidayahButtonKind.gold;
     final dark = widget.kind == HidayahButtonKind.onDark;
@@ -343,6 +372,13 @@ class _HidayahCardState extends State<HidayahCard> {
   bool _hover = false;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LCard(
+          onTap: widget.onTap,
+          padding: widget.padding,
+          selected: widget.highlight,
+          child: widget.child);
+    }
     final lift = _hover && widget.onTap != null && !CanopyMotion.reduced(context);
     final radius = BorderRadius.circular(HidayahWeb.radius);
     return MouseRegion(
@@ -383,7 +419,14 @@ class HidayahSectionHeader extends StatelessWidget {
   final String? action;
   final VoidCallback? onAction;
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: LSectionHead(title,
+              count: count == null ? null : '$count',
+              action: action,
+              onAction: onAction))
+      : Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Flexible(
@@ -420,7 +463,9 @@ class HidayahLiveBadge extends StatelessWidget {
   final String label;
   final bool audio;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LBadge(label, kind: audio ? LBadgeKind.audio : LBadgeKind.live)
+      : Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 9),
       decoration: BoxDecoration(
@@ -454,7 +499,9 @@ class HidayahGlassBadge extends StatelessWidget {
   final String label;
   final CaGlyph? icon;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LBadge(label, kind: LBadgeKind.glass, icon: lanternGlyphOrNull(icon))
+      : Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 9),
       decoration: BoxDecoration(
@@ -475,7 +522,11 @@ class HidayahTag extends StatelessWidget {
   const HidayahTag(this.label, {super.key});
   final String label;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Directionality(
+          textDirection: TextDirection.ltr,
+          child: LTag(label, tone: LTone.gold))
+      : Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
       decoration: BoxDecoration(
           color: HidayahGold.g100, borderRadius: BorderRadius.circular(999)),
@@ -491,7 +542,9 @@ class HidayahGiltUnderline extends StatelessWidget {
   const HidayahGiltUnderline({super.key, required this.visible});
   final bool visible;
   @override
-  Widget build(BuildContext context) => AnimatedOpacity(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternGiltUnderline(visible: visible)
+      : AnimatedOpacity(
       opacity: visible ? 1 : 0,
       duration: CanopyMotion.reduced(context)
           ? CanopyMotion.none
@@ -520,6 +573,15 @@ class HidayahTab extends StatelessWidget {
   final double height;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternUnderlineTab(
+          label: label,
+          selected: selected,
+          onTap: onTap,
+          count: count,
+          dark: dark,
+          height: height);
+    }
     final color = dark
         ? (selected ? HidayahGold.g50 : HidayahGold.s300)
         : (selected ? HidayahGold.s900 : HidayahGold.s700);
@@ -579,7 +641,10 @@ class HidayahDateBlock extends StatelessWidget {
   final String month, day;
   final double width;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternDateBlock(
+          month: HidayahText.upper(context, month), day: day, width: width)
+      : Container(
       width: width,
       padding: const EdgeInsets.symmetric(vertical: 7),
       decoration: BoxDecoration(
@@ -602,7 +667,11 @@ class HidayahForwardIcon extends StatelessWidget {
   final Color color;
   final double size;
   @override
-  Widget build(BuildContext context) => Transform.flip(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LIcon(LGlyph.chevronend,
+          size: size,
+          color: color == HidayahGold.s600 ? context.lt.muted : color)
+      : Transform.flip(
       flipX: true, child: CaIcon(CaGlyph.back, color: color, size: size));
 }
 
@@ -617,7 +686,23 @@ class HidayahMeta extends StatelessWidget {
   final String text;
   final Color color;
   @override
-  Widget build(BuildContext context) => Row(children: [
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Row(children: [
+          LIcon(lanternGlyphFor(icon),
+              size: 15,
+              color: color == HidayahGold.s600 ? context.lt.muted : color),
+          const SizedBox(width: 6),
+          Expanded(
+              child: Text(text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Lantern.textStyle(12.5,
+                      color: color == HidayahGold.s600
+                          ? context.lt.muted
+                          : color,
+                      height: 1.4))),
+        ])
+      : Row(children: [
         CaIcon(icon, color: color, size: 15),
         const SizedBox(width: 6),
         Expanded(

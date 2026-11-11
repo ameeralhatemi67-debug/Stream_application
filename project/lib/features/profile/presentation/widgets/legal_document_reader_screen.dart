@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../admin/models/terms_and_conditions_model.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// Full-screen paging reader for the platform's 3 legal documents (Terms of
 /// Service, Broadcaster Code of Conduct, Privacy Policy), letting the user
@@ -45,6 +46,14 @@ class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
       ),
     ];
     final doc = docs[_currentIndex];
+    if (context.isLanternSkin) {
+      return LanternLegalReader(
+          title: doc.title,
+          content: doc.content,
+          index: _currentIndex,
+          onPrevious: () => _goTo(_currentIndex - 1),
+          onNext: () => _goTo(_currentIndex + 1));
+    }
 
     return Scaffold(
       backgroundColor: context.pageGround,

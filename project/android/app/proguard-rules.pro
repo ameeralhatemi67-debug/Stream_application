@@ -30,12 +30,11 @@
 # release-only fault would surface only once a broadcaster is going live.
 -keep class com.pedro.** { *; }
 
-# flutter_vlc_player native bindings
--keep class software.solid.fluttervlcplayer.** { *; }
--keep class org.videolan.libvlc.** { *; }
--dontwarn org.videolan.libvlc.**
+# flutter_vlc_player rules removed 2026-11-11: the plugin is no longer a dependency
+# (pubspec.yaml), so the classes they kept are not in the build.
 
-# google_sign_in / Google Play Services auth
+# Google Play services, used by Firebase Cloud Messaging. Kept as before; google_sign_in
+# itself is no longer a dependency (Google sign-in goes through Supabase in the browser).
 -keep class com.google.android.gms.auth.** { *; }
 -keep class com.google.android.gms.common.** { *; }
 -dontwarn com.google.android.gms.**

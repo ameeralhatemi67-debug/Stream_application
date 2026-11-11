@@ -14,6 +14,8 @@ import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
+import '../../../../core/widgets/lantern/lantern.dart' show LRing;
+import '../lantern/lantern_chat_moderation.dart';
 
 /// How a chat message's sender looks in chat, from the badges the server
 /// resolved for them. A broadcaster outranks an admin, who outranks a
@@ -363,8 +365,67 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
           ),
       };
 
+  // Lantern and Arch (ADR-026): the same state and actions, drawn by
+  // LanternSenderProfile inside a Lantern sheet.
+  Future<void> _deleteAllLantern() async {
+    final count = widget.controller.messages
+        .where((m) => m.senderId == widget.message.senderId)
+        .length;
+    final held = await lanternHoldConfirm(context,
+        title: 'live.sender_delete_all_title'
+            .tr(namedArgs: {'name': widget.message.senderName}),
+        body: 'live.sender_delete_all_body'.plural(count, name: 'count'),
+        hold: 'lantern.admin.hold_delete'.tr());
+    if (!held || !mounted) return;
+    await _run(() async {
+      await widget.controller.deleteMessagesFrom(widget.message.senderId);
+      if (mounted) setState(() {});
+    });
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final message = widget.message;
+    final since = _moderatorSince;
+    final ends = _muteEnds;
+    return LanternSenderProfile(
+        name: message.senderName,
+        avatarUrl: message.senderAvatarUrl,
+        roleLabel: _tag.label,
+        ring: switch (_role) {
+          CaChatRole.admin => LRing.admin,
+          CaChatRole.moderator => LRing.mod,
+          CaChatRole.broadcaster => LRing.live,
+          CaChatRole.viewer => LRing.none,
+        },
+        affiliation: _affiliation(context, context.locale.languageCode),
+        moderatorSince: _role == CaChatRole.moderator && since != null
+            ? 'live.sender_moderator_since'.tr(namedArgs: {
+                'date': MaterialLocalizations.of(context).formatMediumDate(since)
+              })
+            : null,
+        canAct: _canActOnSender,
+        muteKnown: _muteKnown,
+        muted: _muted,
+        muteLeft: ends == null
+            ? null
+            : chatMuteRemaining(ends.difference(DateTime.now())),
+        isModerator: _role == CaChatRole.moderator,
+        busy: _busy,
+        error: _error,
+        history: widget.controller.messages
+            .where((m) => m.senderId == message.senderId)
+            .toList()
+            .reversed
+            .toList(),
+        onMute: _mute,
+        onUnmute: _unmute,
+        onToggleModerator: _toggleModerator,
+        onDeleteAll: _deleteAllLantern);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final lang = context.locale.languageCode;
     final textTheme = Theme.of(context).textTheme;
     final message = widget.message;

@@ -33,6 +33,10 @@ import '../../../core/services/reminder_push_service.dart';
 import '../../web/presentation/hidayah_web_header.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import 'web/profile_web_parts.dart';
+import '../../../core/services/content_report_service.dart';
+import '../../moderation/presentation/content_report_sheet.dart';
+import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
+import 'lantern/lantern_channel_view.dart';
 
 class BroadcasterProfileScreen extends StatefulWidget {
   final String streamerId;
@@ -99,8 +103,99 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026): the same values and actions as the build
+  // below, drawn by LanternChannelView. Runs only with the Lantern design.
+  // ---------------------------------------------------------------------
+  Widget _buildLantern(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    context.select<AppProvider, (bool, bool, bool, bool, bool, String?, bool)>(
+        (p) => (
+              p.isOnline,
+              p.isUsingCachedCatalog,
+              p.isLoggedInStreamer,
+              p.isApprovedStreamer,
+              p.isStreamerModeEnabled,
+              p.currentUserStreamerId,
+              p.remindersAvailable
+            ));
+    final lang = context.locale.languageCode;
+    final streamer = context.select<AppProvider, StreamerModel?>(
+        (p) => p.getStreamerById(widget.streamerId));
+    if (streamer == null) return const LanternChannelUnavailable();
+    final id = streamer.streamerId;
+    final following = context.select<AppProvider, bool>((p) => p.isFollowing(id));
+    final reminder = context.select<AppProvider, bool>((p) => p.hasReminder(id));
+    final allVods = context
+        .select<AppProvider, List<VodModel>>((p) => p.getVodsForStreamer(id));
+    final allPlaylists = context.select<AppProvider, List<PlaylistModel>>(
+        (p) => p.getPlaylistsForStreamer(id));
+    final archiveKnown =
+        context.select<AppProvider, bool>((p) => p.isChannelArchiveKnown(id));
+    final filtered = _selectedSpeakerId != null && _selectedSpeakerId != 'all';
+    final uncertain = !provider.isOnline || provider.isUsingCachedCatalog;
+    final own = provider.isLoggedInStreamer &&
+        provider.isApprovedStreamer &&
+        provider.isStreamerModeEnabled &&
+        provider.isOwnStreamerProfile(id);
+    final canJoin = !streamer.isOrganization &&
+        provider.isLoggedInStreamer &&
+        provider.isOwnStreamerProfile(id);
+    return LanternChannelView(
+        streamer: streamer,
+        live: !uncertain &&
+            streamer.isCurrentlyLive &&
+            streamer.activeStreamId != null,
+        uncertain: uncertain,
+        following: following,
+        reminder: reminder,
+        remindersAvailable: provider.remindersAvailable,
+        own: own,
+        recordings: filtered
+            ? allVods
+                .where((v) => v.speakerIds.contains(_selectedSpeakerId))
+                .toList()
+            : allVods,
+        playlists: filtered
+            ? allPlaylists
+                .where((p) => p.speakerIds.contains(_selectedSpeakerId))
+                .toList()
+            : allPlaylists,
+        archiveKnown: archiveKnown,
+        recordingCount: archiveKnown ? allVods.length : null,
+        playlistCount: archiveKnown ? allPlaylists.length : null,
+        selectedSpeakerId: _selectedSpeakerId,
+        onSpeaker: (speaker) => setState(() => _selectedSpeakerId =
+            _selectedSpeakerId == speaker ? null : speaker),
+        initialTab: widget.initialTab == 2
+            ? LanternChannelTab.upcoming
+            : LanternChannelTab.archive,
+        onWatch: () => context.push('/live/${streamer.activeStreamId}'),
+        onFollow: () => toggleFollowWithFeedback(context, id),
+        onReminder: () => _toggleChannelReminder(context, id),
+        onShare: streamer.youtubeHandle.trim().isEmpty
+            ? null
+            : () => _shareChannel(streamer, lang),
+        onStudio: own ? () => LiveBroadcasterStudioSheet.show(context) : null,
+        onSettings: own ? () => context.push('/settings') : null,
+        onBranches: streamer.isOrganization && streamer.venues.isNotEmpty
+            ? () => OrgBranchesModalSheet.show(context,
+                orgName: streamer.getLocalizedName(lang),
+                venues: streamer.venues)
+            : null,
+        onJoin: canJoin ? () => JoinOrgModalSheet.show(context) : null,
+        // Anyone but the channel's owner can report it.
+        onReport: own
+            ? null
+            : () => showLanternReportSheet(context,
+                kind: ContentReportKind.channel,
+                channelProfileId: streamer.channelProfileId,
+                name: streamer.getLocalizedName(lang)));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final appProvider = context.read<AppProvider>();
     context
         .select<AppProvider, (bool, bool, bool, bool, bool, String?)>((p) => (
@@ -345,6 +440,28 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                 glass: true,
                                                 onPressed: () => _shareChannel(
                                                     streamer, lang)),
+                                          // Anyone but the channel's owner
+                                          // can report it.
+                                          if (!own)
+                                            CaIconButton(
+                                                key: const ValueKey(
+                                                    'channel-report'),
+                                                bare: true,
+                                                icon: CaGlyph.alert,
+                                                label:
+                                                    'lantern.report.action_channel'
+                                                        .tr(),
+                                                glass: true,
+                                                onPressed: () =>
+                                                    showContentReportSheet(
+                                                        context,
+                                                        kind: ContentReportKind
+                                                            .channel,
+                                                        channelProfileId: streamer
+                                                            .channelProfileId,
+                                                        name: streamer
+                                                            .getLocalizedName(
+                                                                lang))),
                                         ])))))))))),
         // The card rises over the green panel, so the panel keeps its height and
         // everything below the card moves up with it.

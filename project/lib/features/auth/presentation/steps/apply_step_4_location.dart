@@ -7,6 +7,7 @@ import '../../../admin/models/broadcaster_application_model.dart';
 import '../widgets/location_picker_modal.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
+import '../lantern/lantern_apply_steps.dart';
 
 class OrgBranchVenue {
   String branchName;
@@ -391,8 +392,42 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
     }
   }
 
+  // Lantern and Arch (ADR-026): the same city, venue, map pin, branches,
+  // phone check and contact choice, drawn by LanternApplyVenue.
+  Widget _buildLantern(BuildContext context) {
+    final ar = context.locale.languageCode == 'ar';
+    final point = widget.selectedCoordinates;
+    return LanternApplyVenue(
+        cities: [
+          for (final c in BroadcasterApplicationModel.cityNames.entries)
+            (c.key, ar ? c.value.nameAr : c.value.nameEn),
+        ],
+        city: widget.selectedCity,
+        onCity: widget.onCityChanged,
+        venue: widget.venueController,
+        isOrganization: widget.isOrganization,
+        pinned: point == null
+            ? null
+            : 'map.picker_pinned_point'
+                .tr(namedArgs: {'coords': formatPickerCoordinates(point)}),
+        onPin: _openMapPinpoint,
+        branches: [
+          for (final b in widget.orgBranches) (b.branchName, b.address),
+        ],
+        onAddBranch: _showAddBranchDialog,
+        onRemoveBranch: widget.onRemoveBranch,
+        phone: widget.phoneController,
+        onPhoneChanged: _validatePhone,
+        phoneProblem: widget.phoneController.text.isEmpty
+            ? null
+            : _phoneValidationError,
+        contact: widget.preferredContact,
+        onContact: widget.onContactPrefChanged);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

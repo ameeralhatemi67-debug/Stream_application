@@ -21,13 +21,17 @@ class LiveWebLayout extends StatelessWidget {
       required this.following,
       required this.onFollow,
       required this.onMinimize,
-      this.onStudio});
+      this.onStudio,
+      this.onReport});
   final StreamerModel streamer;
   final Widget viewport, panel;
   final int? viewerCount;
   final bool following;
   final VoidCallback onFollow, onMinimize;
   final VoidCallback? onStudio;
+
+  /// Report the broadcast; absent for its own broadcaster.
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +65,8 @@ class LiveWebLayout extends StatelessWidget {
                         following: following,
                         onFollow: onFollow,
                         onMinimize: onMinimize,
-                        onStudio: onStudio),
+                        onStudio: onStudio,
+                        onReport: onReport),
                   ])),
               const SizedBox(width: 24),
               SizedBox(
@@ -144,12 +149,16 @@ class _Details extends StatelessWidget {
       required this.following,
       required this.onFollow,
       required this.onMinimize,
-      this.onStudio});
+      this.onStudio,
+      this.onReport});
   final StreamerModel streamer;
   final bool showTitle, following;
   final int? viewerCount;
   final VoidCallback onFollow, onMinimize;
   final VoidCallback? onStudio;
+
+  /// Report the broadcast; absent for its own broadcaster.
+  final VoidCallback? onReport;
   @override
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
@@ -243,6 +252,15 @@ class _Details extends StatelessWidget {
                     icon: CaGlyph.video,
                     kind: HidayahButtonKind.onDark,
                     onPressed: onStudio),
+              ],
+              if (onReport != null) ...[
+                const SizedBox(width: 10),
+                CaIconButton(
+                    key: const ValueKey('room-report'),
+                    icon: CaGlyph.alert,
+                    glass: true,
+                    label: 'lantern.report.action_stream'.tr(),
+                    onPressed: onReport),
               ],
             ];
             if (MediaQuery.textScalerOf(context).scale(10) > 13) {

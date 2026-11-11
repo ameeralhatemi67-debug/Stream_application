@@ -6,13 +6,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import 'lantern/lantern_application_status_view.dart';
 
 /// Confirmation screen after submitting Streamer Verification Application
 class ApplicationPendingScreen extends StatelessWidget {
   const ApplicationPendingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? const LanternApplicationStatusView()
+      : Scaffold(
         backgroundColor: context.pageGround,
         appBar: CaAppBar(
             languageBare: true,

@@ -1,0 +1,30 @@
+{
+  "en": {
+    "opening": {
+      "label": "Opening {}",
+      "subtitle": "Live lectures and lessons · Eastern Province",
+      "step_live": "Getting live broadcasts and tonight's lessons…",
+      "step_order": "Ordering lessons by prayer time…",
+      "step_ready": "Ready",
+      "slow": "The network is slow. Still loading the broadcasts…",
+      "continue": "Continue with what loaded",
+      "offline": "No internet connection",
+      "retry": "Try again",
+      "skip": "Skip"
+    }
+  },
+  "ar": {
+    "opening": {
+      "label": "جارٍ فتح {}",
+      "subtitle": "البث المباشر والدروس · المنطقة الشرقية",
+      "step_live": "نجهّز البثوث المباشرة ودروس الليلة…",
+      "step_order": "نرتّب الدروس حسب أوقات الصلاة…",
+      "step_ready": "جاهز",
+      "slow": "الشبكة بطيئة. ما زلنا نحمّل البثوث…",
+      "continue": "تابع بما تم تحميله",
+      "offline": "لا يوجد اتصال بالإنترنت",
+      "retry": "إعادة المحاولة",
+      "skip": "تخطي"
+    }
+  }
+}

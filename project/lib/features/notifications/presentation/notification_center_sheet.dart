@@ -8,6 +8,7 @@ import '../../../../core/services/notifications/notification_models.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../core/widgets/ds/ca_button.dart';
 import '../../../core/widgets/ds/ca_fields.dart';
+import 'lantern/lantern_notifications.dart';
 
 /// In-App Notification Center Bottom Sheet Modal.
 /// Features category filtering, read state tracking, swipe-to-delete,
@@ -16,6 +17,7 @@ class NotificationCenterSheet extends StatefulWidget {
   const NotificationCenterSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    if (context.isLanternSkin) return showLanternNotifications(context);
     return showCaSheet<void>(context,
         title: '',
         framed: false,
@@ -45,8 +47,65 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     }
   }
 
+  /// Lantern and Arch (ADR-026): the same list, filter and actions.
+  Widget _buildLantern(BuildContext context) {
+    final appProvider = context.read<AppProvider>();
+    final (allNotifications, unreadNotificationsCount, _) = context.select<
+        AppProvider,
+        (List<AppNotificationModel>, int, NotificationPreferencesModel)>(
+      (p) => (
+        p.enhancedNotifications,
+        p.unreadNotificationsCount,
+        p.notificationPreferences,
+      ),
+    );
+    final isAr = context.locale.languageCode == 'ar';
+    final filteredNotifications = _selectedCategory == NotificationCategory.all
+        ? allNotifications
+        : allNotifications
+            .where((n) => n.category == _selectedCategory)
+            .toList();
+    return LanternNotificationsBody(
+        all: allNotifications,
+        visible: filteredNotifications,
+        category: _selectedCategory,
+        onCategory: (c) => setState(() => _selectedCategory = c),
+        unread: unreadNotificationsCount,
+        onMarkAllRead: allNotifications.isEmpty
+            ? null
+            : () => appProvider.markAllNotificationsAsRead(),
+        onOpen: (notif) => _openLantern(context, notif, appProvider),
+        onDelete: (notif) => appProvider.deleteNotification(notif.id),
+        isMuted: appProvider.isEntityMuted,
+        onToggleMute: appProvider.toggleMuteEntity,
+        timeAgo: (time) => _formatTimeAgo(time, isAr),
+        onPreferences: appProvider.isLoggedInStreamer
+            ? () {
+                Navigator.pop(context);
+                context.push('/settings');
+              }
+            : null);
+  }
+
+  /// As the older tile: marks it read, closes the list, then opens the
+  /// stream, the link or the channel.
+  void _openLantern(BuildContext context, AppNotificationModel notif,
+      AppProvider appProvider) {
+    appProvider.markNotificationAsRead(notif.id);
+    Navigator.pop(context);
+
+    if (notif.streamId != null && notif.streamId!.isNotEmpty) {
+      context.push('/live/${notif.streamId}');
+    } else if (notif.actionUrl != null && notif.actionUrl!.isNotEmpty) {
+      context.push(notif.actionUrl!);
+    } else if (notif.streamerId.isNotEmpty) {
+      context.push('/profile/${notif.streamerId}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     // context.read for method calls -- doesn't need to rebuild this widget on
     // its own. context.select scopes the rebuild to just the 3 fields this
     // sheet actually renders (notificationPreferences is included because

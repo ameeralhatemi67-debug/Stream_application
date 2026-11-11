@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/theme/app_theme.dart' show LanternContext;
 import '../../../profile/models/streamer_models.dart';
 import '../../domain/prayer_times.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_names.dart';
 import '../../state/lessons_controller.dart';
+import '../lantern/lessons_home_view.dart';
 import '../lessons_kit.dart';
 import '../lessons_in_app.dart';
 import '../lessons_shell.dart';
@@ -35,6 +37,19 @@ class LessonsDiscoverScreen extends StatelessWidget {
         (x, upcoming.where((l) => l.language == x || l.interpretation == x).length)
     ].where((e) => e.$2 > 0).toList();
     final live = context.select<AppProvider, List<StreamerModel>>((a) => a.streamers.where((s) => s.isCurrentlyLive).take(3).toList());
+    if (context.isLanternSkin) {
+      return LanternLessonsHome(
+          upcoming: upcoming,
+          week: week,
+          tonight: tonight,
+          hero: hero,
+          prayer: kpt,
+          mosquesWeek: mosquesWeek,
+          series: series,
+          preachers: preachers,
+          langCounts: langCounts,
+          live: live);
+    }
 
     final heroItems = [
       for (final l in hero)

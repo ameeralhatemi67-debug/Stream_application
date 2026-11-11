@@ -10,6 +10,7 @@ import '../../../core/widgets/ds/ca_button.dart';
 import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/hedayah/hedayah_kit.dart';
+import 'lantern/lantern_role_select_view.dart';
 
 class RoleSelectScreen extends StatelessWidget {
   const RoleSelectScreen({super.key});
@@ -26,6 +27,25 @@ class RoleSelectScreen extends StatelessWidget {
             'Welcome';
     final avatar =
         context.select<AppProvider, String?>((p) => p.googleUserAvatar);
+    if (context.isLanternSkin) {
+      return LanternRoleSelectView(
+          name: name,
+          avatar: avatar,
+          onViewer: () => _asViewer(context),
+          onBroadcaster: () {
+            final provider = context.read<AppProvider>()
+              ..selectBroadcasterRole();
+            // The application comes first; a page that asked for sign-in
+            // waits.
+            provider.takeSignInReturn();
+            context.go('/streamer-apply');
+          },
+          onPreacher: () {
+            final provider = context.read<AppProvider>()..selectViewerRole();
+            provider.takeSignInReturn();
+            context.go('/lessons/apply');
+          });
+    }
     final expanded = MediaQuery.sizeOf(context).width >= CanopyWindow.expanded;
     final dock = !expanded &&
         (MediaQuery.textScalerOf(context).scale(1) >= 1.3 || context.isShort);

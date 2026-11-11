@@ -38,6 +38,10 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 import 'widgets/tricity_basemap_layer.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import 'lantern/lantern_map_chrome.dart';
+import 'lantern/lantern_map_pins.dart';
+import 'lantern/lantern_place_card.dart';
 
 /// The Al Khobar / Dhahran / Dammam discovery map.
 ///
@@ -113,6 +117,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   bool _webHintDismissed = true;
   bool _isRetryingConnectivity = false;
   bool _mapReady = false;
+
+  /// Lantern, website layout: whether the legend card is open on the map.
+  bool _lanternLegend = false;
 
   /// False until the user or the app moves the camera. Until then the first
   /// overview is re-framed whenever the measured insets change (controls,
@@ -247,7 +254,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       if (legal != null) _mapController.move(legal.center, legal.zoom);
     }
 
-    if (!animate) {
+    // Lantern's calm motion: the camera jumps instead of flying.
+    if (!animate || (context.isLanternSkin && Lantern.calm(context))) {
       apply(1);
       return;
     }
@@ -306,6 +314,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   void _focusVenue(LatLng venue, double zoom) {
     final target = _policy.focusTarget(venue, zoom, _canvas, _focusPadding);
     if (target == null) {
+      if (context.isLanternSkin) {
+        lanternToast(context, 'map.outside_area'.tr(),
+            icon: LGlyph.pin,
+            warn: true,
+            actionLabel: 'map.overview_button'.tr(),
+            onAction: _showOverview);
+        return;
+      }
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         content: Text('map.outside_area'.tr()),
@@ -374,6 +390,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
   void _openDetails() {
     final provider = context.read<AppProvider>();
+    if (context.isLanternSkin) {
+      showLanternMapDetails(
+        context,
+        controller: _pack,
+        venuesUpdatedAt: provider.mapCacheUpdatedAt,
+        backendOnline: provider.isOnline,
+      );
+      return;
+    }
     showMapDetailsSheet(
       context,
       controller: _pack,
@@ -389,6 +414,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   /// says plainly what it doesn't, rather than silently doing nothing or
   /// pretending the summary card's live data is real.
   void _showCachedMarkerInfo(BuildContext context, MapMarkerModel marker) {
+    if (context.isLanternSkin) {
+      showLanternCachedPlace(context, marker);
+      return;
+    }
     final isAr = context.locale.languageCode == 'ar';
     showModalBottomSheet<void>(
       context: context,
@@ -518,6 +547,210 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The same pins, priorities and selection as
+  // _buildPinLayer; drawn with the Lantern pins and grouped by the box each
+  // pin takes with its label (owner decision 2026-11-10), so neither pins
+  // nor labels can cover each other.
+  // ---------------------------------------------------------------------
+  Widget _buildLanternPinLayer({
+    required List<StreamerModel> streamers,
+    required List<MapMarkerModel> cached,
+    required List<MapMosque> mosques,
+    required StreamerModel? selectedStreamer,
+    required String? ownStreamerId,
+    required Map<String, ({UpcomingSchedule schedule, DateTime start})>
+        nextLive,
+  }) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _cameraRevision,
+      builder: (context, revision, child) {
+        final camera = _clusterCamera(context);
+        final zoom = camera.zoom;
+        final lang = context.locale.languageCode;
+        String? soonChip(StreamerModel s) {
+          final next = nextLive[s.streamerId];
+          if (next == null || s.isCurrentlyLive) return null;
+          final minutes = next.start.difference(_now).inMinutes + 1;
+          return minutes > 60
+              ? null
+              : 'lessons.map.in'.tr(args: [durationLabel(minutes, lang)]);
+        }
+
+        final selectedMosque =
+            mosques.where((m) => m.id == _selectedMosqueId).firstOrNull;
+        final points = <MapClusterPoint>[
+          for (final s in streamers)
+            if (s.streamerId != selectedStreamer?.streamerId)
+              MapClusterPoint(
+                  's:${s.streamerId}', LatLng(s.latitude, s.longitude),
+                  priority: s.isCurrentlyLive
+                      ? 6
+                      : soonChip(s) != null
+                          ? 4
+                          : 1),
+          for (final m in cached)
+            MapClusterPoint('c:${m.streamerId}', m.coordinates, priority: 1),
+          for (final m in mosques)
+            if (m.id != selectedMosque?.id &&
+                (m.status != MosqueStatus.quiet || zoom >= kMapQuietMosqueZoom))
+              MapClusterPoint('m:${m.id}', m.point,
+                  priority: mapMosquePriority(m)),
+        ];
+        final groups =
+            clusterMapFootprints(points, project: camera.projectAtZoom);
+
+        final streamersById = {for (final s in streamers) s.streamerId: s};
+        final cachedById = {for (final m in cached) m.streamerId: m};
+        final mosquesById = {for (final m in mosques) m.id: m};
+        final pointsById = {for (final p in points) p.id: p};
+        final pins = <String, ({String label, bool mosque, VoidCallback open})>{
+          for (final s in streamers)
+            's:${s.streamerId}': (
+              label: s.getLocalizedName(lang),
+              mosque: false,
+              open: () => _selectStreamer(s)
+            ),
+          for (final m in cached)
+            'c:${m.streamerId}': (
+              label: m.getLocalizedName(lang),
+              mosque: false,
+              open: () => _showCachedMarkerInfo(context, m)
+            ),
+          for (final m in mosques)
+            'm:${m.id}': (
+              label: m.label,
+              mosque: true,
+              open: () => _selectMosque(m)
+            ),
+        };
+
+        Marker pin(Key key, LatLng point, Widget child) => Marker(
+            key: key,
+            point: point,
+            width: kMapPinFootprint.width,
+            height: kMapPinFootprint.height,
+            child: child);
+
+        Marker streamerMarker(StreamerModel s, {bool selected = false}) => pin(
+            ValueKey('marker_${s.streamerId}'),
+            LatLng(s.latitude, s.longitude),
+            LanternStreamerPin(
+                key: ValueKey('avatar_${s.streamerId}'),
+                name: s.getLocalizedName(lang),
+                avatarUrl: s.avatarUrl,
+                live: s.isCurrentlyLive,
+                audio: s.isAudioLive,
+                org: s.isOrganization,
+                mine: ownStreamerId == s.streamerId,
+                selected: selected,
+                soon: soonChip(s),
+                onTap: () => _selectStreamer(s),
+                onDoubleTap: () => _focusVenue(
+                    LatLng(s.latitude, s.longitude),
+                    math.min(_mapController.camera.zoom + 2, kMapMaxZoom))));
+
+        Marker mosquePin(MapMosque m, {bool selected = false}) => pin(
+            ValueKey('mosque_${m.id}'),
+            m.point,
+            LanternMosquePin(m,
+                selected: selected, onTap: () => _selectMosque(m)));
+
+        Marker bubble(MapClusterGroup group) {
+          final inside = [
+            for (final id in group.memberIds)
+              if (id.startsWith('m:')) mosquesById[id.substring(2)]
+          ].nonNulls.toList();
+          final liveStreamers = group.memberIds
+              .where((id) =>
+                  id.startsWith('s:') &&
+                  (streamersById[id.substring(2)]?.isCurrentlyLive ?? false))
+              .length;
+          final count = group.memberIds.length;
+          return pin(
+              ValueKey(group.id),
+              group.center,
+              LanternBubblePin(
+                  count: count,
+                  mosques: inside.length,
+                  live: liveStreamers + inside.where((m) => m.live).length,
+                  onSite: inside
+                      .where((m) => m.status == MosqueStatus.now && !m.live)
+                      .length,
+                  semantics: 'map.cluster_label'.plural(count, name: 'count'),
+                  onTap: () => _openLanternCluster(group, pins, [
+                        for (final id in group.memberIds)
+                          if (pointsById[id] case final point?) point
+                      ])));
+        }
+
+        final markers = <Marker>[
+          for (final group in groups)
+            if (!group.isSingle)
+              bubble(group)
+            else if (group.memberIds.single.startsWith('m:'))
+              mosquePin(mosquesById[group.memberIds.single.substring(2)]!)
+            else if (group.memberIds.single.startsWith('s:'))
+              streamerMarker(
+                  streamersById[group.memberIds.single.substring(2)]!)
+            else
+              () {
+                final marker =
+                    cachedById[group.memberIds.single.substring(2)]!;
+                return pin(
+                    ValueKey('offline_${group.id}'),
+                    group.center,
+                    LanternStreamerPin(
+                        name: marker.getLocalizedName(lang),
+                        avatarUrl: marker.avatarUrl,
+                        org: marker.isOrganization,
+                        saved: true,
+                        onTap: () => _showCachedMarkerInfo(context, marker),
+                        onDoubleTap: () => _focusVenue(
+                            marker.coordinates,
+                            math.min(_mapController.camera.zoom + 2,
+                                kMapMaxZoom))));
+              }(),
+          if (selectedStreamer != null)
+            streamerMarker(selectedStreamer, selected: true),
+          if (selectedMosque != null) mosquePin(selectedMosque, selected: true),
+        ];
+        if (markers.isEmpty) return const SizedBox.shrink();
+        return MarkerLayer(markers: markers);
+      },
+    );
+  }
+
+  /// A bubble zooms to the first level where its places come apart, framed
+  /// on all of them. Places that never come apart (a broadcaster streaming
+  /// from a mosque) open a short list instead.
+  void _openLanternCluster(
+      MapClusterGroup group,
+      Map<String, ({String label, bool mosque, VoidCallback open})> pins,
+      List<MapClusterPoint> members) {
+    final camera = _mapController.camera;
+    final zoom = mapSeparationZoom(members,
+        projectAt: camera.projectAtZoom, from: camera.zoom, max: kMapMaxZoom);
+    if (zoom != null && members.isNotEmpty) {
+      var south = 90.0, north = -90.0, west = 180.0, east = -180.0;
+      for (final m in members) {
+        south = math.min(south, m.coordinates.latitude);
+        north = math.max(north, m.coordinates.latitude);
+        west = math.min(west, m.coordinates.longitude);
+        east = math.max(east, m.coordinates.longitude);
+      }
+      _focusVenue(LatLng((south + north) / 2, (west + east) / 2), zoom);
+      return;
+    }
+    showLanternPlaceList(context,
+        title: 'map.cluster_list_title'
+            .plural(group.memberIds.length, name: 'count'),
+        places: [
+          for (final id in group.memberIds)
+            if (pins[id] case final place?) place
+        ]);
+  }
+
   /// Every pin in one layer, so mosques and streamers group into the same
   /// bubbles. Online, live state comes only from the current provider
   /// snapshot; [cached] pins are the saved venues of UI-08, always offline,
@@ -531,6 +764,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     required Map<String, ({UpcomingSchedule schedule, DateTime start})>
         nextLive,
   }) {
+    if (context.isLanternSkin) {
+      return _buildLanternPinLayer(
+          streamers: streamers,
+          cached: cached,
+          mosques: mosques,
+          selectedStreamer: selectedStreamer,
+          ownStreamerId: ownStreamerId,
+          nextLive: nextLive);
+    }
     return ValueListenableBuilder<int>(
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
@@ -749,13 +991,20 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final top = box.size.height + AppTheme.spaceSm;
     final notice =
         _emptyNoticeKey.currentContext?.findRenderObject() as RenderBox?;
-    final bottom = notice != null && notice.hasSize
-        ? 60 + notice.size.height + AppTheme.spaceSm
-        : 56.0;
+    final lantern = context.isLanternSkin;
+    // Lantern's navigation floats over the tab, so the tab's own bottom
+    // inset is part of what covers the map.
+    final bottom = (notice != null && notice.hasSize
+            ? 60 + notice.size.height + AppTheme.spaceSm
+            : 56.0) +
+        (lantern ? MediaQuery.paddingOf(context).bottom : 0);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final desktop = MediaQuery.sizeOf(context).width >= 900;
-    final next = EdgeInsets.fromLTRB(
-        desktop || !rtl ? 16 : 72, top, desktop || !rtl ? 72 : 16, bottom);
+    // Lantern keeps its buttons on the end side at every width.
+    final next = lantern
+        ? EdgeInsets.fromLTRB(rtl ? 72 : 16, top, rtl ? 16 : 72, bottom)
+        : EdgeInsets.fromLTRB(
+            desktop || !rtl ? 16 : 72, top, desktop || !rtl ? 72 : 16, bottom);
     if ((next.top - _safePadding.top).abs() > 1 ||
         (next.bottom - _safePadding.bottom).abs() > 1 ||
         next.left != _safePadding.left) {
@@ -764,6 +1013,75 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         if (mounted) _reframeInitialOverview();
       });
     }
+  }
+
+  /// The map itself, the same for every design: one controller, one camera
+  /// policy, the stored streets and the pins.
+  Widget _buildMapCanvas({
+    required Size canvas,
+    required MapCameraTarget initial,
+    required Color background,
+    required Widget pinLayer,
+  }) {
+    return Center(
+      child: SizedBox(
+        width: canvas.width,
+        height: canvas.height,
+        child: FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: initial.center,
+            initialZoom: initial.zoom,
+            minZoom: _policy.minZoom(canvas, _safePadding),
+            maxZoom: kMapMaxZoom,
+            backgroundColor: background,
+            cameraConstraint: CameraConstraint.contain(
+              bounds: kTricityNavigationExtent.bounds,
+            ),
+            interactionOptions: const InteractionOptions(
+              flags:
+                  InteractiveFlag.all & ~InteractiveFlag.rotate,
+            ),
+            onMapReady: () {
+              _mapReady = true;
+              _enforceLegalCamera();
+              _reframeInitialOverview();
+              _applyPendingMosque();
+            },
+            onPositionChanged: (camera, hasGesture) {
+              if (hasGesture) {
+                _cameraMoved = true;
+                _stopCameraAnimation();
+              }
+              if (_zoomNotifier.value != camera.zoom) {
+                _zoomNotifier.value = camera.zoom;
+              }
+              // Clusters depend on zoom only (the grid is in absolute
+              // world pixels), and MarkerLayer repositions markers on
+              // pan by itself, so re-cluster only when the zoom
+              // changes, not on every pan frame (audit MAP-01).
+              if (_lastClusterZoom != camera.zoom) {
+                _lastClusterZoom = camera.zoom;
+                _cameraRevision.value++;
+              }
+            },
+            onTap: (tapPosition, latLng) {
+              if (_selectedStreamerId != null ||
+                  _selectedMosqueId != null) {
+                setState(() {
+                  _selectedStreamerId = null;
+                  _selectedMosqueId = null;
+                });
+              }
+            },
+          ),
+          children: [
+            TricityBasemapLayer(controller: _pack),
+            pinLayer,
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -850,6 +1168,30 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       _measureInsets();
       _applyPendingMosque();
     });
+
+    if (context.isLanternSkin) {
+      return _buildLantern(
+        context,
+        locale: locale,
+        displayedStreamers: displayedStreamers,
+        selectedStreamer: selectedStreamer,
+        currentCategoryFilter: currentCategoryFilter,
+        isDesktop: isDesktop,
+        isOnline: isOnline,
+        visibleCachedMarkers: visibleCachedMarkers,
+        networkStatus: networkStatus,
+        venuesUpdatedAt: venuesUpdatedAt,
+        mosques: mosques,
+        shownMosques: shownMosques,
+        todayMosques: todayMosques,
+        showStreamers: showStreamers,
+        hasLayers: layerSwitch != null,
+        nextLive: nextLive,
+        ownStreamerId: ownStreamerId,
+        onSiteNow: onSiteNow,
+        liveNow: liveNow,
+      );
+    }
 
     final searchBar = TopSpatialSearchBar(
       visibleStreamers: displayedStreamers,
@@ -951,75 +1293,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   Positioned.fill(
                     child: Container(color: AppTheme.surfaceAlt),
                   ),
-                  Center(
-                    child: SizedBox(
-                      width: canvas.width,
-                      height: canvas.height,
-                      child: FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          initialCenter: initial.center,
-                          initialZoom: initial.zoom,
-                          minZoom: _policy.minZoom(canvas, _safePadding),
-                          maxZoom: kMapMaxZoom,
-                          backgroundColor: AppTheme.bg,
-                          cameraConstraint: CameraConstraint.contain(
-                            bounds: kTricityNavigationExtent.bounds,
-                          ),
-                          interactionOptions: const InteractionOptions(
-                            flags:
-                                InteractiveFlag.all & ~InteractiveFlag.rotate,
-                          ),
-                          onMapReady: () {
-                            _mapReady = true;
-                            _enforceLegalCamera();
-                            _reframeInitialOverview();
-                            _applyPendingMosque();
-                          },
-                          onPositionChanged: (camera, hasGesture) {
-                            if (hasGesture) {
-                              _cameraMoved = true;
-                              _stopCameraAnimation();
-                            }
-                            if (_zoomNotifier.value != camera.zoom) {
-                              _zoomNotifier.value = camera.zoom;
-                            }
-                            // Clusters depend on zoom only (the grid is in absolute
-                            // world pixels), and MarkerLayer repositions markers on
-                            // pan by itself, so re-cluster only when the zoom
-                            // changes, not on every pan frame (audit MAP-01).
-                            if (_lastClusterZoom != camera.zoom) {
-                              _lastClusterZoom = camera.zoom;
-                              _cameraRevision.value++;
-                            }
-                          },
-                          onTap: (tapPosition, latLng) {
-                            if (_selectedStreamerId != null ||
-                                _selectedMosqueId != null) {
-                              setState(() {
-                                _selectedStreamerId = null;
-                                _selectedMosqueId = null;
-                              });
-                            }
-                          },
-                        ),
-                        children: [
-                          TricityBasemapLayer(controller: _pack),
-                          _buildPinLayer(
-                            streamers: isOnline && showStreamers
-                                ? displayedStreamers
-                                : const [],
-                            cached: !isOnline && showStreamers
-                                ? visibleCachedMarkers
-                                : const [],
-                            mosques: shownMosques,
-                            selectedStreamer: selectedStreamer,
-                            ownStreamerId: ownStreamerId,
-                            nextLive: nextLive,
-                          ),
-                        ],
-                      ),
-                    ),
+                  _buildMapCanvas(
+                    canvas: canvas,
+                    initial: initial,
+                    background: AppTheme.bg,
+                    pinLayer: _buildPinLayer(
+                                                streamers: isOnline && showStreamers
+                                                    ? displayedStreamers
+                                                    : const [],
+                                                cached: !isOnline && showStreamers
+                                                    ? visibleCachedMarkers
+                                                    : const [],
+                                                mosques: shownMosques,
+                                                selectedStreamer: selectedStreamer,
+                                                ownStreamerId: ownStreamerId,
+                                                nextLive: nextLive,
+                                              ),
                   ),
 
                   // No eligible venues: a compact notice above the credit
@@ -1343,6 +1632,450 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
             }),
           ),
         ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The state, the camera and the selection are
+  // the ones above; only what is drawn around the map changes. Nothing here
+  // is built under the two older designs.
+  // ---------------------------------------------------------------------
+
+  /// One step closer or farther, through the same camera policy.
+  void _zoomBy(double delta) {
+    if (!_mapReady || _canvas.isEmpty) return;
+    final camera = _mapController.camera;
+    final zoom = (camera.zoom + delta)
+        .clamp(_policy.minZoom(_canvas, _safePadding), kMapMaxZoom)
+        .toDouble();
+    final legal =
+        _policy.legalTarget(camera.center, zoom, _canvas, _safePadding);
+    if (legal != null) _moveTo(legal);
+  }
+
+  Widget _buildLantern(
+    BuildContext context, {
+    required Locale locale,
+    required List<StreamerModel> displayedStreamers,
+    required StreamerModel? selectedStreamer,
+    required String currentCategoryFilter,
+    required bool isDesktop,
+    required bool isOnline,
+    required List<MapMarkerModel> visibleCachedMarkers,
+    required NetworkStatus networkStatus,
+    required DateTime? venuesUpdatedAt,
+    required List<MapMosque> mosques,
+    required List<MapMosque> shownMosques,
+    required List<MapMosque> todayMosques,
+    required bool showStreamers,
+    required bool hasLayers,
+    required Map<String, ({UpcomingSchedule schedule, DateTime start})>
+        nextLive,
+    required String? ownStreamerId,
+    required int onSiteNow,
+    required int liveNow,
+  }) {
+    final wide = context.lanternWide;
+    final lang = locale.languageCode;
+    final lessonsOnly = _layers == MapLayers.lessons;
+    final academicCategories =
+        context.select<AppProvider, List<AcademicCategoryModel>>(
+            (p) => p.academicCategories);
+    // Broadcasters and lessons have different topic lists, so the topics
+    // follow the layer, as in the older designs.
+    final topics = lessonsOnly ? lessonTopicCategories() : academicCategories;
+    final topicId =
+        lessonsOnly ? (_lessonTopic ?? 'all') : currentCategoryFilter;
+    final listStreamers =
+        showStreamers ? displayedStreamers : const <StreamerModel>[];
+    final shownStreamers = isOnline ? listStreamers : const <StreamerModel>[];
+    final shownCached = !isOnline && showStreamers
+        ? visibleCachedMarkers
+        : const <MapMarkerModel>[];
+    final empty = shownMosques.isEmpty &&
+        shownStreamers.isEmpty &&
+        shownCached.isEmpty;
+    final total =
+        shownMosques.length + shownStreamers.length + shownCached.length;
+    final filtered = _selectedCityId != kAllCitiesId || topicId != 'all';
+
+    void selectTopic(String id) {
+      if (lessonsOnly) {
+        setState(() => _lessonTopic = id == 'all' ? null : id);
+        return;
+      }
+      context.read<AppProvider>().setCategoryFilter(id);
+      if (selectedStreamer != null &&
+          !categoryFilterMatches(id, selectedStreamer.categoryId)) {
+        setState(() => _selectedStreamerId = null);
+      }
+    }
+
+    void selectLayers(MapLayers layers) => setState(() {
+          _layers = layers;
+          if (layers == MapLayers.lessons) _selectedStreamerId = null;
+        });
+
+    Widget search({bool floating = false}) => LanternMapSearch(
+          floating: floating,
+          streamers: displayedStreamers,
+          cached: isOnline ? const [] : visibleCachedMarkers,
+          onCity: _selectCity,
+          onStreamer: (id) {
+            final current =
+                displayedStreamers.where((s) => s.streamerId == id).firstOrNull;
+            if (current != null) _selectStreamer(current);
+          },
+          searchLessons: (query) {
+            final lessons = context.read<LessonsController?>();
+            return lessons == null
+                ? const []
+                : searchMapLessons(lessons, query, lang);
+          },
+          onMosque: (id) {
+            final mosque = mosques.where((m) => m.id == id).firstOrNull;
+            if (mosque != null) _selectMosque(mosque);
+          },
+          onCached: (marker) {
+            _focusVenue(marker.coordinates, kVenueFocusZoom);
+            _showCachedMarkerInfo(context, marker);
+          },
+        );
+
+    void openList() => showLanternSheet<void>(context,
+        title: 'lantern.map.list'.tr(),
+        body: (sheetContext) => LanternMapPlaceList(
+            key: const ValueKey('lantern-map-list-sheet'),
+            scrolls: false,
+            mosques: todayMosques,
+            streamers: listStreamers,
+            selectedMosqueId: _selectedMosqueId,
+            selectedStreamerId: _selectedStreamerId,
+            onMosque: (m) {
+              Navigator.of(sheetContext).pop();
+              _selectMosque(m);
+            },
+            onStreamer: (s) {
+              Navigator.of(sheetContext).pop();
+              _selectStreamer(s);
+            },
+            onShowAll: () {
+              Navigator.of(sheetContext).pop();
+              _showOverview();
+            }));
+
+    void openLegend() {
+      if (wide) {
+        setState(() => _lanternLegend = !_lanternLegend);
+        return;
+      }
+      showLanternSheet<void>(context,
+          title: 'lantern.map.legend'.tr(),
+          body: (_) => const LanternMapLegend());
+    }
+
+    final map = LayoutBuilder(builder: (context, constraints) {
+      final t = context.lt;
+      final available = constraints.biggest;
+      final canvas = isDesktop
+          ? available
+          : _policy.feasibleCanvas(available, _safePadding);
+      if (canvas != _canvas) {
+        _canvas = canvas;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _enforceLegalCamera();
+        });
+      }
+      final initial = _policy.overviewTarget(canvas, _safePadding);
+      final media = MediaQuery.paddingOf(context);
+      final top = _safePadding.top + media.top;
+      final minZoom = _policy.minZoom(canvas, _safePadding);
+      return Stack(
+        children: [
+          Positioned.fill(child: ColoredBox(color: t.sunk)),
+          _buildMapCanvas(
+            canvas: canvas,
+            initial: initial,
+            background: t.sunk,
+            pinLayer: _buildPinLayer(
+              streamers: shownStreamers,
+              cached: shownCached,
+              mosques: shownMosques,
+              selectedStreamer: selectedStreamer,
+              ownStreamerId: ownStreamerId,
+              nextLive: nextLive,
+            ),
+          ),
+
+          // Nothing to show: a small card above the credit, so the map
+          // itself stays in view and in use.
+          if (empty)
+            PositionedDirectional(
+              key: ValueKey('map_empty_$locale'),
+              start: 16,
+              end: 76,
+              bottom: 60 + media.bottom,
+              child: KeyedSubtree(
+                key: _emptyNoticeKey,
+                child: LanternMapEmptyNotice(
+                  online: isOnline,
+                  retrying: _isRetryingConnectivity,
+                  onRetry: _retryConnectivity,
+                ),
+              ),
+            ),
+
+          // The stored map is opening or cannot be used; the pins, the list
+          // and the live actions still work.
+          ListenableBuilder(
+            listenable: _pack,
+            builder: (context, _) => _pack.isReady
+                ? const SizedBox.shrink()
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: LanternMapPackStatus(
+                        controller: _pack,
+                        onShowList: wide ? null : openList,
+                      ),
+                    ),
+                  ),
+          ),
+
+          // Top: the connection line, then on a phone the search, the
+          // filters and the layers (the side panel holds them otherwise).
+          PositionedDirectional(
+            top: 0,
+            start: 0,
+            end: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                key: _topControlsKey,
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!isOnline) ...[
+                      LanternMapConnection(
+                        label: _connectionLabel(networkStatus, venuesUpdatedAt),
+                        retrying: _isRetryingConnectivity,
+                        onRetry: _retryConnectivity,
+                        onDetails: _openDetails,
+                      ),
+                      if (!wide) const SizedBox(height: 8),
+                    ],
+                    if (!wide) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: search(floating: true)),
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: LanternMapButton(
+                              key: const ValueKey('lantern-map-filter-button'),
+                              icon: LGlyph.filter,
+                              label: 'lantern.map.filters'.tr(),
+                              on: filtered,
+                              onPressed: () => showLanternMapFilters(
+                                context,
+                                cityId: _selectedCityId,
+                                onCity: _selectCity,
+                                topics: topics,
+                                topicId: topicId,
+                                onTopic: selectTopic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (hasLayers)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: LanternMapLayerChips(
+                              value: _layers, onChanged: selectLayers),
+                        ),
+                    ],
+                    ListenableBuilder(
+                      listenable: _pack,
+                      builder: (context, _) => _showWebOfflineHint
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: LanternMapOfflineHint(
+                                evicted: _pack.webOffline?.state ==
+                                    WebOfflineState.evicted,
+                                // Not dismissed here: success hides the
+                                // line, a failure keeps it for a retry.
+                                onPrepare: () {
+                                  unawaited(_pack.prepareWebOffline());
+                                  _openDetails();
+                                },
+                                onDismiss: _dismissWebHint,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // The buttons on the map, on the end side at every width.
+          PositionedDirectional(
+            top: top,
+            end: 16,
+            child: ValueListenableBuilder<double>(
+              valueListenable: _zoomNotifier,
+              // Zero means the camera has not reported yet.
+              builder: (context, zoom, _) => LanternMapControls(
+                canZoomIn: zoom == 0 || zoom < kMapMaxZoom - 1e-6,
+                canZoomOut: zoom == 0 || zoom > minZoom + 1e-6,
+                onZoomIn: () => _zoomBy(1),
+                onZoomOut: () => _zoomBy(-1),
+                legendOn: wide && _lanternLegend,
+                zoomOnly: !wide &&
+                    (selectedStreamer != null || _selectedMosqueId != null),
+                onLegend: openLegend,
+                onList: wide ? null : openList,
+              ),
+            ),
+          ),
+
+          if (wide && _lanternLegend)
+            PositionedDirectional(
+              top: top,
+              start: 16,
+              width: 300,
+              child: LanternMapLegendCard(
+                  onClose: () => setState(() => _lanternLegend = false)),
+            ),
+
+          // What is on right now. The side panel says it on the website
+          // layout.
+          if (!wide && onSiteNow + liveNow > 0)
+            PositionedDirectional(
+              top: top,
+              start: 16,
+              end: 76,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: LanternMapNowPill(onSite: onSiteNow, live: liveNow),
+              ),
+            ),
+
+          // The place card above the credit. A mosque card may rise over
+          // the controls: it holds a status and lessons, and should read
+          // without scrolling. The bottom inset keeps both clear of the
+          // floating navigation of a phone.
+          PositionedDirectional(
+            top: _selectedMosqueId != null ? 8 : top,
+            bottom: media.bottom,
+            start: 0,
+            end: 0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment:
+                  wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              children: [
+                if (selectedStreamer != null || _selectedMosqueId != null)
+                  Flexible(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: wide ? 380 : 420,
+                          maxHeight: selectedStreamer != null
+                              ? available.height * 0.55
+                              : available.height,
+                        ),
+                        child: SingleChildScrollView(
+                          child: selectedStreamer != null
+                              ? LanternStreamerPlaceCard(
+                                  streamer: selectedStreamer,
+                                  nextStart: selectedStreamer.isCurrentlyLive
+                                      ? null
+                                      : nextLive[selectedStreamer.streamerId]
+                                          ?.start,
+                                  nextTitle:
+                                      nextLive[selectedStreamer.streamerId]
+                                          ?.schedule
+                                          .title(lang),
+                                  onClose: () => setState(() {
+                                    _selectedStreamerId = null;
+                                  }),
+                                )
+                              : LanternMosquePlaceCard(
+                                  mosqueId: _selectedMosqueId!,
+                                  online: isOnline,
+                                  onClose: () => setState(() {
+                                    _selectedMosqueId = null;
+                                  }),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ListenableBuilder(
+                    listenable: _pack,
+                    builder: (context, _) => LanternMapAttribution(
+                      credit:
+                          _pack.manifest?.attributionShort ?? kOsmCreditFallback,
+                      url: _pack.manifest?.attributionUrl ??
+                          'https://www.openstreetmap.org/copyright',
+                      onDetails: _openDetails,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
+
+    return LanternSurface(
+      child: Material(
+        type: MaterialType.transparency,
+        child: !wide
+            ? map
+            : Row(
+                children: [
+                  LanternMapPanel(
+                    key: const ValueKey('lantern-map-panel'),
+                    search: search(),
+                    layers: hasLayers
+                        ? LanternMapLayerChips(
+                            value: _layers, onChanged: selectLayers)
+                        : null,
+                    filters: LanternMapFilters(
+                      cityId: _selectedCityId,
+                      onCity: _selectCity,
+                      topics: topics,
+                      topicId: topicId,
+                      onTopic: selectTopic,
+                    ),
+                    counts: LanternMapCounts(
+                        total: total, onSite: onSiteNow, live: liveNow),
+                    list: LanternMapPlaceList(
+                      mosques: todayMosques,
+                      streamers: listStreamers,
+                      selectedMosqueId: _selectedMosqueId,
+                      selectedStreamerId: _selectedStreamerId,
+                      onMosque: _selectMosque,
+                      onStreamer: _selectStreamer,
+                      onShowAll: _showOverview,
+                    ),
+                  ),
+                  Expanded(child: map),
+                ],
+              ),
       ),
     );
   }

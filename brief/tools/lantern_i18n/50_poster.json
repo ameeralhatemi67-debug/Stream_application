@@ -1,0 +1,30 @@
+{
+  "en": {
+    "poster": {
+      "title": "Invitation picture",
+      "row": "Make an invitation picture",
+      "row_sub": "A poster of this lesson to send in a group",
+      "share": "Send the picture",
+      "note": "The picture is made on your device. Nothing is uploaded.",
+      "failed": "The picture could not be made. Try again.",
+      "lesson": "Mosque lesson",
+      "series": "Weekly lesson",
+      "live": "Live broadcast",
+      "channel": "Channel on Hadayah Live"
+    }
+  },
+  "ar": {
+    "poster": {
+      "title": "بطاقة دعوة",
+      "row": "اصنع بطاقة دعوة",
+      "row_sub": "صورة لهذا الدرس تُرسل في المجموعات",
+      "share": "أرسل الصورة",
+      "note": "تُصنع الصورة على جهازك، ولا يُرفع شيء.",
+      "failed": "تعذّر إنشاء الصورة. حاول مرة أخرى.",
+      "lesson": "درس في المسجد",
+      "series": "درس أسبوعي",
+      "live": "بث مباشر",
+      "channel": "قناة على منصة هداية"
+    }
+  }
+}

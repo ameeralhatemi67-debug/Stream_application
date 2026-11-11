@@ -8,6 +8,19 @@ status: complete
 
 # 🏗️ Phase 7 — Platform Build Readiness (Android + iOS)
 
+> **Current state, 2026-11-11.** This report is from 2026-08-20 and its Android section is out of date. The current Android status and the owner's steps are in `brief/fable/ANDROID_PLAY_STATUS.md`. What changed since this report:
+>
+> - Release signing fails closed. There is no debug fallback any more: a release build without `android/key.properties` stops. The owner creates the key and the file with `brief/launch/make_upload_key.ps1` (RSA 2048, about 27 years of validity).
+> - Release builds also need `--dart-define=DISTRIBUTION=play` (Play) or `apk` (website APK), ADR-017.
+> - The application ID is decided: `sa.hadayah.streamer_app` (§1b is closed).
+> - `CAMERA` and `RECORD_AUDIO` are back, for phone broadcasting (v0.7), with a `camera|microphone` foreground service. Camera, autofocus and microphone are optional hardware features.
+> - `flutter_vlc_player` and `google_sign_in` are no longer dependencies; their keep rules are gone or relabelled.
+> - Android backup is off (`allowBackup="false"` and `data_extraction_rules.xml`), so the Supabase session is never copied to a backup or a new phone.
+> - 16 KB pages: the native libraries of the 2026-10-26 release APK are 16 KB aligned (zipalign and `llvm-objdump`, checked 2026-11-11). The final app bundle still needs the same check.
+> - Toolchain: Flutter 3.41.9, AGP 8.11.1, Kotlin 2.2.20, Gradle 8.14, compile and target SDK 36, minimum SDK 24, NDK 28.2.
+>
+> The iOS section below is also old. iOS is v1.1 (`Roadmap.md`); its current plan is kept outside this repository.
+
 **A note on what I could and couldn't do directly this phase:** I have write access to your project files and made real, committed changes to the Android build config (details below). I do **not** have the Flutter SDK or network access in this session's environment — your actual Flutter install lives on your own machine (`C:\Users\User\sru\flutter`, confirmed from your `local.properties`), and generating the iOS platform folder requires running the `flutter` CLI, which I can't do from here. Section 2 gives you the exact commands and file contents to run yourself; I've done everything short of that.
 
 ---

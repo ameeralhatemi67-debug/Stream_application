@@ -12,6 +12,7 @@ import '../app_logo.dart';
 import '../language_switcher.dart';
 import 'ca_icon.dart';
 import 'ca_focus_ring.dart';
+import '../lantern/lantern_compat.dart';
 
 /// All feature app bars keep their native actions and gain one locale control.
 class CaAppBar extends AppBar {
@@ -312,7 +313,18 @@ class CaRail extends StatelessWidget {
   final String role;
   final bool expanded;
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternRail(
+          index: index,
+          onChanged: onChanged,
+          role: role,
+          destinations: caTabDestinations,
+          width: expanded ? CanopySize.railExpanded : CanopySize.railMedium,
+          expanded: expanded,
+          accountLinks: expanded && !context.isPhone
+              ? const _RailAccountLinks()
+              : null)
+      : SizedBox(
       width: expanded ? CanopySize.railExpanded : CanopySize.railMedium,
       child: ColoredBox(
           color: Canopy.paper,
