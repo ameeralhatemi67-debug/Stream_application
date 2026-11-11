@@ -3736,6 +3736,27 @@
       "series": "Weekly lesson",
       "live": "Live broadcast",
       "channel": "Channel on Hadayah Live"
+    },
+    "admin": {
+      "sections": "Admin sections",
+      "select_all_pending": "Select all pending",
+      "select_app": "Select {name}",
+      "queue_empty_body": "Every application has been reviewed.",
+      "show_all": "Show all",
+      "youtube_missing": "No YouTube channel given",
+      "capacity": "Capacity {count}",
+      "reason_required": "Write a reason the applicant can act on.",
+      "batch_approve_body": "{count} applications will be approved, and each one gets a broadcaster profile.",
+      "batch_approved": "Applications approved: {count}",
+      "stage_1": "Updating the application and granting broadcaster access",
+      "stage_2": "Creating the broadcaster card and adding it to Discover",
+      "stage_3": "Reading the YouTube channel's uploads",
+      "stage_4": "Placing the venue on the map and notifying the applicant",
+      "stage_5": "Verification complete",
+      "stage_of": "Stage {stage} of 5",
+      "bio_en": "Biography (English)",
+      "bio_ar": "Biography (Arabic)",
+      "none": "None"
     }
   }
 }
