@@ -50,10 +50,12 @@ This file is the state of the run. Update it after each step. Remove notes that 
 | 5a. Map (label-aware grouping, new place cards, Lantern controls and side panel) | done, commits `57a16e0` and the `feat(map)` commit after it |
 | 5b. Lessons home, calendar, lesson, preacher, mosque, series | done by helpers, merged (see below) |
 | 5c. Shared kits (`Ca*`, `Hidayah*`, `T*`) draw as Lantern under the Lantern skin | done by a helper, merged (see below) |
-| 6. Settings, notifications, bookmarks, welcome, states and 404 | pending |
-| 7. Channel, studio, broadcaster application, admin hub, organization hub | pending |
-| 7b. Report action for a stream and a channel (Google's user-content rule) | pending |
-| 7c. The surprise feature | not chosen yet |
+| 5d. Broadcast studio (one page, three steps, hold to go live and to end) | done, commit `4af19ce` |
+| 6. Settings, notifications, bookmarks, welcome, states and 404 | helper H1 running |
+| 7. Channel page, broadcaster application | helper H2 running |
+| 7a. Admin hub, organization hub, moderation dialogs, content report queue | pending |
+| 7b. Report action for a broadcast and a channel | done for the live room, commit `f861945`; the migration is not applied anywhere; the channel page and the admin queue are pending |
+| 7c. The surprise: an invitation picture for a lesson | done, commit `b2bd83a` |
 | 8. Optimizations with before and after numbers | pending |
 | 9. Play requirements check | done by helper, merged (`c1c2635`..`9761a7e`); status in `brief/fable/ANDROID_PLAY_STATUS.md` |
 | 9. Release build, emulator pass in three skins | pending |
@@ -79,6 +81,7 @@ To merge a helper: cherry-pick its commits onto `fable/lantern-skin`, run `pytho
 ## Numbers measured
 
 - Baseline on `master` (2026-11-11): analyzer 1 note (an unused import in a test, now removed); tests 1,886 passed, 12 skipped, 0 failed, 5 min 24 s.
+- After the studio (`4af19ce`): analyzer 0; full suite 2,238 passed, 54 skipped, 0 failed, 5 min 48 s.
 - After the foundation: analyzer 0. New tests: `lantern_skin_test.dart` 23, `lantern_isolation_test.dart` 10, `lantern_discover_test.dart` 23, `lantern_opening_test.dart` 12. The full suite has not been re-run since the baseline.
 - Pictures of Lantern screens: `LANTERN_CAPTURE_DIR=<dir> flutter test test/lantern_capture_test.dart` (optional `LANTERN_CAPTURE_ONLY=name-part`). Output so far in `brief/fable/shots/` (not committed).
 
