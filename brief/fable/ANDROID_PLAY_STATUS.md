@@ -1,6 +1,6 @@
 # Android and Google Play: where the app stands
 
-Written 2026-11-11 for the owner. Branch `worktree-agent-a09e17d724ef05468`, on top of `fable/lantern-skin`. Nothing was built, pushed or deployed.
+Written 2026-11-11 for the owner. Branch `fable/lantern-skin`. Nothing was built, pushed or deployed.
 
 Words used the same way throughout:
 - **your key**: the file `upload-keystore.jks` that `brief\launch\make_upload_key.ps1` creates. It signs the website APK and becomes the Play signing key.

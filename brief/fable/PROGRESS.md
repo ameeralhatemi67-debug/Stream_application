@@ -46,23 +46,27 @@ This file is the state of the run. Update it after each step. Remove notes that 
 | 4. Skin foundation (tokens, theme, icons, kit, frame, isolation tests) | done, commit `d64f8c5` |
 | 5a. Opening screen | done, commit `b8c8aae` |
 | 5a. Discover | done, commit `093b900` |
-| 5a. Live and audio rooms (full screen) | in progress (main session): `lib/features/live_stream/presentation/lantern/` (`lantern_room_view.dart` written; stage and chat files next; then the hook `_buildLantern` in `live_broadcast_screen.dart`, strings in `12_room.json`, tests, capture) |
-| 5a. Map (label-aware grouping, new place cards) | pending (main session) |
-| 5b. Lessons home, calendar, lesson, preacher, mosque, application | helper running |
-| 5c. Shared kits (`Ca*`, `Hidayah*`, `T*`) draw as Lantern under the Lantern skin | helper running |
+| 5a. Live and audio rooms (full screen) | done, commit `4bce2db` |
+| 5a. Map (label-aware grouping, new place cards, Lantern controls and side panel) | done, commits `57a16e0` and the `feat(map)` commit after it |
+| 5b. Lessons home, calendar, lesson, preacher, mosque, series | done by helpers, merged (see below) |
+| 5c. Shared kits (`Ca*`, `Hidayah*`, `T*`) draw as Lantern under the Lantern skin | done by a helper, merged (see below) |
 | 6. Settings, notifications, bookmarks, welcome, states and 404 | pending |
 | 7. Channel, studio, broadcaster application, admin hub, organization hub | pending |
+| 7b. Report action for a stream and a channel (Google's user-content rule) | pending |
+| 7c. The surprise feature | not chosen yet |
 | 8. Optimizations with before and after numbers | pending |
 | 9. Play requirements check | done by helper, merged (`c1c2635`..`9761a7e`); status in `brief/fable/ANDROID_PLAY_STATUS.md` |
 | 9. Release build, emulator pass in three skins | pending |
 | 10. Proof that old skins did not change | pending (method below) |
 | 11. Final report and artifact | pending |
 
-## Helpers started (each in its own worktree and branch; merge by cherry-pick, then re-run the i18n tool, analyzer and tests)
+## Helpers (each in its own worktree and branch)
 
-- Shared kits under Lantern (Opus). Files: `lib/core/widgets/ds/*`, web kit and header, lessons kit and icons, new `lantern_compat.dart`.
-- Lessons screens (Opus). Files: `lib/features/lessons/presentation/lantern/*`, hooks in the lessons screens and `lessons_shell.dart`, strings in `20_lessons.json`.
-- Android and Play (Opus). Files: `project/android/**`, `store/**`, `project/web/delete-account.html`, `brief/launch/*`, writes `brief/fable/ANDROID_PLAY_STATUS.md`.
+- Shared kits under Lantern (Opus): worktree `agent-a042ac1f6af7bfaa3`, commit `c3ac6c3`. Known gaps it reported: `CaAppBar` is only restyled by the theme; `CaSwitch` has an empty screen-reader label under Lantern.
+- Lessons screens (Opus, two sessions): worktree `agent-a4b85e7d6e6275098`, commits `6a61cb4`, `2a872b4`, `f77d4d8`, `e7652d0`, `ecaa527`. Lessons pages that still show the older widgets under Lantern: `/lessons/me`, `/lessons/me/notifications`, `/lessons/me/saved`, `/lessons/apply`, `/lessons/me/preacher`.
+- Android and Play (Opus): merged earlier.
+
+To merge a helper: cherry-pick its commits onto `fable/lantern-skin`, run `python brief/tools/merge_lantern_i18n.py` instead of resolving the catalogs by hand, then the analyzer, its tests and `lantern_isolation_test.dart`.
 
 ## Findings to act on or report
 

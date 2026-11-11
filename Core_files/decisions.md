@@ -1,12 +1,25 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-11-08
+updated: 2026-11-11
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-026: A third design, Lantern and Arch, fully apart from the two older designs (2026-11-11)
+
+Owner brief 2026-11-10 (`brief/prompts/FABLE_LANTERN_SKIN_RELEASE_PROMPT.md`): build the approved "Lantern and Arch" identity as a third design beside gold & black (ADR-013, the default) and Hedayah (ADR-016). The two older designs must look and behave exactly as before; every new screen and feature is seen only with Lantern.
+
+- **Where it lives.** `AppSkin.lantern`, chosen in Settings → Design. Tokens for day and night in `lib/core/theme/lantern/`, the kit in `lib/core/widgets/lantern/` (its `README.md` is the build guide), each feature's screens in `lib/features/<feature>/presentation/lantern/`. Day is the default appearance (`LanternAppearance.fallback`); night, "follow the phone" and calm motion are stored in `AppProvider`.
+- **One mark, one rule.** Every public Lantern widget `implements LanternSkinWidget`. `test/lantern_isolation_test.dart` fails if a class in a `lantern/` folder lacks the mark, or if a marked widget is in the tree of an older design's screen.
+- **Screens keep their logic.** An existing screen's `State` or controller keeps every load, timer and action. At the top of `build` it hands over when `context.isLanternSkin`; the Lantern view receives values and callbacks. In a file the older designs use, the allowed changes are that branch and moving unchanged code into a method both paths call (the map's `_buildMapCanvas` is the one case so far).
+- **Shared kits draw as Lantern.** The older kits (`ds/*`, the website kit, the Lessons kit) hand over to Lantern pieces at the top of `build` (`lantern_compat.dart`), so a screen that has no Lantern view yet is still one design, not a mix.
+- **The map.** Markers are grouped by the box a pin takes with its label (`kMapPinFootprint`, 84 × 74), by the existing priority rule, so neither pins nor labels cover each other. A bubble zooms to the first level where its places come apart (`mapSeparationZoom`); places that never come apart open a short list. The controls around the map (search, filters, the side panel of the website layout, zoom, legend, connection line, credit, map details) are Lantern widgets in `lantern_map_chrome.dart`; the camera, the selection and the stored streets are shared code. With calm motion the camera jumps instead of flying.
+- **Sheets open over the whole app** (`showLanternSheet` uses the root navigator), because the Lantern navigation of a phone floats over the tabs.
+- **Strings and icons are generated.** Strings are added to `brief/tools/lantern_i18n/NN_area.json` and merged into both catalogs by `brief/tools/merge_lantern_i18n.py`; icons come from `brief/tools/lantern_icons.json`.
+- **Not decided by the owner yet, built as the simplest default:** no locate button and no Now / Tonight / This week control on the map; drawn reactions; labelled role chips in chat; no new font files (Hacen Maghreb is not bundled until its licence is confirmed).
 
 ## ADR-025: Web start-up waits only for what the first screen needs (2026-11-08)
 
