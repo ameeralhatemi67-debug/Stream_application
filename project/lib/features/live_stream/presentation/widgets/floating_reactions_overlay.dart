@@ -30,7 +30,14 @@ class FloatingReactionsOverlayController {
 
   void spawnReaction(String reactionType) {
     _state?.spawnReaction(reactionType);
+    _listener?.call(reactionType);
   }
+
+  /// Lantern and Arch draws reactions with its own overlay (ADR-026); it
+  /// listens here instead of attaching a state.
+  void Function(String reactionType)? _listener;
+  void listen(void Function(String reactionType)? listener) =>
+      _listener = listener;
 }
 
 class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay> {

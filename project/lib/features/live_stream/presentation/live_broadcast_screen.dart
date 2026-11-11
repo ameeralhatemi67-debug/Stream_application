@@ -46,6 +46,10 @@ import 'widgets/rtmp_ip_dialog.dart';
 import 'web/live_web_parts.dart';
 import '../../web/presentation/hidayah_web_header.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/config/app_identity.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import 'lantern/lantern_room_view.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -846,6 +850,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final appProvider = context.read<AppProvider>();
     final networkStatus =
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
+    if (context.isLanternSkin) {
+      return _buildLantern(context, appProvider, networkStatus);
+    }
     final choices = appProvider.roomChoices(widget.streamId);
     if (choices.length > 1) {
       return Scaffold(
@@ -1044,6 +1051,195 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The same room: the same player, chat,
+  // presence and recovery as above. LanternRoomView draws it full screen.
+  // ---------------------------------------------------------------------
+  bool _lanternRetrying = false;
+
+  Future<void> _lanternRetryConnection() async {
+    if (_lanternRetrying) return;
+    setState(() => _lanternRetrying = true);
+    final provider = context.read<AppProvider>();
+    if (await provider.refreshConnectivityNow()) {
+      await provider.loadVerifiedStreamersFromBackend();
+    }
+    if (mounted) setState(() => _lanternRetrying = false);
+  }
+
+  Widget _buildLantern(BuildContext context, AppProvider appProvider,
+      NetworkStatus networkStatus) {
+    final lang = context.locale.languageCode;
+    final choices = appProvider.roomChoices(widget.streamId);
+    if (choices.length > 1) {
+      return LanternRoomChoices(
+          title: 'organization_v1.choose_show'.tr(),
+          choices: [for (final s in choices) (s.id, s.title(lang))],
+          onChoose: (id) => context.pushReplacement('/live/$id'));
+    }
+    final session = appProvider.roomSession(widget.streamId);
+    if (session != null && !session.live && !session.replayWatchable) {
+      final waiting = ['scheduled', 'preparing'].contains(session.state);
+      final key = waiting
+          ? 'scheduled_room'
+          : session.replayStatus == 'processing' ||
+                  session.state == 'processing_replay'
+              ? 'replay_processing'
+              : 'replay_missing';
+      return LanternRoomStatus(
+          key: const Key('live-room-waiting'),
+          title: session.title(lang),
+          body: 'organization_v1.$key'.tr(),
+          icon: waiting ? LGlyph.clock : LGlyph.history,
+          onRetry: _refreshRoom,
+          retryLabel: 'organization_v1.refresh'.tr());
+    }
+    if (_roomEnded && session?.replayWatchable != true) {
+      return LanternRoomStatus(
+          key: const Key('live-room-ended'),
+          title: 'live.room_ended_title'.tr(),
+          body: 'live.room_ended_body'.tr(),
+          icon: LGlyph.stop);
+    }
+    Widget unavailable() => LanternRoomStatus(
+        key: const Key('live-room-unavailable'),
+        title: 'live.room_unavailable_title'.tr(),
+        body: 'live.room_unavailable_body'.tr(),
+        onRetry: () => appProvider.loadVerifiedStreamersFromBackend(),
+        retryLabel: 'live.room_check_again'.tr());
+    if (_findStreamer(appProvider) == null &&
+        appProvider.roomRevision(widget.streamId) > 0) {
+      return unavailable();
+    }
+    if (_recoveryExhausted) {
+      return LanternRoomStatus(
+          key: const Key('live-room-recovery-exhausted'),
+          title: 'live.connection_error'.tr(),
+          body: 'live.recovery_exhausted'.tr(),
+          icon: LGlyph.wifioff,
+          onRetry: _retryStream);
+    }
+    if (!_roomActive) {
+      final rechecking = networkStatus == NetworkStatus.online;
+      final notLive = _requiredCatalogRevision != null &&
+          appProvider.roomRevision(widget.streamId) >
+              _requiredCatalogRevision!;
+      return LanternRoomStatus(
+          key: const Key('live-room-connecting'),
+          title: (rechecking
+                  ? notLive
+                      ? 'offline_experience.room_not_live'
+                      : 'offline_experience.room_rechecking'
+                  : 'offline_experience.room_title')
+              .tr(),
+          body: (rechecking
+                  ? notLive
+                      ? 'offline_experience.room_not_live_body'
+                      : 'offline_experience.room_rechecking_body'
+                  : networkStatus == NetworkStatus.degraded
+                      ? 'offline_experience.degraded_title'
+                      : 'offline_experience.room_body')
+              .tr(),
+          icon: LGlyph.wifioff,
+          busy: _lanternRetrying || (rechecking && !notLive),
+          onRetry: _lanternRetryConnection,
+          retryLabel: 'offline_experience.retry'.tr());
+    }
+    final streamer = _findStreamer(appProvider);
+    if (streamer == null) return unavailable();
+
+    final audio = streamer.isLiveForRoom &&
+        streamer.broadcastType == BroadcastType.liveAudio;
+    final roomGeneration = _roomGeneration;
+    final streamUrl = _getStreamUrl(streamer);
+    final playerKey = _playerKeyFor(
+        '${_sourceType.name}_${streamUrl}_${appProvider.streamReloadCount}_$_playerReloads');
+    final slides = appProvider.isOwnStreamerProfile(streamer.streamerId)
+        ? appProvider.customSlidesUrl.trim()
+        : '';
+    final title = streamer.getLocalizedTitle(lang);
+    return LanternRoomView(
+        room: LanternRoom(
+            streamId: widget.streamId,
+            streamer: streamer,
+            audio: audio,
+            viewers: _presenceService.count,
+            player: streamUrl.isEmpty
+                ? null
+                : _buildPlayer(appProvider, streamer, streamUrl, playerKey,
+                    roomGeneration),
+            state: streamUrl.isEmpty ? StreamState.offline : _streamState,
+            interrupted: streamer.isIngestInterrupted,
+            recovering: _recovering,
+            recoveryAttempts: _recoveryAttempts,
+            playing: _isPlaying,
+            muted: _isMuted,
+            fullscreen: _isFullscreen,
+            transport: _transportAvailable,
+            handRaised: _isHandRaised,
+            access: appProvider.localViewerAccessState,
+            following: appProvider.isFollowing(streamer.channelProfileId),
+            own: appProvider.isOwnStreamerProfile(streamer.streamerId),
+            replay: session?.live == false,
+            chat: _chatController,
+            chatTick: _chatTick,
+            chatText: _chatTextController,
+            chatFocus: _chatFocus,
+            chatScroll: _chatScrollController,
+            unread: _chatUnreadWhileScrolled,
+            arrived: _animatedChatIds.contains,
+            reactions: _reactionsController,
+            slidesUrl: slides,
+            customArtwork: _customPlaceholderUrl(appProvider, streamer),
+            onClose: () =>
+                context.canPop() ? context.pop() : context.go('/feed'),
+            onMinimize: () =>
+                _minimizeToMiniPlayer(appProvider, streamer, lang),
+            onFollow: () =>
+                toggleFollowWithFeedback(context, streamer.channelProfileId),
+            onTogglePlay: _togglePlayPause,
+            onToggleMute: _toggleMute,
+            onToggleFullscreen: _handleToggleFullscreen,
+            onRetry: _retryStream,
+            onSend: _handleSendLocalMessage,
+            onToggleHand: _toggleRaiseHand,
+            onReaction: (type) => _handleQuickReaction(type, ''),
+            onScrollToNewest: _scrollChatToNewest,
+            onSignIn: () =>
+                openSignIn(context, returnTo: '/live/${widget.streamId}'),
+            onRetryMessage: _retryFailedChatMessage,
+            onMessageMenu: (message) => showChatMessageActionsSheet(context,
+                message: message, controller: _chatController),
+            onSender: (message) => showChatSenderProfile(context,
+                message: message, controller: _chatController),
+            onOpenChannel: () =>
+                context.push('/profile/${streamer.channelProfileId}'),
+            onOpenSource: () {
+              final uri = Uri.tryParse(slides);
+              if (uri != null) {
+                launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            onStudio: appProvider.isLoggedInStreamer &&
+                    appProvider.isStreamerModeEnabled
+                ? () => LiveBroadcasterStudioSheet.show(context,
+                    openedFromVideo: true)
+                : null,
+            onOpenInYouTube: _sourceType == StreamSourceType.youtubeEmbed &&
+                    _hasYouTubeId(streamer)
+                ? () => _openStreamInYouTube(streamer)
+                : null,
+            onRequestJoin: appProvider.requestToJoinActiveStream,
+            onShare: () => Share.share(
+                '$title\n${AppIdentity.websiteUrl}/#/live/${widget.streamId}',
+                subject: title),
+            onDirections:
+                isUsableVenuePoint(streamer.latitude, streamer.longitude)
+                    ? () =>
+                        VenueNavigationSheet.show(context, streamer: streamer)
+                    : null));
+  }
+
   Widget _buildVideoViewport(AppProvider appProvider, StreamerModel streamer,
       int? viewerCount, String langCode,
       {required bool isSideBySide}) {
@@ -1082,80 +1278,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             children: [
               // 1. The Video/Audio Player Engine (Always mounted so Android WebView never suspends audio)
               if (streamUrl.isNotEmpty)
-                AbstractVideoPlayer.fromSource(
-                  key: playerKey,
-                  sourceType: _sourceType,
-                  streamUrl: streamUrl,
-                  // A live room never fails over to another video.
-                  fallbackUrls: streamer.isLiveForRoom
-                      ? const []
-                      : streamer.fallbackYoutubeVideoIds,
-                  autoPlay: _playIntent,
-                  // A new player (Retry, reload) keeps the viewer's mute choice.
-                  initialMuted: _isMuted,
-                  // The new player starts from initialMuted; the room only needs
-                  // to learn whether it takes commands.
-                  onPlayerReady: () => WidgetsBinding.instance
-                      .addPostFrameCallback(
-                          (_) => _refreshTransportAvailability()),
-                  preferredQuality: _selectedQuality.value,
-                  onStateChanged: (state) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted &&
-                          _roomActive &&
-                          roomGeneration == _roomGeneration &&
-                          playerKey == _playerKey &&
-                          _streamState != state) {
-                        _refreshTransportAvailability();
-                        setState(() {
-                          _streamState = state;
-                          if (state == StreamState.unconfirmed) {
-                            // No state bridge: hand control to the visible
-                            // player without claiming recovery or repeatedly
-                            // reloading media the user may already be playing.
-                            _cancelViewerRecovery();
-                          }
-                          // Follow the player: a pause from its own controls or
-                          // the system shows as paused here too.
-                          if (state == StreamState.paused) _isPlaying = false;
-                          if (state == StreamState.live) _isPlaying = true;
-                          if (state == StreamState.paused ||
-                              state == StreamState.live) {
-                            _playIntent = _isPlaying;
-                            if (_recovering) {
-                              _recoveryTimer?.cancel();
-                              _recoveryTimer = null;
-                              _recoveryStable ??=
-                                  Timer(const Duration(seconds: 10), () {
-                                _cancelViewerRecovery();
-                                if (mounted) setState(() {});
-                              });
-                            }
-                          }
-                          if (state == StreamState.fallbackError ||
-                              state == StreamState.offline) {
-                            _beginViewerRecovery();
-                          }
-                        });
-                      }
-                    });
-                  },
-                  onError: (_) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted &&
-                          _roomActive &&
-                          roomGeneration == _roomGeneration &&
-                          playerKey == _playerKey &&
-                          _streamState != StreamState.fallbackError) {
-                        setState(
-                            () => _streamState = StreamState.fallbackError);
-                        _recoveryTimer?.cancel();
-                        _recoveryTimer = null;
-                        _beginViewerRecovery();
-                      }
-                    });
-                  },
-                ),
+                _buildPlayer(appProvider, streamer, streamUrl, playerKey,
+                    roomGeneration),
 
               // Keep the YouTube player mounted for audio, and restore the
               // centered audio stage over its otherwise black video surface.
@@ -1378,6 +1502,88 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       aspectRatio: 16 / 9,
       child: videoWidget,
     );
+  }
+
+  /// The player itself, with the room's reactions to its state. One builder
+  /// for every layout, so the older designs and Lantern and Arch cannot drift
+  /// apart in how they recover.
+  Widget _buildPlayer(AppProvider appProvider, StreamerModel streamer,
+      String streamUrl, GlobalKey playerKey, int roomGeneration) {
+    return
+                AbstractVideoPlayer.fromSource(
+                  key: playerKey,
+                  sourceType: _sourceType,
+                  streamUrl: streamUrl,
+                  // A live room never fails over to another video.
+                  fallbackUrls: streamer.isLiveForRoom
+                      ? const []
+                      : streamer.fallbackYoutubeVideoIds,
+                  autoPlay: _playIntent,
+                  // A new player (Retry, reload) keeps the viewer's mute choice.
+                  initialMuted: _isMuted,
+                  // The new player starts from initialMuted; the room only needs
+                  // to learn whether it takes commands.
+                  onPlayerReady: () => WidgetsBinding.instance
+                      .addPostFrameCallback(
+                          (_) => _refreshTransportAvailability()),
+                  preferredQuality: _selectedQuality.value,
+                  onStateChanged: (state) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted &&
+                          _roomActive &&
+                          roomGeneration == _roomGeneration &&
+                          playerKey == _playerKey &&
+                          _streamState != state) {
+                        _refreshTransportAvailability();
+                        setState(() {
+                          _streamState = state;
+                          if (state == StreamState.unconfirmed) {
+                            // No state bridge: hand control to the visible
+                            // player without claiming recovery or repeatedly
+                            // reloading media the user may already be playing.
+                            _cancelViewerRecovery();
+                          }
+                          // Follow the player: a pause from its own controls or
+                          // the system shows as paused here too.
+                          if (state == StreamState.paused) _isPlaying = false;
+                          if (state == StreamState.live) _isPlaying = true;
+                          if (state == StreamState.paused ||
+                              state == StreamState.live) {
+                            _playIntent = _isPlaying;
+                            if (_recovering) {
+                              _recoveryTimer?.cancel();
+                              _recoveryTimer = null;
+                              _recoveryStable ??=
+                                  Timer(const Duration(seconds: 10), () {
+                                _cancelViewerRecovery();
+                                if (mounted) setState(() {});
+                              });
+                            }
+                          }
+                          if (state == StreamState.fallbackError ||
+                              state == StreamState.offline) {
+                            _beginViewerRecovery();
+                          }
+                        });
+                      }
+                    });
+                  },
+                  onError: (_) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted &&
+                          _roomActive &&
+                          roomGeneration == _roomGeneration &&
+                          playerKey == _playerKey &&
+                          _streamState != StreamState.fallbackError) {
+                        setState(
+                            () => _streamState = StreamState.fallbackError);
+                        _recoveryTimer?.cancel();
+                        _recoveryTimer = null;
+                        _beginViewerRecovery();
+                      }
+                    });
+                  },
+                );
   }
 
   Widget _buildBroadcasterHeader(

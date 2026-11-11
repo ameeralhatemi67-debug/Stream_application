@@ -39,7 +39,7 @@ AppProvider lanternProvider(
     LanternAppearance appearance = LanternAppearance.day,
     bool audio = false,
     bool live = true,
-    String liveId = 'stream-lantern-1'}) {
+    String liveId = 'lanternLive'}) {
   final provider = AppProvider()..restoreAppSkin(skin, appearance: appearance);
   for (final (i, s) in mockStreamers.indexed) {
     provider.addStreamerForTests(!live

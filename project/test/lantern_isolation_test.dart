@@ -106,7 +106,7 @@ void main() {
           '/lessons/calendar',
           if (lesson != null) '/lessons/lesson/$lesson',
           '/lessons/me',
-          '/live/stream-lantern-1',
+          '/live/lanternLive',
           '/profile/${provider.streamers.first.streamerId}',
           '/settings',
           '/organizations',

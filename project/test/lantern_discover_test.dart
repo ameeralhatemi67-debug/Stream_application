@@ -95,7 +95,7 @@ void main() {
     await app.settle();
     tester.takeException();
     expect(app.location,
-        '/live/stream-lantern-1');
+        '/live/lanternLive');
     await app.close();
   });
 

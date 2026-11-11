@@ -3507,6 +3507,35 @@
       "offline": "No internet connection",
       "retry": "Try again",
       "skip": "Skip"
+    },
+    "room": {
+      "leave": "Leave the room",
+      "share": "Share",
+      "studio": "Studio",
+      "more": "More",
+      "open_channel": "Open the channel",
+      "recording": "Recording",
+      "starting_soon": "Starting soon",
+      "starting_soon_body": "The broadcast has not started yet. This page starts playing when it does.",
+      "play": "Play",
+      "pause": "Pause",
+      "mute": "Turn the sound off",
+      "unmute": "Turn the sound on",
+      "fullscreen": "Full screen",
+      "exit_fullscreen": "Leave full screen",
+      "background": "Keeps playing in the background",
+      "chat_title": "Room chat",
+      "message_actions": "Message actions",
+      "react_heart": "Send a heart",
+      "react_praise": "Send praise",
+      "react_idea": "Send an idea",
+      "react_fire": "Send a flame",
+      "react_learned": "Send a book",
+      "report": "Report",
+      "report_title": "Report this broadcast",
+      "report_body": "Tell the moderators what is wrong. They review every report.",
+      "report_sent": "Report sent. Thank you.",
+      "report_failed": "The report could not be sent. Check your connection and try again."
     }
   }
 }

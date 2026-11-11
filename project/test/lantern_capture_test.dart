@@ -71,6 +71,13 @@ final shots = <LanternShot>[
       size: const Size(1440, 3200), lang: 'en', night: true),
   lanternShot('discover-phone-ar-fold', '/feed'),
   lanternShot('discover-laptop-ar-fold', '/feed', size: laptop),
+  lanternShot('room-live-phone-ar', '/live/lanternLive'),
+  lanternShot('room-live-phone-en', '/live/lanternLive', lang: 'en'),
+  lanternShot('room-live-tablet-ar', '/live/lanternLive', size: tablet),
+  lanternShot('room-live-laptop-ar', '/live/lanternLive', size: laptop),
+  lanternShot('room-audio-phone-ar', '/live/lanternLive', audio: true),
+  lanternShot('room-audio-laptop-en', '/live/lanternLive',
+      size: laptop, lang: 'en', audio: true),
 ];
 
 void main() {
