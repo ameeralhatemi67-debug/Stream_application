@@ -21,6 +21,7 @@ import '../models/chat_report_model.dart';
 import '../models/tag_moderation_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
+import '../../moderation/presentation/lantern/lantern_reports_queue.dart';
 import 'widgets/chat_moderation_view.dart';
 import 'widgets/custom_placeholder_review_view.dart';
 import 'widgets/academic_categories_view.dart';
@@ -380,7 +381,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         const OrgManagementView(orgId: 'org_dalilk_04'),
         _buildViewerAnalyticsTab(context, provider, isAr),
         _buildTermsGovernanceTab(context, provider, isAr),
-        const ChatModerationView(),
+        // Lantern and Arch adds the queue of reported broadcasts and
+        // channels beside the chat reports (ADR-026).
+        context.isLanternSkin
+            ? const LanternModerationTab(chat: ChatModerationView())
+            : const ChatModerationView(),
         const CustomPlaceholderReviewView(),
         const AcademicCategoriesView(),
         const TagModerationView(),

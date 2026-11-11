@@ -25,7 +25,21 @@
       "outcome_already": "You have already reported this.",
       "outcome_signIn": "Sign in with an active account to report.",
       "outcome_tooMany": "You have sent many reports today. Try again tomorrow.",
-      "outcome_failed": "The report could not be sent. Check your connection and try again."
+      "outcome_failed": "The report could not be sent. Check your connection and try again.",
+      "queue_tab_chat": "Chat messages",
+      "queue_tab_content": "Broadcasts and channels",
+      "queue_lead": "Open the broadcast or the channel, act there, then clear the report.",
+      "queue_empty_title": "No reports",
+      "queue_empty_body": "Reports of broadcasts and channels show here.",
+      "kind_stream": "Broadcast",
+      "kind_channel": "Channel",
+      "open_stream": "Open the broadcast",
+      "clear": "Clear the report",
+      "clear_title": "Clear this report?",
+      "clear_body": "Clear it after you have acted on it. It cannot be brought back.",
+      "cleared": "Report cleared.",
+      "clear_failed": "The report could not be cleared.",
+      "unknown_channel": "A channel that is no longer listed"
     }
   },
   "ar": {
@@ -54,7 +68,21 @@
       "outcome_already": "سبق أن أبلغت عن هذا.",
       "outcome_signIn": "سجّل الدخول بحساب فعّال للإبلاغ.",
       "outcome_tooMany": "أرسلت بلاغات كثيرة اليوم. حاول غدًا.",
-      "outcome_failed": "تعذّر إرسال البلاغ. تحقق من الاتصال وحاول مرة أخرى."
+      "outcome_failed": "تعذّر إرسال البلاغ. تحقق من الاتصال وحاول مرة أخرى.",
+      "queue_tab_chat": "رسائل المحادثة",
+      "queue_tab_content": "البثوث والقنوات",
+      "queue_lead": "افتح البث أو القناة، اتخذ الإجراء هناك، ثم أغلق البلاغ.",
+      "queue_empty_title": "لا بلاغات",
+      "queue_empty_body": "تظهر هنا البلاغات عن البثوث والقنوات.",
+      "kind_stream": "بث",
+      "kind_channel": "قناة",
+      "open_stream": "افتح البث",
+      "clear": "أغلق البلاغ",
+      "clear_title": "إغلاق هذا البلاغ؟",
+      "clear_body": "أغلقه بعد اتخاذ الإجراء. لا يمكن استرجاعه.",
+      "cleared": "أُغلق البلاغ.",
+      "clear_failed": "تعذّر إغلاق البلاغ.",
+      "unknown_channel": "قناة لم تعد مدرجة"
     }
   }
 }

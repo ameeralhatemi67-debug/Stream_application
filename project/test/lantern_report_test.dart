@@ -7,6 +7,7 @@ import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/lantern/lantern.dart';
 import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
 import 'package:streamer_app/features/moderation/presentation/lantern/lantern_report_sheet.dart';
+import 'package:streamer_app/features/moderation/presentation/lantern/lantern_reports_queue.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'fixtures/streamer_fixtures.dart';
@@ -37,6 +38,23 @@ class _Reports extends ContentReportService {
       'reason': reason,
       'note': note
     });
+  }
+
+  List<ContentReport> queue = [];
+  final cleared = <String>[];
+  bool failClear = false;
+
+  @override
+  Future<List<ContentReport>> loadOpen() async => queue;
+
+  @override
+  Future<void> dismiss(String id) async {
+    if (failClear) throw StateError('offline');
+    cleared.add(id);
+    queue = [
+      for (final r in queue)
+        if (r.id != id) r
+    ];
   }
 }
 
@@ -278,6 +296,114 @@ void main() {
       tester.takeException();
       expect(find.byKey(report), findsNothing);
       await app.close();
+    });
+  });
+
+  group('the admin queue', () {
+    ContentReport row(String id, ContentReportKind kind, {String? note}) =>
+        ContentReport(
+            id: id,
+            kind: kind,
+            channelProfileId: mockStreamers.first.streamerId,
+            streamId: kind == ContentReportKind.stream ? 'lanternLive' : null,
+            reporterId: 'viewer',
+            reason: ContentReportReason.wrongTeaching,
+            note: note,
+            createdAt: DateTime.now().subtract(const Duration(minutes: 12)));
+
+    Future<AppProvider> pumpQueue(WidgetTester tester, _Reports reports,
+        {String lang = 'en', bool night = false}) async {
+      final p = provider(reports)..addStreamerForTests(mockStreamers.first);
+      await pumpLanternWidget(tester, const LanternContentReportsQueue(),
+          provider: p, lang: lang, night: night);
+      await tester.pump(const Duration(milliseconds: 200));
+      return p;
+    }
+
+    for (final (lang, night) in [('en', false), ('ar', true)]) {
+      testWidgets('it lists reports, newest first ($lang)', (tester) async {
+        final reports = _Reports()
+          ..queue = [
+            row('r1', ContentReportKind.stream, note: 'At minute 12'),
+            row('r2', ContentReportKind.channel),
+          ];
+        await pumpQueue(tester, reports, lang: lang, night: night);
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const ValueKey('lantern-content-report-r1')),
+            findsOneWidget);
+        expect(find.byKey(const ValueKey('lantern-content-report-r2')),
+            findsOneWidget);
+        expect(find.text('At minute 12'), findsOneWidget);
+        expect(find.text(mockStreamers.first.getLocalizedName(lang)),
+            findsNWidgets(2));
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+
+    testWidgets('nothing reported says so', (tester) async {
+      await pumpQueue(tester, _Reports());
+      expect(find.byKey(const ValueKey('lantern-content-reports-empty')),
+          findsOneWidget);
+      expect(find.text('No reports'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('clearing asks first, then removes the report', (tester) async {
+      final reports = _Reports()
+        ..queue = [row('r1', ContentReportKind.stream)];
+      await pumpQueue(tester, reports);
+      await tester.tap(find.byKey(const ValueKey('lantern-report-clear-r1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Clear this report?'), findsOneWidget);
+      expect(reports.cleared, isEmpty);
+      await tester
+          .tap(find.byKey(const ValueKey('lantern-report-clear-confirm')));
+      await tester.pumpAndSettle();
+      expect(reports.cleared, ['r1']);
+      expect(find.byKey(const ValueKey('lantern-content-report-r1')),
+          findsNothing);
+      expect(find.text('Report cleared.'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('a clear that fails keeps the report and says so',
+        (tester) async {
+      final reports = _Reports()
+        ..queue = [row('r1', ContentReportKind.channel)]
+        ..failClear = true;
+      await pumpQueue(tester, reports);
+      await tester.tap(find.byKey(const ValueKey('lantern-report-clear-r1')));
+      await tester.pumpAndSettle();
+      await tester
+          .tap(find.byKey(const ValueKey('lantern-report-clear-confirm')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('lantern-content-report-r1')),
+          findsOneWidget);
+      expect(find.text('The report could not be cleared.'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('the tab keeps the chat reports and adds this queue beside them',
+        (tester) async {
+      final reports = _Reports()
+        ..queue = [row('r1', ContentReportKind.stream)];
+      final p = provider(reports)..addStreamerForTests(mockStreamers.first);
+      await pumpLanternWidget(
+          tester,
+          const LanternModerationTab(
+              chat: Center(child: Text('chat reports here'))),
+          provider: p);
+      expect(find.text('chat reports here'), findsOneWidget);
+      // The queue is not read until it is asked for.
+      expect(find.byType(LanternContentReportsQueue), findsNothing);
+      await tester.tap(find.text('Broadcasts and channels'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const ValueKey('lantern-content-report-r1')),
+          findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   });
 }
