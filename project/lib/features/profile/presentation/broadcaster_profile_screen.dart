@@ -742,6 +742,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           onStudio: own
                               ? () => LiveBroadcasterStudioSheet.show(context)
                               : null,
+                          // Anyone but the channel's owner can report it.
+                          onReport: own
+                              ? null
+                              : () => showContentReportSheet(context,
+                                  kind: ContentReportKind.channel,
+                                  channelProfileId: streamer.channelProfileId,
+                                  name: streamer.getLocalizedName(lang)),
                           onBranches: streamer.isOrganization &&
                                   streamer.venues.isNotEmpty
                               ? () => OrgBranchesModalSheet.show(context,

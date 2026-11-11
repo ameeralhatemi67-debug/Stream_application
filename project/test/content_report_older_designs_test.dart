@@ -138,6 +138,37 @@ void main() {
         await app.close();
       });
 
+      testWidgets('the website layout has the report button too',
+          (tester) async {
+        final reports = _Reports();
+        var app = await LanternApp.start(tester,
+            provider: provider(skin, reports),
+            size: const Size(1440, 900),
+            location: '/profile/$id');
+        await app.settle(10);
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(channelReport), findsOneWidget);
+        await tester.ensureVisible(find.byKey(channelReport));
+        await tester.tap(find.byKey(channelReport));
+        await app.settle(6);
+        expect(find.byKey(sheet), findsOneWidget);
+        await tester.tap(
+            find.byKey(const ValueKey('content-report-reason-harassment')));
+        await app.settle(6);
+        expect(reports.sent.single['reason'], ContentReportReason.harassment);
+        expect(lantern, findsNothing);
+        await app.close();
+
+        app = await LanternApp.start(tester,
+            provider: provider(skin, _Reports(), owns: id),
+            size: const Size(1440, 900),
+            location: '/profile/$id');
+        await app.settle(10);
+        tester.takeException();
+        expect(find.byKey(channelReport), findsNothing);
+        await app.close();
+      });
+
       testWidgets('a guest is asked to sign in and nothing is sent',
           (tester) async {
         final reports = _Reports();

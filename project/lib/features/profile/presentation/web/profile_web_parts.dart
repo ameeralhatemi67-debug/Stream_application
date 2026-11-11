@@ -25,9 +25,13 @@ class ProfileWebHero extends StatelessWidget {
       this.onShare,
       this.onStudio,
       this.onBranches,
-      this.onJoin});
+      this.onJoin,
+      this.onReport});
   final StreamerModel streamer;
   final bool live, uncertain, following, reminder, remindersAvailable;
+
+  /// Report the channel; absent for its owner.
+  final VoidCallback? onReport;
 
   /// Null until the channel's archive has loaded.
   final int? recordings, playlists;
@@ -191,6 +195,13 @@ class ProfileWebHero extends StatelessWidget {
                             icon: CaGlyph.video,
                             kind: HidayahButtonKind.ghost,
                             onPressed: onStudio),
+                      if (onReport != null)
+                        HidayahButton(
+                            key: const ValueKey('channel-report'),
+                            label: 'lantern.report.action_channel'.tr(),
+                            icon: CaGlyph.alert,
+                            kind: HidayahButtonKind.ghost,
+                            onPressed: onReport),
                     ]))),
               ])),
           ProfileWebAbout(
