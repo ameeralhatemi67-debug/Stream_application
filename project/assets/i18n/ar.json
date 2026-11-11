@@ -3655,6 +3655,27 @@
         "prayer_today": "أوقات الصلاة اليوم"
       }
     },
+    "channel": {
+      "unfollow_title": "إلغاء متابعة هذه القناة؟",
+      "unfollow_body": "لن تصلك تنبيهات بثها القادم.",
+      "keep_following": "إبقاء المتابعة",
+      "unfollow": "إلغاء المتابعة",
+      "unavailable_body": "ربما أُوقفت القناة مؤقتًا أو تغيّر رابطها.",
+      "discover_others": "اكتشف قنوات أخرى",
+      "venue": "المقر",
+      "subjects": "التخصصات",
+      "affiliation": "الجهة",
+      "no_about": "لم تُضف هذه القناة أي تفاصيل بعد.",
+      "open_recording": "تشغيل التسجيل: {}",
+      "open_playlist": "فتح قائمة التشغيل: {}",
+      "saved": "محفوظ",
+      "save": "حفظ",
+      "unsave": "إزالة من المحفوظات",
+      "stat_unknown": "غير معروف بعد",
+      "speaker_filter": "عرض محاضرات {}",
+      "speaker_filter_on": "تُعرض محاضرات {}. اضغط لعرض الكل.",
+      "planned_every": "كل أسبوع: {}"
+    },
     "poster": {
       "title": "بطاقة دعوة",
       "row": "اصنع بطاقة دعوة",

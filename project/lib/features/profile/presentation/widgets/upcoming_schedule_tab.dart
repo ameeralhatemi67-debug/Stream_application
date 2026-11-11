@@ -19,6 +19,7 @@ import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_feedback.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../discovery/presentation/widgets/bookmark_button.dart';
+import '../lantern/lantern_upcoming_list.dart';
 
 class UpcomingScheduleTab extends StatefulWidget {
   const UpcomingScheduleTab({super.key, required this.streamer});
@@ -184,8 +185,47 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
           'upcoming.day_$day'.tr(),
       ];
 
+  // Lantern and Arch (ADR-026): the same rows, states and actions, drawn by
+  // LanternUpcomingList inside the channel page's own scroll.
+  Widget _buildLantern(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    final id = widget.streamer.streamerId;
+    context.select<AppProvider,
+            (bool, bool, List<UpcomingSchedule>?, String?, int, bool)>(
+        (p) => (
+              p.isApprovedStreamer,
+              p.isOwnStreamerProfile(id),
+              p.upcomingSchedulesFor(id),
+              p.upcomingScheduleErrorFor(id),
+              Object.hashAll((p.upcomingSchedulesFor(id) ?? [])
+                  .map((s) => p.hasCardReminder(s.id))),
+              p.remindersAvailable
+            ));
+    final rows = provider.upcomingSchedulesFor(id);
+    final now = DateTime.now();
+    final upcoming = rows == null
+        ? <UpcomingSchedule>[]
+        : rows.where((s) => s.nextStartUtc(now) != null).toList()
+      ..sort((a, b) => a.nextStartUtc(now)!.compareTo(b.nextStartUtc(now)!));
+    return LanternUpcomingList(
+        schedules: upcoming,
+        loading: rows == null && provider.upcomingScheduleErrorFor(id) == null,
+        failed: provider.upcomingScheduleErrorFor(id) != null,
+        owner: provider.isApprovedStreamer &&
+            provider.isOwnStreamerProfile(id) &&
+            !widget.streamer.isOrganization,
+        reminderOn: provider.hasCardReminder,
+        onRetry: () => provider.loadUpcomingSchedules(id),
+        onAdd: () => _edit(),
+        onEdit: _edit,
+        onDelete: _delete,
+        onShare: _share,
+        onRemind: provider.remindersAvailable ? _remind : null);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final provider = context.read<AppProvider>();
     context.select<
             AppProvider, (bool, bool, List<UpcomingSchedule>?, String?, int)>(

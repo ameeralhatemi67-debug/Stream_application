@@ -3655,6 +3655,27 @@
         "prayer_today": "Prayer times today"
       }
     },
+    "channel": {
+      "unfollow_title": "Unfollow this channel?",
+      "unfollow_body": "You will stop hearing about its next broadcasts.",
+      "keep_following": "Keep following",
+      "unfollow": "Unfollow",
+      "unavailable_body": "The channel may be paused or its link changed.",
+      "discover_others": "Discover other channels",
+      "venue": "Venue",
+      "subjects": "Subjects",
+      "affiliation": "Affiliation",
+      "no_about": "This channel has not added any details yet.",
+      "open_recording": "Play recording: {}",
+      "open_playlist": "Open playlist: {}",
+      "saved": "Saved",
+      "save": "Save",
+      "unsave": "Remove from saved",
+      "stat_unknown": "Not known yet",
+      "speaker_filter": "Show the lectures of {}",
+      "speaker_filter_on": "Showing the lectures of {}. Tap to show all.",
+      "planned_every": "Every week: {}"
+    },
     "poster": {
       "title": "Invitation picture",
       "row": "Make an invitation picture",
