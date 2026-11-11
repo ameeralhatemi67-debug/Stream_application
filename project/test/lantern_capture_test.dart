@@ -111,6 +111,13 @@ final shots = <LanternShot>[
   lanternShot('apply-laptop-en', '/streamer-apply',
       size: laptop, lang: 'en', who: 'viewer'),
   lanternShot('apply-status-phone-ar', '/application-pending', who: 'viewer'),
+  lanternShot('settings-phone-ar', '/settings',
+      size: const Size(390, 3600), who: 'viewer'),
+  lanternShot('settings-laptop-en-night', '/settings',
+      size: laptop, lang: 'en', night: true, who: 'streamer'),
+  lanternShot('welcome-phone-ar', '/welcome'),
+  lanternShot('welcome-laptop-en', '/welcome', size: laptop, lang: 'en'),
+  lanternShot('notfound-phone-ar', '/no-such-page'),
 ];
 
 void main() {
