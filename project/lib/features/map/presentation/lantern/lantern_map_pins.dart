@@ -29,9 +29,9 @@ class _PinLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.lt;
     final (bg, fg) = switch (tone) {
-      LTone.live => (t.live, LanternTokens.white),
-      LTone.ok => (t.ok, LanternTokens.white),
-      LTone.audio => (t.audio, LanternTokens.white),
+      LTone.live => (LanternTokens.liveFill, LanternTokens.white),
+      LTone.ok => (LanternTokens.okFill, LanternTokens.white),
+      LTone.audio => (LanternTokens.audioFill, LanternTokens.white),
       LTone.warn => (t.warnSoft, t.warn),
       _ => (t.surface, t.fg),
     };
@@ -273,7 +273,6 @@ class LanternBubblePin extends StatelessWidget implements LanternSkinWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.lt;
     Widget badge(int n, Color color) => Container(
         constraints: const BoxConstraints(minWidth: 18),
         height: 18,
@@ -308,10 +307,14 @@ class LanternBubblePin extends StatelessWidget implements LanternSkinWidget {
                           .copyWith(fontFeatures: Lantern.tabular))),
               if (live > 0)
                 PositionedDirectional(
-                    top: -4, start: -4, child: badge(live, t.live)),
+                    top: -4,
+                    start: -4,
+                    child: badge(live, LanternTokens.liveFill)),
               if (onSite > 0)
                 PositionedDirectional(
-                    top: -4, end: -4, child: badge(onSite, t.ok)),
+                    top: -4,
+                    end: -4,
+                    child: badge(onSite, LanternTokens.okFill)),
             ])));
   }
 }

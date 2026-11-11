@@ -295,7 +295,7 @@ class _CountDot extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-          color: context.lt.live,
+          color: LanternTokens.liveFill,
           borderRadius: BorderRadius.circular(Lantern.radiusPill),
           border: Border.all(color: ring, width: 1.5)),
       child: Text(count > 99 ? '99+' : '$count',

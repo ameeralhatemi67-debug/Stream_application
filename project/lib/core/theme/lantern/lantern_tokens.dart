@@ -80,6 +80,13 @@ class LanternTokens extends ThemeExtension<LanternTokens> {
       onNight = Color(0xFFF3EFE6),
       white = Color(0xFFFFFFFF);
 
+  /// Solid grounds for small white text (a pin's label, a count badge), the
+  /// same by day and by night: the night state colours are light, and white
+  /// on them is below 4.5:1 (test/lantern_contrast_test.dart).
+  static const liveFill = Color(0xFFC2343F),
+      okFill = Color(0xFF2D7647),
+      audioFill = Color(0xFF2D6F86);
+
   /// Linen by day.
   static const day = LanternTokens._(
     night: false,
