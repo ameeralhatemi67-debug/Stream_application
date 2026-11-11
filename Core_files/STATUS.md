@@ -1,12 +1,27 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-11-08
+updated: 2026-11-11
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Lantern and Arch, the third design, 2026-11-11 (branch `fable/lantern-skin`, not merged, not pushed)
+
+A third design sits beside gold & black (still the default) and Hedayah. It is chosen in Settings → Design. Everything below shows only when it is active; the two older designs were captured on `master` and on the branch at the same minute and are pixel-identical except the new tile in Settings → Design (ADR-026, `brief/tools/skin_proof.sh`).
+
+Built in Lantern: the opening screen, Discover, the live and audio rooms (full screen), the map with its controls and side panel, lessons (home, calendar, lesson, preacher, mosque, series), the broadcast studio (three steps, hold to go live and to end), the channel page, the broadcaster application with inline errors and its status page. The older kits draw as Lantern pieces under Lantern, so a screen without its own Lantern view is still one design.
+
+New under Lantern only: an invitation picture for a lesson (made on the device, from the share sheet); Report for a broadcast or a channel, with a queue in the admin's moderation tab.
+
+Waiting for the owner:
+- Migration `20261111120000_content_reports.sql` is written and not applied anywhere. It was not run on a local stack either (Docker was not running). Until it is applied the Report action answers "could not be sent".
+- Google's reviewer sees gold & black, which has no Report for a broadcast or a channel. That is a decision: add it to the older designs too, or make Lantern the default.
+- A signed app bundle needs the owner's key (`brief\launch\make_upload_key.ps1`).
+
+State of the run, what is left and how to continue: `brief/fable/HANDOFF.md`. The report for the owner: `brief/fable/FINAL_REPORT.md`.
 
 ## Web start-up speed, round 1, 2026-11-08 (deployed to the website)
 
