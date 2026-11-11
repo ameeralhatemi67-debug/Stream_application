@@ -3600,6 +3600,18 @@
         "not_found_body": "It may have been removed or its link changed.",
         "available": "Available",
         "not_available": "Not available"
+      },
+      "preachers": "Preachers",
+      "preacher": {
+        "no_series": "No series yet",
+        "no_past": "No past lessons yet"
+      },
+      "mosque": {
+        "this_week": "{} this week",
+        "unverified": "Unverified",
+        "day": "Day",
+        "none_week": "No lessons this week",
+        "prayer_today": "Prayer times today"
       }
     }
   }

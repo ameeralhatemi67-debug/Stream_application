@@ -12,6 +12,18 @@
         "not_found_body": "It may have been removed or its link changed.",
         "available": "Available",
         "not_available": "Not available"
+      },
+      "preachers": "Preachers",
+      "preacher": {
+        "no_series": "No series yet",
+        "no_past": "No past lessons yet"
+      },
+      "mosque": {
+        "this_week": "{} this week",
+        "unverified": "Unverified",
+        "day": "Day",
+        "none_week": "No lessons this week",
+        "prayer_today": "Prayer times today"
       }
     }
   },
@@ -28,6 +40,18 @@
         "not_found_body": "ربما حُذف أو تغيّر رابطه.",
         "available": "متوفر",
         "not_available": "غير متوفر"
+      },
+      "preachers": "الدعاة",
+      "preacher": {
+        "no_series": "لا سلاسل بعد",
+        "no_past": "لا دروس سابقة بعد"
+      },
+      "mosque": {
+        "this_week": "{} هذا الأسبوع",
+        "unverified": "غير موثّق",
+        "day": "اليوم",
+        "none_week": "لا دروس هذا الأسبوع",
+        "prayer_today": "أوقات الصلاة اليوم"
       }
     }
   }

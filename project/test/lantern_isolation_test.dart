@@ -96,15 +96,20 @@ void main() {
             size: size,
             lang: 'ar',
             persona: LessonsDemoPersona.admin);
-        final lesson = app.lessons.upcoming.isEmpty
+        final first = app.lessons.upcoming.isEmpty
             ? null
-            : app.lessons.upcoming.first.id;
+            : app.lessons.upcoming.first;
+        final lesson = first?.id;
         final routes = [
           '/feed',
           '/map',
           '/lessons',
           '/lessons/calendar',
           if (lesson != null) '/lessons/lesson/$lesson',
+          if (first != null) '/lessons/preachers/${first.preacherId}',
+          if (first != null) '/lessons/mosques/${first.mosqueId}',
+          for (final l in app.lessons.upcoming.where((l) => l.seriesId != null).take(1))
+            '/lessons/series/${l.seriesId}',
           '/lessons/me',
           '/live/lanternLive',
           '/profile/${provider.streamers.first.streamerId}',

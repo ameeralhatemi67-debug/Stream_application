@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,9 @@ import 'package:streamer_app/features/lessons/domain/lessons_names.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/calendar_view.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lantern_lessons_parts.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lesson_view.dart';
+import 'package:streamer_app/features/lessons/presentation/lantern/mosque_view.dart';
+import 'package:streamer_app/features/lessons/presentation/lantern/preacher_view.dart';
+import 'package:streamer_app/features/lessons/presentation/lantern/series_view.dart';
 import 'package:streamer_app/features/lessons/presentation/lantern/lessons_home_view.dart';
 import 'package:streamer_app/features/lessons/state/lessons_controller.dart';
 
@@ -493,5 +497,257 @@ void main() {
       expect(app.router.routeInformationProvider.value.uri.path, '/lessons/calendar');
       await app.close();
     });
+  });
+
+  group('Preacher page', () {
+    String withLessons(LessonsController c) =>
+        '/lessons/preachers/${c.listedPreachers.firstWhere((p) => c.upcoming.any((l) => l.preacherId == p.id && l.seriesId != null)).id}';
+
+    testWidgets('lays out in both languages, layouts and appearances',
+        (tester) async {
+      await _layoutEverywhere(tester, withLessons, view: LanternPreacherView);
+    });
+
+    testWidgets('header, counts and tabs', (tester) async {
+      final app = await _start(tester, location: '/lessons', size: _laptop);
+      await app.push(withLessons(app.lessons));
+      expect(find.byKey(const ValueKey('lantern-preacher-avatar')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-preacher-tab-upcoming')),
+          findsOneWidget);
+      expect(find.byType(LLessonCard), findsWidgets);
+      await _tap(app, find.text('lessons.preacher.series'.tr()));
+      expect(find.byKey(const ValueKey('lantern-preacher-tab-series')),
+          findsOneWidget);
+      expect(find.byType(LSeriesCard), findsWidgets);
+      await _tap(app, find.text('lessons.preacher.about'.tr()));
+      expect(find.text('lessons.preacher.languages'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('his mosques open their pages', (tester) async {
+      final app = await _start(tester, location: '/lessons');
+      final route = withLessons(app.lessons);
+      final id = route.split('/').last;
+      final mosque =
+          app.lessons.upcoming.firstWhere((l) => l.preacherId == id).mosqueId;
+      await app.push(route);
+      expect(find.byKey(const ValueKey('lantern-preacher-mosques')),
+          findsOneWidget);
+      await _tap(app, find.byKey(ValueKey('lantern-preacher-mosque-$mosque')));
+      expect(app.router.routeInformationProvider.value.uri.path,
+          '/lessons/mosques/$mosque');
+      expect(find.byType(LanternMosqueView), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('Follow and Copy link', (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', persona: LessonsDemoPersona.viewer);
+      final route = withLessons(app.lessons);
+      final id = route.split('/').last;
+      await app.push(route);
+      final was = app.lessons.isFollowing('preacher', id);
+      await _tap(app, find.byKey(ValueKey('lantern-follow-preacher-$id')));
+      expect(app.lessons.isFollowing('preacher', id), !was);
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform, (call) async => null);
+      addTearDown(() => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null));
+      await _tap(app, find.byKey(const ValueKey('lantern-preacher-copy')));
+      expect(find.text('lessons.copied'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('a guest who follows is asked to sign in', (tester) async {
+      final app = await _start(tester, location: '/lessons');
+      final route = withLessons(app.lessons);
+      await app.push(route);
+      await _tap(
+          app,
+          find.byKey(
+              ValueKey('lantern-follow-preacher-${route.split('/').last}')));
+      expect(find.text('lessons.sign_in_title'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('no upcoming lessons, and not found', (tester) async {
+      final app = await _start(tester, location: '/lessons');
+      final idle = app.lessons.listedPreachers
+          .where((p) => !app.lessons.upcoming.any((l) => l.preacherId == p.id))
+          .toList();
+      if (idle.isNotEmpty) {
+        await app.push('/lessons/preachers/${idle.first.id}');
+        expect(find.byKey(const ValueKey('lantern-preacher-no-upcoming')),
+            findsOneWidget);
+      }
+      await app.go('/lessons/preachers/no-such-preacher');
+      expect(find.byKey(const ValueKey('lantern-preacher-missing')),
+          findsOneWidget);
+      await app.close();
+    });
+  });
+
+  group('Mosque page', () {
+    String busy(LessonsController c) =>
+        '/lessons/mosques/${c.upcoming.firstWhere((l) => c.mosque(l.mosqueId)!.verified).mosqueId}';
+
+    testWidgets('lays out in both languages, layouts and appearances',
+        (tester) async {
+      await _layoutEverywhere(tester, busy, view: LanternMosqueView);
+    });
+
+    testWidgets('the week timetable opens a lesson', (tester) async {
+      final app = await _start(tester, location: '/lessons', size: _laptop);
+      final route = busy(app.lessons);
+      final id = route.split('/').last;
+      await app.push(route);
+      expect(find.byKey(const ValueKey('lantern-mosque-week')), findsOneWidget);
+      expect(find.byType(LPrayerStrip), findsOneWidget);
+      final week = app.lessons.upcoming
+          .where((l) =>
+              l.mosqueId == id &&
+              l.date.difference(app.lessons.today).inDays < 7)
+          .toList();
+      if (week.isNotEmpty) {
+        await _tap(
+            app, find.byKey(ValueKey('lantern-mosque-row-${week.first.id}')));
+        expect(app.router.routeInformationProvider.value.uri.path,
+            '/lessons/lesson/${week.first.id}');
+      }
+      await app.close();
+    });
+
+    testWidgets('Follow calls the controller', (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', persona: LessonsDemoPersona.viewer);
+      final route = busy(app.lessons);
+      final id = route.split('/').last;
+      await app.push(route);
+      final was = app.lessons.isFollowing('mosque', id);
+      await _tap(app, find.byKey(ValueKey('lantern-follow-mosque-$id')));
+      expect(app.lessons.isFollowing('mosque', id), !was);
+      await app.close();
+    });
+
+    testWidgets('an unverified mosque says so; an unknown one is not found',
+        (tester) async {
+      // The sample's suggested mosque, which only admins see.
+      final app = await _start(tester,
+          location: '/lessons/mosques/m13', persona: LessonsDemoPersona.admin);
+      expect(find.byKey(const ValueKey('lantern-mosque-unverified')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-mosque-on-map')), findsNothing);
+      await app.go('/lessons/mosques/no-such-mosque');
+      expect(
+          find.byKey(const ValueKey('lantern-mosque-missing')), findsOneWidget);
+      await app.close();
+    });
+  });
+
+  group('Series page', () {
+    String withSessions(LessonsController c) =>
+        '/lessons/series/${c.upcoming.firstWhere((l) => l.seriesId != null).seriesId}';
+
+    testWidgets('lays out in both languages, layouts and appearances',
+        (tester) async {
+      await _layoutEverywhere(tester, withSessions, view: LanternSeriesView);
+    });
+
+    testWidgets('shows its progress and every session; Next opens a lesson',
+        (tester) async {
+      final app = await _start(tester, location: '/lessons', size: _laptop);
+      final route = withSessions(app.lessons);
+      final id = route.split('/').last;
+      final sessions = app.lessons.sessionsOf(id);
+      await app.push(route);
+      expect(find.byKey(const ValueKey('lantern-series-head')), findsOneWidget);
+      expect(find.byType(LFillBar), findsOneWidget);
+      expect(find.byType(LLessonRow), findsNWidgets(sessions.length));
+      final next = sessions
+          .where((x) => !x.date.isBefore(app.lessons.today) && x.isPublic)
+          .first;
+      await _tap(app, find.byKey(const ValueKey('lantern-series-next')));
+      expect(app.router.routeInformationProvider.value.uri.path,
+          '/lessons/lesson/${next.id}');
+      await app.close();
+    });
+
+    testWidgets('Follow calls the controller; a guest is asked to sign in',
+        (tester) async {
+      final app = await _start(tester,
+          location: '/lessons', persona: LessonsDemoPersona.viewer);
+      final route = withSessions(app.lessons);
+      final id = route.split('/').last;
+      await app.push(route);
+      final was = app.lessons.isFollowing('series', id);
+      await _tap(app, find.byKey(ValueKey('lantern-follow-series-$id')));
+      expect(app.lessons.isFollowing('series', id), !was);
+      await app.close();
+
+      final guest = await _start(tester, location: '/lessons');
+      await guest.push(route);
+      await _tap(guest, find.byKey(ValueKey('lantern-follow-series-$id')));
+      expect(find.text('lessons.sign_in_title'.tr()), findsOneWidget);
+      await guest.close();
+    });
+
+    testWidgets('an unknown series is not found', (tester) async {
+      final app =
+          await _start(tester, location: '/lessons/series/no-such-series');
+      expect(find.byKey(const ValueKey('lantern-series-missing')),
+          findsOneWidget);
+      await _tap(app, find.text('lessons.see_all'.tr()));
+      expect(app.router.routeInformationProvider.value.uri.path,
+          '/lessons/calendar');
+      await app.close();
+    });
+
+    testWidgets('waits for the programme, and offers Try again',
+        (tester) async {
+      final slow =
+          await _start(tester, location: '/lessons/series/s1', repo: _SlowRepo());
+      expect(find.byType(LSkeleton), findsWidgets);
+      expect(find.byKey(const ValueKey('lantern-series-missing')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await slow.close();
+      final repo = _DownRepo();
+      final down =
+          await _start(tester, location: '/lessons/series/s1', repo: repo);
+      expect(find.byKey(const ValueKey('lantern-lessons-error')),
+          findsOneWidget);
+      repo.down = false;
+      await _tap(down, find.text('lessons.retry'.tr()));
+      expect(down.lessons.loaded, isTrue);
+      expect(find.byKey(const ValueKey('lantern-lessons-error')), findsNothing);
+      await down.close();
+    });
+  });
+
+  testWidgets(
+      'older designs build no Lantern widget on the preacher, mosque and series pages',
+      (tester) async {
+    for (final skin in [AppSkin.gold, AppSkin.hedayah]) {
+      for (final size in [_phone, _laptop]) {
+        final app = await _start(tester,
+            location: '/lessons', skin: skin, size: size, lang: 'ar');
+        final l = app.lessons.upcoming.first;
+        final s = app.lessons.upcoming.firstWhere((x) => x.seriesId != null);
+        for (final route in [
+          '/lessons/preachers/${l.preacherId}',
+          '/lessons/mosques/${l.mosqueId}',
+          '/lessons/series/${s.seriesId}',
+          '/lessons/preachers/no-such-preacher',
+          '/lessons/mosques/no-such-mosque',
+          '/lessons/series/no-such-series',
+        ]) {
+          await app.go(route);
+          tester.takeException();
+          expect(tester.allWidgets.whereType<LanternSkinWidget>(), isEmpty,
+              reason: '${skin.id} $route');
+        }
+        await app.close();
+      }
+    }
   });
 }
