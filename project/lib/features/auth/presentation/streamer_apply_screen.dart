@@ -26,6 +26,8 @@ import 'steps/apply_step_4_location.dart';
 import 'steps/apply_step_5_review.dart';
 import '../../../core/providers/app_flags.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import 'lantern/lantern_apply_view.dart';
 
 /// Dynamic Streamer / Organization Verification Application Wizard
 class StreamerApplyScreen extends StatefulWidget {
@@ -265,6 +267,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   /// Leaves the wizard from any step. Back only steps backwards, so from
   /// step 5 an exit used to take five taps (P6-R09 "no way out" report).
   Future<void> _confirmExit() async {
+    if (context.isLanternSkin) return _lanternConfirmExit();
     if (_currentStep == 0) {
       _leaveWizard();
       return;
@@ -290,6 +293,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   }
 
   void _showValidationToast(String message) {
+    if (context.isLanternSkin) return _lanternShowError(message);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -553,8 +557,255 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     return pages;
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The checks, the draft, the pickers and the
+  // submission above are unchanged; with the Lantern design a failed check
+  // shows its message in a banner and under its field instead of a snack
+  // bar. Everything below runs only with the Lantern design.
+  // ---------------------------------------------------------------------
+  String? _lanternError, _lanternErrorField, _lanternErrorFieldMessage;
+  int _lanternAttempt = 0;
+
+  /// The same question as [_confirmExit], in a Lantern dialog.
+  Future<void> _lanternConfirmExit() async {
+    if (_currentStep == 0) {
+      _leaveWizard();
+      return;
+    }
+    final leave = await showLanternDialog<bool>(context,
+        title: 'wizard_steps.exit_title'.tr(),
+        body: (context) => Text('wizard_steps.exit_body'.tr(),
+            style: Lantern.textStyle(14.5, color: context.lt.muted)),
+        actions: (dialog) => [
+              LButton(
+                  key: const ValueKey('lantern-apply-stay'),
+                  label: 'wizard_steps.exit_stay'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialog, false)),
+              LButton(
+                  key: const ValueKey('lantern-apply-leave'),
+                  label: 'wizard_steps.exit_leave'.tr(),
+                  kind: LButtonKind.danger,
+                  onPressed: () => Navigator.pop(dialog, true)),
+            ]);
+    if (leave == true && mounted) _leaveWizard();
+  }
+
+  void _lanternClearError() {
+    _lanternError = _lanternErrorField = _lanternErrorFieldMessage = null;
+  }
+
+  /// The messages the checks above give, and the field each belongs to.
+  /// A message that is a field's label means "fill this in".
+  void _lanternShowError(String message) {
+    String bare(String label) => label.replaceAll('*', '').trim();
+    final required = 'lantern.apply.required'.tr();
+    final labels = <String, (String, String)>{
+      'wizard_steps.step1_name_label'.tr(): ('name', required),
+      'wizard_steps.step1_handle_label'.tr(): ('handle', required),
+      'wizard_steps.step1_bio_label'.tr(): ('bio', required),
+      'wizard_steps.step2_avatar_label'.tr():
+          ('avatar', 'lantern.apply.picture_required'.tr()),
+      'wizard_steps.step2_banner_label'.tr():
+          ('banner', 'lantern.apply.picture_required'.tr()),
+      'wizard_steps.step3_org_name_label'.tr(): ('org_name', required),
+      'wizard_steps.step3_youtube_label'.tr(): ('youtube', required),
+      'wizard_steps.step3_categories_title'.tr(args: ['0']):
+          ('categories', required),
+      'settings.city_label'.tr(): ('city', required),
+      'wizard_steps.step4_phone_label'.tr():
+          ('phone', 'lantern.apply.phone_invalid'.tr()),
+      'wizard_steps.step4_venue_org_label'.tr(): ('venue', required),
+    };
+    final sentences = <String, String>{
+      'wizard_steps.step3_yt_invalid'.tr(): 'youtube',
+      'live.channel_invalid'.tr(): 'youtube',
+      'map.location_outside_supported'.tr(): 'map',
+      'application.terms_required'.tr(): 'terms',
+    };
+    final label = labels[message];
+    setState(() {
+      _lanternAttempt++;
+      if (label != null) {
+        _lanternError = 'lantern.apply.fix_field'.tr(args: [bare(message)]);
+        _lanternErrorField = label.$1;
+        _lanternErrorFieldMessage = label.$2;
+      } else {
+        _lanternError = message;
+        _lanternErrorField = sentences[message];
+        _lanternErrorFieldMessage = sentences.containsKey(message) ? message : null;
+      }
+    });
+  }
+
+  Widget _buildLantern(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    context.select<AppProvider, bool>((p) => p.isOnline);
+    final lang = context.locale.languageCode;
+    final visualStep = _isOrganization && _currentStep > 2
+        ? (_currentStep == 3 ? 2 : _currentStep - 1)
+        : _currentStep;
+    final names = [
+      for (final name in [
+        'identity',
+        'media',
+        'professional',
+        'venue',
+        'review'
+      ])
+        'ds.apply_$name'.tr()
+    ];
+    final venuePage = _isOrganization ? 4 : 3;
+    final reviewPage = _totalSteps - 1;
+    final old = _buildStepPages();
+    String join(Iterable<String> parts) {
+      final s = parts.where((x) => x.trim().isNotEmpty).join(' · ');
+      return s.isEmpty ? 'lantern.apply.no_value'.tr() : s;
+    }
+
+    final city = BroadcasterApplicationModel.cityNames[_selectedCity];
+    final review = LanternApplyReview(
+        isOrganization: _isOrganization,
+        agreed: _agreedToTerms,
+        onAgree: (v) => setState(() {
+              _agreedToTerms = v;
+              if (v && _lanternErrorField == 'terms') _lanternClearError();
+            }),
+        onEdit: _moveToPage,
+        onReadTerms: () {
+          final terms = provider.termsAndConditions;
+          showLanternSheet<void>(context,
+              title: (_isOrganization
+                      ? 'wizard_steps.step5_terms_modal_org'
+                      : 'wizard_steps.step5_terms_modal_ind')
+                  .tr(),
+              body: (context) {
+                final t = context.lt;
+                Widget part(String head, String body) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(head,
+                              style: Lantern.textStyle(14.5,
+                                  color: t.fg, weight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          Text(body,
+                              style: Lantern.textStyle(13.5,
+                                  color: t.muted, height: 1.6)),
+                        ]));
+                return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      part(
+                          'wizard_steps.step5_charter_title'
+                              .tr(args: [terms.version]),
+                          terms.getLocalizedTerms(lang)),
+                      part('design_ui.broadcasting_audio_visual_standards'.tr(),
+                          terms.getLocalizedGuidelines(lang)),
+                      part('design_ui.privacy_regional_telemetry_guidelines'.tr(),
+                          terms.getLocalizedPrivacy(lang)),
+                    ]);
+              });
+        },
+        rows: [
+          (
+            title: names[0],
+            icon: LGlyph.person,
+            summary: join([_nameController.text, _handleController.text]),
+            page: 0
+          ),
+          (
+            title: names[1],
+            icon: LGlyph.image,
+            summary: ((_avatarPath != null || _avatarBytes != null) &&
+                        (_bannerPath != null || _bannerBytes != null)
+                    ? 'lantern.apply.pictures_set'
+                    : 'lantern.apply.pictures_missing')
+                .tr(),
+            page: 1
+          ),
+          (
+            title: names[2],
+            icon: LGlyph.book,
+            summary: join([
+              (_isOrganization
+                      ? 'lantern.apply.type_org'
+                      : 'lantern.apply.type_individual')
+                  .tr(),
+              if (_isOrganization) _orgNameController.text,
+              _affiliationController.text,
+              _selectedCategories.join('، '),
+              if (!_organizationOnly) _youtubeController.text,
+            ]),
+            page: 2
+          ),
+          if (_isOrganization)
+            (
+              title: 'wizard_steps.step3_5_roster_count'
+                  .tr(args: ['${_orgSpeakers.length}']),
+              icon: LGlyph.users,
+              summary: join([for (final s in _orgSpeakers) s.name]),
+              page: 3
+            ),
+          (
+            title: names[3],
+            icon: LGlyph.pin,
+            summary: join([
+              if (city != null) lang == 'ar' ? city.nameAr : city.nameEn,
+              _venueController.text,
+              if (_isOrganization)
+                for (final b in _orgBranches) b.branchName,
+              _phoneController.text,
+            ]),
+            page: venuePage
+          ),
+        ]);
+    final pages = <Widget>[
+      LanternApplyIdentity(
+          name: _nameController,
+          handle: _handleController,
+          bio: _bioController),
+      for (var i = 1; i < old.length - 1; i++) old[i],
+      review,
+    ];
+    final isLast = _currentStep == _totalSteps - 1;
+    return LanternApplyView(
+        stepNames: names,
+        visualStep: visualStep,
+        stepPages: [0, 1, 2, venuePage, reviewPage],
+        pageController: _pageController,
+        onPageChanged: (idx) => setState(() {
+              _currentStep = idx;
+              _lanternClearError();
+            }),
+        pages: pages,
+        // The organization speakers step is still its older widget.
+        scrollingPages: {if (_isOrganization) 3},
+        page: _currentStep,
+        onBack: _previousStep,
+        onNext: () {
+          setState(_lanternClearError);
+          isLast ? _submitApplication() : _nextStep();
+        },
+        onExit: _confirmExit,
+        onStep: _moveToPage,
+        nextLabel: (isLast ? 'wizard_steps.btn_submit' : 'wizard_steps.btn_next')
+            .tr(),
+        isLast: isLast,
+        submitting: _isSubmitting,
+        error: _lanternError,
+        errorField: _lanternErrorField,
+        errorFieldMessage: _lanternErrorFieldMessage,
+        attempt: _lanternAttempt,
+        onFieldEdited: () => setState(_lanternClearError));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     final visualStep = _isOrganization && _currentStep > 2
         ? (_currentStep == 3 ? 2 : _currentStep - 1)
         : _currentStep;

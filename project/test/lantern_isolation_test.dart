@@ -118,6 +118,7 @@ void main() {
           '/admin',
           '/admin/lessons',
           '/streamer-apply',
+          '/application-pending',
           '/nowhere-at-all',
         ];
         for (final route in routes) {
