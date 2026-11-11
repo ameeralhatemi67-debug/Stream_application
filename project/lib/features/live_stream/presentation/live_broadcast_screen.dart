@@ -52,6 +52,7 @@ import '../../../core/widgets/lantern/lantern.dart';
 import '../../../core/services/content_report_service.dart';
 import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
 import 'lantern/lantern_room_view.dart';
+import 'lantern/lantern_chat_moderation.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -1210,9 +1211,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             onSignIn: () =>
                 openSignIn(context, returnTo: '/live/${widget.streamId}'),
             onRetryMessage: _retryFailedChatMessage,
-            onMessageMenu: (message) => showChatMessageActionsSheet(context,
+            onMessageMenu: (message) => showLanternChatMessageActions(context,
                 message: message, controller: _chatController),
-            onSender: (message) => showChatSenderProfile(context,
+            onSender: (message) => showLanternChatSenderProfile(context,
                 message: message, controller: _chatController),
             onOpenChannel: () =>
                 context.push('/profile/${streamer.channelProfileId}'),

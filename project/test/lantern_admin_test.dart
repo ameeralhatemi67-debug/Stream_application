@@ -16,6 +16,15 @@ import 'package:streamer_app/features/admin/presentation/admin_surface.dart';
 import 'package:streamer_app/features/admin/presentation/lantern/lantern_admin_frame.dart';
 import 'package:streamer_app/features/admin/presentation/lantern/lantern_admin_overview.dart';
 import 'package:streamer_app/features/admin/presentation/lantern/lantern_verification_queue.dart';
+import 'package:streamer_app/core/widgets/ds/ca_surfaces.dart';
+import 'package:streamer_app/features/admin/models/chat_mute_audit_entry.dart';
+import 'package:streamer_app/features/admin/models/chat_report_model.dart';
+import 'package:streamer_app/features/admin/presentation/lantern/lantern_chat_reports.dart';
+import 'package:streamer_app/features/admin/presentation/widgets/chat_moderation_view.dart';
+import 'package:streamer_app/features/live_stream/models/chat_message_model.dart';
+import 'package:streamer_app/features/live_stream/presentation/lantern/lantern_chat_moderation.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/chat_sender_profile_sheet.dart';
+import 'package:streamer_app/features/live_stream/services/live_chat_controller.dart';
 
 import 'fixtures/admin_applications.dart';
 import 'support/fixture_application_db.dart';
@@ -399,4 +408,306 @@ void main() {
     expect(find.byKey(const ValueKey('lantern-admin-denied')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  // ---- Chat moderation -----------------------------------------------------
+
+  Future<_ChatDb> pumpChatQueue(WidgetTester tester,
+      {String lang = 'en',
+      Size size = phone,
+      bool night = false,
+      bool empty = false}) async {
+    final db = _ChatDb(empty: empty);
+    final provider = AppProvider(db)
+      ..restoreAppSkin(AppSkin.lantern,
+          appearance: night ? LanternAppearance.night : LanternAppearance.day)
+      ..debugSetSignedInForTests(
+          email: 'admin@example.invalid', name: 'Admin', isAdmin: true);
+    await pumpLanternWidget(
+        tester, const LanternSurface(child: ChatModerationView()),
+        lang: lang, size: size, night: night, provider: provider);
+    await tester.pump(const Duration(milliseconds: 200));
+    return db;
+  }
+
+  Future<void> frames(WidgetTester tester) async {
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 120));
+    }
+  }
+
+  Future<void> hold(WidgetTester tester, Finder button) async {
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump(Lantern.hold + const Duration(milliseconds: 150));
+    await gesture.up();
+    await frames(tester);
+  }
+
+  for (final lang in ['en', 'ar']) {
+    for (final (label, size) in [('phone', phone), ('website', laptop)]) {
+      for (final night in [false, true]) {
+        testWidgets(
+            'chat reports lay out: $lang $label ${night ? 'night' : 'day'}',
+            (tester) async {
+          await pumpChatQueue(tester, lang: lang, size: size, night: night);
+          expect(tester.takeException(), isNull);
+          expect(find.byType(LanternChatReportsQueue), findsOneWidget);
+          expect(find.byKey(const ValueKey('lantern-chat-report-r1')),
+              findsOneWidget);
+          expect(
+              find.byKey(const ValueKey('lantern-muted-log')), findsOneWidget);
+          expectNoOlderKit(find.byType(LanternChatReportsQueue), 'chat');
+          expect(find.byType(ExpansionTile), findsNothing);
+        });
+      }
+    }
+  }
+
+  testWidgets('no open reports shows the empty state', (tester) async {
+    await pumpChatQueue(tester, empty: true);
+    expect(find.byKey(const ValueKey('lantern-chat-reports-empty')),
+        findsOneWidget);
+    expect(find.text('No open chat reports.'), findsOneWidget);
+  });
+
+  testWidgets('dismiss clears the report through the provider', (tester) async {
+    final db = await pumpChatQueue(tester);
+    await tester.tap(find.byKey(const ValueKey('lantern-chat-dismiss-r1')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(db.dismissed, ['r1']);
+    expect(find.byKey(const ValueKey('lantern-chat-report-r1')), findsNothing);
+  });
+
+  testWidgets('deleting the message is press-and-hold', (tester) async {
+    final db = await pumpChatQueue(tester);
+    await tester.tap(find.byKey(const ValueKey('lantern-chat-delete-r1')));
+    await frames(tester);
+    final button = find.byKey(const ValueKey('lantern-moderation-hold'));
+    expect(button, findsOneWidget);
+    // A tap is not enough.
+    await tester.tap(button);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(db.deleted, isEmpty);
+    await hold(tester, button);
+    expect(db.deleted, ['m1']);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mute asks for the duration, then is held', (tester) async {
+    final db = await pumpChatQueue(tester);
+    await tester.tap(find.byKey(const ValueKey('lantern-chat-mute-r1')));
+    await frames(tester);
+    expect(
+        find.byKey(const ValueKey('lantern-mute-durations')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('lantern-mute-1.0')));
+    await frames(tester);
+    await hold(tester, find.byKey(const ValueKey('lantern-moderation-hold')));
+    expect(db.muted, [('u1', 1.0)]);
+  });
+
+  testWidgets('a ban needs a reason and is held', (tester) async {
+    final db = await pumpChatQueue(tester, size: laptop);
+    await tester.tap(find.byKey(const ValueKey('lantern-chat-ban-r1')));
+    await frames(tester);
+    final field = find.descendant(
+        of: find.byKey(const ValueKey('lantern-ban-reason')),
+        matching: find.byType(TextField));
+    await tester.enterText(field, '');
+    await tester.pump();
+    final banHold = find.byKey(const ValueKey('lantern-ban-hold'));
+    expect(tester.widget<LHoldButton>(banHold).enabled, isFalse);
+    await tester.enterText(field, 'Repeated spam');
+    await tester.pump();
+    expect(tester.widget<LHoldButton>(banHold).enabled, isTrue);
+    await hold(tester, banHold);
+    expect(db.banned, [('u1', 'Repeated spam')]);
+  });
+
+  testWidgets('the room message menu and sender window are Lantern sheets',
+      (tester) async {
+    final controller = LiveChatController(streamId: 'stream-1');
+    addTearDown(controller.dispose);
+    final message = ChatMessageModel(
+        id: 'm9',
+        streamId: 'stream-1',
+        senderId: 'u9',
+        senderName: 'Yusuf',
+        body: 'As-salamu alaykum',
+        createdAt: DateTime(2026, 11, 11, 20));
+    await pumpLanternWidget(
+        tester,
+        LanternSurface(
+            night: true,
+            child: Builder(
+                builder: (context) => Column(children: [
+                      LButton(
+                          key: const ValueKey('open-menu'),
+                          label: 'menu',
+                          onPressed: () => showLanternChatMessageActions(
+                              context,
+                              message: message,
+                              controller: controller)),
+                      LButton(
+                          key: const ValueKey('open-sender'),
+                          label: 'sender',
+                          onPressed: () => showLanternChatSenderProfile(context,
+                              message: message, controller: controller)),
+                    ]))));
+    await tester.tap(find.byKey(const ValueKey('open-menu')));
+    await frames(tester);
+    expect(
+        find.byKey(const ValueKey('lantern-message-actions')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('lantern-message-report')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lantern-message-hide')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lantern-message-block')), findsOneWidget);
+    // Moderating rows only for people who can moderate this room.
+    expect(find.byKey(const ValueKey('lantern-message-mute')), findsNothing);
+    expect(find.byType(CaSheet), findsNothing);
+    expect(find.byType(ListTile), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('lantern-message-report')));
+    await frames(tester);
+    expect(find.byKey(const ValueKey('lantern-report-reason-spam')),
+        findsOneWidget);
+    Navigator.of(tester
+            .element(find.byKey(const ValueKey('lantern-report-reason-spam'))))
+        .pop();
+    await frames(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-sender')));
+    await frames(tester);
+    expect(find.byType(ChatSenderProfileSheet), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('lantern-sender-profile')), findsOneWidget);
+    expect(find.byType(CaSheet), findsNothing);
+    expect(find.byType(CaAvatar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the sender window shows moderation for a moderator',
+      (tester) async {
+    Duration? muted = const Duration(days: 1);
+    await pumpLanternWidget(
+        tester,
+        SingleChildScrollView(
+            child: LanternSenderProfile(
+                name: 'Yusuf',
+                avatarUrl: null,
+                roleLabel: 'Viewer',
+                ring: LRing.none,
+                affiliation: null,
+                moderatorSince: null,
+                canAct: true,
+                muteKnown: true,
+                muted: false,
+                muteLeft: null,
+                isModerator: false,
+                busy: false,
+                error: null,
+                history: [
+                  ChatMessageModel(
+                      id: 'a',
+                      streamId: 's',
+                      senderId: 'u',
+                      senderName: 'Yusuf',
+                      body: 'Hello',
+                      createdAt: DateTime(2026, 11, 11, 20)),
+                ],
+                onMute: (d) => muted = d,
+                onUnmute: () {},
+                onToggleModerator: () {},
+                onDeleteAll: () {})),
+        lang: 'ar');
+    await tester.tap(find.byKey(const ValueKey('lantern-sender-mute-10')));
+    expect(muted, const Duration(minutes: 10));
+    await tester.tap(find.byKey(const ValueKey('lantern-sender-mute-rest')));
+    expect(muted, isNull);
+    expect(find.byKey(const ValueKey('lantern-sender-delete-all')),
+        findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+/// The chat-report tables in memory.
+class _ChatDb extends FixtureApplicationDb {
+  _ChatDb({bool empty = false}) {
+    if (!empty) {
+      reports.addAll([
+        ChatReportModel(
+            id: 'r1',
+            messageId: 'm1',
+            streamId: 'stream-1',
+            reportedSenderId: 'u1',
+            reporterId: 'v1',
+            reason: 'spam',
+            createdAt: DateTime(2026, 11, 11, 19, 30),
+            messageBody: 'Visit my page for free gifts',
+            reporterDisplayName: 'Umm Ahmad',
+            reportedDisplayName: 'Yusuf',
+            reportedEmail: 'yusuf@example.invalid'),
+        ChatReportModel(
+            id: 'r2',
+            messageId: 'm2',
+            streamId: 'stream-1',
+            reportedSenderId: 'u1',
+            reporterId: 'v2',
+            reason: 'other',
+            createdAt: DateTime(2026, 11, 11, 19, 40),
+            messageBody: 'Another link',
+            reporterDisplayName: 'Sarah',
+            reportedDisplayName: 'Yusuf'),
+      ]);
+    }
+  }
+
+  final reports = <ChatReportModel>[];
+  final dismissed = <String>[], deleted = <String>[];
+  final muted = <(String, double?)>[];
+  final banned = <(String, String)>[];
+
+  @override
+  Future<List<ChatReportModel>> loadChatReports() async =>
+      List.unmodifiable(reports);
+
+  @override
+  Future<List<ChatMuteAuditEntry>> loadMutedChattersAuditLog() async => [
+        ChatMuteAuditEntry(
+            profileId: 'u7',
+            displayName: 'Guest 1902',
+            streamsMutedCount: 2,
+            lastReason: 'Spam',
+            lastMessages: const ['buy now'],
+            lastMutedAt: DateTime(2026, 11, 10)),
+      ];
+
+  @override
+  Future<void> dismissChatReport(String reportId) async {
+    dismissed.add(reportId);
+    reports.removeWhere((r) => r.id == reportId);
+  }
+
+  @override
+  Future<void> deleteChatMessageAndResolveReport(
+      {required String messageId, required String reportId}) async {
+    deleted.add(messageId);
+    reports.removeWhere((r) => r.id == reportId);
+  }
+
+  @override
+  Future<void> muteChatSenderAndResolveReport(
+      {required String streamId,
+      required String senderId,
+      required String reportId,
+      double? muteDurationHours}) async {
+    muted.add((senderId, muteDurationHours));
+    reports.removeWhere((r) => r.id == reportId);
+  }
+
+  @override
+  Future<void> banAccountPlatformWide(
+      {required String profileId,
+      required String email,
+      required String reason,
+      DateTime? expiresAt}) async {
+    banned.add((profileId, reason));
+  }
 }

@@ -19,7 +19,15 @@
       "stage_of": "Stage {stage} of 5",
       "bio_en": "Biography (English)",
       "bio_ar": "Biography (Arabic)",
-      "none": "None"
+      "none": "None",
+      "chat_empty": "No open chat reports.",
+      "chat_empty_body": "Messages viewers report show up here.",
+      "chat_no_match": "No reports match your search.",
+      "report_count": "Reports: {count}",
+      "hold_mute": "Hold to mute",
+      "hold_delete": "Hold to delete",
+      "hold_ban": "Hold to ban",
+      "hold_hint": "Press and hold the button to confirm."
     }
   },
   "ar": {
@@ -42,7 +50,15 @@
       "stage_of": "المرحلة {stage} من 5",
       "bio_en": "النبذة (بالإنجليزية)",
       "bio_ar": "النبذة (بالعربية)",
-      "none": "لا يوجد"
+      "none": "لا يوجد",
+      "chat_empty": "لا بلاغات مفتوحة عن الدردشة.",
+      "chat_empty_body": "تظهر هنا الرسائل التي يبلّغ عنها المشاهدون.",
+      "chat_no_match": "لا بلاغات تطابق البحث.",
+      "report_count": "البلاغات: {count}",
+      "hold_mute": "اضغط مطولًا للكتم",
+      "hold_delete": "اضغط مطولًا للحذف",
+      "hold_ban": "اضغط مطولًا للحظر",
+      "hold_hint": "اضغط على الزر مطولًا للتأكيد."
     }
   }
 }
