@@ -75,7 +75,7 @@ Both worktrees are locked and keep their files. Both started from `d82e114`.
 
 | Helper | Worktree and branch | State |
 |---|---|---|
-| A. Classic kits under Lantern (`ds/*`, web kit, lessons kit, `lantern_compat.dart`, `test/lantern_compat_test.dart`) | `.claude/worktrees/agent-a042ac1f6af7bfaa3`, `worktree-agent-a042ac1f6af7bfaa3` | Finished. **25 files uncommitted**, no own commit. Report: read its last message in the session transcript, or just read the diff. |
+| A. Classic kits under Lantern (`ds/*`, web kit, lessons kit, `lantern_compat.dart`, `test/lantern_compat_test.dart`) | `.claude/worktrees/agent-a042ac1f6af7bfaa3`, `worktree-agent-a042ac1f6af7bfaa3` | Finished and committed there as `c3ac6c3` (on top of `d82e114`). Its report says: analyzer 0, `lantern_compat_test` 148 pass, old-skin pictures 34 of 38 the same (the 4 known ones). **Not reviewed by me, not merged.** Known gaps it reported: `CaAppBar` only restyled by the theme; lessons screens use `TC.*` colours directly, so they stay gold-era until helper B's screens replace them; `CaSwitch` has an empty screen-reader label under Lantern. |
 | B. Lantern lessons screens (`lib/features/lessons/presentation/lantern/*`, hooks, `20_lessons.json`) | `.claude/worktrees/agent-a4b85e7d6e6275098`, `worktree-agent-a4b85e7d6e6275098` | **Stopped by me in the middle.** About 3 own commits and 11 uncommitted files. May not compile. |
 
 To merge each: read the diff (`git -C <worktree> diff d82e114`), commit in
