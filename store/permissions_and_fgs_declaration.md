@@ -1,6 +1,6 @@
 # Permissions and foreground-service declaration
 
-Status: 2026-10-16, ready to paste, but the video in section 3 still has to be recorded by the owner. Text is based on `project/android/app/src/main/AndroidManifest.xml` and `RtmpForegroundService.kt`. Verify against the merged manifest of the final `.aab` before submitting.
+Status: 2026-11-11, checked against Google's current foreground-service and location pages; section 1a (plugin additions) is new, and section 5 has a new limit. 2026-10-16: ready to paste, but the video in section 3 still has to be recorded by the owner. Text is based on `project/android/app/src/main/AndroidManifest.xml` and `RtmpForegroundService.kt`. Verify against the merged manifest of the final `.aab` before submitting.
 
 ## 1. What the manifest declares and why
 
@@ -15,9 +15,24 @@ Status: 2026-10-16, ready to paste, but the video in section 3 still has to be r
 
 Not declared on purpose: storage or media permissions (the system photo picker is used), contacts, background location, `SYSTEM_ALERT_WINDOW`, full-screen intents.
 
+### 1a. What the plugins add (checked 2026-11-11)
+
+Read from the merged manifest of the last release build (2026-10-26, `project/build/app/intermediates/merged_manifests/release/`) and from each plugin's own manifest in the pub cache. Check again on the final `.aab` (section 5 of `brief/fable/ANDROID_PLAY_STATUS.md`).
+
+| Added by | What | Action |
+| --- | --- | --- |
+| `firebase_messaging` | `WAKE_LOCK`, `com.google.android.c2dm.permission.RECEIVE`, `POST_NOTIFICATIONS`, its services and receivers (not exported, or protected by `c2dm.permission.SEND`) | Keep. Push needs them. No Play form. |
+| androidx core | `sa.hadayah.streamer_app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (signature level) | Keep. Internal to the app. |
+| `geolocator_android` | A service with `foregroundServiceType="location"` | **Removed** in the app manifest with `tools:node="remove"` (2026-11-11). The app never starts it, so Play Console must not see a location foreground service. |
+| `image_picker_android` | A file provider and the photo picker module trigger | Keep. No permission. |
+| `share_plus`, `url_launcher_android` | A file provider, a receiver and a web view activity, none exported | Keep. |
+| androidx profile installer | A receiver protected by `android.permission.DUMP` | Keep. Standard. |
+
+Hardware features: `android.hardware.camera`, `camera.autofocus` and `microphone` are declared `required="false"` (2026-11-11). Without that, the `CAMERA` and `RECORD_AUDIO` permissions make Play hide the app from devices without a rear camera or microphone, although most people only watch.
+
 ## 2. Play Console: Foreground service permissions form
 
-Play Console > Policy > App content > **Foreground service permissions**. Declare two types. The notification wording was made mode-neutral on 2026-10-16: it reads "You're broadcasting live. Your phone is streaming live video or audio."
+Play Console > Policy > App content > **Foreground service permissions**. Declare two types. Google's help page (answer 13392821, read 2026-11-11) asks for each type: a description of the feature, the impact on the user if the task is delayed or stopped, a video link, and a use case from Google's list. Pick the use cases that describe streaming from the camera and capturing audio while the app is in the background, as the list words them on the day. The notification wording was made mode-neutral on 2026-10-16: it reads "You're broadcasting live. Your phone is streaming live video or audio."
 
 ### Camera (`FOREGROUND_SERVICE_CAMERA`)
 
@@ -63,7 +78,7 @@ Checklist before uploading:
 
 ## 4. Other permission-related declarations
 
-- **Location (not background):** no special declaration form is required for foreground location. If Play asks, answer "used when the user taps *use my location* to place a venue pin".
+- **Location (not background):** no special declaration form is required for foreground location. If Play asks, answer "used when the user taps *use my location* to place a venue pin". The merged manifest has no `ACCESS_BACKGROUND_LOCATION` and, since 2026-11-11, no location foreground service. Coming: Google's sensitive-permissions policy (answer 16558241) says apps that target Android 17 (API 37) must use the Android location button for one-time location, effective 27 January 2027. This app targets 36, so it applies only when the target moves to 37.
 - **Photo and video permissions policy:** the app does not request `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO` or `READ_EXTERNAL_STORAGE`. The Android photo picker returns a single file per tap.
 - **Exact alarms, full-screen intents, SMS, call log, accessibility, VPN, `QUERY_ALL_PACKAGES`:** none.
 - `<queries>` lists `https`/`http`/`vnd.youtube` view intents and the YouTube package only, to open links and videos.
@@ -72,3 +87,4 @@ Checklist before uploading:
 
 - The service is declared as both camera and microphone even in audio-only mode. This is safe because the phone broadcast screen asks for camera and then microphone permission before any setup, in every mode (`phone_broadcast_screen.dart`, `_confirmPresetAndSetup`), and stops if either is denied. The consequence: a broadcaster who denies the camera cannot do an audio-only broadcast either.
 - Interruption by the system (battery saver, a phone call) can stop the stream; the app reconnects for up to two minutes, then the server ends the broadcast.
+- Not yet tried on a phone (2026-11-11): a reconnect while the app is in the background or the screen is locked. On a disconnect, `RtmpPublisherBridge.releaseStream()` stops the foreground service, and the next attempt starts it again. Android 12 and later refuse to start a foreground service from the background, and Android 14 and later refuse a camera or microphone one. So that reconnect may fail until the broadcaster opens the app. Test it before recording the video, and do not show a background reconnect in it.

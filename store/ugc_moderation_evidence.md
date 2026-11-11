@@ -15,6 +15,12 @@ Google Play's UGC policy calls for accepted terms before users create/upload UGC
 
 The current server-side controls and local P6 tests are evidence of implementation, not evidence of sustained moderation operations. The latest RESUME block in brief/LEDGER.md says physical-phone, Google OAuth and authorized YouTube ingest acceptance remain open. Any statement that the app complies with Play UGC requirements is **for counsel review**.
 
+## 2026-11-11 check against Google's current pages
+
+Google's UGC policy (answer 9876937) and its guidance (answer 12923286), read 2026-11-11, say: users accept terms of use before they create or upload content, and that step cannot be skipped; the terms define objectionable content and are separate from the privacy policy; the app has in-app reporting and blocking; apps with public content offer report and block for both users and content; moderation is ongoing.
+
+What the code has today: report a chat message, block a user from chat, the admin chat moderation queue, mutes and bans. What it lacks: a way to report a live stream, a recording, a channel or a profile. The string `report_stream` ("Report Stream") exists in `en.json`, but no screen uses it. Live streams and channels are public content, so this is the largest UGC gap for review. Suggested fix (not made here, it is in `project/lib`): a "Report" item on the live room, the channel page and the profile, writing to a reports table the admin queue already reads.
+
 ## Owner evidence still needed
 
 - Approve and publish bilingual user conduct terms that define prohibited content and require acceptance before the first UGC action. Record version and acceptance, including returning accounts. **For counsel review.**
