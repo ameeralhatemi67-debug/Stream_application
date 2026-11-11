@@ -1276,7 +1276,9 @@ class LLessonsPage extends StatelessWidget implements LanternSkinWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<LessonsController>();
-    unawaited(c.ensureLoaded());
+    // After a failure the page waits for Try again: loading again on every
+    // rebuild would never let the failure show.
+    if (c.failure == null) unawaited(c.ensureLoaded());
     return LanternSurface(child: Builder(builder: (context) {
       final t = context.lt;
       final wide = context.lanternWide;
