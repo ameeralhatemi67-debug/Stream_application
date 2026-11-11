@@ -14,6 +14,7 @@ import '../widgets/ds/ca_navigation.dart';
 import '../widgets/ds/canopy_motion.dart';
 import '../widgets/floating_stream_mini_player.dart';
 import '../widgets/hedayah/hedayah_kit.dart';
+import '../widgets/lantern/lantern_shell.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
 import '../../features/auth/presentation/role_select_screen.dart';
@@ -626,6 +627,15 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Lantern and Arch (ADR-026) frames the tabs itself: its own header on a
+    // laptop, its own app bar and floating navigation on a phone.
+    if (context.isLanternSkin) {
+      return LanternTabShell(
+          index: navigationShell.currentIndex,
+          onBranch: (index) => navigationShell.goBranch(index,
+              initialLocation: index == navigationShell.currentIndex),
+          child: navigationShell);
+    }
     // Gold palette on a laptop: a website with a top navigation bar instead
     // of the app's side rail. The branches keep their own stacks either way.
     if (context.usesHidayahWeb) {

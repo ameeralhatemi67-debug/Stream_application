@@ -114,6 +114,9 @@ flutter:
     # The pattern motif's source SVG (assets/hedayah/source/) stays on disk;
     # brief/tools/make_hedayah_motif.py turns it into Dart path data.
     - assets/hedayah/icons/
+    # Lantern and Arch (ADR-026): its icon set, one SVG per icon, built by
+    # brief/tools/make_lantern_icons.mjs from brief/tools/lantern_icons.json.
+    - assets/lantern/icons/
     - assets/hedayah/wordmark.png
     - assets/images/hadayah_association_logo.png
 

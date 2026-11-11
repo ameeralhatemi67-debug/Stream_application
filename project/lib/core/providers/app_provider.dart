@@ -843,13 +843,41 @@ class AppProvider extends ChangeNotifier {
   AppSkin get appSkin => _appSkin;
 
   /// The skin read at start-up; no save and no notification.
-  void restoreAppSkin(AppSkin skin) => _appSkin = skin;
+  void restoreAppSkin(AppSkin skin,
+      {LanternAppearance? appearance, bool? calmMotion}) {
+    _appSkin = skin;
+    if (appearance != null) _lanternAppearance = appearance;
+    if (calmMotion != null) _lanternCalmMotion = calmMotion;
+  }
+
+  /// Day or night for the Lantern and Arch design (ADR-026); per device.
+  LanternAppearance _lanternAppearance = LanternAppearance.fallback;
+  LanternAppearance get lanternAppearance => _lanternAppearance;
+
+  Future<void> setLanternAppearance(LanternAppearance appearance) async {
+    if (appearance == _lanternAppearance) return;
+    _lanternAppearance = appearance;
+    notifyListeners();
+    await saveLanternAppearance(appearance);
+  }
+
+  /// Calm motion in the Lantern and Arch design: stops the motion that is not
+  /// needed to use the app, beside the device's own reduced-motion setting.
+  bool _lanternCalmMotion = false;
+  bool get lanternCalmMotion => _lanternCalmMotion;
+
+  Future<void> setLanternCalmMotion(bool calm) async {
+    if (calm == _lanternCalmMotion) return;
+    _lanternCalmMotion = calm;
+    notifyListeners();
+    await saveLanternCalmMotion(calm);
+  }
 
   Future<void> setAppSkin(AppSkin skin) async {
     if (skin == _appSkin) return;
     _appSkin = skin;
-    // Readex Pro loads with the Hedayah skin, not at start-up; headings
-    // re-lay out when it arrives (skin_fonts.dart).
+    // Readex Pro loads with the Hedayah and Lantern skins, not at start-up;
+    // headings re-lay out when it arrives (skin_fonts.dart).
     unawaited(SkinFonts.ensureLoaded(skin));
     notifyListeners();
     await saveAppSkin(skin);

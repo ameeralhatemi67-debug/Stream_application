@@ -20,7 +20,8 @@ abstract final class SkinFonts {
   /// Registers the fonts [skin] needs. Safe to call repeatedly; a failed
   /// load is forgotten so a later call can try again.
   static Future<void> ensureLoaded(AppSkin skin, {AssetBundle? bundle}) {
-    if (skin != AppSkin.hedayah) return Future.value();
+    // Hedayah and Lantern and Arch share Readex Pro for headings.
+    if (skin == AppSkin.gold) return Future.value();
     return _loads[HedayahSkin.display] ??= _load(
             HedayahSkin.display, readexProAsset, bundle ?? rootBundle)
         .catchError((Object error) {

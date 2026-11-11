@@ -1,0 +1,44 @@
+{
+  "en": {
+    "skin_name": "Lantern and Arch",
+    "skin_hint": "The new design: linen by day, ink by night, the arch and the star.",
+    "hold_hint": "Press and hold to confirm",
+    "hold_cancel": "Cancel",
+    "corner": {
+      "return": "Return to the room",
+      "close": "Close the corner player",
+      "audio": "Audio room",
+      "video": "Live room"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "hint": "For the Lantern and Arch design on this device.",
+      "day": "Day",
+      "night": "Night",
+      "system": "Follow the device",
+      "calm": "Calm motion",
+      "calm_hint": "Stops moving decoration: counters, sweeps, rising reactions. The app works the same."
+    }
+  },
+  "ar": {
+    "skin_name": "الفانوس والقوس",
+    "skin_hint": "التصميم الجديد: كتّاني في النهار، حبري في الليل، بالقوس والنجمة.",
+    "hold_hint": "اضغط مطوّلاً للتأكيد",
+    "hold_cancel": "إلغاء",
+    "corner": {
+      "return": "العودة إلى الغرفة",
+      "close": "إغلاق المشغّل المصغّر",
+      "audio": "غرفة صوتية",
+      "video": "غرفة البث"
+    },
+    "appearance": {
+      "title": "المظهر",
+      "hint": "لتصميم الفانوس والقوس على هذا الجهاز.",
+      "day": "نهار",
+      "night": "ليل",
+      "system": "حسب الجهاز",
+      "calm": "حركة هادئة",
+      "calm_hint": "توقف الزخارف المتحركة: العدّادات واللمعان والتفاعلات الصاعدة. التطبيق يعمل كما هو."
+    }
+  }
+}

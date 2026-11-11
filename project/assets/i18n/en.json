@@ -3450,5 +3450,26 @@
     "open_failed": "The download link could not be opened. Try again, or open the download page from the website.",
     "settings_available": "Version {version} is available",
     "settings_latest": "You have the latest version"
+  },
+  "lantern": {
+    "skin_name": "Lantern and Arch",
+    "skin_hint": "The new design: linen by day, ink by night, the arch and the star.",
+    "hold_hint": "Press and hold to confirm",
+    "hold_cancel": "Cancel",
+    "corner": {
+      "return": "Return to the room",
+      "close": "Close the corner player",
+      "audio": "Audio room",
+      "video": "Live room"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "hint": "For the Lantern and Arch design on this device.",
+      "day": "Day",
+      "night": "Night",
+      "system": "Follow the device",
+      "calm": "Calm motion",
+      "calm_hint": "Stops moving decoration: counters, sweeps, rising reactions. The app works the same."
+    }
   }
 }

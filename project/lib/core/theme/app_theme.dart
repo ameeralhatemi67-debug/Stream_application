@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'app_skin.dart';
 import 'canopy_tokens.dart';
 import 'hedayah_skin.dart';
+import 'lantern/lantern_theme.dart';
 export 'app_palette.dart';
 export 'app_skin.dart';
 export 'hedayah_skin.dart';
 export 'skin_colors.dart';
+export 'lantern/lantern_tokens.dart';
+export 'lantern/lantern_theme.dart';
 // Canopy tokens back the redesigned streaming screens; the app-wide values
 // below are unchanged.
 export 'canopy_tokens.dart';
@@ -111,6 +114,9 @@ abstract final class AppTheme {
   /// fresh one (and its text theme) every time (audit ST-01).
   static ThemeData forLocale(Locale locale, {AppSkin skin = AppSkin.gold}) {
     ActiveSkin.current = skin;
+    // Lantern and Arch keeps its own day and night themes (ADR-026). The
+    // app-wide theme is its day set; Lantern screens take night themselves.
+    if (skin == AppSkin.lantern) return LanternSkin.theme(locale);
     return _themeByLanguage.putIfAbsent(
         '${skin.id}/${locale.languageCode}',
         () => skin == AppSkin.hedayah
