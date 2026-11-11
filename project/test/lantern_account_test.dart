@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:streamer_app/core/providers/app_flags.dart';
+import 'package:streamer_app/core/services/admin_database_service.dart';
+import 'package:streamer_app/core/services/notifications/notification_models.dart';
+import 'package:streamer_app/core/services/supabase_auth_service.dart';
+import 'package:streamer_app/core/services/upcoming_schedule_service.dart';
+import 'package:streamer_app/features/discovery/models/bookmark_entry.dart';
+import 'package:streamer_app/features/discovery/presentation/lantern/lantern_bookmarks.dart';
+import 'package:streamer_app/features/notifications/presentation/lantern/lantern_notifications.dart';
+import 'package:streamer_app/features/profile/models/upcoming_schedule.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/routing/lantern/lantern_not_found_page.dart';
 import 'package:streamer_app/features/auth/presentation/lantern/lantern_consent_dialog.dart';
@@ -16,6 +25,8 @@ import 'package:streamer_app/features/profile/presentation/settings/blocked_acco
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
 
 import 'fixtures/streamer_fixtures.dart';
+import 'fixtures/vod_fixtures.dart';
+import 'support/empty_broadcasts.dart';
 import 'support/lantern_harness.dart';
 import 'support/localized_app.dart';
 
@@ -436,6 +447,259 @@ void main() {
     });
   });
 
+  group('notifications', () {
+    void seed(AppProvider p) {
+      final now = DateTime.now();
+      p
+        ..addEnhancedNotification(AppNotificationModel(
+            id: 'org:live-1',
+            type: NotificationType.streamerLiveVideo,
+            streamerId: mockStreamers.first.streamerId,
+            titleEn: 'A scholar is live now',
+            titleAr: 'بدأ بث مباشر',
+            bodyEn: 'Session twelve',
+            bodyAr: 'المجلس الثاني عشر',
+            timestamp: now,
+            actionUrl: '/settings'))
+        ..addEnhancedNotification(AppNotificationModel(
+            id: 'org:note-1',
+            type: NotificationType.adminNoteToStreamer,
+            titleEn: 'A note from the admins',
+            titleAr: 'ملاحظة من المشرفين',
+            bodyEn: 'Please read it',
+            bodyAr: 'يرجى قراءتها',
+            timestamp: now.subtract(const Duration(hours: 2))));
+    }
+
+    Future<LanternApp> open(WidgetTester tester,
+        {String lang = 'en',
+        Size size = phone,
+        bool night = false,
+        bool notices = true}) async {
+      final provider = _signedIn(
+          appearance: night ? LanternAppearance.night : LanternAppearance.day);
+      if (notices) seed(provider);
+      final app = await LanternApp.start(tester,
+          provider: provider, lang: lang, size: size, location: '/feed');
+      openLanternNotifications(tester.element(find.byType(LanternTabShell)));
+      await app.settle(4);
+      return app;
+    }
+
+    for (final lang in ['en', 'ar']) {
+      for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+        for (final night in [false, true]) {
+          testWidgets('lay out ($lang, $label, ${night ? 'night' : 'day'})',
+              (tester) async {
+            final app =
+                await open(tester, lang: lang, size: size, night: night);
+            expect(tester.takeException(), isNull);
+            expect(find.byType(LanternNotificationsBody), findsOneWidget);
+            expect(find.byKey(const ValueKey('lantern-notice-org:live-1')),
+                findsOneWidget);
+            // A panel from the end side on the website layout, a sheet on a
+            // phone.
+            expect(find.byType(BottomSheet),
+                size == phone ? findsOneWidget : findsNothing);
+            expect(_olderKit, findsNothing);
+            await app.close();
+          });
+        }
+      }
+    }
+
+    testWidgets('filter, mute, dismiss and mark all read reach the provider',
+        (tester) async {
+      final app = await open(tester, size: laptop);
+      final provider = app.provider;
+      expect(provider.unreadNotificationsCount, 2);
+      expect(find.byKey(const ValueKey('lantern-notifications-unread')),
+          findsOneWidget);
+      await tester.tap(find.byKey(
+          const ValueKey('lantern-notifications-filter-invitesAndAdmin')));
+      await app.settle(2);
+      expect(find.byKey(const ValueKey('lantern-notice-org:live-1')),
+          findsNothing);
+      expect(find.byKey(const ValueKey('lantern-notice-org:note-1')),
+          findsOneWidget);
+      await tester.tap(
+          find.byKey(const ValueKey('lantern-notifications-filter-all')));
+      await app.settle(2);
+      await tester.tap(find.descendant(
+          of: find.byKey(const ValueKey('lantern-notice-org:live-1')),
+          matching: find.text('Mute')));
+      await app.settle(2);
+      expect(provider.isEntityMuted(mockStreamers.first.streamerId), isTrue);
+      await tester.tap(find.descendant(
+          of: find.byKey(const ValueKey('lantern-notice-org:note-1')),
+          matching: find.byType(LIconButton)));
+      await app.settle(2);
+      expect(provider.enhancedNotifications.map((n) => n.id),
+          isNot(contains('org:note-1')));
+      await tester.tap(
+          find.byKey(const ValueKey('lantern-notifications-read-all')));
+      await app.settle(2);
+      expect(provider.unreadNotificationsCount, 0);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('a notice opens its target and is marked read',
+        (tester) async {
+      final app = await open(tester, size: phone);
+      await tester.tap(find.byKey(const ValueKey('lantern-notice-org:live-1')));
+      await app.settle(6);
+      expect(
+          app.provider.enhancedNotifications
+              .firstWhere((n) => n.id == 'org:live-1')
+              .isRead,
+          isTrue);
+      expect(find.byType(LanternNotificationsBody), findsNothing);
+      expect(app.location, '/settings');
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('nothing yet: the empty state', (tester) async {
+      final app = await open(tester, size: laptop, notices: false);
+      expect(find.byKey(const ValueKey('lantern-notifications-empty')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('lantern-notifications-read-all')),
+          findsNothing);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+  });
+
+  group('bookmarks', () {
+    Future<(LanternApp, _Db)> open(WidgetTester tester,
+        {String lang = 'en',
+        Size size = phone,
+        bool night = false,
+        bool saved = true,
+        bool fail = false}) async {
+      final db = _Db();
+      final auth = _Auth();
+      final provider = AppProvider.withServices(
+          adminDbService: db,
+          authService: auth,
+          upcomingService: _Schedules(),
+          organizationBroadcastService: EmptyBroadcasts())
+        ..restoreAppSkin(AppSkin.lantern,
+            appearance:
+                night ? LanternAppearance.night : LanternAppearance.day);
+      for (final s in mockStreamers) {
+        provider.addStreamerForTests(s);
+      }
+      provider.debugSetSignedInForTests(
+          email: 'amal@example.invalid', name: 'Amal', isStreamer: false);
+      if (saved) {
+        await tester.runAsync(() async {
+          await provider.toggleVodBookmark(_vod);
+          await provider.toggleUpcomingBookmark(_schedule());
+        });
+      }
+      final app = await LanternApp.start(tester,
+          provider: provider, lang: lang, size: size, location: '/feed');
+      // The saved list reads the server only with a session; the items
+      // above were saved on this device.
+      if (fail) {
+        auth.signIn('viewer-1');
+        db.fail = true;
+      }
+      openLanternBookmarks(tester.element(find.byType(LanternTabShell)));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await app.settle(4);
+      return (app, db);
+    }
+
+    for (final lang in ['en', 'ar']) {
+      for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+        for (final night in [false, true]) {
+          testWidgets('lay out ($lang, $label, ${night ? 'night' : 'day'})',
+              (tester) async {
+            final (app, _) =
+                await open(tester, lang: lang, size: size, night: night);
+            expect(tester.takeException(), isNull);
+            expect(find.byType(LanternBookmarksBody), findsOneWidget);
+            expect(find.byKey(const ValueKey('lantern-bookmarks-tabs')),
+                findsOneWidget);
+            // A large dialog on the website layout, a sheet on a phone.
+            expect(find.byType(BottomSheet),
+                size == phone ? findsOneWidget : findsNothing);
+            expect(_olderKit, findsNothing);
+            await app.close();
+          });
+        }
+      }
+    }
+
+    testWidgets('tabs filter; Remove calls the provider', (tester) async {
+      final (app, db) = await open(tester, size: laptop);
+      final provider = app.provider;
+      expect(provider.bookmarks, hasLength(2));
+      final recording = provider.bookmarks
+          .firstWhere((b) => b.kind == BookmarkKind.recording);
+      final upcoming =
+          provider.bookmarks.firstWhere((b) => b.kind == BookmarkKind.upcoming);
+      expect(find.text('Play recording'), findsOneWidget);
+      expect(find.text('View upcoming stream'), findsOneWidget);
+      await tester.tap(find.text('Recordings'));
+      await app.settle(2);
+      expect(find.byKey(ValueKey('lantern-bookmark-${upcoming.id}')),
+          findsNothing);
+      expect(find.byKey(ValueKey('lantern-bookmark-${recording.id}')),
+          findsOneWidget);
+      await tester
+          .tap(find.byKey(ValueKey('lantern-bookmark-remove-${recording.id}')));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await app.settle(3);
+      expect(provider.bookmarks.map((b) => b.id), isNot(contains(recording.id)));
+      expect(db.rows, isEmpty, reason: 'saved on this device only');
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('an upcoming stream opens its channel', (tester) async {
+      final (app, _) = await open(tester, size: phone);
+      final upcoming = app.provider.bookmarks
+          .firstWhere((b) => b.kind == BookmarkKind.upcoming);
+      await tester.ensureVisible(
+          find.byKey(ValueKey('lantern-bookmark-open-${upcoming.id}')));
+      await tester
+          .tap(find.byKey(ValueKey('lantern-bookmark-open-${upcoming.id}')));
+      await app.settle(6);
+      expect(find.byType(LanternBookmarksBody), findsNothing);
+      expect(app.location, '/profile/${upcoming.streamerId}');
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('empty, and partly failed with Try again', (tester) async {
+      var (app, db) = await open(tester, size: laptop, saved: false);
+      expect(find.byKey(const ValueKey('lantern-bookmarks-empty')),
+          findsOneWidget);
+      await app.close();
+
+      (app, db) = await open(tester, size: laptop, fail: true);
+      expect(find.byKey(const ValueKey('lantern-bookmarks-failed')),
+          findsOneWidget);
+      // What was saved before still shows.
+      expect(find.text('Saved lecture'), findsOneWidget);
+      db.fail = false;
+      await tester.tap(find.text('Try again'));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await app.settle(3);
+      expect(find.byKey(const ValueKey('lantern-bookmarks-failed')),
+          findsNothing);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+  });
+
   group('page not found', () {
     for (final lang in ['en', 'ar']) {
       for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
@@ -467,6 +731,78 @@ void main() {
       }
     });
   });
+}
+
+final _vod = MockVodArchivePool.sampleVods.first.copyWith(
+    vodId: 'vod_yt_bl60n6uuvWE',
+    youtubeVideoId: 'bl60n6uuvWE',
+    streamerId: mockStreamers.first.streamerId,
+    titleEn: 'Saved lecture',
+    thumbnailUrl: '');
+
+UpcomingSchedule _schedule() => UpcomingSchedule(
+    id: 'schedule-one',
+    streamerId: mockStreamers.first.streamerId,
+    kind: 'once',
+    localTime: '12:00',
+    weekdays: const [],
+    oneTimeStartUtc: DateTime.now().toUtc().add(const Duration(days: 3)),
+    titleEn: 'Upcoming seminar',
+    titleAr: 'ندوة قادمة',
+    descriptionEn: '',
+    descriptionAr: '',
+    tags: const [],
+    colorKey: 'green');
+
+class _Auth extends SupabaseAuthService {
+  Session? session;
+  void signIn(String id) {
+    session = Session(
+        accessToken: 'test-only',
+        tokenType: 'bearer',
+        user: User(
+            id: id,
+            appMetadata: {},
+            userMetadata: {},
+            aud: 'authenticated',
+            createdAt: '2026-10-06T00:00:00Z'));
+  }
+
+  @override
+  Session? get currentSession => session;
+  @override
+  Stream<AuthState> get onAuthStateChange => const Stream.empty();
+  @override
+  Future<void> signOut() async {
+    session = null;
+  }
+}
+
+class _Db extends AdminDatabaseService {
+  final rows = <String, BookmarkEntry>{};
+  bool fail = false;
+  @override
+  Future<List<BookmarkEntry>> loadBookmarks() async {
+    if (fail) throw StateError('offline');
+    return rows.values.toList();
+  }
+
+  @override
+  Future<void> addBookmark(BookmarkEntry entry) async {
+    if (fail) throw StateError('offline');
+    rows.putIfAbsent(entry.id, () => entry);
+  }
+
+  @override
+  Future<void> removeBookmark(String id) async {
+    if (fail) throw StateError('offline');
+    rows.remove(id);
+  }
+}
+
+class _Schedules extends UpcomingScheduleService {
+  @override
+  Future<List<UpcomingSchedule>> load(String id) async => [_schedule()];
 }
 
 class _Flags implements AppFlagsStore {

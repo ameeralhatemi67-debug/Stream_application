@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../features/discovery/presentation/bookmarks_sheet.dart';
-import '../../../features/notifications/presentation/notification_center_sheet.dart';
+import '../../../features/discovery/presentation/lantern/lantern_bookmarks.dart';
+import '../../../features/notifications/presentation/lantern/lantern_notifications.dart';
 import '../../../features/web/presentation/hidayah_web_header.dart'
     show showHidayahLegal;
 import '../../config/app_identity.dart';
@@ -22,8 +22,8 @@ const lanternNavClearance = 88.0;
 /// Opens the notifications list and the saved list from the Lantern chrome.
 /// One place, so a Lantern drawer or page can replace the sheet behind them.
 void openLanternNotifications(BuildContext context) =>
-    NotificationCenterSheet.show(context);
-void openLanternBookmarks(BuildContext context) => BookmarksSheet.show(context);
+    showLanternNotifications(context);
+void openLanternBookmarks(BuildContext context) => showLanternBookmarks(context);
 
 /// The 2 px gilt line under the header.
 class LGiltLine extends StatelessWidget implements LanternSkinWidget {

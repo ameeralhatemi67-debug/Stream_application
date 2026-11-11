@@ -3665,7 +3665,8 @@
       "changes_requested": "Changes requested before verification.",
       "welcome_terms": "By continuing you agree to the terms of service and the privacy policy.",
       "not_found_title": "We could not find this page",
-      "not_found_body": "The link may have moved, or the broadcast may have ended. Go back to Discover, or look in Lessons or on the map."
+      "not_found_body": "The link may have moved, or the broadcast may have ended. Go back to Discover, or look in Lessons or on the map.",
+      "unread": "unread"
     },
     "channel": {
       "unfollow_title": "Unfollow this channel?",

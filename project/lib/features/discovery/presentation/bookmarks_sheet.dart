@@ -11,11 +11,13 @@ import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../profile/presentation/widgets/vod_player_modal_sheet.dart';
 import '../models/bookmark_entry.dart';
+import 'lantern/lantern_bookmarks.dart';
 
 class BookmarksSheet extends StatefulWidget {
   const BookmarksSheet({super.key});
 
   static Future<void> show(BuildContext context) async {
+    if (context.isLanternSkin) return showLanternBookmarks(context);
     final provider = context.read<AppProvider>();
     final selected = await showCaSheet<BookmarkEntry>(context,
         title: '',
@@ -59,6 +61,17 @@ class _BookmarksSheetState extends State<BookmarksSheet> {
         context.select<AppProvider, bool>((p) => p.bookmarkLoadFailed);
     final visible =
         entries.where((e) => _filter == null || e.kind == _filter).toList();
+    if (context.isLanternSkin) {
+      return LanternBookmarksBody(
+          entries: entries,
+          visible: visible,
+          filter: _filter,
+          onFilter: (kind) => setState(() => _filter = kind),
+          loading: loading,
+          failed: failed,
+          onRetry: () => context.read<AppProvider>().loadBookmarks(),
+          onOpen: (entry) => Navigator.pop(context, entry));
+    }
     return SafeArea(
         top: false,
         child: CaSheet(
