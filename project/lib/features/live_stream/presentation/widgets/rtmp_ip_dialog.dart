@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/organization_broadcast_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/layout/window_class.dart';
@@ -24,6 +25,8 @@ import '../screens/phone_broadcast_screen.dart';
 import 'live_chat_layout.dart';
 import '../../../../core/widgets/app_logo.dart';
 import '../../../web/presentation/hidayah_web_kit.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_studio_view.dart';
 
 class FeatureInProgressModal extends StatelessWidget {
   const FeatureInProgressModal({super.key, required this.title});
@@ -72,7 +75,8 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
       return FeatureInProgressModal.show(context,
           title: 'organization_v1.studio'.tr());
     }
-    if (context.usesHidayahWeb) {
+    // Lantern and Arch: the studio is one full page at every width.
+    if (context.usesHidayahWeb || context.isLanternSkin) {
       // The website studio is a full page: an overview beside the controls.
       final provider = context.read<AppProvider>();
       return showGeneralDialog<void>(
@@ -455,8 +459,450 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     ]);
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026): the same controller, state and actions as
+  // the build below, drawn as one night page. Going live from a laptop and
+  // ending a broadcast are press-and-hold, so a stray tap cannot do either.
+  // ---------------------------------------------------------------------
+  Widget _buildLantern(BuildContext context) {
+    void close() => Navigator.pop(context);
+    if (widget.openedFromVideo && isCompactLandscapeChat(context)) {
+      return LanternStudioNotice(
+          icon: LGlyph.phone,
+          message: 'live.landscape_settings_portrait'.tr(),
+          actions: [
+            if (widget.onEndBroadcast != null)
+              LHoldButton(
+                  label: 'lantern.studio.hold_end'.tr(),
+                  icon: LGlyph.stop,
+                  onConfirmed: _end),
+            LButton(
+                label: 'organization_v1.close'.tr(),
+                kind: LButtonKind.secondary,
+                onPressed: close),
+          ]);
+    }
+    if (widget.initialMode == StudioMode.local) {
+      return LanternStudioNotice(
+          key: const ValueKey('local-unavailable'),
+          icon: LGlyph.info,
+          message: 'live_studio.local_unavailable_body'.tr(),
+          actions: [
+            LButton(
+                label: 'organization_v1.close'.tr(),
+                kind: LButtonKind.secondary,
+                onPressed: close),
+          ]);
+    }
+
+    final (_, _, _, live, error) = context.select<
+            AppProvider,
+            (List<ChannelConnection>, List<OrgMembership>, bool, bool, String?)>(
+        (p) => (
+              p.channelConnections,
+              p.orgMemberships,
+              p.personalBroadcastApproved,
+              p.isBroadcastingLive,
+              p.broadcastSessionError
+            ));
+    final network =
+        context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
+    final destinations = _studio.destinations;
+    final frozen = _studio.frozen;
+    final operationBusy =
+        context.select<AppProvider, bool>((p) => p.broadcastOperationBusy) ||
+            _studio.busy;
+    final choices = _studio.assignments
+        .where((s) => s.organizationId == _studio.destination?.organizationId)
+        .toList();
+    if (_studio.session != null &&
+        !choices.any((s) => s.id == _studio.session!.id)) {
+      choices.add(_studio.session!);
+    }
+    final pending = context.select<AppProvider, bool>(
+        (p) => p.publishingSession?.terminationPending == true);
+    final canPrepare = destinations.isNotEmpty &&
+        _studio.session?.state != 'ending' &&
+        widget.onEndBroadcast == null;
+    final canStart = frozen &&
+        _studio.ingestKey.isNotEmpty &&
+        _studio.sender == 'obs_laptop' &&
+        !live;
+    // While the title is typed the keyboard needs the room; the actions
+    // return as soon as it closes.
+    final keyboardOpen = View.of(context).viewInsets.bottom > 0;
+    final lang = context.locale.languageCode;
+    final phone = _studio.sender == 'phone_direct';
+    final phoneLabel = (iosPhonePublishingEnabled
+            ? 'organization_v1.sender_ios'
+            : 'organization_v1.sender_android')
+        .tr();
+    final organization = _studio.destination?.organizationId != null;
+
+    Widget gap([double height = 12]) => SizedBox(height: height);
+    Widget note(String text) => Builder(
+        builder: (context) => Text(text,
+            style: Lantern.textStyle(13.5,
+                color: context.lt.muted, height: 1.5)));
+
+    final controls = <Widget>[
+      if (context.isPhoneLandscape) ...[
+        LBanner('live.landscape_settings_portrait'.tr(), icon: LGlyph.phone),
+        gap(),
+      ],
+      if (!frozen) ...[
+        LanternStudioField(
+            label: 'lantern.studio.sender'.tr(),
+            note: _phoneAvailable
+                ? null
+                : 'live_studio.error_phone_unsupported'.tr(),
+            child: !_phoneAvailable
+                ? Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: LTag('organization_v1.sender_obs'.tr(),
+                        icon: LGlyph.video))
+                : IgnorePointer(
+                    ignoring: operationBusy,
+                    child: Opacity(
+                        opacity: operationBusy ? .5 : 1,
+                        child: LSegmented<String>(
+                            key: const ValueKey('lantern-studio-sender'),
+                            expand: true,
+                            value: _studio.sender,
+                            segments: [
+                              (
+                                value: 'obs_laptop',
+                                label: 'organization_v1.sender_obs'.tr(),
+                                icon: LGlyph.video
+                              ),
+                              (
+                                value: 'phone_direct',
+                                label: phoneLabel,
+                                icon: LGlyph.phone
+                              ),
+                            ],
+                            onChanged: (sender) {
+                              setState(() => _studio.sender = sender);
+                              // The background preparation is for this
+                              // phone only.
+                              if (sender == 'obs_laptop') {
+                                _studio.discardWarm();
+                              } else {
+                                _prewarm();
+                              }
+                            })))),
+        if (!organization)
+          LanternStudioField(
+              label: 'lantern.studio.format'.tr(),
+              child: LSegmented<bool>(
+                  key: const ValueKey('lantern-studio-format'),
+                  expand: true,
+                  value: _audio,
+                  segments: [
+                    (
+                      value: false,
+                      label: 'design_copy.video'.tr(),
+                      icon: LGlyph.video
+                    ),
+                    (
+                      value: true,
+                      label: 'organization_v1.audio'.tr(),
+                      icon: LGlyph.mic
+                    ),
+                  ],
+                  onChanged: (audio) => setState(() => _audio = audio))),
+        if (phone)
+          LanternStudioField(
+              label: 'lantern.studio.quality'.tr(),
+              note: '${_quality.videoBitrateBps ~/ 1000} kbps',
+              child: IgnorePointer(
+                  ignoring: operationBusy,
+                  child: LSegmented<BroadcastQualityPreset>(
+                      key: const ValueKey('lantern-studio-quality'),
+                      expand: true,
+                      value: _quality,
+                      segments: [
+                        for (final preset in BroadcastQualityPreset.values)
+                          (
+                            value: preset,
+                            label: '${preset.height}p',
+                            icon: null
+                          ),
+                      ],
+                      onChanged: (preset) =>
+                          setState(() => _quality = preset)))),
+      ],
+      note('organization_v1.publish_hint'.tr()),
+      gap(),
+      if (_loadError != null) ...[
+        LBanner(_loadError!.tr(), tone: LTone.live),
+        gap(),
+      ],
+      if (widget.consentStatus == 'connected' ||
+          widget.consentStatus == 'failed') ...[
+        LBanner('organization_v1.consent_${widget.consentStatus}'.tr(),
+            tone: widget.consentStatus == 'failed' ? LTone.live : LTone.ok),
+        gap(),
+      ],
+      if (destinations.isEmpty) ...[
+        note('organization_v1.connect_before_live'.tr()),
+        gap(),
+        LButton(
+            key: const ValueKey('lantern-studio-connect'),
+            label: 'organization_v1.connect'.tr(),
+            icon: LGlyph.video,
+            loading: _connecting,
+            expand: true,
+            onPressed: _connecting ? null : _connectYouTube),
+        gap(),
+      ],
+      if (_connectError != null) ...[
+        LBanner(_connectError!.tr(), tone: LTone.live),
+        gap(),
+      ],
+      if (_studio.simplePersonalDestination) ...[
+        LBanner(
+            'organization_v1.going_live_on'
+                .tr(namedArgs: {'channel': _studio.destination!.title}),
+            icon: LGlyph.video),
+        gap(),
+      ] else if (destinations.isNotEmpty)
+        LanternStudioField(
+            label: 'organization_v1.destination'.tr(),
+            child: LanternStudioChoice<String>(
+                key: const ValueKey('lantern-studio-destination'),
+                title: 'organization_v1.destination'.tr(),
+                value: _studio.destination?.id,
+                options: [
+                  for (final c in destinations) (value: c.id, label: c.title)
+                ],
+                onChanged: frozen || operationBusy
+                    ? null
+                    : (id) {
+                        setState(() {
+                          _studio.destination =
+                              destinations.where((c) => c.id == id).firstOrNull;
+                          _studio.session = null;
+                          _studio.confirmed = false;
+                        });
+                        _studio.discardWarm();
+                        _prewarm();
+                      })),
+      if (destinations.isNotEmpty && !frozen && !_connecting)
+        Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: LLink('organization_v1.reconnect'.tr(),
+                    arrow: false,
+                    icon: LGlyph.refresh,
+                    onTap: _connectYouTube))),
+      if (organization) ...[
+        LanternStudioField(
+            label: 'organization_v1.assignment'.tr(),
+            child: LanternStudioChoice<String>(
+                key: const ValueKey('lantern-studio-assignment'),
+                title: 'organization_v1.assignment'.tr(),
+                icon: LGlyph.calendar,
+                value: _studio.session?.id,
+                options: [
+                  for (final s in choices) (value: s.id, label: s.title(lang))
+                ],
+                onChanged: frozen || operationBusy
+                    ? null
+                    : (id) => setState(() => _studio.session =
+                        choices.where((s) => s.id == id).firstOrNull))),
+        Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: LLink('organization_v1.shows'.tr(),
+                    onTap: () => context.push('/shows')))),
+      ] else if (!frozen) ...[
+        LField(
+            key: const ValueKey('lantern-studio-title'),
+            label: 'organization_v1.title_optional'.tr(),
+            controller: _title,
+            maxLength: 100,
+            enabled: !context.isPhoneLandscape),
+        gap(16),
+      ],
+      if (destinations.isNotEmpty && _studio.session?.state != 'ending') ...[
+        Row(children: [
+          Expanded(
+              child: Builder(
+                  builder: (context) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('live.hide_replay'.tr(),
+                                style: Lantern.textStyle(14.5,
+                                    color: context.lt.fg,
+                                    weight: FontWeight.w600,
+                                    height: 1.35)),
+                            Text('live.hide_replay_sub'.tr(),
+                                style: Lantern.textStyle(12.5,
+                                    color: context.lt.muted, height: 1.4)),
+                          ]))),
+          const SizedBox(width: 12),
+          LSwitch(
+              key: const Key('studio-hide-replay'),
+              label: 'live.hide_replay'.tr(),
+              value: _studio.hideReplay,
+              onChanged: operationBusy
+                  ? null
+                  : (value) => _studio.setHideReplay(value)),
+        ]),
+        gap(16),
+      ],
+      if (frozen && _studio.ingestKey.isNotEmpty && !phone) ...[
+        note('organization_v1.obs_hint'.tr()),
+        gap(),
+        LanternStudioField(
+            label: 'lantern.studio.server'.tr(),
+            child: Builder(
+                builder: (context) => SelectableText(_studio.ingestUrl,
+                    textDirection: TextDirection.ltr,
+                    style: Lantern.textStyle(13.5,
+                        color: context.lt.fg, height: 1.4)))),
+        LanternStudioField(
+            label: 'design_copy.stream_key'.tr(),
+            child: Row(children: [
+              Expanded(
+                  child: Builder(
+                      builder: (context) => _showKey
+                          ? SelectableText(_studio.ingestKey,
+                              key: const ValueKey('lantern-studio-key'),
+                              textDirection: TextDirection.ltr,
+                              style: Lantern.textStyle(13.5,
+                                  color: context.lt.fg, height: 1.4))
+                          : Semantics(
+                              label: 'lantern.studio.key_hidden'.tr(),
+                              child: ExcludeSemantics(
+                                  child: Text('• • • • • • • • • •',
+                                      textDirection: TextDirection.ltr,
+                                      style: Lantern.textStyle(13.5,
+                                          color: context.lt.muted,
+                                          height: 1.4)))))),
+              LIconButton(
+                  icon: _showKey ? LGlyph.eyeoff : LGlyph.eye,
+                  label: 'organization_v1.show_key'.tr(),
+                  onPressed: () => setState(() => _showKey = !_showKey)),
+              LIconButton(
+                  icon: LGlyph.copy,
+                  label: 'organization_v1.copy_key'.tr(),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _studio.ingestKey));
+                    lanternToast(context, 'lantern.studio.copied'.tr());
+                  }),
+            ])),
+      ],
+      if (live) ...[
+        Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: LBadge('organization_v1.live'.tr(), kind: LBadgeKind.live)),
+        gap(),
+      ],
+      if (pending) ...[
+        LBanner('organization_v1.termination_pending'.tr(), tone: LTone.warn),
+        gap(),
+      ],
+      if (_studio.errorKey != null || error != null) ...[
+        LBanner((_studio.errorKey ?? error!).tr(), tone: LTone.live),
+        gap(),
+      ],
+      Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: LButton(
+              label: 'organization_v1.refresh'.tr(),
+              kind: LButtonKind.ghost,
+              size: LButtonSize.small,
+              icon: LGlyph.refresh,
+              onPressed: operationBusy ? null : _load)),
+    ];
+
+    final actions = <Widget>[
+      if (!keyboardOpen) ...[
+        if (canPrepare && !_studio.simplePersonalDestination)
+          LanternStudioConfirm(
+              key: const ValueKey('lantern-studio-confirm'),
+              label: 'organization_v1.confirm_destination'.tr(
+                  namedArgs: {'channel': _studio.destination?.title ?? ''}),
+              value: _studio.confirmed,
+              onChanged: operationBusy
+                  ? null
+                  : (value) => setState(() => _studio.confirmed = value)),
+        if (canStart) ...[
+          LHoldButton(
+              key: const ValueKey('lantern-studio-start'),
+              label: 'lantern.studio.hold_start'.tr(),
+              kind: LButtonKind.primary,
+              icon: LGlyph.live,
+              expand: true,
+              enabled: !operationBusy,
+              onConfirmed: _start),
+          // Recovery stays in reach without a second main action.
+          if (canPrepare)
+            Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: LButton(
+                    label: 'organization_v1.prepare'.tr(),
+                    kind: LButtonKind.ghost,
+                    size: LButtonSize.small,
+                    onPressed: operationBusy || !_studio.confirmed
+                        ? null
+                        : _prepare)),
+        ] else if (canPrepare)
+          LButton(
+              key: const ValueKey('lantern-studio-prepare'),
+              label: (phone
+                      ? 'organization_v1.preview'
+                      : 'organization_v1.prepare')
+                  .tr(),
+              icon: phone ? LGlyph.camera : null,
+              loading: _studio.busy,
+              expand: true,
+              onPressed:
+                  operationBusy || !_studio.confirmed ? null : _prepare),
+        if (frozen)
+          Padding(
+              padding: EdgeInsets.only(top: canPrepare || canStart ? 8 : 0),
+              child: LHoldButton(
+                  key: const ValueKey('lantern-studio-end'),
+                  label: (live
+                          ? 'lantern.studio.hold_end'
+                          : 'lantern.studio.hold_cancel_show')
+                      .tr(),
+                  icon: LGlyph.stop,
+                  expand: true,
+                  enabled: !operationBusy,
+                  onConfirmed: _end)),
+      ],
+    ];
+
+    return LanternStudioView(
+        status: live
+            ? LanternStudioStatus.live
+            : frozen
+                ? LanternStudioStatus.ready
+                : LanternStudioStatus.setup,
+        destination: _studio.destination?.title ?? '',
+        sender: phone ? phoneLabel : 'organization_v1.sender_obs'.tr(),
+        format: (_audio ? 'organization_v1.audio' : 'design_copy.video').tr(),
+        network: switch (network) {
+          NetworkStatus.online => LanternStudioNetwork.good,
+          NetworkStatus.degraded => LanternStudioNetwork.unstable,
+          NetworkStatus.offline => LanternStudioNetwork.offline,
+        },
+        help: 'organization_v1.obs_hint'.tr(),
+        controls: controls,
+        actions: actions,
+        onClose: close);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _buildLantern(context);
     if (widget.openedFromVideo && isCompactLandscapeChat(context)) {
       return SafeArea(
           child: SingleChildScrollView(

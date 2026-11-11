@@ -1,0 +1,46 @@
+{
+  "en": {
+    "studio": {
+      "network": "Connection",
+      "network_good": "Good",
+      "network_unstable": "Unstable",
+      "network_off": "Offline",
+      "step_done": "done",
+      "step_next": "Next",
+      "sender": "Sending from",
+      "format": "Format",
+      "quality": "Picture quality",
+      "hold_start": "Hold to go live",
+      "hold_end": "Hold to end the broadcast",
+      "hold_cancel_show": "Hold to cancel the show",
+      "key_hidden": "The stream key is hidden",
+      "copied": "Stream key copied",
+      "server": "Server",
+      "private_recording": "Recording",
+      "local_unavailable": "Not available on this device",
+      "rotate": "Rotate the phone"
+    }
+  },
+  "ar": {
+    "studio": {
+      "network": "الاتصال",
+      "network_good": "جيد",
+      "network_unstable": "غير مستقر",
+      "network_off": "بلا اتصال",
+      "step_done": "تم",
+      "step_next": "التالي",
+      "sender": "الإرسال من",
+      "format": "الصيغة",
+      "quality": "جودة الصورة",
+      "hold_start": "اضغط مطولًا لبدء البث",
+      "hold_end": "اضغط مطولًا لإنهاء البث",
+      "hold_cancel_show": "اضغط مطولًا لإلغاء العرض",
+      "key_hidden": "مفتاح البث مخفي",
+      "copied": "تم نسخ مفتاح البث",
+      "server": "الخادم",
+      "private_recording": "التسجيل",
+      "local_unavailable": "غير متاح على هذا الجهاز",
+      "rotate": "أدر الهاتف"
+    }
+  }
+}
