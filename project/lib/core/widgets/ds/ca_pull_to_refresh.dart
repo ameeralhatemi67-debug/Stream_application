@@ -95,6 +95,49 @@ class _CaPullToRefreshState extends State<CaPullToRefresh>
           PointerDeviceKind.stylus,
           PointerDeviceKind.trackpad,
         });
+    if (context.isLanternSkin) {
+      return Stack(children: [
+        NotificationListener<ScrollNotification>(
+            onNotification: _onScroll,
+            child: ScrollConfiguration(behavior: behavior, child: widget.child)),
+        Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+                child: ListenableBuilder(
+                    listenable: Listenable.merge([_pull, _refreshing, _spin]),
+                    builder: (context, _) {
+                      final refreshing = _refreshing.value;
+                      final progress = refreshing
+                          ? 1.0
+                          : (_pull.value / CaPullToRefresh.threshold)
+                              .clamp(0.0, 1.0);
+                      if (progress == 0 && !refreshing) {
+                        return const SizedBox.shrink();
+                      }
+                      return Align(
+                          alignment: Alignment.topCenter,
+                          child: Transform.translate(
+                              offset: Offset(
+                                  0,
+                                  refreshing
+                                      ? AppTheme.spaceLg
+                                      : AppTheme.spaceSm + _pull.value * .4),
+                              child: Opacity(
+                                  opacity: progress,
+                                  child: Transform.rotate(
+                                      angle: refreshing
+                                          ? math.pi + _spin.value * 2 * math.pi
+                                          : progress * math.pi,
+                                      child: CustomPaint(
+                                          size: const Size.square(36),
+                                          painter: _StarPainter(
+                                              progress: progress,
+                                              color: context.lt.goldInk))))));
+                    }))),
+      ]);
+    }
     return Stack(children: [
       NotificationListener<ScrollNotification>(
           onNotification: _onScroll,

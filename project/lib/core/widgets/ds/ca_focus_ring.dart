@@ -18,7 +18,18 @@ class CaFocusRing extends StatefulWidget {
 class _CaFocusRingState extends State<CaFocusRing> {
   bool _focused = false;
   @override
-  Widget build(BuildContext context) => Focus(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Focus(
+          canRequestFocus: false,
+          includeSemantics: false,
+          onFocusChange: (value) => setState(() => _focused = value),
+          child: CustomPaint(
+              foregroundPainter: _FocusOutline(
+                  _focused,
+                  widget.onDark ? LanternTokens.goldHi : context.lt.goldInk,
+                  widget.radius),
+              child: widget.child))
+      : Focus(
       canRequestFocus: false,
       includeSemantics: false,
       onFocusChange: (value) => setState(() => _focused = value),

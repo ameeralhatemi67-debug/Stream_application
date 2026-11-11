@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../safe_image_provider.dart';
 import '../streamer_avatar.dart';
+import '../lantern/lantern.dart';
+import '../lantern/lantern_compat.dart';
 import 'ca_icon.dart';
 import 'ca_focus_ring.dart';
 import 'canopy_content_motion.dart';
@@ -23,6 +25,13 @@ class CaCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LCard(
+          onTap: onTap,
+          padding: padding,
+          flat: variant == CaCardVariant.flat,
+          child: child);
+    }
     // Hedayah skin: the website's service card, 15 px corners and a soft
     // ambient shadow instead of the warm drop and bezel.
     final hedayah = context.isHedayahSkin;
@@ -63,6 +72,9 @@ class CaStatusChip extends StatelessWidget {
   final String? label;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternStatusChip(kind: kind, label: label);
+    }
     final foreground = switch (kind) {
       CaStatusKind.live || CaStatusKind.audio => Canopy.paper,
       CaStatusKind.pending => Canopy.warning,
@@ -176,6 +188,21 @@ class _CaAvatarState extends State<CaAvatar>
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      // The same footprint (2r + 4); a ring takes 4 px on each side.
+      final footprint = widget.radius * 2 + AppTheme.spaceXs;
+      final ring = lanternRingFor(widget.ring, live: widget.live);
+      return SizedBox.square(
+          dimension: footprint,
+          child: Center(
+              child: LAvatar(
+                  name: widget.name,
+                  image: lanternImage(widget.url),
+                  size: ring == LRing.none ? footprint : footprint - 8,
+                  ring: ring,
+                  org: widget.org,
+                  verified: widget.verified)));
+    }
     final name = widget.name.trim();
     final initial = name.isEmpty
         ? '?'
@@ -244,7 +271,9 @@ class CaVerifiedBadge extends StatelessWidget {
   const CaVerifiedBadge({super.key, this.size = 20});
   final double size;
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternVerifiedSeal(size: size)
+      : Semantics(
       label: 'ds.status_verified'.tr(),
       child: DecoratedBox(
           decoration: const BoxDecoration(
@@ -300,7 +329,20 @@ class CaPersonRow extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
   @override
-  Widget build(BuildContext context) => CaFocusRing(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LRow(
+          title: name,
+          subtitle: subtitle,
+          leading: LAvatar(
+              name: name,
+              image: lanternImage(avatarUrl),
+              size: 40,
+              ring: lanternRingFor(ring, live: live),
+              verified: verified),
+          trailing: trailing,
+          arrow: false,
+          onTap: onTap)
+      : CaFocusRing(
       radius: CanopyRadius.input,
       child: Material(
           type: MaterialType.transparency,
@@ -379,7 +421,24 @@ class CaScholarCard extends StatelessWidget {
   static int columnsForWidth(double width, {double gap = AppTheme.spaceMd}) =>
       (width - gap) / 2 >= CanopyWindow.scholarCardMinWidth ? 2 : 1;
   @override
-  Widget build(BuildContext context) => CaCard(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternScholarCard(
+          name: name,
+          subtitle: subtitle,
+          avatarUrl: avatarUrl,
+          bannerUrl: bannerUrl,
+          live: live,
+          verified: verified,
+          org: org,
+          onTap: onTap,
+          statusLabel: statusLabel,
+          bannerHeight: bannerHeight,
+          footer: footer,
+          statusKind: statusKind,
+          largeAvatar: largeAvatar,
+          bannerOverlay: bannerOverlay,
+          bannerLoadingPlaceholder: bannerLoadingPlaceholder)
+      : CaCard(
       onTap: onTap,
       padding: EdgeInsets.zero,
       child: Column(
@@ -493,6 +552,16 @@ class CaLectureTile extends StatelessWidget {
   final CaStatusKind? statusKind;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternLectureTile(
+          title: title,
+          meta: meta,
+          imageUrl: imageUrl,
+          duration: duration,
+          onTap: onTap,
+          stacked: stacked,
+          statusKind: statusKind);
+    }
     final image = Stack(fit: StackFit.expand, children: [
       _CardImage(url: imageUrl),
       if (duration != null) ...[
@@ -562,6 +631,9 @@ class _CardImage extends StatelessWidget {
   final Widget? loadingPlaceholder;
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternCardImage(url: url, loadingPlaceholder: loadingPlaceholder);
+    }
     const fallback =
         DecoratedBox(decoration: BoxDecoration(gradient: AppGradients.canopy));
     final image = resolveImageProviderOrNull(url);
@@ -586,5 +658,7 @@ class CaCardImage extends StatelessWidget {
   const CaCardImage({super.key, this.url});
   final String? url;
   @override
-  Widget build(BuildContext context) => _CardImage(url: url);
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LanternCardImage(url: url)
+      : _CardImage(url: url);
 }

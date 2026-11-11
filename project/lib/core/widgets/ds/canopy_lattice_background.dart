@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
+import '../lantern/lantern.dart';
 
 /// Memory pressure only switches off optional lattice decoration, for this run.
 class CanopyTexturePolicy extends ValueNotifier<bool>
@@ -159,7 +160,11 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
                   : widget.textureColor,
               widget.textureOpacity)));
   @override
-  Widget build(BuildContext context) => MouseRegion(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? (widget.gradient
+          ? LNightBand(latticeOpacity: .08, child: widget.child)
+          : widget.child)
+      : MouseRegion(
       onHover:
           _spotlight ? (event) => _pointer.value = event.localPosition : null,
       onExit: _spotlight ? (_) => _pointer.value = null : null,

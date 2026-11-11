@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'ca_icon.dart';
+import '../lantern/lantern.dart';
 
 Rect? canopyOrigin(BuildContext context) {
   final box = context.findRenderObject();
@@ -221,7 +222,16 @@ class _CaLevelMeterState extends State<CaLevelMeter> {
   }
 
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? LProgress(_level,
+          height: CanopySize.meterHeight,
+          label: widget.label ?? 'ds.audio_level'.tr(),
+          color: _level >= CanopySize.clippingThreshold
+              ? context.lt.live
+              : _level >= CanopySize.warningThreshold
+                  ? context.lt.warn
+                  : null)
+      : Semantics(
       label: widget.label ?? 'ds.audio_level'.tr(),
       value: '${(_level * 100).round()}%',
       child: TweenAnimationBuilder<double>(

@@ -10,6 +10,8 @@ import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../core/widgets/hedayah/hedayah_kit.dart';
+import '../../../core/widgets/lantern/lantern.dart';
+import '../../../core/widgets/lantern/lantern_compat.dart';
 import '../../discovery/presentation/bookmarks_sheet.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import '../../profile/presentation/widgets/legal_document_reader_screen.dart';
@@ -48,6 +50,11 @@ class HidayahWebHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      final header = LanternWebHeader(
+          active: lanternSectionFor(active), onBranch: onBranch);
+      return dark ? LanternSurface(night: true, child: header) : header;
+    }
     final lang = context.locale.languageCode;
     final (liveCount, unread, signedIn, streamer, admin, orgAdmin) =
         context.select<AppProvider, (int, int, bool, bool, bool, bool)>((p) => (
@@ -301,6 +308,7 @@ class HidayahWebFooter extends StatelessWidget {
   const HidayahWebFooter({super.key});
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return const LanternWebFooter();
     void onLegal(int index) => showHidayahLegal(context, index);
     final lang = context.locale.languageCode;
     // Hedayah skin: the website closes on gold; its text is ink here.
@@ -409,7 +417,15 @@ class HidayahWebPage extends StatelessWidget {
   final HidayahWebSection? active;
   final bool dark;
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => context.isLanternSkin
+      ? Scaffold(
+          backgroundColor: dark ? LanternTokens.nightGround : context.lt.bg,
+          body: SafeArea(
+              child: Column(children: [
+            HidayahWebHeader(active: active, dark: dark),
+            Expanded(child: body),
+          ])))
+      : Scaffold(
       backgroundColor: dark ? HidayahGold.s950 : context.pageGround,
       // On a browser there are no system bars; a landscape tablet has them.
       body: SafeArea(
