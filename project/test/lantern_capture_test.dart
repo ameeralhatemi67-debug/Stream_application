@@ -101,6 +101,16 @@ final shots = <LanternShot>[
       taps: ['lantern-map-legend-button', 'lantern-map-row-s-']),
   lanternShot('map-laptop-ar-mosque', '/map',
       size: laptop, taps: ['lantern-map-row-m-']),
+  lanternShot('channel-phone-ar-day', '/profile/${mockStreamers.first.streamerId}',
+      size: const Size(390, 1500)),
+  lanternShot('channel-phone-en-night', '/profile/${mockStreamers[1].streamerId}',
+      size: const Size(390, 1500), lang: 'en', night: true),
+  lanternShot('channel-laptop-ar-day', '/profile/${mockStreamers.first.streamerId}',
+      size: laptop),
+  lanternShot('apply-phone-ar', '/streamer-apply', who: 'viewer'),
+  lanternShot('apply-laptop-en', '/streamer-apply',
+      size: laptop, lang: 'en', who: 'viewer'),
+  lanternShot('apply-status-phone-ar', '/application-pending', who: 'viewer'),
 ];
 
 void main() {

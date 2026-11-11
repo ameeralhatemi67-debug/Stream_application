@@ -328,7 +328,9 @@ class LanternApplyView extends StatelessWidget implements LanternSkinWidget {
                               key: const ValueKey('lantern-apply-rail'),
                               radius: Lantern.radiusCard,
                               padding: const EdgeInsets.all(20),
-                              child: _rail(context))),
+                              // Inside the band, so its text reads the
+                              // night colours.
+                              child: Builder(builder: _rail))),
                       const SizedBox(width: 28),
                       Expanded(
                           child: DecoratedBox(
@@ -442,7 +444,7 @@ class LanternApplyView extends StatelessWidget implements LanternSkinWidget {
                               ? t.ok
                               : current
                                   ? LanternTokens.goldHi
-                                  : t.line,
+                                  : t.muted,
                           width: current ? 2.5 : 1.5)),
                   child: done
                       ? const LIcon(LGlyph.check,
