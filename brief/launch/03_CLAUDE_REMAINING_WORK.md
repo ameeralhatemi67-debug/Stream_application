@@ -146,7 +146,8 @@ Blocked by: the signing key (01 §6), the new API key and Firebase values (01 §
   ```
   The build must use the real upload key; it fails closed without `key.properties`, and without `DISTRIBUTION` (`apk` for the website APK, `play` here; a bundle built as `apk` is refused). *(2026-10-26: R8 now passes. The first release build stopped on Flutter's Play Core references; `proguard-rules.pro` covers them and keeps RootEncoder. Checked with a throwaway key: arm64 APK 40.7 MB, x86_64 42.2 MB.)*
 - [ ] Run `node brief/tools/scan_build_secrets.mjs <aab>`: it must print `RESULT: clean`. Record the AAB size.
-- [ ] Check 16 KB page alignment of the native `.so` files (RootEncoder, Flutter) inside the AAB.
+- [ ] Check 16 KB page alignment of the native `.so` files (RootEncoder, Flutter) inside the AAB. *(2026-11-11: the 2026-10-26 release APK passes `zipalign -c -P 16` and every library has LOAD alignment 2\*\*14 or more. RootEncoder ships no `.so`. The final bundle still needs the check; commands in `brief/fable/ANDROID_PLAY_STATUS.md` section 5.)*
+- [ ] Check the merged manifest of the final bundle against `store/permissions_and_fgs_declaration.md` section 1a: no location foreground service, no background location, no media permission, camera and microphone features not required. *(2026-11-11: manifest changes made; not yet built.)*
 - [ ] Install a universal APK from the AAB (bundletool) on an emulator and a phone. Smoke-test: launch, sign-in screen, feed, map, live room, studio open. Check R8 keep rules (RootEncoder, Supabase, WebView, Firebase) if anything crashes.
 - [ ] Hand the `.aab` path to the owner for the internal-testing upload (01 §8).
 

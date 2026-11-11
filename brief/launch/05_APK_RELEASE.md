@@ -115,9 +115,19 @@ newer one), so ship a fixed release with a higher version code instead.
 1. Play Console → your app → Test and release → App integrity → App signing:
    **use your own key**, export it with Google's PEPK tool, and upload it.
    Optionally make a separate upload key for future uploads.
+   *2026-11-11:* new apps get a Google-generated key by default, so change
+   this before the first release of any track. Copy the PEPK command exactly
+   as Play Console shows it.
 2. Register the package name and this key for Android developer verification
    (Play Console), so the website APK keeps installing once Google enforces it
    worldwide in 2027.
+   *2026-11-11, from developer.android.com/developer-verification:* a developer
+   who distributes on and off Play uses Play Console for this, not the
+   separate Android Developer Console. Play registers most Play apps
+   automatically. Open Play Console's developer verification page and check
+   that this package and this key show as registered. Enforcement started on
+   30 September 2026 in Brazil, Indonesia, Singapore and Thailand; other
+   countries follow from 2027.
 3. Build the bundle with `--dart-define=DISTRIBUTION=play`
    (`flutter build appbundle --release ...`). A bundle built as `apk` is
    refused.
