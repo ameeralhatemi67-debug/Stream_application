@@ -38,6 +38,8 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 import 'widgets/tricity_basemap_layer.dart';
+import 'lantern/lantern_map_pins.dart';
+import 'lantern/lantern_place_card.dart';
 
 /// The Al Khobar / Dhahran / Dammam discovery map.
 ///
@@ -518,6 +520,210 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Lantern and Arch (ADR-026). The same pins, priorities and selection as
+  // _buildPinLayer; drawn with the Lantern pins and grouped by the box each
+  // pin takes with its label (owner decision 2026-11-10), so neither pins
+  // nor labels can cover each other.
+  // ---------------------------------------------------------------------
+  Widget _buildLanternPinLayer({
+    required List<StreamerModel> streamers,
+    required List<MapMarkerModel> cached,
+    required List<MapMosque> mosques,
+    required StreamerModel? selectedStreamer,
+    required String? ownStreamerId,
+    required Map<String, ({UpcomingSchedule schedule, DateTime start})>
+        nextLive,
+  }) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _cameraRevision,
+      builder: (context, revision, child) {
+        final camera = _clusterCamera(context);
+        final zoom = camera.zoom;
+        final lang = context.locale.languageCode;
+        String? soonChip(StreamerModel s) {
+          final next = nextLive[s.streamerId];
+          if (next == null || s.isCurrentlyLive) return null;
+          final minutes = next.start.difference(_now).inMinutes + 1;
+          return minutes > 60
+              ? null
+              : 'lessons.map.in'.tr(args: [durationLabel(minutes, lang)]);
+        }
+
+        final selectedMosque =
+            mosques.where((m) => m.id == _selectedMosqueId).firstOrNull;
+        final points = <MapClusterPoint>[
+          for (final s in streamers)
+            if (s.streamerId != selectedStreamer?.streamerId)
+              MapClusterPoint(
+                  's:${s.streamerId}', LatLng(s.latitude, s.longitude),
+                  priority: s.isCurrentlyLive
+                      ? 6
+                      : soonChip(s) != null
+                          ? 4
+                          : 1),
+          for (final m in cached)
+            MapClusterPoint('c:${m.streamerId}', m.coordinates, priority: 1),
+          for (final m in mosques)
+            if (m.id != selectedMosque?.id &&
+                (m.status != MosqueStatus.quiet || zoom >= kMapQuietMosqueZoom))
+              MapClusterPoint('m:${m.id}', m.point,
+                  priority: mapMosquePriority(m)),
+        ];
+        final groups =
+            clusterMapFootprints(points, project: camera.projectAtZoom);
+
+        final streamersById = {for (final s in streamers) s.streamerId: s};
+        final cachedById = {for (final m in cached) m.streamerId: m};
+        final mosquesById = {for (final m in mosques) m.id: m};
+        final pointsById = {for (final p in points) p.id: p};
+        final pins = <String, ({String label, bool mosque, VoidCallback open})>{
+          for (final s in streamers)
+            's:${s.streamerId}': (
+              label: s.getLocalizedName(lang),
+              mosque: false,
+              open: () => _selectStreamer(s)
+            ),
+          for (final m in cached)
+            'c:${m.streamerId}': (
+              label: m.getLocalizedName(lang),
+              mosque: false,
+              open: () => _showCachedMarkerInfo(context, m)
+            ),
+          for (final m in mosques)
+            'm:${m.id}': (
+              label: m.label,
+              mosque: true,
+              open: () => _selectMosque(m)
+            ),
+        };
+
+        Marker pin(Key key, LatLng point, Widget child) => Marker(
+            key: key,
+            point: point,
+            width: kMapPinFootprint.width,
+            height: kMapPinFootprint.height,
+            child: child);
+
+        Marker streamerMarker(StreamerModel s, {bool selected = false}) => pin(
+            ValueKey('marker_${s.streamerId}'),
+            LatLng(s.latitude, s.longitude),
+            LanternStreamerPin(
+                key: ValueKey('avatar_${s.streamerId}'),
+                name: s.getLocalizedName(lang),
+                avatarUrl: s.avatarUrl,
+                live: s.isCurrentlyLive,
+                audio: s.isAudioLive,
+                org: s.isOrganization,
+                mine: ownStreamerId == s.streamerId,
+                selected: selected,
+                soon: soonChip(s),
+                onTap: () => _selectStreamer(s),
+                onDoubleTap: () => _focusVenue(
+                    LatLng(s.latitude, s.longitude),
+                    math.min(_mapController.camera.zoom + 2, kMapMaxZoom))));
+
+        Marker mosquePin(MapMosque m, {bool selected = false}) => pin(
+            ValueKey('mosque_${m.id}'),
+            m.point,
+            LanternMosquePin(m,
+                selected: selected, onTap: () => _selectMosque(m)));
+
+        Marker bubble(MapClusterGroup group) {
+          final inside = [
+            for (final id in group.memberIds)
+              if (id.startsWith('m:')) mosquesById[id.substring(2)]
+          ].nonNulls.toList();
+          final liveStreamers = group.memberIds
+              .where((id) =>
+                  id.startsWith('s:') &&
+                  (streamersById[id.substring(2)]?.isCurrentlyLive ?? false))
+              .length;
+          final count = group.memberIds.length;
+          return pin(
+              ValueKey(group.id),
+              group.center,
+              LanternBubblePin(
+                  count: count,
+                  mosques: inside.length,
+                  live: liveStreamers + inside.where((m) => m.live).length,
+                  onSite: inside
+                      .where((m) => m.status == MosqueStatus.now && !m.live)
+                      .length,
+                  semantics: 'map.cluster_label'.plural(count, name: 'count'),
+                  onTap: () => _openLanternCluster(group, pins, [
+                        for (final id in group.memberIds)
+                          if (pointsById[id] case final point?) point
+                      ])));
+        }
+
+        final markers = <Marker>[
+          for (final group in groups)
+            if (!group.isSingle)
+              bubble(group)
+            else if (group.memberIds.single.startsWith('m:'))
+              mosquePin(mosquesById[group.memberIds.single.substring(2)]!)
+            else if (group.memberIds.single.startsWith('s:'))
+              streamerMarker(
+                  streamersById[group.memberIds.single.substring(2)]!)
+            else
+              () {
+                final marker =
+                    cachedById[group.memberIds.single.substring(2)]!;
+                return pin(
+                    ValueKey('offline_${group.id}'),
+                    group.center,
+                    LanternStreamerPin(
+                        name: marker.getLocalizedName(lang),
+                        avatarUrl: marker.avatarUrl,
+                        org: marker.isOrganization,
+                        saved: true,
+                        onTap: () => _showCachedMarkerInfo(context, marker),
+                        onDoubleTap: () => _focusVenue(
+                            marker.coordinates,
+                            math.min(_mapController.camera.zoom + 2,
+                                kMapMaxZoom))));
+              }(),
+          if (selectedStreamer != null)
+            streamerMarker(selectedStreamer, selected: true),
+          if (selectedMosque != null) mosquePin(selectedMosque, selected: true),
+        ];
+        if (markers.isEmpty) return const SizedBox.shrink();
+        return MarkerLayer(markers: markers);
+      },
+    );
+  }
+
+  /// A bubble zooms to the first level where its places come apart, framed
+  /// on all of them. Places that never come apart (a broadcaster streaming
+  /// from a mosque) open a short list instead.
+  void _openLanternCluster(
+      MapClusterGroup group,
+      Map<String, ({String label, bool mosque, VoidCallback open})> pins,
+      List<MapClusterPoint> members) {
+    final camera = _mapController.camera;
+    final zoom = mapSeparationZoom(members,
+        projectAt: camera.projectAtZoom, from: camera.zoom, max: kMapMaxZoom);
+    if (zoom != null && members.isNotEmpty) {
+      var south = 90.0, north = -90.0, west = 180.0, east = -180.0;
+      for (final m in members) {
+        south = math.min(south, m.coordinates.latitude);
+        north = math.max(north, m.coordinates.latitude);
+        west = math.min(west, m.coordinates.longitude);
+        east = math.max(east, m.coordinates.longitude);
+      }
+      _focusVenue(LatLng((south + north) / 2, (west + east) / 2), zoom);
+      return;
+    }
+    showLanternPlaceList(context,
+        title: 'map.cluster_list_title'
+            .plural(group.memberIds.length, name: 'count'),
+        places: [
+          for (final id in group.memberIds)
+            if (pins[id] case final place?) place
+        ]);
+  }
+
   /// Every pin in one layer, so mosques and streamers group into the same
   /// bubbles. Online, live state comes only from the current provider
   /// snapshot; [cached] pins are the saved venues of UI-08, always offline,
@@ -531,6 +737,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     required Map<String, ({UpcomingSchedule schedule, DateTime start})>
         nextLive,
   }) {
+    if (context.isLanternSkin) {
+      return _buildLanternPinLayer(
+          streamers: streamers,
+          cached: cached,
+          mosques: mosques,
+          selectedStreamer: selectedStreamer,
+          ownStreamerId: ownStreamerId,
+          nextLive: nextLive);
+    }
     return ValueListenableBuilder<int>(
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
@@ -1283,7 +1498,32 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                         : available.height,
                                   ),
                                   child: SingleChildScrollView(
-                                    child: selectedStreamer != null
+                                    child: context.isLanternSkin
+                                        ? (selectedStreamer != null
+                                            ? LanternStreamerPlaceCard(
+                                                streamer: selectedStreamer,
+                                                nextStart: selectedStreamer
+                                                        .isCurrentlyLive
+                                                    ? null
+                                                    : nextLive[selectedStreamer
+                                                            .streamerId]
+                                                        ?.start,
+                                                nextTitle: nextLive[
+                                                        selectedStreamer
+                                                            .streamerId]
+                                                    ?.schedule
+                                                    .title(locale.languageCode),
+                                                onClose: () => setState(() {
+                                                      _selectedStreamerId =
+                                                          null;
+                                                    }))
+                                            : LanternMosquePlaceCard(
+                                                mosqueId: _selectedMosqueId!,
+                                                online: isOnline,
+                                                onClose: () => setState(() {
+                                                      _selectedMosqueId = null;
+                                                    })))
+                                        : selectedStreamer != null
                                         ? MarkerSummaryCard(
                                             streamer: selectedStreamer,
                                             nextLive: selectedStreamer

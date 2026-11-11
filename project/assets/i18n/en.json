@@ -3536,6 +3536,27 @@
       "report_body": "Tell the moderators what is wrong. They review every report.",
       "report_sent": "Report sent. Thank you.",
       "report_failed": "The report could not be sent. Check your connection and try again."
+    },
+    "map": {
+      "mosque_pin": "{}, {} lessons this week",
+      "streamer_pin": "{}",
+      "next_lesson": "Next lesson",
+      "this_week": "This week at this mosque",
+      "next_broadcast": "Next broadcast",
+      "not_scheduled": "No broadcast is scheduled",
+      "open_channel": "Open the channel",
+      "close_card": "Close the card",
+      "more_lessons": "{} more this week",
+      "legend": "What the markers mean",
+      "legend_mosque": "A mosque with lessons",
+      "legend_quiet": "A mosque with nothing coming up",
+      "legend_channel": "A broadcaster",
+      "legend_live": "Live in the app",
+      "legend_now": "On now at the mosque",
+      "legend_group": "Several places: tap to come closer",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "saved_venue": "Saved place, shown without a connection"
     }
   }
 }

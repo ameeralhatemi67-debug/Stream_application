@@ -1,0 +1,48 @@
+{
+  "en": {
+    "map": {
+      "mosque_pin": "{}, {} lessons this week",
+      "streamer_pin": "{}",
+      "next_lesson": "Next lesson",
+      "this_week": "This week at this mosque",
+      "next_broadcast": "Next broadcast",
+      "not_scheduled": "No broadcast is scheduled",
+      "open_channel": "Open the channel",
+      "close_card": "Close the card",
+      "more_lessons": "{} more this week",
+      "legend": "What the markers mean",
+      "legend_mosque": "A mosque with lessons",
+      "legend_quiet": "A mosque with nothing coming up",
+      "legend_channel": "A broadcaster",
+      "legend_live": "Live in the app",
+      "legend_now": "On now at the mosque",
+      "legend_group": "Several places: tap to come closer",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "saved_venue": "Saved place, shown without a connection"
+    }
+  },
+  "ar": {
+    "map": {
+      "mosque_pin": "{}، {} دروس هذا الأسبوع",
+      "streamer_pin": "{}",
+      "next_lesson": "الدرس القادم",
+      "this_week": "هذا الأسبوع في هذا المسجد",
+      "next_broadcast": "البث القادم",
+      "not_scheduled": "لا يوجد بث مجدول",
+      "open_channel": "افتح القناة",
+      "close_card": "إغلاق البطاقة",
+      "more_lessons": "{} أخرى هذا الأسبوع",
+      "legend": "معاني العلامات",
+      "legend_mosque": "مسجد فيه دروس",
+      "legend_quiet": "مسجد بلا دروس قادمة",
+      "legend_channel": "محاضر أو قناة",
+      "legend_live": "مباشر على المنصة",
+      "legend_now": "يقام الآن في المسجد",
+      "legend_group": "عدة مواقع: اضغط للاقتراب",
+      "zoom_in": "تكبير",
+      "zoom_out": "تصغير",
+      "saved_venue": "موقع محفوظ، يظهر بلا اتصال"
+    }
+  }
+}
