@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_settings_sections.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/config/app_identity.dart';
@@ -30,6 +33,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     context.select<AppProvider, Object?>((p) =>
         (p.consentAcceptedAt, p.consentVersion, p.hasAcceptedCurrentConsent));
     final provider = context.read<AppProvider>();
+    if (context.isLanternSkin) return _buildLantern(context, provider);
     return Column(children: [
       if (!widget.dangerOnly) _buildConsentRecordCard(context, provider),
       const SizedBox(height: AppTheme.spaceMd),
@@ -39,6 +43,189 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       const SizedBox(height: AppTheme.spaceMd),
       if (!widget.privacyOnly) _buildDeleteAccountCard(context, provider),
     ]);
+  }
+
+  /// Lantern and Arch (ADR-026): the same cards, flags and handlers.
+  Widget _buildLantern(BuildContext context, AppProvider provider) {
+    final acceptedAt = provider.consentAcceptedAt;
+    final version = provider.consentVersion;
+    final String status;
+    if (version == null || acceptedAt == null) {
+      status = 'settings.consent_record_none'.tr();
+    } else if (provider.hasAcceptedCurrentConsent) {
+      status = 'settings.consent_record_accepted'.tr(namedArgs: {
+        'version': version,
+        'date': DateFormat.yMMMd(context.locale.languageCode)
+            .format(acceptedAt.toLocal()),
+      });
+    } else {
+      status =
+          'settings.consent_record_outdated'.tr(namedArgs: {'version': version});
+    }
+    return LanternPrivacyView(
+        showPrivacy: !widget.dangerOnly,
+        showDanger: !widget.privacyOnly,
+        consentStatus: status,
+        exporting: _isExportingData,
+        onExport: () => _handleDataExport(context, provider),
+        clearingStream: _isDeletingStreamMessages,
+        onClearStream: () => _showSelectStreamDialog(context, provider),
+        deletingAll: _isDeletingAllMessages,
+        onDeleteAll: () => _showDeleteAllMessagesDialog(context, provider),
+        deleting: _isDeletingAccount,
+        onDelete: () => _showDeleteAccountDialog(context, provider));
+  }
+
+  void _showDataExportDialogLantern(BuildContext context, String jsonText) {
+    showLanternDialog<void>(context,
+        title: 'settings.data_export_dialog_title'.tr(),
+        maxWidth: 620,
+        body: (context) {
+          final t = context.lt;
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('settings.data_export_dialog_desc'.tr(),
+                    style: Lantern.textStyle(13.5, color: t.muted)),
+                const SizedBox(height: 10),
+                Container(
+                    constraints: const BoxConstraints(maxHeight: 360),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        color: t.sunk,
+                        borderRadius:
+                            BorderRadius.circular(Lantern.radiusField),
+                        border: Border.all(color: t.line)),
+                    child: SingleChildScrollView(
+                        child: SelectableText(jsonText,
+                            textDirection: ui.TextDirection.ltr,
+                            style: Lantern.textStyle(12, color: t.fg, height: 1.4)
+                                .copyWith(fontFamily: 'monospace')))),
+              ]);
+        },
+        actions: (dialogContext) => [
+              LButton(
+                  label: 'common.close'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialogContext)),
+              LButton(
+                  label: 'settings.data_export_copy_btn'.tr(),
+                  icon: LGlyph.copy,
+                  kind: LButtonKind.tonal,
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: jsonText));
+                    if (!dialogContext.mounted) return;
+                    lanternToast(
+                        dialogContext, 'settings.data_export_copied_toast'.tr());
+                  }),
+              LButton(
+                  label: 'settings.data_export_save_btn'.tr(),
+                  icon: LGlyph.download,
+                  onPressed: () =>
+                      _saveDataExportFile(dialogContext, jsonText)),
+            ]);
+  }
+
+  /// Delete My Account under Lantern: the same warning and the same flow;
+  /// only the final confirm is press-and-hold.
+  void _showDeleteAccountDialogLantern(
+      BuildContext context, AppProvider provider) {
+    showLanternDialog<void>(context,
+        title: 'settings.delete_account_confirm_title'.tr(),
+        body: (context) {
+          final t = context.lt;
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LBanner('settings.delete_account_confirm_body'.tr(),
+                    tone: LTone.live),
+                const SizedBox(height: 10),
+                Text('lantern.hold_hint'.tr(),
+                    style: Lantern.textStyle(13, color: t.muted)),
+              ]);
+        },
+        actions: (dialogContext) => [
+              LButton(
+                  label: 'settings.cancel'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialogContext)),
+              LHoldButton(
+                  key: const ValueKey('lantern-delete-account-hold'),
+                  label: 'settings.delete_account_confirm_btn'.tr(),
+                  icon: LGlyph.trash,
+                  onConfirmed: () {
+                    Navigator.pop(dialogContext);
+                    _handleDeleteAccount(context, provider);
+                  }),
+            ]);
+  }
+
+  void _showDeleteAllMessagesDialogLantern(
+      BuildContext context, AppProvider provider) {
+    showLanternDialog<void>(context,
+        title: 'settings.delete_all_messages_confirm_title'.tr(),
+        body: (context) => LBanner(
+            'settings.delete_all_messages_confirm_body'.tr(),
+            tone: LTone.live),
+        actions: (dialogContext) => [
+              LButton(
+                  label: 'settings.cancel'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialogContext)),
+              LButton(
+                  key: const ValueKey('lantern-delete-messages-confirm'),
+                  label: 'settings.delete_all_messages_btn'.tr(),
+                  icon: LGlyph.trash,
+                  kind: LButtonKind.danger,
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    _handleDeleteAllMessages(context, provider);
+                  }),
+            ]);
+  }
+
+  Future<void> _showSelectStreamDialogLantern(
+      BuildContext context, AppProvider provider) async {
+    final streamIds = await provider.loadMyMessageStreamIds();
+    if (!context.mounted) return;
+    final selectedStreamId = await showLanternDialog<String>(context,
+        title: 'settings.select_stream_dialog_title'.tr(),
+        body: (dialogContext) => streamIds.isEmpty
+            ? LEmptyState(
+                compact: true,
+                icon: LGlyph.chat,
+                title: 'settings.select_stream_dialog_empty'.tr())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                    for (final id in streamIds)
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: LRow(
+                              icon: LGlyph.chat,
+                              title: id,
+                              onTap: () => Navigator.pop(dialogContext, id))),
+                  ]),
+        actions: (dialogContext) => [
+              LButton(
+                  label: 'settings.cancel'.tr(),
+                  kind: LButtonKind.ghost,
+                  onPressed: () => Navigator.pop(dialogContext)),
+            ]);
+    if (selectedStreamId == null || !context.mounted) return;
+    setState(() => _isDeletingStreamMessages = true);
+    final success = await provider.deleteMyMessagesForStream(selectedStreamId);
+    if (!context.mounted) return;
+    setState(() => _isDeletingStreamMessages = false);
+    lanternToast(
+        context,
+        success
+            ? 'settings.delete_messages_by_stream_success_toast'.tr()
+            : 'settings.delete_all_messages_error_toast'.tr(),
+        warn: !success);
   }
 
   /// What this account consented to, and how to withdraw it.
@@ -211,6 +398,9 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   }
 
   void _showDataExportDialog(BuildContext context, String jsonText) {
+    if (context.isLanternSkin) {
+      return _showDataExportDialogLantern(context, jsonText);
+    }
     showCaDialog(
       context: context,
       builder: (dialogContext) {
@@ -355,6 +545,9 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   }
 
   void _showDeleteAccountDialog(BuildContext context, AppProvider provider) {
+    if (context.isLanternSkin) {
+      return _showDeleteAccountDialogLantern(context, provider);
+    }
     showCaDialog(
       context: context,
       builder: (dialogContext) {
@@ -514,6 +707,9 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
 
   void _showDeleteAllMessagesDialog(
       BuildContext context, AppProvider provider) {
+    if (context.isLanternSkin) {
+      return _showDeleteAllMessagesDialogLantern(context, provider);
+    }
     showCaDialog(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
@@ -582,6 +778,9 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
 
   Future<void> _showSelectStreamDialog(
       BuildContext context, AppProvider provider) async {
+    if (context.isLanternSkin) {
+      return _showSelectStreamDialogLantern(context, provider);
+    }
     final streamIds = await provider.loadMyMessageStreamIds();
     if (!context.mounted) return;
 

@@ -3655,6 +3655,15 @@
         "prayer_today": "Prayer times today"
       }
     },
+    "account": {
+      "categories": "Settings categories",
+      "new": "New",
+      "guest_hint": "Sign in to follow broadcasters and save lessons.",
+      "master_admin": "Master admin",
+      "admin": "Admin",
+      "offline": "Offline",
+      "changes_requested": "Changes requested before verification."
+    },
     "channel": {
       "unfollow_title": "Unfollow this channel?",
       "unfollow_body": "You will stop hearing about its next broadcasts.",

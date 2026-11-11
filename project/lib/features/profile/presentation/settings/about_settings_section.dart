@@ -9,6 +9,9 @@ import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/config/app_identity.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// The app's logo beside the logo of the association behind it, the installed
 /// version and, on release builds, whether a newer one is published.
@@ -20,6 +23,9 @@ class AboutSettingsSection extends StatelessWidget {
     final updates = context.watch<AppUpdateController?>();
     final version = updates?.installedVersion;
     final build = updates?.installedBuild;
+    if (context.isLanternSkin) {
+      return _buildLantern(context, updates, version, build);
+    }
     return CaCard(
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -57,6 +63,42 @@ class AboutSettingsSection extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// Lantern and Arch (ADR-026): the same version and update states, and the
+/// way back to the welcome pages.
+Widget _buildLantern(BuildContext context, AppUpdateController? updates,
+    String? version, int? build) {
+  final release = updates?.release;
+  final status = updates?.status;
+  final available = release != null &&
+      (status == AppUpdateStatus.available ||
+          status == AppUpdateStatus.required);
+  return LanternAboutCard(
+      appName: AppIdentity.name(context.locale.languageCode),
+      version: version == null
+          ? null
+          : 'settings.build_version'.tr(namedArgs: {
+              'version': version,
+              'build': build?.toString() ?? '-',
+            }),
+      latest: status == AppUpdateStatus.upToDate,
+      available: available
+          ? 'update.settings_available'
+              .tr(namedArgs: {'version': release.versionName})
+          : null,
+      downloadLabel: updates?.distribution == AppDistribution.play
+          ? 'update.open_play'.tr()
+          : 'update.download'.tr(),
+      onDownload: !available
+          ? null
+          : () async {
+              final opened = await updates!.openDownload();
+              if (!opened && context.mounted) {
+                lanternToast(context, 'update.open_failed'.tr(), warn: true);
+              }
+            },
+      onReopenWelcome: () => context.push('/onboarding'));
 }
 
 /// "Version x is available" with its download, or a quiet "latest" line once

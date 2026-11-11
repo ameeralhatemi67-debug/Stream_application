@@ -7,6 +7,8 @@ import '../../../live_stream/presentation/widgets/chat_message_actions_sheet.dar
     show chatBlockFailureKey;
 import '../../../live_stream/services/chat_block_list.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// Lists the chat accounts this viewer has blocked, straight from the server
 /// (P6), and lets them unblock one. Opening the sheet refreshes the list, so
@@ -18,6 +20,11 @@ class BlockedAccountsSheet extends StatefulWidget {
   final ChatBlockList? blockList;
 
   static Future<void> show(BuildContext context, {ChatBlockList? blockList}) {
+    if (context.isLanternSkin) {
+      return showLanternSheet<void>(context,
+          title: 'settings.blocked_accounts_title'.tr(),
+          body: (_) => BlockedAccountsSheet(blockList: blockList));
+    }
     return showCaSheet<void>(context,
         title: 'settings.blocked_accounts_title'.tr(),
         body: BlockedAccountsSheet(blockList: blockList),
@@ -88,6 +95,18 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
   @override
   Widget build(BuildContext context) {
     final ids = _list.blockedIds.toList()..sort();
+    if (context.isLanternSkin) {
+      return LanternBlockedAccounts(
+          accounts: [for (final id in ids) (id, _names[id])],
+          pending: _pending,
+          loading: _loading,
+          stale: _list.isStale,
+          onRetry: () {
+            setState(() => _loading = true);
+            _load();
+          },
+          onUnblock: _unblock);
+    }
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(

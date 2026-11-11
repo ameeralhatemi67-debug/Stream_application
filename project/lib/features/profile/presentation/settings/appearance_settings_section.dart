@@ -10,6 +10,8 @@ import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/hedayah/hedayah_kit.dart';
 import '../../../../core/widgets/lantern/lantern_base.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../lantern/lantern_settings_sections.dart';
+import '../lantern/lantern_settings_view.dart';
 
 /// Settings → Design: the app's gold & black design, the Hedayah skin
 /// (ADR-016) or Lantern and Arch (ADR-026), per device. Each choice is a
@@ -20,6 +22,7 @@ class AppearanceSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.select<AppProvider, AppSkin>((p) => p.appSkin);
+    if (context.isLanternSkin) return _buildLantern(context, skin);
     final hedayah = context.isHedayahSkin;
     return CaCard(
         key: const ValueKey('settings-design'),
@@ -54,6 +57,33 @@ class AppearanceSettingsSection extends StatelessWidget {
                 ]);
               })),
         ]));
+  }
+
+  /// Lantern and Arch (ADR-026): the three designs as tiles, then Lantern's
+  /// own appearance (day, night or the device's) and calm motion.
+  Widget _buildLantern(BuildContext context, AppSkin skin) {
+    final (appearance, calm) =
+        context.select<AppProvider, (LanternAppearance, bool)>(
+            (p) => (p.lanternAppearance, p.lanternCalmMotion));
+    final provider = context.read<AppProvider>();
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LanternSkinTiles(
+              options: [
+                for (final option in AppSkin.values)
+                  (skin: option, name: nameOf(option), hint: hintOf(option)),
+              ],
+              current: skin,
+              onChoose: (option) => _choose(context, option)),
+          const SizedBox(height: 22),
+          LanternAppearanceGroup(
+              appearance: appearance,
+              calm: calm,
+              onAppearance: provider.setLanternAppearance,
+              onCalm: provider.setLanternCalmMotion),
+        ]);
   }
 
   static String nameOf(AppSkin skin) => switch (skin) {

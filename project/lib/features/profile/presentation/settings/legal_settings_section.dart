@@ -9,6 +9,8 @@ import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../admin/models/terms_and_conditions_model.dart';
 import '../widgets/legal_document_reader_screen.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// Platform governance: terms, broadcaster guidelines and the privacy policy,
 /// each opening the legal reader.
@@ -20,6 +22,13 @@ class LegalSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     context.select<AppProvider, Object?>((p) => p.termsAndConditions);
+    if (context.isLanternSkin) {
+      final terms = context.read<AppProvider>().termsAndConditions;
+      return LanternLegalRows(
+          version: terms.version,
+          onOpen: (index) => _openLegalReader(context, terms, index),
+          support: const IosSupportContact());
+    }
     return _buildGovernanceCard(context, context.read<AppProvider>());
   }
 
@@ -104,6 +113,13 @@ class LegalSettingsSection extends StatelessWidget {
 
   void _openLegalReader(
       BuildContext context, TermsAndConditionsModel terms, int index) {
+    if (context.isLanternSkin) {
+      showLanternSheet<void>(context,
+          title: 'settings.governance_legal'.tr(),
+          body: (_) => LegalDocumentReaderScreen(
+              terms: terms, initialDocumentIndex: index));
+      return;
+    }
     showCaSheet<void>(context,
         title: 'settings.governance_legal'.tr(),
         body: LegalDocumentReaderScreen(

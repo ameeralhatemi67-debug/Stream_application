@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/reminder_push_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/lantern/lantern.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// The notification preferences card, shown in its own modal sheet from
 /// Settings.
@@ -26,8 +28,112 @@ class NotificationSettingsSection extends StatelessWidget {
           p.reminderPushStatus,
           p.streamers
         ));
+    if (context.isLanternSkin) {
+      return _buildLantern(context, context.read<AppProvider>());
+    }
     return _buildNotificationPreferencesCard(
         context, context.read<AppProvider>());
+  }
+
+  /// Lantern and Arch (ADR-026): the same preferences and provider calls.
+  Widget _buildLantern(BuildContext context, AppProvider provider) {
+    final isAr = context.locale.languageCode == 'ar';
+    final prefs = provider.notificationPreferences;
+    final status = provider.reminderPushStatus;
+    final askPush = provider.isLoggedInStreamer &&
+        status != ReminderPushStatus.granted;
+    return LanternNotificationPrefs(
+        limit: prefs.maxPer10Min,
+        onLimit: provider.setNotificationRateLimit,
+        reminders: provider.remindersAvailable ? true : null,
+        leadMinutes: provider.reminderLeadMinutes,
+        onLead: provider.isLoggedInStreamer
+            ? (value) async {
+                try {
+                  await provider.setReminderLeadMinutes(value);
+                } catch (_) {
+                  if (context.mounted) {
+                    lanternToast(context, 'upcoming.save_failed'.tr(),
+                        warn: true);
+                  }
+                }
+              }
+            : null,
+        pushNote: !askPush
+            ? null
+            : (status == ReminderPushStatus.notGranted
+                    ? 'upcoming.permission_denied'
+                    : 'upcoming.permission_unavailable')
+                .tr(),
+        pushHelp: askPush && status == ReminderPushStatus.notGranted
+            ? 'upcoming.permission_help'.tr()
+            : null,
+        onEnablePush: askPush && status == ReminderPushStatus.notGranted
+            ? () => provider.syncReminderPush(
+                requestPermission: true,
+                language: context.locale.languageCode)
+            : null,
+        categories: [
+          (
+            'design_copy.live_video_broadcasts'.tr(),
+            LGlyph.live,
+            prefs.liveVideoEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(liveVideoEnabled: v)),
+          ),
+          (
+            'design_copy.live_audio_stages'.tr(),
+            LGlyph.audio,
+            prefs.liveAudioEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(liveAudioEnabled: v)),
+          ),
+          (
+            'design_copy.1_hour_watch_milestone_rewards'.tr(),
+            LGlyph.star,
+            prefs.watchMilestonesEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(watchMilestonesEnabled: v)),
+          ),
+          (
+            'design_copy.org_invites_guest_roles'.tr(),
+            LGlyph.org,
+            prefs.orgInvitesEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(orgInvitesEnabled: v)),
+          ),
+          (
+            'design_copy.administrative_governance_notes'.tr(),
+            LGlyph.shield,
+            prefs.adminNotesEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(adminNotesEnabled: v)),
+          ),
+          (
+            'design_copy.new_vods_lectures'.tr(),
+            LGlyph.play,
+            prefs.vodsEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(vodsEnabled: v)),
+          ),
+          (
+            'design_copy.lesson_alerts'.tr(),
+            LGlyph.mosque,
+            prefs.lessonsEnabled,
+            (v) => provider.updateNotificationPreferences(
+                prefs.copyWith(lessonsEnabled: v)),
+          ),
+        ],
+        muted: [
+          for (final id in prefs.mutedEntityIds)
+            (
+              provider
+                      .getStreamerById(id)
+                      ?.getLocalizedName(isAr ? 'ar' : 'en') ??
+                  id,
+              () => provider.toggleMuteEntity(id),
+            ),
+        ]);
   }
 
   Widget _buildNotificationPreferencesCard(

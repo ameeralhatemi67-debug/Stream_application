@@ -8,6 +8,7 @@ import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
 import '../widgets/broadcaster_application_sheet.dart';
+import '../lantern/lantern_settings_sections.dart';
 
 /// The broadcaster and organization verification application: the promo card
 /// for a viewer who has not applied, and the live status card once they have.
@@ -20,7 +21,60 @@ class ApplicationSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     context.select<AppProvider, Object?>(
         (p) => (p.myApplication, p.isApprovedStreamer));
+    if (context.isLanternSkin) {
+      return _buildLantern(context, context.read<AppProvider>());
+    }
     return _buildApplicationSection(context, context.read<AppProvider>());
+  }
+
+  /// Lantern and Arch (ADR-026): the same card, states and actions.
+  Widget _buildLantern(BuildContext context, AppProvider provider) {
+    final app = provider.myApplication;
+    if (app == null) {
+      return LanternApplicationCard.invite(
+          onApply: () => context.push('/streamer-apply'));
+    }
+    final isAr = context.locale.languageCode == 'ar';
+    final rejected = app.status == ApplicationStatus.rejected;
+    final feedback = rejected && app.reviewNotes != null;
+    final state = switch (app.status) {
+      ApplicationStatus.approved => LanternApplicationState.approved,
+      ApplicationStatus.rejected => LanternApplicationState.rejected,
+      _ => LanternApplicationState.pending,
+    };
+    final message = switch (state) {
+      LanternApplicationState.approved =>
+        'application.status_approved_desc'.tr(),
+      LanternApplicationState.rejected =>
+        app.reviewNotes ?? 'lantern.account.changes_requested'.tr(),
+      LanternApplicationState.pending => 'application.status_pending_desc'.tr(),
+    };
+    // One "Edit"/"Reapply" action only; an approved channel opens the
+    // profile editor instead of the form.
+    final editable = provider.isApprovedStreamer || !app.isApproved;
+    return LanternApplicationCard.status(
+        state: state,
+        name: isAr ? app.applicantNameAr : app.applicantNameEn,
+        email: app.email,
+        organization: app.isOrganization,
+        message: message,
+        feedback: feedback,
+        actionLabel: !editable
+            ? null
+            : provider.isApprovedStreamer
+                ? 'application.edit_channel_btn'.tr()
+                : rejected
+                    ? 'application.reapply_btn'.tr()
+                    : 'application.edit_btn'.tr(),
+        onAction: !editable
+            ? null
+            : () => provider.isApprovedStreamer
+                ? BroadcasterApplicationSheet.show(
+                    context,
+                    application: provider.myApplication,
+                    editingProfile: true,
+                  )
+                : context.push('/streamer-apply'));
   }
 
   Widget _buildApplicationSection(BuildContext context, AppProvider provider) {

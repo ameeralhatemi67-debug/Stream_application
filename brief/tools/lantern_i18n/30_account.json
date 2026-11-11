@@ -1,0 +1,24 @@
+{
+  "en": {
+    "account": {
+      "categories": "Settings categories",
+      "new": "New",
+      "guest_hint": "Sign in to follow broadcasters and save lessons.",
+      "master_admin": "Master admin",
+      "admin": "Admin",
+      "offline": "Offline",
+      "changes_requested": "Changes requested before verification."
+    }
+  },
+  "ar": {
+    "account": {
+      "categories": "فئات الإعدادات",
+      "new": "جديد",
+      "guest_hint": "سجّل الدخول لتتابع المحاضرين وتحفظ الدروس.",
+      "master_admin": "مشرف عام",
+      "admin": "مشرف",
+      "offline": "غير متصل",
+      "changes_requested": "طُلبت تعديلات قبل التوثيق."
+    }
+  }
+}
