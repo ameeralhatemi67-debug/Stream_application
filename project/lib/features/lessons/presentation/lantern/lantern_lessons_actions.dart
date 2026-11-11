@@ -14,7 +14,7 @@ import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart' show lessonsError;
 import '../lessons_modals.dart'
     show askForLessonAlerts, lessonShareText, lessonsLink, openExternal;
-import '../lessons_widgets.dart' show prayerLabel;
+import '../lessons_widgets.dart' show prayerLabel, whenOf;
 
 /// The actions of the Lessons pages in the Lantern design. Each one calls
 /// the same controller method as the older pages (lessons_modals.dart,
@@ -135,7 +135,36 @@ Future<void> showLanternRemindSheet(BuildContext context, Lesson l) {
               ]));
 }
 
-/// Share: copy the text, the system share sheet, or WhatsApp.
+/// A lesson as an invitation picture: what it is, who teaches it, the day
+/// with its Hijri date, the time by the prayer, and the mosque.
+LanternPosterData lessonPoster(LessonsController c, Lesson l, String lang) {
+  final p = c.preacher(l.preacherId),
+      m = c.mosque(l.mosqueId),
+      d = c.district(m?.districtId);
+  return LanternPosterData(
+      eyebrow:
+          (l.seriesId == null ? 'lantern.poster.lesson' : 'lantern.poster.series')
+              .tr(),
+      title: l.title(lang),
+      person: p?.name(lang),
+      facts: [
+        (
+          icon: LGlyph.calendar,
+          text:
+              '${weekdayName(l.date, lang)} ${gregorianLabel(l.date, lang)} (${hijriLabel(l.date, lang)})'
+        ),
+        (icon: LGlyph.clock, text: whenOf(c, l, lang, withDate: false)),
+        (
+          icon: LGlyph.mosque,
+          text:
+              '${m?.name(lang) ?? ''}${d == null ? '' : ' — ${d.name(lang)}'}'
+        ),
+      ],
+      link: lessonsLink('/lessons/lesson/${l.id}'));
+}
+
+/// Share: an invitation picture, copy the text, the system share sheet, or
+/// WhatsApp.
 Future<void> showLanternShareSheet(BuildContext context, Lesson l) {
   final c = context.read<LessonsController>();
   final lang = context.locale.languageCode;
@@ -158,6 +187,18 @@ Future<void> showLanternShareSheet(BuildContext context, Lesson l) {
                     child: SelectableText(text,
                         style: Lantern.textStyle(13.5, color: ctx.lt.fg))),
                 const SizedBox(height: 12),
+                LChoiceRow(
+                    key: const ValueKey('lantern-share-poster'),
+                    title: 'lantern.poster.row'.tr(),
+                    subtitle: 'lantern.poster.row_sub'.tr(),
+                    icon: LGlyph.image,
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      showLanternPoster(overTabs(context),
+                          lessonPoster(c, l, lang),
+                          fileName: 'hedayah-lesson');
+                    }),
+                const SizedBox(height: 8),
                 LChoiceRow(
                     title: 'lessons.share.copy'.tr(),
                     icon: LGlyph.copy,
