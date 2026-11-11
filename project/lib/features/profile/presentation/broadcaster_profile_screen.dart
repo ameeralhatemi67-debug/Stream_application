@@ -33,6 +33,8 @@ import '../../../core/services/reminder_push_service.dart';
 import '../../web/presentation/hidayah_web_header.dart';
 import '../../web/presentation/hidayah_web_kit.dart';
 import 'web/profile_web_parts.dart';
+import '../../../core/services/content_report_service.dart';
+import '../../moderation/presentation/lantern/lantern_report_sheet.dart';
 import 'lantern/lantern_channel_view.dart';
 
 class BroadcasterProfileScreen extends StatefulWidget {
@@ -180,7 +182,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 orgName: streamer.getLocalizedName(lang),
                 venues: streamer.venues)
             : null,
-        onJoin: canJoin ? () => JoinOrgModalSheet.show(context) : null);
+        onJoin: canJoin ? () => JoinOrgModalSheet.show(context) : null,
+        // Anyone but the channel's owner can report it.
+        onReport: own
+            ? null
+            : () => showLanternReportSheet(context,
+                kind: ContentReportKind.channel,
+                channelProfileId: streamer.channelProfileId,
+                name: streamer.getLocalizedName(lang)));
   }
 
   @override

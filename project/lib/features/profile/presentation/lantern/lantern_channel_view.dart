@@ -74,6 +74,7 @@ class LanternChannelView extends StatefulWidget implements LanternSkinWidget {
       this.onSettings,
       this.onBranches,
       this.onJoin,
+      this.onReport,
       this.initialTab = LanternChannelTab.archive});
 
   final StreamerModel streamer;
@@ -97,6 +98,9 @@ class LanternChannelView extends StatefulWidget implements LanternSkinWidget {
   final VoidCallback onWatch, onReminder;
   final Future<void> Function() onFollow;
   final VoidCallback? onShare, onStudio, onSettings, onBranches, onJoin;
+
+  /// Report this channel to the platform's admins. Null on one's own.
+  final VoidCallback? onReport;
   final LanternChannelTab initialTab;
 
   @override
@@ -371,6 +375,12 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                 icon: LGlyph.settings,
                 label: 'nav.settings'.tr(),
                 onPressed: widget.onSettings),
+          if (widget.onReport != null)
+            LIconButton(
+                key: const ValueKey('lantern-channel-report'),
+                icon: LGlyph.flag,
+                label: 'lantern.report.action_channel'.tr(),
+                onPressed: widget.onReport),
           if (widget.onBranches != null)
             LButton(
                 key: const ValueKey('lantern-channel-branches'),

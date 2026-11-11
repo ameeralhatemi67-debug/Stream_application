@@ -299,6 +299,39 @@ void main() {
     });
   });
 
+  group('on the channel page', () {
+    testWidgets('a visitor can report the channel; its owner cannot',
+        (tester) async {
+      const report = ValueKey('lantern-channel-report');
+      final id = mockStreamers[1].streamerId;
+      var app = await LanternApp.start(tester,
+          size: const Size(390, 844), lang: 'en');
+      await app.push('/profile/$id');
+      await app.settle(10);
+      tester.takeException();
+      expect(find.byKey(report), findsOneWidget);
+      await tester.ensureVisible(find.byKey(report));
+      await tester.tap(find.byKey(report));
+      await app.settle(6);
+      // A guest is asked to sign in first.
+      expect(find.text('Sign in to report'), findsOneWidget);
+      await app.close();
+
+      final own = lanternProvider()
+        ..debugSetSignedInForTests(
+            email: 'streamer@example.invalid',
+            name: 'Streamer',
+            ownedStreamerId: id);
+      app = await LanternApp.start(tester,
+          provider: own, size: const Size(390, 844), lang: 'en');
+      await app.push('/profile/$id');
+      await app.settle(10);
+      tester.takeException();
+      expect(find.byKey(report), findsNothing);
+      await app.close();
+    });
+  });
+
   group('the admin queue', () {
     ContentReport row(String id, ContentReportKind kind, {String? note}) =>
         ContentReport(
