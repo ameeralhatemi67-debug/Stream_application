@@ -456,8 +456,11 @@ void main() {
       await _tap(app, find.byKey(const ValueKey('lantern-lesson-remind')));
       await _tap(app, find.byKey(const ValueKey('lantern-remind-30')));
       expect(app.lessons.reminderLead(l.id), '30');
+      // The sample viewer already follows some preachers, and the lesson
+      // chosen depends on the day: the button must flip whatever it was.
+      final followed = app.lessons.isFollowing('preacher', l.preacherId);
       await _tap(app, find.byKey(ValueKey('lantern-follow-preacher-${l.preacherId}')));
-      expect(app.lessons.isFollowing('preacher', l.preacherId), isTrue);
+      expect(app.lessons.isFollowing('preacher', l.preacherId), !followed);
       await _tap(app, find.byKey(const ValueKey('lantern-lesson-share')));
       expect(find.text('lessons.share.copy'.tr()), findsOneWidget);
       await _tap(app, find.byTooltip('Close'));
