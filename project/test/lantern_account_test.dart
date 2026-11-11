@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:streamer_app/core/providers/app_flags.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/routing/lantern/lantern_not_found_page.dart';
+import 'package:streamer_app/features/auth/presentation/lantern/lantern_consent_dialog.dart';
+import 'package:streamer_app/features/auth/presentation/lantern/lantern_welcome_view.dart';
+import 'package:streamer_app/features/auth/presentation/welcome_screen.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/lantern/lantern.dart';
 import 'package:streamer_app/features/live_stream/services/chat_block_list.dart';
@@ -316,4 +321,160 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('welcome and sign-in', () {
+    for (final lang in ['en', 'ar']) {
+      for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+        for (final night in [false, true]) {
+          testWidgets('lays out ($lang, $label, ${night ? 'night' : 'day'})',
+              (tester) async {
+            final provider = lanternProvider(
+                appearance:
+                    night ? LanternAppearance.night : LanternAppearance.day);
+            final app = await LanternApp.start(tester,
+                provider: provider,
+                lang: lang,
+                size: size,
+                location: '/welcome');
+            expect(tester.takeException(), isNull);
+            expect(find.byType(LanternWelcomeView), findsOneWidget);
+            expect(
+                find.byKey(ValueKey(size == laptop
+                    ? 'lantern-welcome-wide'
+                    : 'lantern-welcome-phone')),
+                findsOneWidget);
+            expect(find.byKey(const ValueKey('lantern-welcome-brand')),
+                findsOneWidget);
+            // Who is live now: the sample's first channel.
+            expect(find.byKey(const ValueKey('lantern-welcome-live')),
+                findsOneWidget);
+            expect(find.byKey(const Key('welcome-signup')), findsOneWidget);
+            expect(find.byKey(const Key('welcome-guest')), findsOneWidget);
+            expect(_olderKit, findsNothing);
+            await app.close();
+          });
+        }
+      }
+    }
+
+    testWidgets('sign-ups paused: sign up is off, guest and log in stay',
+        (tester) async {
+      final flags = AppFlags(store: _Flags(open: false));
+      await pumpLanternWidget(tester, WelcomeScreen(appFlags: flags),
+          size: laptop);
+      await settle(tester, 2);
+      expect(find.byKey(const Key('registrations-paused-notice')),
+          findsOneWidget);
+      final signup = find.byKey(const Key('welcome-signup'));
+      expect(
+          tester
+              .widget<LPressable>(
+                  find.descendant(of: signup, matching: find.byType(LPressable)))
+              .onTap,
+          isNull);
+      expect(
+          tester
+              .widget<LButton>(find.byKey(const Key('welcome-guest')))
+              .onPressed,
+          isNotNull);
+      expect(
+          tester
+              .widget<LButton>(find.byKey(const ValueKey('welcome-login')))
+              .onPressed,
+          isNotNull);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'the consent gate: Agree stays off until ticked, then the guest '
+        'goes on', (tester) async {
+      final provider = lanternProvider();
+      final app = await LanternApp.start(tester,
+          provider: provider, size: phone, location: '/welcome');
+      await tester.ensureVisible(find.byKey(const Key('welcome-guest')));
+      await app.settle(2);
+      await tester.tap(find.byKey(const Key('welcome-guest')));
+      await app.settle(4);
+      expect(find.byType(LanternConsentDialog), findsOneWidget);
+      expect(_olderKit, findsNothing);
+      final accept = find.byKey(const ValueKey('lantern-consent-accept'));
+      expect(tester.widget<LButton>(accept).onPressed, isNull);
+      // The full policy opens in a Lantern dialog and closes again.
+      await tester.tap(find.byKey(const ValueKey('lantern-consent-policy')));
+      await app.settle(3);
+      expect(find.text('Privacy Policy'), findsWidgets);
+      expect(_olderKit, findsNothing);
+      await tester.tap(find.widgetWithText(LButton, 'Close'));
+      await app.settle(3);
+      await tester.tap(find.byKey(const ValueKey('lantern-consent-check')));
+      await app.settle(2);
+      expect(tester.widget<LButton>(accept).onPressed, isNotNull);
+      await tester.tap(accept);
+      await app.settle(6);
+      expect(provider.hasAcceptedCurrentConsent, isTrue);
+      expect(find.byType(LanternConsentDialog), findsNothing);
+      expect(app.location, '/viewer-setup');
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+
+    testWidgets('declining the consent keeps the person on the welcome page',
+        (tester) async {
+      final provider = lanternProvider();
+      final app = await LanternApp.start(tester,
+          provider: provider, size: laptop, location: '/welcome');
+      await tester.tap(find.byKey(const Key('welcome-signup')));
+      await app.settle(4);
+      expect(find.byType(LanternConsentDialog), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('lantern-consent-decline')));
+      await app.settle(4);
+      expect(find.byType(LanternConsentDialog), findsNothing);
+      expect(provider.hasAcceptedCurrentConsent, isFalse);
+      expect(app.location, '/welcome');
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+  });
+
+  group('page not found', () {
+    for (final lang in ['en', 'ar']) {
+      for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+        testWidgets('an unknown link shows the Lantern page ($lang, $label)',
+            (tester) async {
+          final app = await LanternApp.start(tester,
+              lang: lang, size: size, location: '/nowhere-at-all');
+          expect(tester.takeException(), isNull);
+          expect(find.byType(LanternNotFoundPage), findsOneWidget);
+          expect(find.text('404'), findsOneWidget);
+          expect(_olderKit, findsNothing);
+          await tester.tap(find.byKey(const ValueKey('lantern-not-found-discover')));
+          await app.settle();
+          expect(app.location, '/feed');
+          expect(tester.takeException(), isNull);
+          await app.close();
+        });
+      }
+    }
+
+    testWidgets('the older designs keep their own error page', (tester) async {
+      for (final skin in [AppSkin.gold, AppSkin.hedayah]) {
+        final app = await LanternApp.start(tester,
+            skin: skin, size: phone, location: '/nowhere-at-all');
+        tester.takeException();
+        expect(find.byType(LanternNotFoundPage), findsNothing);
+        expect(find.textContaining('Route Not Found'), findsOneWidget);
+        await app.close();
+      }
+    });
+  });
+}
+
+class _Flags implements AppFlagsStore {
+  _Flags({required this.open});
+  final bool open;
+  @override
+  Future<Map<String, ({bool enabled, DateTime? updatedAt})>> fetch() async =>
+      {'registrations_open': (enabled: open, updatedAt: null)};
+  @override
+  Future<void> set(String key, bool enabled, String reason) async {}
 }

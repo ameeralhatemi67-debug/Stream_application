@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
+import '../../features/auth/presentation/lantern/lantern_consent_dialog.dart';
+import 'lantern/lantern.dart';
 
 /// PDPL onboarding consent gate (v0.9 Checkpoint 3 Phase 1) -- shown once,
 /// before any personal data is gathered, for both the Google sign-in and
@@ -39,6 +41,20 @@ class _ConsentDialogState extends State<ConsentDialog> {
     final terms = provider.termsAndConditions;
     final isAr = context.locale.languageCode == 'ar';
 
+    if (context.isLanternSkin) {
+      showLanternDialog<void>(context,
+          title: 'settings.view_privacy'.tr(),
+          maxWidth: 560,
+          body: (context) => SelectableText(
+              terms.getLocalizedPrivacy(isAr ? 'ar' : 'en'),
+              style: Lantern.textStyle(14, color: context.lt.fg, height: 1.6)),
+          actions: (dialogContext) => [
+                LButton(
+                    label: 'common.close'.tr(),
+                    onPressed: () => Navigator.pop(dialogContext)),
+              ]);
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -85,6 +101,15 @@ class _ConsentDialogState extends State<ConsentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) {
+      return LanternConsentDialog(
+          agreed: _agreed,
+          onToggle: () => setState(() => _agreed = !_agreed),
+          onDecline: () => Navigator.pop(context, false),
+          onAccept: _agreed ? () => Navigator.pop(context, true) : null,
+          onViewPolicy: () => _showFullPolicy(context),
+          support: const IosSupportContact());
+    }
     return PopScope(
       canPop: false,
       child: AlertDialog(

@@ -15,6 +15,7 @@ import '../widgets/ds/canopy_motion.dart';
 import '../widgets/floating_stream_mini_player.dart';
 import '../widgets/hedayah/hedayah_kit.dart';
 import '../widgets/lantern/lantern_shell.dart';
+import 'lantern/lantern_not_found_page.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
 import '../../features/auth/presentation/role_select_screen.dart';
@@ -241,7 +242,9 @@ class AppRouter {
 
           return null;
         },
-        errorBuilder: (context, state) => Scaffold(
+        errorBuilder: (context, state) => context.isLanternSkin
+            ? const LanternNotFoundPage()
+            : Scaffold(
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
