@@ -17,14 +17,21 @@ import '../widgets/hedayah/hedayah_kit.dart';
 import '../widgets/lantern/lantern_shell.dart';
 import 'lantern/lantern_not_found_page.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
-import '../../features/auth/presentation/viewer_setup_screen.dart';
+import '../../features/auth/presentation/viewer_setup_screen.dart'
+    deferred as viewer_setup;
 import '../../features/auth/presentation/role_select_screen.dart';
-import '../../features/auth/presentation/streamer_apply_screen.dart';
+// Loaded on demand, like the admin surfaces below: a visitor who only
+// watches never opens the application, the settings or the organization
+// pages, so their code is not part of the first download (ADR-025,
+// round 2).
+import '../../features/auth/presentation/streamer_apply_screen.dart'
+    deferred as streamer_apply;
 import '../../features/auth/presentation/application_pending_screen.dart';
 import '../../features/map/presentation/spatial_map_screen.dart';
 import '../../features/discovery/presentation/discovery_feed_screen.dart';
 import '../../features/profile/presentation/broadcaster_profile_screen.dart';
-import '../../features/profile/presentation/settings_screen.dart';
+import '../../features/profile/presentation/settings_screen.dart'
+    deferred as settings;
 import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 // Admin surfaces are loaded on demand (deferred) so every visitor does not
 // download the admin hub and organization management code (audit WEB-04).
@@ -32,11 +39,15 @@ import '../../features/admin/presentation/admin_hub_screen.dart'
     deferred as admin_hub;
 import '../../features/admin/presentation/org_admin_screen.dart'
     deferred as org_admin;
-import '../../features/organization/presentation/org_invitation_screen.dart';
-import '../../features/organization/presentation/channel_connections_screen.dart';
+import '../../features/organization/presentation/org_invitation_screen.dart'
+    deferred as org_invitation;
+import '../../features/organization/presentation/channel_connections_screen.dart'
+    deferred as channel_connections;
 import '../../features/organization/presentation/channel_consent_return_screen.dart';
-import '../../features/organization/presentation/organization_shows_screen.dart';
-import '../../features/organization/presentation/organization_hub_screen.dart';
+import '../../features/organization/presentation/organization_shows_screen.dart'
+    deferred as organization_shows;
+import '../../features/organization/presentation/organization_hub_screen.dart'
+    deferred as organization_hub;
 import '../../features/splash/presentation/app_splash_screen.dart';
 import '../../features/auth/presentation/screens/account_banned_screen.dart';
 import '../../features/web/presentation/hidayah_web_header.dart';
@@ -45,16 +56,46 @@ import '../widgets/hadayah_loading_indicator.dart';
 import '../../features/lessons/domain/lessons_rules.dart';
 import '../../features/lessons/presentation/admin/lessons_admin_pages.dart'
     deferred as lessons_admin;
-import '../../features/lessons/presentation/screens/account_screens.dart';
+import '../../features/lessons/presentation/screens/account_screens.dart'
+    deferred as lessons_account;
 import '../../features/lessons/presentation/screens/detail_screens.dart';
 import '../../features/lessons/presentation/screens/discover_screen.dart';
 import '../../features/lessons/presentation/screens/lessons_screen.dart';
-import '../../features/lessons/presentation/screens/preacher_apply_screen.dart';
-import '../../features/lessons/presentation/screens/preacher_link_screen.dart';
+import '../../features/lessons/presentation/screens/preacher_apply_screen.dart'
+    deferred as preacher_apply;
+import '../../features/lessons/presentation/screens/preacher_link_screen.dart'
+    deferred as preacher_link;
 import '../../features/lessons/presentation/lessons_shell.dart';
 import '../../features/lessons/state/lessons_controller.dart';
 
 class AppRouter {
+  /// Loads every page the router otherwise loads when it is first opened.
+  ///
+  /// For tests (`test/flutter_test_config.dart`): the Dart VM finishes a
+  /// library load in the zone of the test that first asked for one, so a
+  /// later test in the same file would stay on the loading frame for ever.
+  @visibleForTesting
+  static Future<void> preloadDeferredPages() async {
+    for (final loader in <Future<void> Function()>[
+      admin_hub.loadLibrary,
+      org_admin.loadLibrary,
+      lessons_admin.loadLibrary,
+      settings.loadLibrary,
+      streamer_apply.loadLibrary,
+      organization_hub.loadLibrary,
+      organization_shows.loadLibrary,
+      channel_connections.loadLibrary,
+      viewer_setup.loadLibrary,
+      org_invitation.loadLibrary,
+      lessons_account.loadLibrary,
+      preacher_apply.loadLibrary,
+      preacher_link.loadLibrary,
+    ]) {
+      await loader();
+      _Deferred._ready.add(loader);
+    }
+  }
+
   /// Opens a page from the card that was tapped (its rectangle arrives as
   /// [GoRouterState.extra]); without one it is the regular page push.
   static Page<void> _canopyPage(
@@ -269,12 +310,17 @@ class AppRouter {
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/shows',
-              builder: (context, state) => OrganizationShowsScreen(
-                  initialOrganizationId: state.uri.queryParameters['org'])),
+              builder: (context, state) => _Deferred(
+                  loader: organization_shows.loadLibrary,
+                  builder: () => organization_shows.OrganizationShowsScreen(
+                      initialOrganizationId:
+                          state.uri.queryParameters['org']))),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/organizations',
-              builder: (context, state) => const OrganizationHubScreen()),
+              builder: (context, state) => _Deferred(
+                  loader: organization_hub.loadLibrary,
+                  builder: () => organization_hub.OrganizationHubScreen())),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/login-callback',
@@ -297,7 +343,9 @@ class AppRouter {
             parentNavigatorKey: _rootNavigatorKey,
             path: '/viewer-setup',
             name: 'viewer-setup',
-            builder: (context, state) => const ViewerSetupScreen(),
+            builder: (context, state) => _Deferred(
+                loader: viewer_setup.loadLibrary,
+                builder: () => viewer_setup.ViewerSetupScreen()),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
@@ -309,7 +357,9 @@ class AppRouter {
             parentNavigatorKey: _rootNavigatorKey,
             path: '/streamer-apply',
             name: 'streamer-apply',
-            builder: (context, state) => const StreamerApplyScreen(),
+            builder: (context, state) => _Deferred(
+                loader: streamer_apply.loadLibrary,
+                builder: () => streamer_apply.StreamerApplyScreen()),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
@@ -423,7 +473,9 @@ class AppRouter {
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me',
-              builder: (context, state) => const LessonsMeScreen()),
+              builder: (context, state) => _Deferred(
+                  loader: lessons_account.loadLibrary,
+                  builder: () => lessons_account.LessonsMeScreen())),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/lesson/:id',
@@ -452,30 +504,42 @@ class AppRouter {
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me/notifications',
-              builder: (context, state) => const LessonsNotificationsScreen()),
+              builder: (context, state) => _Deferred(
+                  loader: lessons_account.loadLibrary,
+                  builder: () => lessons_account.LessonsNotificationsScreen())),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me/saved',
-              builder: (context, state) => LessonsSavedScreen(tab: state.uri.queryParameters['tab'])),
+              builder: (context, state) => _Deferred(
+                  loader: lessons_account.loadLibrary,
+                  builder: () => lessons_account.LessonsSavedScreen(
+                      tab: state.uri.queryParameters['tab']))),
           // Applying to give lessons (from the welcome page or Settings), and
           // the page of a preacher whose card is linked to this account
           // (ADR-020).
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/apply',
-              builder: (context, state) => const PreacherApplyScreen()),
+              builder: (context, state) => _Deferred(
+                  loader: preacher_apply.loadLibrary,
+                  builder: () => preacher_apply.PreacherApplyScreen())),
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/lessons/me/preacher',
-              builder: (context, state) => const PreacherLinkScreen(key: ValueKey('preacher-account'))),
+              builder: (context, state) => _Deferred(
+                  loader: preacher_link.loadLibrary,
+                  builder: () => preacher_link.PreacherLinkScreen(
+                      key: const ValueKey('preacher-account')))),
           // A preacher's page from the link an admin sent him: no account.
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: '/preacher/:token',
-              builder: (context, state) =>
-                  PreacherLinkScreen(
+              builder: (context, state) => _Deferred(
+                  key: ValueKey(state.pathParameters['token']),
+                  loader: preacher_link.loadLibrary,
+                  builder: () => preacher_link.PreacherLinkScreen(
                       key: ValueKey(state.pathParameters['token']),
-                      token: state.pathParameters['token']!)),
+                      token: state.pathParameters['token']!))),
           // The admin page's Preachers & lessons area (loaded on demand).
           GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
@@ -565,7 +629,9 @@ class AppRouter {
             parentNavigatorKey: _rootNavigatorKey,
             path: '/settings',
             name: 'settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) => _Deferred(
+                loader: settings.loadLibrary,
+                builder: () => settings.SettingsScreen()),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
@@ -591,15 +657,19 @@ class AppRouter {
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/org-invite/:id',
-            builder: (context, state) => OrgInvitationScreen(
-                id: state.pathParameters['id']!,
-                token: state.uri.queryParameters['token']),
+            builder: (context, state) => _Deferred(
+                loader: org_invitation.loadLibrary,
+                builder: () => org_invitation.OrgInvitationScreen(
+                    id: state.pathParameters['id']!,
+                    token: state.uri.queryParameters['token'])),
           ),
           GoRoute(
               path: '/channels',
               parentNavigatorKey: _rootNavigatorKey,
-              builder: (context, state) => ChannelConnectionsScreen(
-                  returnStatus: state.uri.queryParameters['status'])),
+              builder: (context, state) => _Deferred(
+                  loader: channel_connections.loadLibrary,
+                  builder: () => channel_connections.ChannelConnectionsScreen(
+                      returnStatus: state.uri.queryParameters['status']))),
           GoRoute(
               path: '/channel-connected',
               parentNavigatorKey: _rootNavigatorKey,
@@ -1022,20 +1092,29 @@ class _RouteGate extends ChangeNotifier {
 /// has finished. On native targets deferred libraries are already present and
 /// this resolves immediately.
 class _Deferred extends StatefulWidget {
-  const _Deferred({required this.loader, required this.builder});
+  const _Deferred({super.key, required this.loader, required this.builder});
 
   final Future<void> Function() loader;
   final Widget Function() builder;
+
+  /// The libraries that are already loaded. A page opened a second time is
+  /// built at once, without a loading frame.
+  static final Set<Future<void> Function()> _ready = {};
 
   @override
   State<_Deferred> createState() => _DeferredState();
 }
 
 class _DeferredState extends State<_Deferred> {
-  late final Future<void> _loaded = widget.loader();
+  late final Future<void>? _loaded = _Deferred._ready.contains(widget.loader)
+      ? null
+      : widget.loader().then((_) {
+          _Deferred._ready.add(widget.loader);
+        });
 
   @override
   Widget build(BuildContext context) {
+    if (_loaded == null) return widget.builder();
     return FutureBuilder<void>(
       future: _loaded,
       builder: (context, snapshot) {
