@@ -11,6 +11,10 @@ const source = await readFile(new URL('../web/index.html', import.meta.url), 'ut
 const dir = await mkdtemp(join(tmpdir(), 'stamp-'));
 try {
   await mkdir(join(dir, 'assets'));
+  await writeFile(join(dir, 'main.dart.js'), 'main');
+  await writeFile(join(dir, 'main.dart.js_1.part.js'), 'part');
+  await writeFile(join(dir, 'flutter_bootstrap.js'),
+    '_flutter.buildConfig = {"builds":[{"compileTarget":"dart2js","mainJsPath":"main.dart.js"},{}]};');
   await writeFile(join(dir, 'index.html'), source.replace('$FLUTTER_BASE_HREF', '/'));
   await writeFile(join(dir, 'assets', 'FontManifest.json'), JSON.stringify([
     { family: 'MaterialIcons', fonts: [{ asset: 'fonts/MaterialIcons-Regular.otf' }] },
@@ -26,7 +30,15 @@ try {
   assert.equal(html.match(/Start-up hints, added by/g).length, 1, 'hints are added once');
   assert.ok(html.indexOf('<base href="/">') < html.indexOf('Start-up hints, added by'),
     'hints follow <base>, so relative paths resolve like the app\'s requests');
-  for (const href of ['main.dart.js', 'assets/FontManifest.json', 'assets/fonts/MaterialIcons-Regular.otf',
+  // The compiled app lives in a folder named after the build, so a deploy is
+  // a new address that no browser has cached (2026-11-12).
+  const loader = await readFile(join(dir, 'flutter_bootstrap.js'), 'utf8');
+  assert.ok(loader.includes('"mainJsPath":"app/stamp-test-2/main.dart.js"'), 'the loader points at the build folder');
+  assert.equal(await readFile(join(dir, 'app', 'stamp-test-2', 'main.dart.js'), 'utf8'), 'main');
+  assert.equal(await readFile(join(dir, 'app', 'stamp-test-2', 'main.dart.js_1.part.js'), 'utf8'), 'part');
+  await assert.rejects(readFile(join(dir, 'main.dart.js')), 'nothing is left at the old address');
+  await assert.rejects(readFile(join(dir, 'app', 'stamp-test-1', 'main.dart.js')), 'a restamp renames the folder');
+  for (const href of ['app/stamp-test-2/main.dart.js', 'assets/FontManifest.json', 'assets/fonts/MaterialIcons-Regular.otf',
     'assets/assets/fonts/IBMPlexSansArabic-400.ttf', 'assets/assets/fonts/IBMPlexSansArabic-700.ttf']) {
     assert.ok(html.includes(`href="${href}"`), `preloads ${href}`);
   }
@@ -35,6 +47,7 @@ try {
   assert.ok(html.includes('content="stamp-test-2"'), 'the newest build id wins');
   const manifest = JSON.parse(await readFile(join(dir, 'offline-build.json'), 'utf8'));
   assert.ok(manifest.files['index.html'], 'the stamped page is part of the offline manifest');
+  assert.ok(manifest.files['app/stamp-test-2/main.dart.js'], 'the moved app is in the offline manifest');
   console.log('PASS: start-up hints follow <base>, once per page, fonts from FontManifest, backend preconnect');
 } finally {
   await rm(dir, { recursive: true, force: true });

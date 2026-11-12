@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { resolve, relative, join } from 'node:path';
 
 // Run after flutter build web with the same HADAYAH_BUILD_ID dart define.
@@ -9,6 +9,38 @@ if (!directory || !/^[a-zA-Z0-9._-]{8,160}$/.test(buildId ?? '')) {
 }
 const root = resolve(directory);
 const index = join(root, 'index.html');
+
+// The compiled app (main.dart.js and its deferred parts) moves into a folder
+// named after this build. Cloudflare in front of the site gives .js files a
+// four-hour browser lifetime whatever the origin says, and these names never
+// changed, so a browser kept running the previous build after a deploy
+// (owner report 2026-11-12). The parts load relative to main.dart.js, so they
+// move with it; flutter_bootstrap.js is told the new path.
+const appDir = `app/${buildId}`;
+const appRoot = join(root, 'app');
+// Stamped before (a second run): the folder takes the new name.
+const earlier = (await readdir(appRoot).catch(() => []))
+  .filter((name) => name !== buildId);
+await mkdir(join(root, appDir), { recursive: true });
+for (const name of earlier) {
+  for (const item of await readdir(join(appRoot, name))) {
+    await rename(join(appRoot, name, item), join(root, appDir, item));
+  }
+  await rm(join(appRoot, name), { recursive: true });
+}
+for (const item of await readdir(root)) {
+  if (/^main\.dart\.(js|mjs|wasm)/.test(item)) {
+    await rename(join(root, item), join(root, appDir, item));
+  }
+}
+const bootstrap = join(root, 'flutter_bootstrap.js');
+const loader = await readFile(bootstrap, 'utf8');
+const moved = loader.replace(/"mainJsPath":"(?:app\/[^/"]+\/)?main\.dart\.js"/g,
+  `"mainJsPath":"${appDir}/main.dart.js"`);
+if (!moved.includes(`"mainJsPath":"${appDir}/main.dart.js"`)) {
+  throw new Error('flutter_bootstrap.js has no mainJsPath to move');
+}
+await writeFile(bootstrap, moved);
 let html = await readFile(index, 'utf8');
 html = html.replace(/<meta name="hadayah-build"[^>]*>\s*/g, '');
 html = html.replace('<head>', `<head>\n  <meta name="hadayah-build" content="${buildId}">`);
@@ -23,7 +55,7 @@ const fontManifest = JSON.parse(
 const hints = ['<!-- Start-up hints, added by tool/stamp_offline_build.mjs -->'];
 const backend = process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : null;
 if (backend) hints.push(`<link rel="preconnect" href="${backend}" crossorigin>`);
-hints.push('<link rel="preload" href="main.dart.js" as="script">');
+hints.push(`<link rel="preload" href="${appDir}/main.dart.js" as="script">`);
 hints.push('<link rel="preload" href="assets/FontManifest.json" as="fetch" crossorigin>');
 for (const family of fontManifest) {
   for (const font of family.fonts) {
