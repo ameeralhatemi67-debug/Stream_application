@@ -14,6 +14,7 @@ import '../../../lessons/domain/lessons_models.dart';
 import '../../../lessons/presentation/lessons_widgets.dart'
     show openLesson, placeOf, typeLabel, whenOf;
 import '../../../lessons/state/lessons_controller.dart';
+import '../../../map/presentation/lantern/lantern_map_preview.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../profile/models/upcoming_schedule.dart';
 import '../../models/academic_category_model.dart';
@@ -1077,15 +1078,20 @@ class _MapTeaser extends StatelessWidget {
         radius: Lantern.radiusCard,
         pressScale: .99,
         excludeChildSemantics: true,
-        builder: (context, _) => ClipRRect(
-            borderRadius: BorderRadius.circular(Lantern.radiusCard),
-            child: AspectRatio(
-                aspectRatio: wide ? 16 / 9 : 16 / 10,
-                child: CustomPaint(
-                    painter: _MiniMapPainter(pins,
-                        night: t.night,
-                        rtl: Directionality.of(context) ==
-                            TextDirection.rtl)))));
+        // The website layout shows the real map; phones keep the drawing.
+        builder: (context, _) => context.lanternWide
+            ? AspectRatio(
+                aspectRatio: 16 / 9,
+                child: LanternMapPreview(streamers: streamers))
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(Lantern.radiusCard),
+                child: AspectRatio(
+                    aspectRatio: wide ? 16 / 9 : 16 / 10,
+                    child: CustomPaint(
+                        painter: _MiniMapPainter(pins,
+                            night: t.night,
+                            rtl: Directionality.of(context) ==
+                                TextDirection.rtl)))));
     return Container(
         key: const ValueKey('lantern-discover-map'),
         padding: EdgeInsets.all(wide ? 28 : 18),

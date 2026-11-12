@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -242,9 +243,11 @@ void main() {
       await openCategory(tester, 'design');
       expect(find.byKey(const ValueKey('lantern-settings-design')),
           findsOneWidget);
-      for (final skin in AppSkin.values) {
+      for (final skin in AppSkin.choices) {
         expect(find.byKey(ValueKey('skin-option-${skin.id}')), findsOneWidget);
       }
+      // Gold & black is no longer offered (ADR-027).
+      expect(find.byKey(const ValueKey('skin-option-gold-black')), findsNothing);
       expect(find.text('In use'), findsOneWidget);
       await tester.tap(find.text('Night'));
       await settle(tester, 2);
@@ -257,9 +260,9 @@ void main() {
       expect(provider.lanternCalmMotion, isTrue);
       expect(find.byKey(const ValueKey('lantern-settings-language')),
           findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('skin-option-gold-black')));
+      await tester.tap(find.byKey(const ValueKey('skin-option-hedayah-skin')));
       await settle(tester, 2);
-      expect(provider.appSkin, AppSkin.gold);
+      expect(provider.appSkin, AppSkin.hedayah);
       expect(tester.takeException(), isNull);
     });
 
@@ -563,6 +566,43 @@ void main() {
       expect(tester.takeException(), isNull);
       await app.close();
     });
+
+    for (final (label, size) in [('phone', phone), ('laptop', laptop)]) {
+      testWidgets('settings sits beside close and opens Settings at '
+          'notifications ($label)', (tester) async {
+        final app = await open(tester, size: size);
+        final button =
+            find.byKey(const ValueKey('lantern-notifications-preferences'));
+        expect(button, findsOneWidget);
+        // In the title row, before the close button; no text link below.
+        final close = find.descendant(
+            of: find.ancestor(of: button, matching: find.byType(Row)).first,
+            matching: find.byWidgetPredicate(
+                (w) => w is LIconButton && w.icon == LGlyph.close));
+        expect(close, findsOneWidget);
+        expect(find.text('design_copy.notification_preferences'.tr()),
+            findsNothing);
+        await tester.tap(button);
+        await app.settle(10);
+        expect(find.byType(LanternNotificationsBody), findsNothing);
+        expect(app.location, '/settings');
+        expect(
+            tester
+                .widget<SettingsScreen>(find.byType(SettingsScreen))
+                .initialSection,
+            'notifications');
+        expect(find.byKey(const ValueKey('lantern-settings-notifications')),
+            findsOneWidget);
+        final head = find.byKey(
+            const ValueKey('lantern-settings-section-notifications'));
+        if (size == phone) {
+          // The phone page scrolled to the section.
+          expect(tester.getRect(head).top, lessThan(size.height));
+        }
+        expect(tester.takeException(), isNull);
+        await app.close();
+      });
+    }
 
     testWidgets('nothing yet: the empty state', (tester) async {
       final app = await open(tester, size: laptop, notices: false);

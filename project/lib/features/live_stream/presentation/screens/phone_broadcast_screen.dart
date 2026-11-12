@@ -19,6 +19,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/lantern/lantern.dart'
+    show LGlyph, lanternToast, showLanternSheet;
+import '../lantern/lantern_broadcast_parts.dart';
 import '../../../../core/widgets/interactive_toast_overlay.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../discovery/models/academic_category_model.dart';
@@ -51,6 +54,10 @@ class PhoneBroadcastScreen extends StatefulWidget {
   const PhoneBroadcastScreen(
       {super.key, this.quickLaunchPreset, this.watchLinkNoteKey, this.autoStart=true});
 
+  /// Widget tests reach the screen's own chat (to add messages) through this.
+  @visibleForTesting
+  static ValueChanged<LiveChatController>? debugOnChat;
+
   @override
   State<PhoneBroadcastScreen> createState() => _PhoneBroadcastScreenState();
 }
@@ -73,6 +80,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   late bool _presetConfirmed;
   bool _isSideChatOpen = false;
   bool _controlsVisible = true;
+
+  /// The last messages over the camera, hidden by the presenter (a swipe
+  /// down on them, or the switch in the tools). This screen only; viewers
+  /// still chat, and the chat button still opens the whole chat.
+  bool _chatHidden = false;
+  int _chatShown = 0;
   bool _wasLandscape = false;
   bool _isDescriptionExpanded = false;
 
@@ -133,6 +146,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (context.read<AppProvider>().liveSessionId != null) {
       _chatController.start();
     }
+    PhoneBroadcastScreen.debugOnChat?.call(_chatController);
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
@@ -1274,7 +1288,133 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }
   }
 
+  void _setChatHidden(bool hidden, {bool fromSwipe = false}) {
+    if (!mounted) return;
+    setState(() {
+      _chatHidden = hidden;
+      if (!hidden) _chatShown++;
+    });
+    if (!hidden || !fromSwipe) return;
+    void show() => _setChatHidden(false);
+    if (context.isLanternSkin) {
+      lanternToast(context, 'lantern.broadcaster.chat_hidden'.tr(),
+          icon: LGlyph.chat,
+          actionLabel: 'lantern.broadcaster.chat_show'.tr(),
+          onAction: show);
+      return;
+    }
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+          content: Text('lantern.broadcaster.chat_hidden'.tr()),
+          action: SnackBarAction(
+              label: 'lantern.broadcaster.chat_show'.tr(), onPressed: show)));
+  }
+
+  Future<void> _showFrontCameraInfo(BuildContext context) => showCaDialog<void>(
+        context: context,
+        builder: (context) => CaAlertDialog(
+          scrollable: true,
+          title: Text('live.front_camera_coming_soon'.tr()),
+          content: Text('live.ctrl_back_active_sub'.tr()),
+          actions: [
+            CaButton(
+                label: 'common.close'.tr(),
+                variant: CaButtonVariant.text,
+                onPressed: () => Navigator.pop(context))
+          ],
+        ),
+      );
+
+  /// The connection's state for the tools: "Live - 2555 kbit/s" or why not.
+  String _sendingStatus() => switch (_engine.state) {
+        RtmpPublishState.live => _engine.lastBitrateBps == null
+            ? 'live.live_indicator'.tr()
+            : 'live.live_badge_bitrate'
+                .tr(args: ['${(_engine.lastBitrateBps! / 1000).round()}']),
+        RtmpPublishState.reconnecting =>
+          'live.stream_interrupted_reconnecting'.tr(),
+        RtmpPublishState.error => 'live.connection_error'.tr(),
+        _ => 'live.chat_status_connecting'.tr(),
+      };
+
+  /// Lantern and Arch: the same tools, drawn by [LanternBroadcastTools].
+  void _showLanternTools() {
+    showLanternSheet<void>(context,
+        title: 'design_ui.streamer_quick_controls'.tr(),
+        body: (sheetContext) => StatefulBuilder(
+            builder: (context, setSheet) => ListenableBuilder(
+                listenable: _engine,
+                builder: (context, _) {
+                  Future<void> then(Future<void> change) async {
+                    await change;
+                    if (context.mounted) setSheet(() {});
+                    if (mounted) setState(() {});
+                  }
+
+                  final session = _appProvider.publishingSession;
+                  return LanternBroadcastTools(
+                      status: _sendingStatus(),
+                      live: _engine.state == RtmpPublishState.live,
+                      mic: (
+                        value: !_engine.isMuted,
+                        onChanged: (on) => then(_engine.setMuted(!on)),
+                      ),
+                      camera: (
+                        value: !_engine.isCameraOff,
+                        onChanged: (on) => then(_toggleCamera(!on)),
+                      ),
+                      chat: (
+                        value: !_chatHidden,
+                        onChanged: (on) {
+                          _setChatHidden(!on);
+                          setSheet(() {});
+                        },
+                      ),
+                      hideReplay: session == null
+                          ? null
+                          : (
+                              value: session.hideReplay,
+                              onChanged: _savingHideReplay
+                                  ? null
+                                  : (value) {
+                                      final saving = _setHideReplay(value);
+                                      setSheet(() {});
+                                      then(saving);
+                                    },
+                            ),
+                      attendees: _appProvider.isActiveStreamPrivate
+                          ? (
+                              'live.ctrl_manage_attendees'.tr(args: [
+                                '${_appProvider.admittedAttendees.length}'
+                              ]),
+                              'live.ctrl_waiting_queue'.tr(args: [
+                                '${_appProvider.pendingKnockRequests.length}'
+                              ]),
+                              () {
+                                Navigator.of(sheetContext).pop();
+                                _showDirectorPanel(this.context, _appProvider);
+                              },
+                            )
+                          : null,
+                      onFrontCamera: () => _showFrontCameraInfo(sheetContext),
+                      languageName: (context.locale.languageCode == 'ar'
+                              ? 'language.en'
+                              : 'language.ar')
+                          .tr(),
+                      onLanguage: () async {
+                        await LanguageSwitcher.toggle(context);
+                        if (context.mounted) setSheet(() {});
+                      },
+                      onEnd: () {
+                        Navigator.of(sheetContext).pop();
+                        _handleEndOrLeave();
+                      });
+                })));
+  }
+
   void _showStreamerControlsSheet(StreamerModel streamer) {
+    if (context.isLanternSkin) return _showLanternTools();
     showCaSheet<void>(
       context,
       title: 'live.tooltip_controls'.tr(),
@@ -1417,20 +1557,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           ),
                           trailing: const Icon(Icons.info_outline_rounded,
                               color: Canopy.slate, size: 18),
-                          onTap: () => showCaDialog<void>(
-                            context: sheetContext,
-                            builder: (context) => CaAlertDialog(
-                              scrollable: true,
-                              title: Text('live.front_camera_coming_soon'.tr()),
-                              content: Text('live.ctrl_back_active_sub'.tr()),
-                              actions: [
-                                CaButton(
-                                    label: 'common.close'.tr(),
-                                    variant: CaButtonVariant.text,
-                                    onPressed: () => Navigator.pop(context))
-                              ],
-                            ),
-                          ),
+                          onTap: () => _showFrontCameraInfo(sheetContext),
                         ),
                         const SizedBox(height: 8),
 
@@ -1483,6 +1610,50 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             await _toggleCamera(!isCameraOff);
                             if (context.mounted) setModalState(() {});
                             if (mounted) setState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // The last messages over the camera (this screen).
+                        ListTile(
+                          key: const Key('phone-chat-on-screen'),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: Canopy.mint,
+                          leading: Icon(
+                              _chatHidden
+                                  ? Icons.speaker_notes_off_outlined
+                                  : Icons.chat_bubble_outline_rounded,
+                              color: AppTheme.primary),
+                          title: Text(
+                            'lantern.broadcaster.chat'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.ink,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            (_chatHidden
+                                    ? 'lantern.broadcaster.chat_off'
+                                    : 'lantern.broadcaster.chat_on')
+                                .tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
+                          ),
+                          trailing: Switch(
+                            value: !_chatHidden,
+                            activeThumbColor: AppTheme.primary,
+                            onChanged: (on) {
+                              _setChatHidden(!on);
+                              setModalState(() {});
+                            },
+                          ),
+                          onTap: () {
+                            _setChatHidden(!_chatHidden);
+                            setModalState(() {});
                           },
                         ),
                         const SizedBox(height: 8),
@@ -1718,16 +1889,25 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       padding: const EdgeInsets.all(AppTheme.spaceXs),
       child: child);
 
+  /// The last three messages over the camera. A swipe down hides them on
+  /// this screen ([_chatHidden]); the tools show them again.
   Widget _broadcastChatPreview() {
+    if (_chatHidden) return const SizedBox.shrink();
     final messages =
         _chatController.messages.reversed.take(3).toList().reversed.toList();
     if (messages.isEmpty) return const SizedBox.shrink();
-    return ConstrainedBox(
+    return Dismissible(
+        key: ValueKey('broadcast-chat-preview-$_chatShown'),
+        direction: DismissDirection.down,
+        onDismissed: (_) => _setChatHidden(true, fromSwipe: true),
+        child: ConstrainedBox(
         constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(context).height *
                 CanopySize.broadcastChatPreviewFraction),
         child: _glassHud(SingleChildScrollView(
             reverse: true,
+            // Not scrolled by hand: a drag here is the swipe that hides it.
+            physics: const NeverScrollableScrollPhysics(),
             child: Column(
                 key: const Key('broadcast-last-three'),
                 mainAxisSize: MainAxisSize.min,
@@ -1752,11 +1932,19 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 .textTheme
                                 .bodySmall
                                 ?.copyWith(color: Canopy.paper))),
-                ]))));
+                ])))));
   }
 
+  /// The picture while the camera is off: the microphone's live level and
+  /// whether it is on. Lantern draws it on its pattern
+  /// ([LanternBroadcastAudioStage]); the older design keeps its card.
   Widget _audioBroadcastStage() {
-    final level = _engine.lastMicRms;
+    final muted = _engine.isMuted;
+    if (context.isLanternSkin) {
+      return SizedBox.expand(
+          child: LanternBroadcastAudioStage(
+              level: _engine.micLevel, muted: muted));
+    }
     return ColoredBox(
         color: Canopy.forestDeep,
         child: Center(
@@ -1769,25 +1957,50 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     decoration: BoxDecoration(
                         color: Canopy.paper,
                         borderRadius: BorderRadius.circular(CanopyRadius.card)),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.mic_rounded, color: Canopy.brandGreen),
-                      const SizedBox(height: AppTheme.spaceSm),
-                      Text('live_studio.audio_only_title'.tr(),
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: AppTheme.spaceMd),
-                      CaLevelMeter(
-                          key: const Key('broadcast-audio-meter'),
-                          level: level ?? 0,
-                          label: level == null
-                              ? 'live.audio_level_unavailable'.tr()
-                              : 'ds.audio_level'.tr()),
-                      const SizedBox(height: AppTheme.spaceSm),
-                      Text(
-                          level == null
-                              ? 'live.audio_level_unavailable'.tr()
-                              : 'ds.audio_level'.tr(),
-                          style: Theme.of(context).textTheme.bodySmall),
-                    ])))));
+                    child: ValueListenableBuilder<double?>(
+                        valueListenable: _engine.micLevel,
+                        builder: (context, level, _) {
+                          final status = muted
+                              ? 'lantern.broadcaster.mic_off'
+                              : level == null
+                                  ? 'lantern.broadcaster.level_waiting'
+                                  : 'lantern.broadcaster.mic_on';
+                          return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                    muted
+                                        ? Icons.mic_off_rounded
+                                        : Icons.mic_rounded,
+                                    color: muted
+                                        ? Canopy.liveCrimson
+                                        : Canopy.brandGreen),
+                                const SizedBox(height: AppTheme.spaceSm),
+                                Text('live_studio.audio_only_title'.tr(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium),
+                                const SizedBox(height: AppTheme.spaceMd),
+                                CaLevelMeter(
+                                    key: const Key('broadcast-audio-meter'),
+                                    level: muted ? 0 : level ?? 0,
+                                    label: 'lantern.broadcaster.level'.tr()),
+                                const SizedBox(height: AppTheme.spaceSm),
+                                Text(status.tr(),
+                                    key: const Key('broadcast-mic-status'),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                            color: muted
+                                                ? Canopy.liveCrimson
+                                                : null,
+                                            fontWeight: muted
+                                                ? FontWeight.w700
+                                                : null)),
+                              ]);
+                        })))));
   }
 
   String get _presetCompactLabel => '${_preset.height}p';

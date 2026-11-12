@@ -631,7 +631,8 @@ class AppRouter {
             name: 'settings',
             builder: (context, state) => _Deferred(
                 loader: settings.loadLibrary,
-                builder: () => settings.SettingsScreen()),
+                builder: () => settings.SettingsScreen(
+                    initialSection: state.uri.queryParameters['section'])),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,

@@ -53,6 +53,13 @@ class BroadcastPublishingController extends ChangeNotifier {
     destination?.organizationId == null && destination?.connected == true;
 
   void _authorityChanged() {
+    // A channel change ended the background preparation: start over on the
+    // next Preview (or the next pre-warm) instead of adopting it.
+    final warm = _warm;
+    if (warm != null && warm.id != null && provider.preparationEnded(warm.id!)) {
+      _warm = null;
+      if (!_disposed) notifyListeners();
+    }
     if (provider.currentDeviceSession?.isPrimaryBroadcaster == true &&
         (ingestKey.isEmpty || provider.publishingSession?.id == session?.id)) { return; }
     _generation++;

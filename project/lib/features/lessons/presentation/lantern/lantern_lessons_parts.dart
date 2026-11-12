@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/lantern/lantern.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../map/presentation/lantern/lantern_map_preview.dart';
 import '../../data/lessons_repository.dart';
 import '../../domain/lessons_dates.dart';
 import '../../domain/lessons_models.dart';
@@ -1196,7 +1197,10 @@ class LMapTeaser extends StatelessWidget implements LanternSkinWidget {
                 ? Lantern.none
                 : const Duration(milliseconds: 400),
             curve: Lantern.ease,
-            child: LMapArt(height: wide ? 330 : 190)));
+            // The website layout shows the real map; phones keep the art.
+            child: wide
+                ? const SizedBox(height: 330, child: LanternMapPreview())
+                : const LMapArt(height: 190)));
     return LCard(
         radius: 32,
         padding: EdgeInsets.all(wide ? 28 : 18),

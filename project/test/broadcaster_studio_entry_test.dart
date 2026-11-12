@@ -174,6 +174,15 @@ class _Broadcasts extends OrganizationBroadcastService {
     'revision':1,'title_en':'A show','title_ar':'برنامج','broadcast_type':'liveVideo','accepted_at':'2026-10-01',
     'sender_mode':'obs_laptop','stream_id':'abcdefghijk'};
   @override Future<List<ChannelConnection>> connections() async=>readable;
+  /// Linking a channel: refused like the server while a personal session is
+  /// preparing, live or ending (channel_oauth_begin).
+  @override Future<Uri> connectChannel({String? organizationId}) async {
+    actions.add('connect');
+    if(creates>0&&['preparing','live','ending'].contains(row['state'])) {
+      throw const FunctionException(status:409,details:{'error':'channel_active_show'});
+    }
+    return Uri.parse('https://accounts.example.invalid/consent');
+  }
   @override Future<List<OrgMembership>> memberships({String? organizationId}) async=>[];
   @override Future<List<BroadcastSession>> sessions({String? organizationId,bool mine=false}) async=>creates==0?[]:[BroadcastSession.fromRow(row)];
   int reads=0;
@@ -399,6 +408,42 @@ void main() {
     expect(broadcasts.actions.last,'end');
     expect(broadcasts.creates,1);
     p.dispose();await db.devices.close();
+  });
+
+  test("linking the channel ends the studio's unused background preparation first",()async {
+    // Owner report 2026-11-12: "end your current broadcast" with nothing on
+    // air. The studio had prepared YouTube in the background.
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='phone_direct'..confirmed=true;
+    studio.prewarm(title:'Default',type:'liveVideo');
+    await settle();
+    expect(broadcasts.row['state'],'preparing');
+    final consent=await p.connectYouTubeChannel();
+    expect(consent.host,'accounts.example.invalid');
+    expect(broadcasts.actions,['prepare','end','connect']);
+    expect(broadcasts.row['state'],'completed');
+    expect(p.preparationEnded('session'),isTrue);
+    // The open studio does not adopt the ended preparation: Preview starts over.
+    expect(await studio.prepare('Default','liveVideo'),isTrue);
+    expect(broadcasts.creates,2);
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('a laptop preparation is not ended to link a channel',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='obs_laptop'..confirmed=true;
+    expect(await studio.prepare('Default','liveVideo'),isTrue);
+    studio.dispose();p.dispose();await db.devices.close();
+    // Another app start (nothing published here) finds the laptop's
+    // preparation: the server's refusal stands and nothing is ended.
+    final db2=_StudioDb();
+    final again=await _broadcaster(db2,broadcasts:broadcasts);
+    await expectLater(again.connectYouTubeChannel(),throwsA(isA<FunctionException>()));
+    expect(broadcasts.actions,['prepare','connect']);
+    expect(broadcasts.row['state'],'preparing');
+    again.dispose();await db2.devices.close();
   });
 
   test('the hide-the-video choice is saved with the prepared session',()async {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -267,6 +268,20 @@ class RtmpPublishEngine extends ChangeNotifier {
   double? _lastMicRms;
   double? get lastMicRms => _lastMicRms;
 
+  /// The microphone level for the studio's meter (0 to 1, on a decibel
+  /// scale: [meterLevel]), or null until the encoder reports one (it does
+  /// while it is sending). Its own notifier, so ten samples a second rebuild
+  /// only the meter, not the whole broadcast screen.
+  final ValueNotifier<double?> micLevel = ValueNotifier<double?>(null);
+
+  /// An RMS level as the meter shows it: -50 dBFS and below is empty, full
+  /// scale is full, so quiet speech still moves it.
+  static double meterLevel(double rms) {
+    if (rms <= 0) return 0;
+    final decibels = 20 * math.log(rms) / math.ln10;
+    return ((decibels + 50) / 50).clamp(0.0, 1.0);
+  }
+
   /// Below this normalised RMS the mic is treated as producing silence
   /// rather than quiet speech -- roughly -40 dBFS, comfortably under normal
   /// room tone but above a truly dead input.
@@ -504,6 +519,7 @@ class RtmpPublishEngine extends ChangeNotifier {
         _silenceTimer?.cancel();
         _silenceTimer = null;
         _lastMicRms = null;
+        micLevel.value = null;
         // Mute is a property of a *live* MicrophoneSource, and stopping tears
         // that source down -- carrying the flag over would both strand a
         // "Streamer Microphone Muted"badge on an ended broadcast and make a
@@ -538,6 +554,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   /// silence rather than on the gaps between words.
   void _handleMicLevel(double rms) {
     _lastMicRms = rms;
+    micLevel.value = meterLevel(rms);
     if (rms >= _silenceRmsThreshold) {
       _silenceTimer?.cancel();
       _silenceTimer = null;
@@ -625,16 +642,11 @@ class RtmpPublishEngine extends ChangeNotifier {
         }
         break;
       case 'audioLevel':
-        // Normalised 0.0-1.0 RMS from the native encoder. The Android
-        // bridge does not emit this yet (v0.7 shipped mute-only), so on
-        // today's devices isMicSilent is driven purely by setMuted -- this
-        // arm is the Dart half of the level pipeline, ready for the encoder
-        // to start reporting without another Dart-side change.
+        // Normalised 0.0-1.0 RMS from the native encoder, about ten times a
+        // second while it sends (Android: MicLevelEffect). Only [micLevel]
+        // and [isMicSilent] change; the screen is not rebuilt for it.
         final rms = (event['rms'] as num?)?.toDouble();
-        if (rms != null) {
-          _handleMicLevel(rms.clamp(0.0, 1.0));
-          notifyListeners();
-        }
+        if (rms != null) _handleMicLevel(rms.clamp(0.0, 1.0));
         break;
       case 'error':
         _cancelRecovery();
@@ -697,6 +709,7 @@ class RtmpPublishEngine extends ChangeNotifier {
     _watchdogTimer?.cancel();
     _silenceTimer?.cancel();
     isMicSilent.dispose();
+    micLevel.dispose();
     _eventSub?.cancel();
     if (!_iosPublishingDisabled) {
       _channel.invokeMethod<void>('dispose').catchError((_) {});

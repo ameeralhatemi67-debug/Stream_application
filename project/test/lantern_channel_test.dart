@@ -369,6 +369,47 @@ void main() {
     await app.close();
   });
 
+  for (final size in [_phone, _laptop]) {
+    testWidgets('the owner\'s share, studio and settings: in the page bar on '
+        'a phone, in the header on the website (${size.width.toInt()})',
+        (tester) async {
+      final provider = seeded()
+        ..debugSetSignedInForTests(
+            email: 'owner@example.invalid', ownedStreamerId: id);
+      final app = await LanternApp.start(tester,
+          location: '/profile/$id', provider: provider, size: size,
+          lang: 'ar');
+      for (final key in [
+        'lantern-channel-share',
+        'lantern-channel-studio',
+        'lantern-channel-settings',
+      ]) {
+        final found = find.byKey(ValueKey(key));
+        expect(found, findsOneWidget, reason: key);
+        expect(
+            find.descendant(
+                of: find.byType(LanternPageBar), matching: found),
+            size == _phone ? findsOneWidget : findsNothing,
+            reason: key);
+      }
+      if (size == _phone) {
+        // The studio is an icon, and Settings takes the corner: the top
+        // left in Arabic.
+        expect(
+            tester.widget(find.byKey(const ValueKey('lantern-channel-studio'))),
+            isA<LIconButton>());
+        final settings =
+            tester.getRect(find.byKey(const ValueKey('lantern-channel-settings')));
+        final share =
+            tester.getRect(find.byKey(const ValueKey('lantern-channel-share')));
+        expect(settings.left, lessThan(share.left));
+        expect(settings.top, lessThan(80));
+      }
+      expect(tester.takeException(), isNull);
+      await app.close();
+    });
+  }
+
   testWidgets('a viewer gets no studio', (tester) async {
     final app = await LanternApp.start(tester,
         location: '/profile/$id', provider: seeded());

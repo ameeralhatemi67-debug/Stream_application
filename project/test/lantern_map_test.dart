@@ -558,11 +558,31 @@ void main() {
         expect(find.byType(LanternMapControls), findsOneWidget);
         expect(find.byType(LanternMapAttribution), findsOneWidget);
         expect(find.byType(LanternMapPanel), findsNothing);
-        // The credit stays clear of the floating navigation.
-        expect(
-            tester.getRect(find.byType(LanternMapAttribution)).bottom,
-            lessThanOrEqualTo(
-                tester.getRect(find.byType(LanternBottomNav)).top + 1));
+        // The credit is a small chip in the bottom corner on the start side
+        // (the right in Arabic), in the strip under the floating
+        // navigation's pill, so it never lifts the place cards (owner notes
+        // 2026-11-12) and never covers the pill.
+        final chip = tester.getRect(find
+            .descendant(
+                of: find.byType(LanternMapAttribution),
+                matching: find.byType(Container))
+            .first);
+        expect(chip.height, LanternMapAttribution.compactHeight);
+        expect(chip.bottom, closeTo(844, 1));
+        if (lang == 'ar') {
+          expect(chip.right, closeTo(390 - 6, 1));
+        } else {
+          expect(chip.left, closeTo(6, 1));
+        }
+        final tabs = find.descendant(
+            of: find.byType(LanternBottomNav),
+            matching: find.byType(LPressable));
+        var pill = tester.getRect(tabs.first);
+        for (final e in tabs.evaluate()) {
+          pill = pill.expandToInclude(tester.getRect(find.byWidget(e.widget)));
+        }
+        pill = pill.inflate(6);
+        expect(chip.overlaps(pill.deflate(.5)), isFalse);
         await app.close();
       });
 
@@ -755,7 +775,8 @@ void main() {
       expect(find.widgetWithText(LButton, 'Retry'), findsOneWidget);
       // No broadcaster is shown as live from a saved list.
       expect(find.text('LIVE'), findsNothing);
-      await tester.tap(find.byTooltip('Map details and credits'));
+      // On a phone the small credit chip opens the details.
+      await tester.tap(find.byKey(const ValueKey('lantern-map-credit')));
       await app.settle(6);
       expect(tester.takeException(), isNull);
       expect(find.byKey(const ValueKey('lantern-map-details')), findsOneWidget);

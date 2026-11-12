@@ -1276,11 +1276,15 @@ Future<T?> showLanternDialog<T>(BuildContext context,
 
 /// A bottom sheet in the Lantern shape (phones), or a dialog on the website
 /// layout where a sheet would hide the page.
+///
+/// [headerActions] are icon buttons drawn in the title row, just before the
+/// close button (on phones only; the website layout's dialog has none).
 Future<T?> showLanternSheet<T>(BuildContext context,
     {required String title,
     required WidgetBuilder body,
     bool? night,
-    bool scrollControlled = true}) {
+    bool scrollControlled = true,
+    List<Widget> Function(BuildContext context)? headerActions}) {
   if (context.lanternWide) {
     return showLanternDialog<T>(context,
         title: title, body: body, night: night);
@@ -1334,6 +1338,8 @@ Future<T?> showLanternSheet<T>(BuildContext context,
                                             height: context.lanternArabic
                                                 ? 1.45
                                                 : 1.25)))),
+                            if (headerActions != null)
+                              ...headerActions(context),
                             LIconButton(
                                 icon: LGlyph.close,
                                 label: MaterialLocalizations.of(context)

@@ -1131,8 +1131,15 @@ class AppProvider extends ChangeNotifier {
     _channelConnections = List.unmodifiable(rows);
     notifyListeners();
   }
-  Future<Uri> connectYouTubeChannel({String? organizationId}) =>
-      _organizationBroadcastService.connectChannel(organizationId:organizationId);
+  /// Links (or changes) a YouTube channel. The presenter's own unused
+  /// preparations end first: the server refuses a channel change while a
+  /// personal session is preparing, and the studio prepares one in the
+  /// background (owner report 2026-11-12: "end your current broadcast" with
+  /// nothing on air).
+  Future<Uri> connectYouTubeChannel({String? organizationId}) async {
+    if (organizationId == null) await endUnusedPreparations();
+    return _organizationBroadcastService.connectChannel(organizationId:organizationId);
+  }
 
   /// The page stack where Google consent started, so the return link can
   /// rebuild it (Google's return replaces the navigation history). Stored,
@@ -1165,6 +1172,8 @@ class AppProvider extends ChangeNotifier {
     }
   }
   Future<void> disconnectYouTubeChannel(String id) async {
+    final personal = _channelConnections.where((c) => c.id == id).firstOrNull?.organizationId == null;
+    if (personal) await endUnusedPreparations();
     await _organizationBroadcastService.disconnectChannel(id);
     await refreshChannelConnections();
   }
@@ -1287,6 +1296,42 @@ class AppProvider extends ChangeNotifier {
       _releasedWarmTimer=null; _releasedWarmId=null;
       unawaited(_endWarmBroadcast(id));
     });
+  }
+
+  /// Preparations this app ended because they were never used (see
+  /// [endUnusedPreparations]). An open studio drops its background
+  /// preparation when it is one of these.
+  final Set<String> _endedPreparations = {};
+  bool preparationEnded(String id) => _endedPreparations.contains(id);
+
+  /// Ends the presenter's own personal sessions that are preparing but were
+  /// never started: the studio's background preparation, kept for a quick go
+  /// live after the studio closes (up to the session's hour). The server
+  /// counts them as active and refuses to link, change or unlink the channel
+  /// while one is open. A session this device is publishing is never ended.
+  Future<void> endUnusedPreparations() async {
+    final me = currentUserSessionId;
+    if (_disposed || me == null) return;
+    final ids = <String>{};
+    final released = _releasedWarmId;
+    if (released != null) {
+      _releasedWarmTimer?.cancel(); _releasedWarmTimer=null; _releasedWarmId=null;
+      ids.add(released);
+    }
+    try {
+      final mine = await organizationSessions(mine: true);
+      // Only phone preparations: the studio's background ones. A laptop
+      // (OBS) preparation is one the presenter set up and is told about.
+      ids.addAll(mine.where((s) => s.organizationId == null && s.state == 'preparing' &&
+          s.senderMode == 'phone_direct' && s.presenterId == me).map((s) => s.id));
+    } catch (e) {
+      debugPrint('Preparations not listed: ${e.runtimeType}');
+    }
+    ids.remove(_publishingSession?.id);
+    if (ids.isEmpty || _disposed) return;
+    _endedPreparations.addAll(ids);
+    await Future.wait(ids.map(_endWarmBroadcast));
+    if (!_disposed) notifyListeners();
   }
 
   /// The studio reopened: keep the released preparation for reuse.

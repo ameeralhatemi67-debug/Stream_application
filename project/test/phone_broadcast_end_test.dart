@@ -4,6 +4,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:streamer_app/core/widgets/ds/ca_button.dart';
+import 'package:streamer_app/core/widgets/lantern/lantern.dart'
+    show LFocusRing, LSwitch;
+import 'package:streamer_app/features/live_stream/models/chat_message_model.dart';
+import 'package:streamer_app/features/live_stream/presentation/lantern/lantern_broadcast_parts.dart';
+import 'package:streamer_app/features/live_stream/services/live_chat_controller.dart';
 import 'package:streamer_app/core/widgets/ds/ca_icon.dart';
 import 'package:streamer_app/core/widgets/ds/canopy_motion.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
@@ -272,6 +277,7 @@ void main() {
       double textScale = 1,
       bool wideConfirmation = false,
       bool canopyTheme = false,
+      AppSkin? skin,
       bool autoStart = true}) async {
     // These fixtures keep the unchanged wider-screen confirmation contract.
     // Separate native-phone cases below exercise its deliberate hold replacement.
@@ -292,7 +298,11 @@ void main() {
         builder: (context) => ChangeNotifierProvider.value(
           value: p,
           child: MaterialApp(
-            theme: canopyTheme ? AppTheme.forLocale(context.locale) : null,
+            theme: skin != null
+                ? AppTheme.forLocale(context.locale, skin: skin)
+                : canopyTheme
+                    ? AppTheme.forLocale(context.locale)
+                    : null,
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context).copyWith(
                   textScaler: TextScaler.linear(textScale),
@@ -575,7 +585,10 @@ void main() {
                 find.byKey(const Key('broadcast-audio-meter')))
             .level,
         0);
-    expect(find.text('live.audio_level_unavailable'.tr()), findsOneWidget);
+    // No more "level unavailable" (owner notes 2026-11-12): the meter waits
+    // for the encoder, which reports while it sends.
+    expect(find.text('live.audio_level_unavailable'.tr()), findsNothing);
+    expect(find.text('lantern.broadcaster.level_waiting'.tr()), findsOneWidget);
     await tester.runAsync(() => messenger.handlePlatformMessage(
         events.name,
         events.codec.encodeSuccessEnvelope({'type': 'audioLevel', 'rms': .75}),
@@ -586,8 +599,8 @@ void main() {
             .widget<CaLevelMeter>(
                 find.byKey(const Key('broadcast-audio-meter')))
             .level,
-        .75);
-    expect(find.text('live.audio_level_unavailable'.tr()), findsNothing);
+        RtmpPublishEngine.meterLevel(.75));
+    expect(find.text('lantern.broadcaster.mic_on'.tr()), findsOneWidget);
     expect(tester.takeException(), isNull);
     await close(tester, p, db);
   });
@@ -1298,6 +1311,174 @@ void main() {
                 find.descendant(of: tile, matching: find.byType(Switch)))
             .value,
         isTrue);
+    await close(tester, p, db);
+  });
+
+  ChatMessageModel chatLine(String id, String body) => ChatMessageModel(
+      id: id,
+      streamId: 's',
+      senderId: 'viewer-$id',
+      senderName: 'Viewer $id',
+      body: body,
+      createdAt: DateTime(2026, 11, 12, 9));
+
+  Future<LiveChatController> openWithChat(WidgetTester tester, AppProvider p,
+      {AppSkin? skin}) async {
+    LiveChatController? chat;
+    PhoneBroadcastScreen.debugOnChat = (c) => chat = c;
+    addTearDown(() => PhoneBroadcastScreen.debugOnChat = null);
+    await open(tester, p, canopyTheme: skin == null, skin: skin);
+    chat!
+      ..debugAddMessageForTests(chatLine('1', 'first'))
+      ..debugAddMessageForTests(chatLine('2', 'second'));
+    await tester.pump();
+    return chat!;
+  }
+
+  for (final skin in [null, AppSkin.lantern]) {
+    final tag = skin == null ? 'older design' : 'Lantern';
+    testWidgets('a swipe down hides the chat over the camera; Show brings it '
+        'back ($tag)', (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await openWithChat(tester, p!, skin: skin);
+      final preview = find.byKey(const Key('broadcast-last-three'));
+      expect(preview, findsOneWidget);
+      expect(find.textContaining('second'), findsOneWidget);
+      await tester.drag(preview, const Offset(0, 260));
+      await tester.pumpAndSettle();
+      expect(preview, findsNothing);
+      expect(find.text('lantern.broadcaster.chat_hidden'.tr()), findsOneWidget);
+      // The chat button still opens the whole chat.
+      expect(find.byTooltip('live.tooltip_toggle_chat'.tr()), findsOneWidget);
+      await tester.tap(find.text('lantern.broadcaster.chat_show'.tr()));
+      await tester.pumpAndSettle();
+      expect(preview, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await close(tester, p, db);
+    });
+  }
+
+  testWidgets('the tools switch hides and shows the chat (older design)',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await openWithChat(tester, p!);
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()).first);
+    await tester.pumpAndSettle();
+    final row = find.byKey(const Key('phone-chat-on-screen'));
+    await tester.ensureVisible(row);
+    final toggle = find.descendant(of: row, matching: find.byType(Switch));
+    expect(tester.widget<Switch>(toggle).value, isTrue);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+    expect(find.byKey(const Key('broadcast-last-three')), findsNothing);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('broadcast-last-three')), findsOneWidget);
+    await close(tester, p, db);
+  });
+
+  for (final locale in [const Locale('ar'), const Locale('en')]) {
+    testWidgets('Lantern tools: grouped rows, on means on, chat and End '
+        '(${locale.languageCode})', (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await openWithChat(tester, p!, skin: AppSkin.lantern);
+      await tester.tap(find.byTooltip('live.tooltip_controls'.tr()).first);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('lantern-broadcast-tools')),
+          findsOneWidget);
+      expect(find.text('design_ui.streamer_quick_controls'.tr()),
+          findsOneWidget);
+      for (final key in [
+        'lantern-broadcast-mic-row',
+        'lantern-broadcast-camera-row',
+        'lantern-broadcast-front-camera',
+        'lantern-broadcast-chat-row',
+        'lantern-broadcast-language',
+        'lantern-broadcast-end',
+      ]) {
+        expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+      }
+      // Mic on reads as on.
+      final mic = find.descendant(
+          of: find.byKey(const ValueKey('lantern-broadcast-mic-row')),
+          matching: find.byType(LSwitch));
+      expect(tester.widget<LSwitch>(mic).value, isTrue);
+      expect(find.text('lantern.broadcaster.mic_on'.tr()), findsOneWidget);
+      await tester.tap(mic);
+      await tester.pumpAndSettle();
+      expect(calls, contains('setMuted'));
+      expect(tester.widget<LSwitch>(mic).value, isFalse);
+      expect(find.text('lantern.broadcaster.mic_off'.tr()), findsWidgets);
+      // The chat over the camera.
+      final chat = find.descendant(
+          of: find.byKey(const ValueKey('lantern-broadcast-chat-row')),
+          matching: find.byType(LSwitch));
+      await tester.ensureVisible(chat);
+      await tester.tap(chat);
+      await tester.pumpAndSettle();
+      expect(tester.widget<LSwitch>(chat).value, isFalse);
+      expect(find.byKey(const Key('broadcast-last-three')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await close(tester, p, db);
+    });
+  }
+
+  testWidgets('Lantern: camera off draws the pattern, the live level and a '
+      'red "microphone is off"', (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    p!.setBroadcastType(BroadcastType.liveAudio);
+    await open(tester, p, skin: AppSkin.lantern);
+    expect(find.byType(LanternBroadcastAudioStage), findsOneWidget);
+    expect(find.byKey(const ValueKey('lantern-broadcast-level')),
+        findsOneWidget);
+    expect(find.text('live.audio_level_unavailable'.tr()), findsNothing);
+    expect(find.text('lantern.broadcaster.level_waiting'.tr()), findsOneWidget);
+    await tester.runAsync(() => messenger.handlePlatformMessage(
+        events.name,
+        events.codec.encodeSuccessEnvelope({'type': 'audioLevel', 'rms': .2}),
+        (_) {}));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('lantern.broadcaster.mic_on'.tr()), findsOneWidget);
+    // Mute from the tools: the stage says so in red.
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+        of: find.byKey(const ValueKey('lantern-broadcast-mic-row')),
+        matching: find.byType(LSwitch)));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(200, 40));
+    await tester.pumpAndSettle();
+    final status = find.byKey(const ValueKey('lantern-broadcast-mic-status'));
+    expect(tester.widget<Text>(status).data,
+        'lantern.broadcaster.mic_off'.tr());
+    expect(tester.widget<Text>(status).style?.color, const Color(0xFFFF8A8F));
+    expect(tester.takeException(), isNull);
+    await close(tester, p, db);
+  });
+
+  testWidgets('Lantern: holding End keeps its label and fill, no focus block',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!, skin: AppSkin.lantern);
+    final end = find.byKey(const Key('phone-end-broadcast'));
+    final gesture = await tester.startGesture(tester.getCenter(end));
+    await tester.pump(const Duration(milliseconds: 400));
+    // The ring is for the keyboard only; it once covered the whole button.
+    for (final ring in tester.widgetList<LFocusRing>(
+        find.descendant(of: end, matching: find.byType(LFocusRing)))) {
+      expect(ring.visible, isFalse);
+    }
+    expect(find.descendant(of: end, matching: find.text('live.hold_to_end'.tr())),
+        findsOneWidget);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(calls, isNot(contains('stopStream')));
     await close(tester, p, db);
   });
 }

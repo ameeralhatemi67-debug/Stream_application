@@ -1,6 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/notifications/notification_models.dart';
 import '../../../../core/widgets/lantern/lantern.dart';
 import '../notification_center_sheet.dart';
@@ -9,10 +12,28 @@ import '../notification_center_sheet.dart';
 /// end side on the website layout, a Lantern sheet on a phone. The list is
 /// [NotificationCenterSheet], which keeps its filter, its loads and its
 /// actions and draws [LanternNotificationsBody] under Lantern.
-Future<void> showLanternNotifications(BuildContext context) =>
-    showLanternDrawer<void>(context,
-        title: 'design_copy.notifications'.tr(),
-        body: (_) => const NotificationCenterSheet());
+///
+/// A signed-in account gets a settings button beside the close button: it
+/// closes the panel and opens Settings at the notifications section.
+Future<void> showLanternNotifications(BuildContext context) {
+  final signedIn = context.read<AppProvider>().isLoggedInStreamer;
+  final router = GoRouter.maybeOf(context);
+  return showLanternDrawer<void>(context,
+      title: 'design_copy.notifications'.tr(),
+      headerActions: !signedIn || router == null
+          ? null
+          : (sheetContext) => [
+                LIconButton(
+                    key: const ValueKey('lantern-notifications-preferences'),
+                    icon: LGlyph.settings,
+                    label: 'design_copy.notification_preferences'.tr(),
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      router.push(LanternNotificationsBody.preferencesPath);
+                    }),
+              ],
+      body: (_) => const NotificationCenterSheet());
+}
 
 /// The notifications: the unread count, the category filters, mark all
 /// read, and one row per notice with open, mute and dismiss.
@@ -30,8 +51,11 @@ class LanternNotificationsBody extends StatelessWidget
       required this.isMuted,
       required this.onToggleMute,
       required this.timeAgo,
-      this.onMarkAllRead,
-      this.onPreferences});
+      this.onMarkAllRead});
+
+  /// Settings, opened at its notifications section (the header's settings
+  /// button).
+  static const preferencesPath = '/settings?section=notifications';
 
   final List<AppNotificationModel> all, visible;
   final NotificationCategory category;
@@ -41,7 +65,7 @@ class LanternNotificationsBody extends StatelessWidget
   final bool Function(String streamerId) isMuted;
   final ValueChanged<String> onToggleMute;
   final String Function(DateTime) timeAgo;
-  final VoidCallback? onMarkAllRead, onPreferences;
+  final VoidCallback? onMarkAllRead;
 
   @override
   Widget build(BuildContext context) {
@@ -128,15 +152,6 @@ class LanternNotificationsBody extends StatelessWidget
                       onToggleMute: n.streamerId.isEmpty
                           ? null
                           : () => onToggleMute(n.streamerId))),
-          if (onPreferences != null) ...[
-            const SizedBox(height: 6),
-            Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: LLink('design_copy.notification_preferences'.tr(),
-                    key: const ValueKey('lantern-notifications-preferences'),
-                    icon: LGlyph.settings,
-                    onTap: onPreferences!)),
-          ],
           SizedBox(height: MediaQuery.paddingOf(context).bottom),
         ]);
   }

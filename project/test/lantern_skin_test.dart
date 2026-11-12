@@ -32,9 +32,10 @@ void main() {
       expect(AppSkin.tryParse('something-else'), isNull);
     });
 
-    test('gold & black stays the default', () async {
+    test('Lantern and Arch is the default (ADR-027)', () async {
       SharedPreferences.setMockInitialValues({});
-      expect(await readAppSkin(), AppSkin.gold);
+      expect(await readAppSkin(), AppSkin.lantern);
+      expect(AppSkin.choices, [AppSkin.lantern, AppSkin.hedayah]);
     });
 
     test('a saved choice and a web link are both honoured', () async {
@@ -338,7 +339,7 @@ void main() {
   });
 
   group('in the app', () {
-    testWidgets('Settings offers the three designs and Lantern is chosen',
+    testWidgets('Settings offers the two designs and Lantern is chosen',
         (tester) async {
       final provider = lanternProvider(skin: AppSkin.gold)
         ..debugSetSignedInForTests(
@@ -346,7 +347,8 @@ void main() {
       final app = await LanternApp.start(tester,
           skin: AppSkin.gold, provider: provider, size: const Size(412, 900));
       await app.push('/settings');
-      for (final skin in AppSkin.values) {
+      expect(find.byKey(const ValueKey('skin-option-gold-black')), findsNothing);
+      for (final skin in AppSkin.choices) {
         final tile = find.byKey(ValueKey('skin-option-${skin.id}'));
         await tester.scrollUntilVisible(tile, 200,
             scrollable: find

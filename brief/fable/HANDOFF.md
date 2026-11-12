@@ -4,9 +4,15 @@ This file is for the next session (Claude Opus), which will fix faults and edit 
 
 **How to use it.** Open the session in the repository root, `C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app`, and say: *read `brief/fable/HANDOFF.md` and continue with what I ask*. The owner decides what to fix and edit; section 4 lists what is already known.
 
+## 0. Update, 2026-11-12 evening: the owner's phone notes
+
+Done on `master` (one commit, pushed): Lantern and Arch is the default and gold & black is no longer offered (ADR-027; `AppSkin.gold` stays in code for Hedayah's shared screens); the notifications sheet has a settings button beside close that opens `/settings?section=notifications`; the phone broadcaster can hide the chat over the camera (swipe it down, or the switch in the tools); the hold-to-end button no longer turns into a solid gold block (the kit's focus ring was painted over controls, `LFocusRing` now draws it outside and only for the keyboard); with the camera off, Lantern shows the pattern and a live microphone level (Android now reports the level: `MicLevelEffect.kt`) with a red "microphone is off"; the quick tools sheet is a Lantern sheet (`lantern_broadcast_parts.dart`); linking or unlinking the personal YouTube channel first ends the studio's unused background preparation (`AppProvider.endUnusedPreparations`), which the server counted as an active show; the channel page's share, studio (now an icon) and settings sit in the phone's page bar; the map cards of Discover and Lessons show the real map on the website layout (`LanternMapPreview`) and the drawing on phones; the map credit on phones is a small chip in the bottom corner under the navigation.
+
+Not checked on a device: the microphone level and the swipe on a real phone (tests and the emulator build only).
+
 ## 1. The state today
 
-- **Lantern and Arch is released.** It is a third design beside gold & black (the default) and Hedayah, chosen in Settings → Design (ADR-026 in `Core_files/decisions.md`). It was built on the branch `fable/lantern-skin`, merged into `master` on 2026-11-12, pushed, and is live on https://live.hedayh.org.sa.
+- **Lantern and Arch is released.** It is a third design beside gold & black and Hedayah (since ADR-027 it is the default and gold & black is no longer offered), chosen in Settings → Design (ADR-026 in `Core_files/decisions.md`). It was built on the branch `fable/lantern-skin`, merged into `master` on 2026-11-12, pushed, and is live on https://live.hedayh.org.sa.
 - **Live build:** commit `202df7f` (Vercel production `dpl_4jBMdhJ3aT81E7kEBT96AM3RNBwh`). The page's `hadayah-build` meta tag shows the commit that is live.
 - **`master` here is one commit ahead of GitHub:** `fc6047a`, a documents-only release note. It was left unpushed on purpose, because every push to `master` redeploys the website. This file adds one more local documents commit.
 - **Hosted database:** the migration `20261111120000_content_reports.sql` is applied (the table behind Report). Two older local migrations are deliberately not on hosted and must stay that way unless the owner says otherwise: `20261017213039_apple_account_deletion_revocation.sql` and `20261026120000_app_releases.sql`.
@@ -19,7 +25,7 @@ This file is for the next session (Claude Opus), which will fix faults and edit 
 - **Never push unless the owner asks in that conversation.** A push to `master` deploys the website.
 - **Ask the owner before:** a push, applying a migration to hosted, deploying an edge function, deleting data, branches or worktrees, anything that costs money, any message to real people. Never create, print or commit keys or passwords. Do not sign in with a real account.
 - **No new cost.** No paid service, plan upgrade, paid font or paid icon set.
-- **Gold & black and Hedayah keep their look.** New screens and features go into Lantern only. The one approved exception is Report for a broadcast or a channel, which is in all three designs (owner, 2026-11-12). Any other visible change to the two older designs needs the owner's word first.
+- **Hedayah keeps its look** (gold & black is no longer offered, ADR-027). New screens and features go into Lantern only. The one approved exception is Report for a broadcast or a channel, which is in all three designs (owner, 2026-11-12). Any other visible change to the two older designs needs the owner's word first.
 - **Before calling a change done:** `flutter analyze` reports 0 issues and the full `flutter test` suite passes. `en.json` and `ar.json` stay key-symmetric. Right-to-left layout comes from `Directionality`, not from left/right code.
 
 ## 3. How the Lantern design is built (what to know before editing it)

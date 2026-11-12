@@ -9,14 +9,17 @@ import 'lantern_surfaces.dart';
 /// layout's notifications). On a phone it is a Lantern sheet instead.
 ///
 /// [body] scrolls; [header] sits under the title and stays put.
+/// [headerActions] are icon buttons in the title row, before the close button.
 Future<T?> showLanternDrawer<T>(BuildContext context,
     {required String title,
     required WidgetBuilder body,
     WidgetBuilder? header,
+    List<Widget> Function(BuildContext context)? headerActions,
     double width = 420}) {
   if (!context.lanternWide) {
     return showLanternSheet<T>(context,
         title: title,
+        headerActions: headerActions,
         body: (context) => Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,6 +84,8 @@ Future<T?> showLanternDrawer<T>(BuildContext context,
                                                                     .lanternArabic
                                                                 ? 1.45
                                                                 : 1.25)))),
+                                            if (headerActions != null)
+                                              ...headerActions(context),
                                             LIconButton(
                                                 icon: LGlyph.close,
                                                 label: MaterialLocalizations

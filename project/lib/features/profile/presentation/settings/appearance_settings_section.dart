@@ -13,9 +13,9 @@ import '../../../../core/widgets/language_switcher.dart';
 import '../lantern/lantern_settings_sections.dart';
 import '../lantern/lantern_settings_view.dart';
 
-/// Settings → Design: the app's gold & black design, the Hedayah skin
-/// (ADR-016) or Lantern and Arch (ADR-026), per device. Each choice is a
-/// small picture of itself.
+/// Settings → Design: Lantern and Arch (ADR-026, the default) or the Hedayah
+/// skin (ADR-016), per device. Gold & black is no longer offered (ADR-027).
+/// Each choice is a small picture of itself.
 class AppearanceSettingsSection extends StatelessWidget {
   const AppearanceSettingsSection({super.key});
 
@@ -47,7 +47,7 @@ class AppearanceSettingsSection extends StatelessWidget {
                 const gap = AppTheme.spaceMd;
                 final width = (box.maxWidth - gap) / 2;
                 return Wrap(spacing: gap, runSpacing: gap, children: [
-                  for (final option in AppSkin.values)
+                  for (final option in AppSkin.choices)
                     SizedBox(
                         width: width,
                         child: _SkinTile(
@@ -59,7 +59,7 @@ class AppearanceSettingsSection extends StatelessWidget {
         ]));
   }
 
-  /// Lantern and Arch (ADR-026): the three designs as tiles, then Lantern's
+  /// Lantern and Arch (ADR-026): the designs as tiles, then Lantern's
   /// own appearance (day, night or the device's) and calm motion.
   Widget _buildLantern(BuildContext context, AppSkin skin) {
     final (appearance, calm) =
@@ -72,7 +72,7 @@ class AppearanceSettingsSection extends StatelessWidget {
         children: [
           LanternSkinTiles(
               options: [
-                for (final option in AppSkin.values)
+                for (final option in AppSkin.choices)
                   (skin: option, name: nameOf(option), hint: hintOf(option)),
               ],
               current: skin,

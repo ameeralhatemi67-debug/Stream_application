@@ -916,20 +916,56 @@ class LanternMapPanel extends StatelessWidget implements LanternSkinWidget {
 
 /// The map's credit, always visible and never cut short, with the button
 /// that opens the map details.
+///
+/// [compact] is the phone's: a small chip in the strip under the floating
+/// navigation, in the bottom corner, so it no longer lifts the place cards
+/// (owner notes 2026-11-12). It opens the map details, whose credits section
+/// links to the licence.
 class LanternMapAttribution extends StatelessWidget
     implements LanternSkinWidget {
   const LanternMapAttribution(
       {super.key,
       required this.credit,
       required this.url,
-      required this.onDetails});
+      required this.onDetails,
+      this.compact = false});
 
   final String credit, url;
   final VoidCallback onDetails;
+  final bool compact;
+
+  /// The compact chip's height: it fits the 14 px under the navigation.
+  static const compactHeight = 14.0;
 
   @override
   Widget build(BuildContext context) {
     final t = context.lt;
+    if (compact) {
+      return LPressable(
+          key: const ValueKey('lantern-map-credit'),
+          label: '$credit, ${'map.details_open'.tr()}',
+          radius: 7,
+          pressScale: 1,
+          excludeChildSemantics: true,
+          onTap: onDetails,
+          // A taller touch area than the chip, clear above it.
+          builder: (context, s) => Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: Container(
+                  height: compactHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                      color: t.surface.withValues(alpha: .86),
+                      borderRadius: BorderRadius.circular(7)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(credit,
+                        textDirection: TextDirection.ltr,
+                        style: Lantern.textStyle(9.5,
+                            color: t.muted, height: 1.2)),
+                    const SizedBox(width: 4),
+                    LIcon(LGlyph.info, size: 10, color: t.muted),
+                  ]))));
+    }
     return Container(
         key: const ValueKey('lantern-map-credit'),
         decoration: BoxDecoration(

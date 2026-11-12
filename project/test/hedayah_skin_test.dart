@@ -70,9 +70,9 @@ void main() {
       expect(AppSkin.tryParse(null), isNull);
     });
 
-    test('a device starts on gold & black', () async {
+    test('a device starts on Lantern and Arch (ADR-027)', () async {
       expect(await readAppSkin(link: Uri.parse('https://x.test/')),
-          AppSkin.gold);
+          AppSkin.lantern);
     });
 
     test('a saved skin is read back; a web link wins and is remembered',
@@ -81,12 +81,23 @@ void main() {
           {AppSkin.preferenceKey: 'hedayah-skin'});
       expect(await readAppSkin(link: Uri.parse('https://x.test/')),
           AppSkin.hedayah);
+      // Gold & black is retired: its link opens the default design.
       expect(
           await readAppSkin(
               link: Uri.parse('https://x.test/?skin=gold-black#/welcome')),
-          AppSkin.gold);
+          AppSkin.lantern);
       final preferences = await SharedPreferences.getInstance();
-      expect(preferences.getString(AppSkin.preferenceKey), 'gold-black');
+      expect(preferences.getString(AppSkin.preferenceKey), 'lantern-arch');
+    });
+
+    test('a device that saved gold & black moves to Lantern and Arch',
+        () async {
+      SharedPreferences.setMockInitialValues(
+          {AppSkin.preferenceKey: 'gold-black'});
+      expect(await readAppSkin(link: Uri.parse('https://x.test/')),
+          AppSkin.lantern);
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getString(AppSkin.preferenceKey), 'lantern-arch');
     });
 
     test('the provider switches, notifies and saves', () async {
@@ -274,9 +285,12 @@ void main() {
           isSemantics(isSelected: true));
       final preferences = await SharedPreferences.getInstance();
       expect(preferences.getString(AppSkin.preferenceKey), 'hedayah-skin');
-      await tester.tap(find.byKey(const ValueKey('skin-option-gold-black')));
-      await tester.pumpAndSettle();
-      expect(provider.appSkin, AppSkin.gold);
+      // Gold & black is no longer offered (ADR-027).
+      expect(find.byKey(const ValueKey('skin-option-gold-black')),
+          findsNothing);
+      await tester.tap(find.byKey(const ValueKey('skin-option-lantern-arch')));
+      await tester.pump();
+      expect(provider.appSkin, AppSkin.lantern);
     });
 
     testWidgets('the Hedayah tab bar is the floating pill with a gold tab',

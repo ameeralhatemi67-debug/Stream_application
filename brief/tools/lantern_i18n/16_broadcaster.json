@@ -1,0 +1,42 @@
+{
+  "en": {
+    "broadcaster": {
+      "group_sound": "Sound and picture",
+      "group_screen": "On your screen",
+      "group_broadcast": "This broadcast",
+      "mic": "Microphone",
+      "mic_on": "Viewers hear you",
+      "mic_off": "Microphone is off",
+      "camera": "Camera",
+      "camera_on": "Viewers see your camera",
+      "camera_off": "Audio only: viewers hear you and see no picture",
+      "chat": "Chat on screen",
+      "chat_on": "The latest messages show over your camera. Swipe them down to hide them.",
+      "chat_off": "Hidden on your screen only. Viewers can still chat.",
+      "chat_hidden": "Chat hidden on your screen",
+      "chat_show": "Show",
+      "level": "Microphone level",
+      "level_waiting": "The level shows once you are live"
+    }
+  },
+  "ar": {
+    "broadcaster": {
+      "group_sound": "الصوت والصورة",
+      "group_screen": "على شاشتك",
+      "group_broadcast": "هذا البث",
+      "mic": "الميكروفون",
+      "mic_on": "يسمعك المشاهدون",
+      "mic_off": "الميكروفون مغلق",
+      "camera": "الكاميرا",
+      "camera_on": "يرى المشاهدون كاميرتك",
+      "camera_off": "صوت فقط: يسمعك المشاهدون ولا يرون صورة",
+      "chat": "الدردشة على الشاشة",
+      "chat_on": "تظهر آخر الرسائل فوق صورتك. اسحبها إلى الأسفل لإخفائها.",
+      "chat_off": "مخفية من شاشتك فقط، ويبقى المشاهدون قادرين على الكتابة.",
+      "chat_hidden": "أُخفيت الدردشة من شاشتك",
+      "chat_show": "إظهار",
+      "level": "مستوى الميكروفون",
+      "level_waiting": "يظهر المستوى عند بدء البث"
+    }
+  }
+}

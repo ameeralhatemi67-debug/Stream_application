@@ -38,7 +38,11 @@ import 'lantern/lantern_settings_sections.dart';
 import 'lantern/lantern_settings_view.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.initialSection});
+
+  /// A section to open at (`/settings?section=notifications`, from the
+  /// notifications panel). Lantern only; the older designs open at the top.
+  final String? initialSection;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -46,6 +50,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   int _desktopSection = 0;
+  bool _initialSectionApplied = false;
   @override
   void initState() {
     super.initState();
@@ -542,9 +547,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: const [AboutSettingsSection()],
       ),
     ];
+    final initial = widget.initialSection;
+    if (initial != null && !_initialSectionApplied) {
+      // Once: the website layout shows that section; the phone layout
+      // scrolls to it ([LanternSettingsView.initialId]).
+      _initialSectionApplied = true;
+      final index = categories.indexWhere((c) => c.id == initial);
+      if (index >= 0) _desktopSection = index;
+    }
     return LanternSettingsView(
         categories: categories,
         selected: _desktopSection,
+        initialId: initial,
         onSelect: (i) => setState(() => _desktopSection = i));
   }
 

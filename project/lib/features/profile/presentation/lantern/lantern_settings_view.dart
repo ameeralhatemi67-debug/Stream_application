@@ -27,11 +27,16 @@ class LanternSettingsView extends StatefulWidget implements LanternSkinWidget {
       {super.key,
       required this.categories,
       required this.selected,
-      required this.onSelect});
+      required this.onSelect,
+      this.initialId});
 
   final List<LanternSettingsCategory> categories;
   final int selected;
   final ValueChanged<int> onSelect;
+
+  /// The phone layout scrolls to this category once, after the first frame
+  /// (the notifications panel opens Settings at its notifications).
+  final String? initialId;
 
   @override
   State<LanternSettingsView> createState() => _LanternSettingsViewState();
@@ -41,10 +46,42 @@ class _LanternSettingsViewState extends State<LanternSettingsView> {
   final _scroll = ScrollController();
   final _content = GlobalKey();
   final _row = GlobalKey();
+  final _initialHead = GlobalKey();
+  final _phoneScroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !context.lanternWide) _revealInitial();
+    });
+  }
+
+  /// The phone list builds lazily, so a section far down does not exist
+  /// yet: step down until it is built, then bring its heading into view.
+  Future<void> _revealInitial() async {
+    final duration = Lantern.calm(context) ? Duration.zero : Lantern.enter;
+    for (var i = 0; i < 16 && mounted; i++) {
+      final target = _initialHead.currentContext;
+      if (target != null && target.mounted) {
+        await Scrollable.ensureVisible(target,
+            duration: duration, curve: Lantern.ease);
+        return;
+      }
+      if (!_phoneScroll.hasClients) return;
+      final p = _phoneScroll.position;
+      if (p.pixels >= p.maxScrollExtent) return;
+      _phoneScroll.jumpTo(
+          math.min(p.pixels + p.viewportDimension * .8, p.maxScrollExtent));
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
 
   @override
   void dispose() {
     _scroll.dispose();
+    _phoneScroll.dispose();
     super.dispose();
   }
 
@@ -69,6 +106,7 @@ class _LanternSettingsViewState extends State<LanternSettingsView> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     return ListView(
         key: const ValueKey('lantern-settings-phone'),
+        controller: _phoneScroll,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.fromLTRB(
             Lantern.gutter, 20, Lantern.gutter, 32 + bottom),
@@ -77,7 +115,9 @@ class _LanternSettingsViewState extends State<LanternSettingsView> {
             if (i > 0) const SizedBox(height: 36),
             KeyedSubtree(
                 key: ValueKey('lantern-settings-section-${c.id}'),
-                child: LSectionHead(c.label, arch: i == 0)),
+                child: KeyedSubtree(
+                    key: c.id == widget.initialId ? _initialHead : null,
+                    child: LSectionHead(c.label, arch: i == 0))),
             const SizedBox(height: 14),
             ..._spaced(c.children, 14),
           ],

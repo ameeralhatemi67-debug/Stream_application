@@ -104,8 +104,19 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
             override fun onAuthSuccess() {}
             override fun onNewBitrate(bitrate: Long) = event("bitrate", bitrate)
         }
+        // The studio's level meter. No generation: the meter follows whichever
+        // instance is current, and a retired one is dropped by the token check.
+        val microphone = MicrophoneSource().apply {
+            setAudioEffect(MicLevelEffect { rms ->
+                main.post {
+                    if (token == nativeGeneration) {
+                        eventSink?.success(mapOf("type" to "audioLevel", "rms" to rms))
+                    }
+                }
+            })
+        }
         val camera = RearCameraSource(appContext)
-        val current = RtmpStream(appContext, checker, camera, MicrophoneSource())
+        val current = RtmpStream(appContext, checker, camera, microphone)
         stream = current
         // A keyframe every second (SDK default 2 s): YouTube sees the feed sooner,
         // ultra-low-latency segments stay short and viewers join faster.

@@ -72,11 +72,12 @@ void main() {
       await frames('start');
       router.push('/settings');
       await frames('opening Settings');
+      // The offered designs (ADR-027: gold & black is no longer one).
       for (final skin in [
         AppSkin.hedayah,
-        AppSkin.gold,
+        AppSkin.lantern,
         AppSkin.hedayah,
-        AppSkin.gold,
+        AppSkin.lantern,
         AppSkin.hedayah,
       ]) {
         final tile = find.byKey(ValueKey('skin-option-${skin.id}'));

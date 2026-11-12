@@ -213,8 +213,34 @@ class _LanternChannelViewState extends State<LanternChannelView> {
     return _ChannelFrame(
         title: s.getLocalizedName(lang),
         header: _header(context, lang),
+        actions: _barActions(),
         children: [content]);
   }
+
+  /// The owner's tools in the phone's page bar, at its end (the top left in
+  /// Arabic): share, the broadcast studio as an icon, and Settings in the
+  /// corner (owner notes 2026-11-12). The website layout keeps them in the
+  /// header's row.
+  List<Widget> _barActions() => [
+        if (widget.onShare != null)
+          LIconButton(
+              key: const ValueKey('lantern-channel-share'),
+              icon: LGlyph.share,
+              label: 'profile.share_btn'.tr(),
+              onPressed: widget.onShare),
+        if (widget.onStudio != null)
+          LIconButton(
+              key: const ValueKey('lantern-channel-studio'),
+              icon: LGlyph.video,
+              label: 'organization_v1.studio'.tr(),
+              onPressed: widget.onStudio),
+        if (widget.onSettings != null)
+          LIconButton(
+              key: const ValueKey('lantern-channel-settings'),
+              icon: LGlyph.settings,
+              label: 'nav.settings'.tr(),
+              onPressed: widget.onSettings),
+      ];
 
   // ---------------------------------------------------------------- header
 
@@ -356,20 +382,21 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                         : 'profile.reminder_btn')
                     .tr(),
                 onPressed: widget.onReminder),
-          if (widget.onShare != null)
+          // On a phone these three sit in the page bar ([_barActions]).
+          if (wide && widget.onShare != null)
             LIconButton(
                 key: const ValueKey('lantern-channel-share'),
                 icon: LGlyph.share,
                 label: 'profile.share_btn'.tr(),
                 onPressed: widget.onShare),
-          if (widget.onStudio != null)
+          if (wide && widget.onStudio != null)
             LButton(
                 key: const ValueKey('lantern-channel-studio'),
                 label: 'organization_v1.studio'.tr(),
                 icon: LGlyph.video,
                 kind: LButtonKind.dark,
                 onPressed: widget.onStudio),
-          if (widget.onSettings != null)
+          if (wide && widget.onSettings != null)
             LIconButton(
                 key: const ValueKey('lantern-channel-settings'),
                 icon: LGlyph.settings,
@@ -708,11 +735,17 @@ class _LanternChannelViewState extends State<LanternChannelView> {
 /// on the website layout. One scroll for the whole page.
 class _ChannelFrame extends StatelessWidget implements LanternSkinWidget {
   const _ChannelFrame(
-      {required this.title, required this.children, this.header});
+      {required this.title,
+      required this.children,
+      this.header,
+      this.actions = const []});
 
   final String title;
   final Widget? header;
   final List<Widget> children;
+
+  /// The phone page bar's buttons, at its end.
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -751,7 +784,7 @@ class _ChannelFrame extends StatelessWidget implements LanternSkinWidget {
     return Scaffold(
         key: const ValueKey('lantern-channel'),
         backgroundColor: t.bg,
-        appBar: LanternPageBar(title: title),
+        appBar: LanternPageBar(title: title, actions: actions),
         body: scroll);
   }
 }

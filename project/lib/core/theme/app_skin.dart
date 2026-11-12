@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// The designs a device can show (ADR-016, ADR-026). Gold & black is the
-/// app's own design and the default; the Hedayah skin follows the
+/// The designs a device can show (ADR-016, ADR-026, ADR-027). Lantern and
+/// Arch is the default. Gold & black was removed as a choice on 2026-11-12
+/// (ADR-027): [gold] stays only as the base the Hedayah skin's shared screens
+/// are drawn on and for tests; a device or link that names it gets Lantern
+/// ([readAppSkin]). The Hedayah skin follows the
 /// association's identity (hedayh.org.sa): white and mist grounds, flat gold
 /// bands with the owner's lattice pattern, slate, pill buttons and Readex Pro
 /// headings. Lantern and Arch is the third: linen by day and ink by night,
@@ -20,6 +23,13 @@ enum AppSkin {
   final String id;
 
   static const preferenceKey = 'app_skin';
+
+  /// The designs offered in Settings, the default first. Gold & black is no
+  /// longer one of them (ADR-027).
+  static const choices = [AppSkin.lantern, AppSkin.hedayah];
+
+  /// The design a device opens in when nothing (or a retired one) is saved.
+  static const fallback = AppSkin.lantern;
 
   /// Reads a stored value or a link parameter; "hedayah", "gold" and
   /// "lantern" work too.

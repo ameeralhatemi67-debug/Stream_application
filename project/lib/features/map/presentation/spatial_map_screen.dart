@@ -1815,7 +1815,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               key: ValueKey('map_empty_$locale'),
               start: 16,
               end: 76,
-              bottom: 60 + media.bottom,
+              // Phones keep the credit under the navigation instead.
+              bottom: (wide ? 60 : 12) + media.bottom,
               child: KeyedSubtree(
                 key: _emptyNoticeKey,
                 child: LanternMapEmptyNotice(
@@ -2020,22 +2021,43 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       ),
                     ),
                   ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ListenableBuilder(
-                    listenable: _pack,
-                    builder: (context, _) => LanternMapAttribution(
-                      credit:
-                          _pack.manifest?.attributionShort ?? kOsmCreditFallback,
-                      url: _pack.manifest?.attributionUrl ??
-                          'https://www.openstreetmap.org/copyright',
-                      onDetails: _openDetails,
+                if (wide)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ListenableBuilder(
+                      listenable: _pack,
+                      builder: (context, _) => LanternMapAttribution(
+                        credit: _pack.manifest?.attributionShort ??
+                            kOsmCreditFallback,
+                        url: _pack.manifest?.attributionUrl ??
+                            'https://www.openstreetmap.org/copyright',
+                        onDetails: _openDetails,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
+
+          // Phones: the credit, small, in the bottom corner under the
+          // floating navigation (the strip below the navigation's pill),
+          // so the place cards sit right above the navigation.
+          if (!wide)
+            PositionedDirectional(
+              start: 6,
+              bottom: math.max(0.0, media.bottom - lanternNavClearance),
+              child: ListenableBuilder(
+                listenable: _pack,
+                builder: (context, _) => LanternMapAttribution(
+                  compact: true,
+                  credit:
+                      _pack.manifest?.attributionShort ?? kOsmCreditFallback,
+                  url: _pack.manifest?.attributionUrl ??
+                      'https://www.openstreetmap.org/copyright',
+                  onDetails: _openDetails,
+                ),
+              ),
+            ),
         ],
       );
     });

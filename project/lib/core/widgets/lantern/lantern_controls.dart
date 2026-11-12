@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
@@ -10,6 +11,63 @@ import 'lantern_base.dart';
 
 /// What a control is doing right now, for its builder.
 typedef LPressState = ({bool hovered, bool pressed, bool focused});
+
+/// The kit's keyboard focus mark: a gap in the page colour, then a gold ink
+/// ring, both drawn outside [child]'s edge so they never cover it.
+class LFocusRing extends StatelessWidget implements LanternSkinWidget {
+  const LFocusRing(
+      {super.key,
+      required this.visible,
+      required this.child,
+      this.radius = Lantern.radiusPill});
+
+  final bool visible;
+  final double radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.lt;
+    return CustomPaint(
+        foregroundPainter: visible
+            ? _FocusRingPainter(gap: t.bg, ink: t.goldInk, radius: radius)
+            : null,
+        child: child);
+  }
+}
+
+class _FocusRingPainter extends CustomPainter {
+  const _FocusRingPainter(
+      {required this.gap, required this.ink, required this.radius});
+
+  final Color gap, ink;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final box = Offset.zero & size;
+    final limit = size.shortestSide / 2;
+    RRect ring(double outset) => RRect.fromRectAndRadius(box.inflate(outset),
+        Radius.circular(math.min(radius, limit) + outset));
+    canvas
+      ..drawRRect(
+          ring(1.5),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..color = gap)
+      ..drawRRect(
+          ring(4),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = ink);
+  }
+
+  @override
+  bool shouldRepaint(_FocusRingPainter old) =>
+      old.gap != gap || old.ink != ink || old.radius != radius;
+}
 
 /// Hover, press and keyboard focus for one tappable thing. The kit's controls
 /// are built on it so they all answer input the same way: a lift on hover, a
@@ -53,23 +111,12 @@ class _LPressableState extends State<LPressable> {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.lt;
     final calm = Lantern.calm(context);
     Widget child = widget.builder(context,
         (hovered: _hovered && _enabled, pressed: _pressed, focused: _focused));
     if (widget.focusRing) {
-      // Two rings: a gap in the page colour, then gold ink.
-      child = DecoratedBox(
-          position: DecorationPosition.foreground,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(widget.radius),
-              boxShadow: _focused
-                  ? [
-                      BoxShadow(color: t.bg, spreadRadius: 3),
-                      BoxShadow(color: t.goldInk, spreadRadius: 5),
-                    ]
-                  : null),
-          child: child);
+      child = LFocusRing(
+          visible: _focused, radius: widget.radius, child: child);
     }
     return Semantics(
         button: widget.button,
@@ -498,18 +545,14 @@ class _LHoldButtonState extends State<LHoldButton>
                     onPointerCancel: (e) {
                       if (e.pointer == _pointer) _cancel();
                     },
-                    child: DecoratedBox(
-                        position: DecorationPosition.foreground,
-                        decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(Lantern.radiusPill),
-                            boxShadow: _focused
-                                ? [
-                                    BoxShadow(color: t.bg, spreadRadius: 3),
-                                    BoxShadow(
-                                        color: t.goldInk, spreadRadius: 5),
-                                  ]
-                                : null),
+                    // The ring marks keyboard focus only. A finger on the
+                    // button also takes focus (so Space can follow), and
+                    // the ring once covered the label and the fill then.
+                    child: LFocusRing(
+                        visible: _focused &&
+                            FocusManager.instance.highlightMode ==
+                                FocusHighlightMode.traditional,
+                        radius: Lantern.radiusPill,
                         child: Container(
                             constraints: BoxConstraints(
                                 minHeight: m.height,

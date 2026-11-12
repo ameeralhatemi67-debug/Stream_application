@@ -9,22 +9,36 @@ import '../theme/app_skin.dart';
 /// On the web a link can carry the skin ("?skin=hedayah-skin" before the
 /// "#/"), so the team can share either design without signing in to reach
 /// Settings. A linked skin is remembered like one chosen in Settings.
+///
+/// Gold & black is no longer offered (ADR-027): a device that saved it, or a
+/// link that names it, opens in Lantern and Arch, the default.
 Future<AppSkin> readAppSkin({SharedPreferences? store, Uri? link}) async {
   try {
     final preferences = store ?? await SharedPreferences.getInstance();
-    final linked = AppSkin.tryParse(
-        (link ?? (kIsWeb ? Uri.base : null))?.queryParameters['skin']);
+    final linked = _offered(AppSkin.tryParse(
+        (link ?? (kIsWeb ? Uri.base : null))?.queryParameters['skin']));
     if (linked != null) {
       await preferences.setString(AppSkin.preferenceKey, linked.id);
       return linked;
     }
-    return AppSkin.tryParse(preferences.getString(AppSkin.preferenceKey)) ??
-        AppSkin.gold;
+    final saved = AppSkin.tryParse(preferences.getString(AppSkin.preferenceKey));
+    final offered = _offered(saved) ?? AppSkin.fallback;
+    if (saved != null && saved != offered) {
+      await preferences.setString(AppSkin.preferenceKey, offered.id);
+    }
+    return offered;
   } catch (error) {
     debugPrint('App skin not read: $error');
-    return AppSkin.gold;
+    return AppSkin.fallback;
   }
 }
+
+/// A retired design becomes the default one.
+AppSkin? _offered(AppSkin? skin) => skin == null
+    ? null
+    : AppSkin.choices.contains(skin)
+        ? skin
+        : AppSkin.fallback;
 
 Future<void> saveAppSkin(AppSkin skin, {SharedPreferences? store}) async {
   try {

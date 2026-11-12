@@ -1,12 +1,21 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-11-11
+updated: 2026-11-12
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-027: Lantern and Arch is the default; gold & black is no longer offered (2026-11-12)
+
+Owner notes on the Android build, 2026-11-12: the app opens in Arabic, by day, in Lantern and Arch, and the gold & black design is removed.
+
+- **Choices.** Settings → Design offers Lantern and Arch (first) and Hedayah (`AppSkin.choices`). Arabic is the start language (already so) and day the Lantern default (`LanternAppearance.fallback`, already so).
+- **Moving people over.** `readAppSkin` opens a device with nothing saved in Lantern, and a device that saved gold & black, or a web link with `?skin=gold-black`, is moved to Lantern and saved as such.
+- **The code stays.** `AppSkin.gold` remains as the base of the shared older screens that Hedayah still draws on (Hedayah is gold's screens with its own branches), and as the theme of tests that build their own. It is no longer reachable by a person. Removing it outright would mean rewriting every older screen for Hedayah alone, with no visible gain.
+- **Amends** ADR-013 (gold the only design), ADR-016 and ADR-026 (gold the default). The rule that Hedayah keeps its look stands; behaviour fixes on shared screens (the phone broadcast screen's hold-to-end, its microphone level, its chat hiding) reach Hedayah too.
 
 ## ADR-026: A third design, Lantern and Arch, fully apart from the two older designs (2026-11-11)
 

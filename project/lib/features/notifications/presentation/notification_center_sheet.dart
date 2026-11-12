@@ -78,13 +78,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         onDelete: (notif) => appProvider.deleteNotification(notif.id),
         isMuted: appProvider.isEntityMuted,
         onToggleMute: appProvider.toggleMuteEntity,
-        timeAgo: (time) => _formatTimeAgo(time, isAr),
-        onPreferences: appProvider.isLoggedInStreamer
-            ? () {
-                Navigator.pop(context);
-                context.push('/settings');
-              }
-            : null);
+        timeAgo: (time) => _formatTimeAgo(time, isAr));
   }
 
   /// As the older tile: marks it read, closes the list, then opens the
