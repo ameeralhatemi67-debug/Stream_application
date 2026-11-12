@@ -8,6 +8,7 @@ import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../lessons/domain/lessons_rules.dart';
 import '../../../lessons/presentation/lessons_in_app.dart' show MapMosque;
 import '../map_cluster_layout.dart';
+import 'lantern_mosque_mark.dart';
 
 /// The pins of the Lantern map. Each is laid out inside the one box the
 /// grouping measures ([kMapPinFootprint]): the pin on top, its label under
@@ -97,9 +98,9 @@ class _PinBox extends StatelessWidget {
                       ])))));
 }
 
-/// A mosque: a gold arch with the number of lessons this week, crowned by
-/// the star. With nothing coming up it is a small hollow arch. Its label
-/// says what is happening (on now, live, starts in, or the weekday).
+/// A mosque: the arched pin of [LanternMosqueMark] with the number of
+/// lessons this week. Its label says what is happening (on now, live, starts
+/// in, or the weekday).
 class LanternMosquePin extends StatelessWidget implements LanternSkinWidget {
   const LanternMosquePin(this.mosque,
       {super.key, required this.onTap, this.selected = false});
@@ -110,60 +111,19 @@ class LanternMosquePin extends StatelessWidget implements LanternSkinWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.lt;
     final m = mosque;
     final quiet = m.status == MosqueStatus.quiet;
-    final width = quiet ? 26.0 : 36.0, height = quiet ? 30.0 : 42.0;
     final tone = m.live
         ? LTone.live
         : m.status == MosqueStatus.now
             ? LTone.ok
             : LTone.neutral;
-    final arch = Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          Container(
-              width: width,
-              height: height,
-              alignment: const Alignment(0, .35),
-              decoration: ShapeDecoration(
-                  gradient: quiet
-                      ? null
-                      : const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [LanternTokens.goldHi, Color(0xFFC1923B)]),
-                  color: quiet ? t.surface : null,
-                  shadows: [
-                    if (selected) BoxShadow(color: t.glow, spreadRadius: 4),
-                    const BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 8,
-                        spreadRadius: -3,
-                        offset: Offset(0, 5)),
-                  ],
-                  shape: LArchBorder(
-                      bottom: quiet ? 5 : 7,
-                      side: BorderSide(
-                          color: selected
-                              ? LanternTokens.ink
-                              : quiet
-                                  ? LanternTokens.gold
-                                  : const Color(0xFF805B1B),
-                          width: selected ? 3 : 2))),
-              child: quiet
-                  ? null
-                  : Text('${m.count}',
-                      style: Lantern.displayStyle(15,
-                              color: const Color(0xFF4B320E),
-                              weight: FontWeight.w700,
-                              height: 1.1)
-                          .copyWith(fontFeatures: Lantern.tabular))),
-          if (!quiet && m.status != MosqueStatus.now)
-            const Positioned(
-                top: -9, child: LStar(size: 9, color: Color(0xFF805B1B))),
-        ]);
+    final arch = LanternMosqueMark(
+        count: m.count,
+        quiet: quiet,
+        live: m.live,
+        onSite: m.status == MosqueStatus.now,
+        selected: selected);
     // "Wednesday · 5:15 PM" does not fit the box: a later day shows the day
     // alone. The spoken name and the place card keep the time.
     final label =
@@ -172,7 +132,7 @@ class LanternMosquePin extends StatelessWidget implements LanternSkinWidget {
         semantics:
             '${'lantern.map.mosque_pin'.tr(args: [m.label, '${m.count}'])}${m.chip.isEmpty ? '' : ', ${m.chip}'}',
         onTap: onTap,
-        pin: Padding(padding: const EdgeInsets.only(top: 8), child: arch),
+        pin: arch,
         label: m.chip.isEmpty ? null : _PinLabel(label, tone: tone));
   }
 }

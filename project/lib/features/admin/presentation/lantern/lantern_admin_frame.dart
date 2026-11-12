@@ -231,7 +231,7 @@ class _AdminNavList extends StatelessWidget {
             for (final i in members)
               Padding(
                   padding: const EdgeInsets.only(bottom: 2),
-                  child: _AdminNavItem(
+                  child: LanternAdminNavItem(
                       key: ValueKey('lantern-${tabs[i].label}'),
                       tab: tabs[i],
                       selected: i == current,
@@ -257,8 +257,9 @@ class _AdminNavList extends StatelessWidget {
   }
 }
 
-class _AdminNavItem extends StatelessWidget {
-  const _AdminNavItem(
+/// One row of an admin rail: its icon, its name and a gold count.
+class LanternAdminNavItem extends StatelessWidget implements LanternSkinWidget {
+  const LanternAdminNavItem(
       {super.key,
       required this.tab,
       required this.selected,

@@ -452,7 +452,8 @@ class LanternSoonCard extends StatelessWidget implements LanternSkinWidget {
 
 /// A scholar or channel as a card: a band with the lattice in the channel's
 /// own tone, the avatar over its edge with the ring of its state, the name,
-/// what they teach, the city and tags, then Watch or Listen and Follow.
+/// what they teach, the city, then the tags with Watch or Listen and Follow
+/// on one line. Every card has the same height.
 class LanternChannelCard extends StatelessWidget implements LanternSkinWidget {
   const LanternChannelCard(this.streamer, {super.key, this.nextLive});
 
@@ -540,50 +541,77 @@ class LanternChannelCard extends StatelessWidget implements LanternSkinWidget {
                         overflow: TextOverflow.ellipsis,
                         style:
                             Lantern.textStyle(13, color: t.muted, height: 1.5)),
-                    if (city.isNotEmpty)
-                      Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(children: [
-                            LIcon(LGlyph.pin, size: 14, color: t.muted),
-                            const SizedBox(width: 5),
-                            Flexible(
-                                child: Text(city,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Lantern.textStyle(13,
-                                        color: t.muted, height: 1.4))),
-                          ])),
-                    if (s.tags.isNotEmpty)
-                      Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Wrap(spacing: 6, runSpacing: 6, children: [
-                            for (final tag in s.tags.take(3)) LTag(tag),
-                          ])),
-                    const SizedBox(height: 14),
-                    Wrap(spacing: 8, runSpacing: 8, children: [
-                      if (s.isCurrentlyLive)
-                        LButton(
-                            label:
-                                (s.isAudioLive ? 'web.listen' : 'web.watch')
+                    // The place line is kept even when empty, and the tags
+                    // share one line with the buttons, so every card in a
+                    // row is the same height (owner notes 2026-11-12).
+                    Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: SizedBox(
+                            height: 19,
+                            child: city.isEmpty
+                                ? null
+                                : Row(children: [
+                                    LIcon(LGlyph.pin, size: 14, color: t.muted),
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                        child: Text(city,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Lantern.textStyle(13,
+                                                color: t.muted, height: 1.4))),
+                                  ]))),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                        key: const ValueKey('lantern-channel-card-actions'),
+                        height: 36,
+                        child: Row(children: [
+                          // The tags that fit on one line; the rest are cut.
+                          Expanded(
+                              child: Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: SizedBox(
+                                      height: 22,
+                                      child: Wrap(
+                                          spacing: 6,
+                                          runSpacing: 6,
+                                          clipBehavior: Clip.hardEdge,
+                                          children: [
+                                            for (final tag in s.tags.take(3))
+                                              LTag(tag),
+                                          ])))),
+                          if (s.isCurrentlyLive) ...[
+                            const SizedBox(width: 8),
+                            LButton(
+                                label: (s.isAudioLive
+                                        ? 'web.listen'
+                                        : 'web.watch')
                                     .tr(),
-                            icon: s.isAudioLive ? LGlyph.audio : LGlyph.live,
-                            kind: s.isAudioLive
-                                ? LButtonKind.dark
-                                : LButtonKind.primary,
-                            size: LButtonSize.small,
-                            onPressed: () => lanternOpenRoom(context, s)),
-                      if (!own)
-                        LButton(
-                            label: (following
-                                    ? 'profile.following_btn'
-                                    : 'web.follow')
-                                .tr(),
-                            icon: following ? LGlyph.check : LGlyph.plus,
-                            kind: LButtonKind.tonal,
-                            size: LButtonSize.small,
-                            onPressed: () => toggleFollowWithFeedback(
-                                context, s.channelProfileId)),
-                    ]),
+                                icon: s.isAudioLive
+                                    ? LGlyph.audio
+                                    : LGlyph.live,
+                                kind: s.isAudioLive
+                                    ? LButtonKind.dark
+                                    : LButtonKind.primary,
+                                size: LButtonSize.small,
+                                onPressed: () => lanternOpenRoom(context, s)),
+                          ],
+                          // Follow at the end of the tags' line: the left in
+                          // Arabic.
+                          if (!own) ...[
+                            const SizedBox(width: 8),
+                            LButton(
+                                key: const ValueKey('lantern-channel-card-follow'),
+                                label: (following
+                                        ? 'profile.following_btn'
+                                        : 'web.follow')
+                                    .tr(),
+                                icon: following ? LGlyph.check : LGlyph.plus,
+                                kind: LButtonKind.tonal,
+                                size: LButtonSize.small,
+                                onPressed: () => toggleFollowWithFeedback(
+                                    context, s.channelProfileId)),
+                          ],
+                        ])),
                   ])),
         ]));
   }

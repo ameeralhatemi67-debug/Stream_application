@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -13,16 +15,23 @@ import '../../../lessons/state/lessons_controller.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../map_visible_catalog.dart';
 
-/// The picture in the map cards of Discover and Lessons on the website
-/// layout: the real three-city map (the bundled pack, as on the map page),
-/// held still, with the mosques that have lessons and, on Discover, the
-/// channels that have a place. Phones keep the drawn picture (owner notes
-/// 2026-11-12). The card around it opens the map.
+/// The picture in the map cards of Discover and Lessons: the real three-city
+/// map (the bundled pack, as on the map page), held still, with the mosques
+/// that have lessons and, on Discover, the channels that have a place (owner
+/// notes 2026-11-12: no drawing). The card around it opens the map.
 class LanternMapPreview extends StatelessWidget implements LanternSkinWidget {
   const LanternMapPreview({super.key, this.streamers = const []});
 
   /// Channels to pin (Discover); none on the Lessons card.
   final List<StreamerModel> streamers;
+
+  /// The zoom that fits the three cities (about a third of a degree east to
+  /// west) across [width]: a phone's card shows them all, not a corner.
+  static double overviewZoomFor(double width) {
+    if (!width.isFinite || width <= 0) return 11.2;
+    final zoom = math.log(width * 360 / (.34 * 256)) / math.ln2;
+    return zoom.clamp(9.5, 12.0).toDouble();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +74,11 @@ class LanternMapPreview extends StatelessWidget implements LanternSkinWidget {
         key: const ValueKey('lantern-map-preview'),
         borderRadius: BorderRadius.circular(Lantern.radiusCard),
         child: IgnorePointer(
-            child: LessonsMap(pins: pins, markers: markers, interactive: false)));
+            child: LayoutBuilder(
+                builder: (context, box) => LessonsMap(
+                    pins: pins,
+                    markers: markers,
+                    interactive: false,
+                    overviewZoom: overviewZoomFor(box.maxWidth)))));
   }
 }

@@ -211,6 +211,42 @@ void main() {
       await app.close();
     });
 
+    for (final size in [_phone, _laptop]) {
+      testWidgets('the lessons admin has the platform admin frame '
+          '(${size.width.toInt()})', (tester) async {
+        final app = await _start(tester,
+            location: '/admin/lessons',
+            persona: LessonsDemoPersona.admin,
+            size: size,
+            lang: 'ar');
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const ValueKey('lantern-lessons-admin-frame')),
+            findsOneWidget);
+        if (size == _laptop) {
+          expect(find.byType(LanternWebHeader), findsOneWidget);
+          expect(find.byKey(const ValueKey('lantern-lessons-admin-rail')),
+              findsOneWidget);
+          expect(find.byKey(const ValueKey('lantern-admin-area-switch')),
+              findsOneWidget);
+          expect(find.byKey(const ValueKey('lessons-admin-tab-mosques')),
+              findsOneWidget);
+          expect(find.byType(Drawer), findsNothing);
+        } else {
+          expect(find.byType(LanternPageBar), findsOneWidget);
+          await _tap(app,
+              find.byKey(const ValueKey('lantern-lessons-admin-sections')));
+          expect(find.byKey(const ValueKey('lessons-admin-tab-mosques')),
+              findsOneWidget);
+          await _tap(
+              app, find.byKey(const ValueKey('lessons-admin-tab-mosques')));
+          expect(app.router.routeInformationProvider.value.uri.path,
+              '/admin/lessons/mosques');
+        }
+        expect(tester.takeException(), isNull);
+        await app.close();
+      });
+    }
+
     testWidgets('admins see their band, which opens the review',
         (tester) async {
       final app = await _start(tester,

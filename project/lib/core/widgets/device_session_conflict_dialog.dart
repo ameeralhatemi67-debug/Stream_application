@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../models/device_session_model.dart';
 import '../theme/app_theme.dart';
+import 'lantern/lantern_device_conflict.dart';
 
 enum DeviceSessionChoice {
   transferBroadcaster,
@@ -24,7 +25,18 @@ class DeviceSessionConflictDialog extends StatelessWidget {
     required BuildContext context,
     required DeviceSessionModel currentDevice,
     required DeviceSessionModel existingDevice,
-  }) {
+  }) async {
+    // Lantern and Arch draws its own (owner notes 2026-11-12).
+    if (context.isLanternSkin) {
+      final choice = await showLanternDeviceConflict(context,
+          current: currentDevice, holder: existingDevice);
+      return switch (choice) {
+        LanternDeviceChoice.moveHere => DeviceSessionChoice.transferBroadcaster,
+        LanternDeviceChoice.watch => DeviceSessionChoice.continueAsViewer,
+        null => null,
+      };
+    }
+    if (!context.mounted) return null;
     return showDialog<DeviceSessionChoice>(
       context: context,
       barrierDismissible: false,

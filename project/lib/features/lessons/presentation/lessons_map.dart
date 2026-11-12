@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 
+import '../../../core/widgets/lantern/lantern.dart' show LTag, LTone, LanternContext;
 import '../../map/models/map_tricity_domain.dart';
+import '../../map/presentation/lantern/lantern_mosque_mark.dart';
 import '../../map/presentation/widgets/tricity_basemap_layer.dart';
 import '../../map/services/map_pack_controller.dart';
 import 'lessons_kit.dart';
@@ -42,12 +44,15 @@ class MosquePin {
 /// Mosques on the bundled tri-city basemap (the same offline pack as the
 /// Spatial Map). Pins outside the pack's area are listed by the caller only.
 class LessonsMap extends StatefulWidget {
-  const LessonsMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5, this.markers = const []});
+  const LessonsMap({super.key, required this.pins, this.selected, this.onPin, this.interactive = true, this.focusZoom = 14.5, this.markers = const [], this.overviewZoom = 11.2});
   final List<MosquePin> pins;
   final String? selected;
   final ValueChanged<String>? onPin;
   final bool interactive;
   final double focusZoom;
+
+  /// The zoom with nothing selected (the three cities in view).
+  final double overviewZoom;
 
   /// Other pins drawn above the mosques (broadcasters' venues on Discover).
   final List<Marker> markers;
@@ -95,7 +100,7 @@ class _LessonsMapState extends State<LessonsMap> {
         mapController: _map,
         options: MapOptions(
           initialCenter: sel != null ? LatLng(sel.lat, sel.lng) : kTricityOverviewExtent.center,
-          initialZoom: sel != null ? widget.focusZoom : 11.2,
+          initialZoom: sel != null ? widget.focusZoom : widget.overviewZoom,
           minZoom: 9,
           maxZoom: kMapMaxZoom,
           backgroundColor: const Color(0xFFF4EBDA),
@@ -174,6 +179,7 @@ class _MosqueArchState extends State<MosqueArch> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    if (context.isLanternSkin) return _lantern(context);
     final pin = widget.pin, selected = widget.selected;
     final width = pin.quiet ? 28.0 : (selected ? 44.0 : 38.0), height = width * 46 / 40;
     final pulse = _pulse;
@@ -214,6 +220,47 @@ class _MosqueArchState extends State<MosqueArch> with SingleTickerProviderStateM
                 left: -80,
                 right: -80,
                 child: Center(child: _Chip(pin.chip, pin.chipTone)),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+extension on _MosqueArchState {
+  /// Lantern and Arch: the same mosque pin as the map page.
+  Widget _lantern(BuildContext context) {
+    final pin = widget.pin;
+    return Semantics(
+      button: widget.onTap != null,
+      selected: widget.selected,
+      label: [pin.label, tPlural('lessons', pin.count), if (pin.chip.isNotEmpty) pin.chip].join(', '),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Opacity(
+          opacity: pin.dim ? .45 : 1,
+          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+            LanternMosqueMark(
+                count: pin.verified ? pin.count : 0,
+                quiet: pin.quiet,
+                live: pin.live,
+                onSite: pin.onSite,
+                selected: widget.selected),
+            if (pin.chip.isNotEmpty)
+              Positioned(
+                top: LanternMosqueMark.size.height + 2,
+                left: -80,
+                right: -80,
+                child: Center(
+                    child: LTag(pin.chip,
+                        tone: switch (pin.chipTone) {
+                          MosqueChipTone.live => LTone.live,
+                          MosqueChipTone.onSite => LTone.ok,
+                          MosqueChipTone.countdown => LTone.warn,
+                          MosqueChipTone.day => LTone.neutral,
+                        })),
               ),
           ]),
         ),

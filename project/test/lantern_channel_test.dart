@@ -184,7 +184,10 @@ void main() {
           }
           if (size == _laptop) {
             expect(find.byType(LanternWebFooter), findsOneWidget);
+            // About sits in the header beside the name; no side column.
             expect(find.byKey(const ValueKey('lantern-channel-side')),
+                findsNothing);
+            expect(find.byKey(const ValueKey('lantern-channel-about-side')),
                 findsOneWidget);
           }
           await app.close();
@@ -409,6 +412,22 @@ void main() {
       await app.close();
     });
   }
+
+  testWidgets('a phone: Report ends the buttons row, never alone below',
+      (tester) async {
+    final app = await LanternApp.start(tester,
+        location: '/profile/$id', provider: seeded(), size: _phone,
+        lang: 'ar');
+    final report = find.byKey(const ValueKey('lantern-channel-report'));
+    final follow = find.byKey(const ValueKey('lantern-channel-follow'));
+    expect(report, findsOneWidget);
+    final r = tester.getRect(report), f = tester.getRect(follow);
+    expect(r.center.dy, closeTo(f.center.dy, 2));
+    // At the end of the row: the left in Arabic.
+    expect(r.right, lessThanOrEqualTo(f.left + 1));
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
 
   testWidgets('a viewer gets no studio', (tester) async {
     final app = await LanternApp.start(tester,

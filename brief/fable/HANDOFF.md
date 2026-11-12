@@ -10,6 +10,8 @@ Done on `master` (one commit, pushed): Lantern and Arch is the default and gold 
 
 Not checked on a device: the microphone level and the swipe on a real phone (tests and the emulator build only).
 
+Second round the same day (commit after `6c53008`): the map cards of Discover and Lessons show the real map on phones too (`LanternMapPreview`, zoom fitted to the card width; `LessonsMap.overviewZoom`); channel cards on Discover are one height, with the tags, Watch and Follow on one line; mosque pins are an arched pin with a mosque, a count badge and a tail (`LanternMosqueMark`, also used by `MosqueArch` under Lantern); the channel page's website layout has About in the header between the name and the buttons (no side column) and the buttons at the end; on a phone the report flag ends the buttons row; the "several devices" dialog has a Lantern version (`lantern_device_conflict.dart`, devices named by kind); the Preachers & lessons admin area uses the platform area's frame (`LanternLessonsAdminFrame`, `LanternAdminNavItem` is now public).
+
 ## 1. The state today
 
 - **Lantern and Arch is released.** It is a third design beside gold & black and Hedayah (since ADR-027 it is the default and gold & black is no longer offered), chosen in Settings → Design (ADR-026 in `Core_files/decisions.md`). It was built on the branch `fable/lantern-skin`, merged into `master` on 2026-11-12, pushed, and is live on https://live.hedayh.org.sa.

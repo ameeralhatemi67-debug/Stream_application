@@ -183,32 +183,15 @@ class _LanternChannelViewState extends State<LanternChannelView> {
         ? _featured(context, lang)
         : null;
 
-    final content = wide
-        ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [tabs, const SizedBox(height: 22), body])),
-            const SizedBox(width: 32),
-            SizedBox(
-                key: const ValueKey('lantern-channel-side'),
-                width: 340,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _aboutPanel(context, lang, compact: true),
-                      if (featured != null) ...[
-                        const SizedBox(height: 16),
-                        featured,
-                      ],
-                    ])),
-          ])
-        : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            if (featured != null) ...[featured, const SizedBox(height: 18)],
-            tabs,
-            const SizedBox(height: 18),
-            body,
-          ]);
+    // The website layout gives the tabs the whole width: About sits in the
+    // header (owner notes 2026-11-12).
+    final content =
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (featured != null) ...[featured, SizedBox(height: wide ? 24 : 18)],
+      tabs,
+      SizedBox(height: wide ? 22 : 18),
+      body,
+    ]);
 
     return _ChannelFrame(
         title: s.getLocalizedName(lang),
@@ -338,21 +321,16 @@ class _LanternChannelViewState extends State<LanternChannelView> {
               ]),
         ]);
 
-    final actions = Wrap(
-        key: const ValueKey('lantern-channel-actions'),
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          if (widget.live)
-            LButton(
-                key: const ValueKey('lantern-channel-watch'),
-                label: (s.isAudioLive ? 'live.listen_live' : 'feed.watch_live')
-                    .tr(),
-                icon: s.isAudioLive ? LGlyph.audio : LGlyph.live,
-                onPressed: widget.onWatch)
-          else if (widget.remindersAvailable)
-            LButton(
+    final primary = widget.live
+        ? LButton(
+            key: const ValueKey('lantern-channel-watch'),
+            label: (s.isAudioLive ? 'live.listen_live' : 'feed.watch_live')
+                .tr(),
+            icon: s.isAudioLive ? LGlyph.audio : LGlyph.live,
+            expand: !wide,
+            onPressed: widget.onWatch)
+        : widget.remindersAvailable
+            ? LButton(
                 key: const ValueKey('lantern-channel-reminder'),
                 label: (widget.reminder
                         ? 'profile.reminder_on'
@@ -362,61 +340,102 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                 kind: widget.reminder
                     ? LButtonKind.secondary
                     : LButtonKind.primary,
-                onPressed: widget.onReminder),
-          LButton(
-              key: const ValueKey('lantern-channel-follow'),
-              label: (widget.following
-                      ? 'profile.following_btn'
-                      : 'profile.follow_btn')
-                  .tr(),
-              icon: widget.following ? LGlyph.check : LGlyph.plus,
-              kind: widget.following ? LButtonKind.secondary : LButtonKind.tonal,
-              onPressed: _follow),
-          if (widget.live && widget.remindersAvailable)
-            LIconButton(
-                key: const ValueKey('lantern-channel-reminder'),
-                icon: LGlyph.bell,
-                on: widget.reminder,
-                label: (widget.reminder
-                        ? 'profile.reminder_on'
-                        : 'profile.reminder_btn')
-                    .tr(),
-                onPressed: widget.onReminder),
-          // On a phone these three sit in the page bar ([_barActions]).
-          if (wide && widget.onShare != null)
-            LIconButton(
-                key: const ValueKey('lantern-channel-share'),
-                icon: LGlyph.share,
-                label: 'profile.share_btn'.tr(),
-                onPressed: widget.onShare),
-          if (wide && widget.onStudio != null)
-            LButton(
-                key: const ValueKey('lantern-channel-studio'),
-                label: 'organization_v1.studio'.tr(),
-                icon: LGlyph.video,
-                kind: LButtonKind.dark,
-                onPressed: widget.onStudio),
-          if (wide && widget.onSettings != null)
-            LIconButton(
-                key: const ValueKey('lantern-channel-settings'),
-                icon: LGlyph.settings,
-                label: 'nav.settings'.tr(),
-                onPressed: widget.onSettings),
-          if (widget.onReport != null)
-            LIconButton(
-                key: const ValueKey('lantern-channel-report'),
-                icon: LGlyph.flag,
-                label: 'lantern.report.action_channel'.tr(),
-                onPressed: widget.onReport),
-          if (widget.onBranches != null)
-            LButton(
-                key: const ValueKey('lantern-channel-branches'),
-                label:
-                    '${s.venues.length} ${'profile.campus_branches_btn'.tr()}',
-                icon: LGlyph.pin,
-                kind: LButtonKind.secondary,
-                onPressed: widget.onBranches),
-        ]);
+                expand: !wide,
+                onPressed: widget.onReminder)
+            : null;
+    final follow = LButton(
+        key: const ValueKey('lantern-channel-follow'),
+        label: (widget.following ? 'profile.following_btn' : 'profile.follow_btn')
+            .tr(),
+        icon: widget.following ? LGlyph.check : LGlyph.plus,
+        kind: widget.following ? LButtonKind.secondary : LButtonKind.tonal,
+        expand: !wide,
+        onPressed: _follow);
+    final bell = widget.live && widget.remindersAvailable
+        ? LIconButton(
+            key: const ValueKey('lantern-channel-reminder'),
+            icon: LGlyph.bell,
+            on: widget.reminder,
+            label: (widget.reminder
+                    ? 'profile.reminder_on'
+                    : 'profile.reminder_btn')
+                .tr(),
+            onPressed: widget.onReminder)
+        : null;
+    final report = widget.onReport == null
+        ? null
+        : LIconButton(
+            key: const ValueKey('lantern-channel-report'),
+            icon: LGlyph.flag,
+            label: 'lantern.report.action_channel'.tr(),
+            onPressed: widget.onReport);
+    final branches = widget.onBranches == null
+        ? null
+        : LButton(
+            key: const ValueKey('lantern-channel-branches'),
+            label: '${s.venues.length} ${'profile.campus_branches_btn'.tr()}',
+            icon: LGlyph.pin,
+            kind: LButtonKind.secondary,
+            onPressed: widget.onBranches);
+
+    // The website layout: one group at the end of the header (the left in
+    // Arabic). A phone: the buttons share one row with the report flag at
+    // its end, so the flag never drops to a line of its own (owner notes
+    // 2026-11-12); the owner's tools are in the page bar.
+    final Widget actions = wide
+        ? Wrap(
+            key: const ValueKey('lantern-channel-actions'),
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (primary != null) primary,
+              follow,
+              if (bell != null) bell,
+              if (widget.onShare != null)
+                LIconButton(
+                    key: const ValueKey('lantern-channel-share'),
+                    icon: LGlyph.share,
+                    label: 'profile.share_btn'.tr(),
+                    onPressed: widget.onShare),
+              if (widget.onStudio != null)
+                LButton(
+                    key: const ValueKey('lantern-channel-studio'),
+                    label: 'organization_v1.studio'.tr(),
+                    icon: LGlyph.video,
+                    kind: LButtonKind.dark,
+                    onPressed: widget.onStudio),
+              if (widget.onSettings != null)
+                LIconButton(
+                    key: const ValueKey('lantern-channel-settings'),
+                    icon: LGlyph.settings,
+                    label: 'nav.settings'.tr(),
+                    onPressed: widget.onSettings),
+              if (report != null) report,
+              if (branches != null) branches,
+            ])
+        : Column(
+            key: const ValueKey('lantern-channel-actions'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+                Row(children: [
+                  if (primary != null) ...[
+                    Expanded(child: primary),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(child: follow),
+                  if (bell != null) ...[const SizedBox(width: 4), bell],
+                  if (report != null) ...[const SizedBox(width: 4), report],
+                ]),
+                if (branches != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: branches),
+                ],
+              ]);
 
     final ring = widget.live
         ? (s.isAudioLive ? LRing.audio : LRing.live)
@@ -479,9 +498,19 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                              Expanded(child: identity),
-                              const SizedBox(width: 24),
-                              Flexible(child: actions),
+                              Expanded(flex: 4, child: identity),
+                              const SizedBox(width: 28),
+                              // About fills what was empty space beside the
+                              // name (it was a side column below).
+                              Expanded(
+                                  flex: 5,
+                                  child: _aboutPanel(context, lang,
+                                      compact: true)),
+                              const SizedBox(width: 28),
+                              ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 300),
+                                  child: actions),
                             ])
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1018,8 +1018,8 @@ class _LessonCard extends StatelessWidget {
   }
 }
 
-/// The map as an invitation: what it is, one button, and a small drawn map
-/// with a pin for every channel that has a place.
+/// The map as an invitation: what it is, one button, and the real map with
+/// the channels that have a place and the mosques with lessons.
 class _MapTeaser extends StatelessWidget {
   const _MapTeaser({required this.streamers});
 
@@ -1078,20 +1078,10 @@ class _MapTeaser extends StatelessWidget {
         radius: Lantern.radiusCard,
         pressScale: .99,
         excludeChildSemantics: true,
-        // The website layout shows the real map; phones keep the drawing.
-        builder: (context, _) => context.lanternWide
-            ? AspectRatio(
-                aspectRatio: 16 / 9,
-                child: LanternMapPreview(streamers: streamers))
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(Lantern.radiusCard),
-                child: AspectRatio(
-                    aspectRatio: wide ? 16 / 9 : 16 / 10,
-                    child: CustomPaint(
-                        painter: _MiniMapPainter(pins,
-                            night: t.night,
-                            rtl: Directionality.of(context) ==
-                                TextDirection.rtl)))));
+        // The real map, on phones as on the website (owner, 2026-11-12).
+        builder: (context, _) => AspectRatio(
+            aspectRatio: wide ? 16 / 9 : 16 / 10,
+            child: LanternMapPreview(streamers: streamers)));
     return Container(
         key: const ValueKey('lantern-discover-map'),
         padding: EdgeInsets.all(wide ? 28 : 18),
@@ -1110,72 +1100,6 @@ class _MapTeaser extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [copy, const SizedBox(height: 18), map]));
   }
-}
-
-/// A drawn map of the coast: land, the Gulf, the main road and the real
-/// pins, placed by their coordinates inside the three cities' bounds.
-class _MiniMapPainter extends CustomPainter {
-  _MiniMapPainter(this.pins, {required this.night, required this.rtl});
-
-  final List<(double, double, int)> pins;
-  final bool night, rtl;
-
-  // Al Khobar, Dhahran and Dammam.
-  static const _south = 26.15, _north = 26.52, _west = 49.95, _east = 50.26;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final land = night ? const Color(0xFF1B252E) : const Color(0xFFF0E8D8);
-    final sea = night ? const Color(0xFF12303A) : const Color(0xFFCADDE2);
-    final road = night ? const Color(0xFF2C3944) : const Color(0xFFFFFFFF);
-    canvas.drawRect(Offset.zero & size, Paint()..color = land);
-    // The Gulf is to the east.
-    final coast = Path()
-      ..moveTo(size.width * .72, 0)
-      ..cubicTo(size.width * .8, size.height * .3, size.width * .7,
-          size.height * .55, size.width * .86, size.height)
-      ..lineTo(size.width, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
-    canvas.drawPath(coast, Paint()..color = sea);
-    final thin = Paint()
-      ..color = road
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    for (final f in [.22, .44, .6]) {
-      canvas.drawLine(Offset(size.width * f, 0),
-          Offset(size.width * (f + .04), size.height), thin);
-      canvas.drawLine(Offset(0, size.height * f),
-          Offset(size.width * .78, size.height * (f + .03)), thin);
-    }
-    canvas.drawPath(
-        Path()
-          ..moveTo(size.width * .06, size.height * .3)
-          ..cubicTo(size.width * .35, size.height * .34, size.width * .55,
-              size.height * .6, size.width * .74, size.height * .96),
-        Paint()
-          ..color = LanternTokens.goldHi.withValues(alpha: night ? .5 : .9)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round
-          ..style = PaintingStyle.stroke);
-    for (final (lat, lng, state) in pins) {
-      final x = ((lng - _west) / (_east - _west)).clamp(.06, .7);
-      final y = (1 - (lat - _south) / (_north - _south)).clamp(.1, .9);
-      final at = Offset(size.width * x, size.height * y);
-      final fill = state == 1
-          ? const Color(0xFFC2343F)
-          : state == 2
-              ? const Color(0xFF2D6F86)
-              : LanternTokens.gold;
-      canvas
-        ..drawCircle(at, 8, Paint()..color = LanternTokens.white)
-        ..drawCircle(at, 6, Paint()..color = fill);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_MiniMapPainter old) =>
-      old.night != night || old.pins.length != pins.length;
 }
 
 /// Sorts out which channels go live soon, for the Starting soon section.

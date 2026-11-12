@@ -1,0 +1,34 @@
+{
+  "en": {
+    "device": {
+      "title": "Broadcasting is on another device",
+      "body": "Your account can broadcast from one device at a time. Move broadcasting to this device, or keep watching here.",
+      "holder": "Broadcasting from here now",
+      "this_device": "This device",
+      "move_hint": "The other device stops broadcasting and becomes a viewer.",
+      "android": "Android phone",
+      "ios": "iPhone",
+      "web": "Web browser",
+      "windows": "Windows computer",
+      "macos": "Mac",
+      "linux": "Linux computer",
+      "other": "Another device"
+    }
+  },
+  "ar": {
+    "device": {
+      "title": "البث مفتوح على جهاز آخر",
+      "body": "يبث حسابك من جهاز واحد في كل مرة. انقل البث إلى هذا الجهاز، أو تابع هنا كمشاهد.",
+      "holder": "يبث منه الآن",
+      "this_device": "هذا الجهاز",
+      "move_hint": "يتوقف الجهاز الآخر عن البث ويصبح مشاهدًا.",
+      "android": "هاتف أندرويد",
+      "ios": "آيفون",
+      "web": "متصفح الويب",
+      "windows": "حاسوب ويندوز",
+      "macos": "ماك",
+      "linux": "حاسوب لينكس",
+      "other": "جهاز آخر"
+    }
+  }
+}

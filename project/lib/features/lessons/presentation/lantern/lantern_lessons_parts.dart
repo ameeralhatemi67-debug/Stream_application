@@ -1197,10 +1197,9 @@ class LMapTeaser extends StatelessWidget implements LanternSkinWidget {
                 ? Lantern.none
                 : const Duration(milliseconds: 400),
             curve: Lantern.ease,
-            // The website layout shows the real map; phones keep the art.
-            child: wide
-                ? const SizedBox(height: 330, child: LanternMapPreview())
-                : const LMapArt(height: 190)));
+            // The real map, on phones as on the website (owner, 2026-11-12).
+            child: SizedBox(
+                height: wide ? 330 : 210, child: const LanternMapPreview())));
     return LCard(
         radius: 32,
         padding: EdgeInsets.all(wide ? 28 : 18),

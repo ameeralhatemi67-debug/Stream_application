@@ -13,6 +13,7 @@ import '../../../admin/presentation/widgets/admin_area_switch.dart';
 import '../../data/lessons_repository.dart';
 import '../../state/lessons_controller.dart';
 import '../lessons_kit.dart';
+import 'lantern/lantern_lessons_admin_frame.dart';
 
 /// The Preachers & lessons area of the admin page, in its order.
 const lessonsAdminTabs = ['overview', 'approvals', 'preachers', 'lessons', 'mosques', 'reports', 'stats', 'log'];
@@ -86,6 +87,23 @@ class _LessonsAdminShellState extends State<LessonsAdminShell> {
       );
     }
     final sub = widget.title != null;
+    // Lantern and Arch: the platform area's frame (owner notes 2026-11-12).
+    if (context.isLanternSkin) {
+      return LanternLessonsAdminFrame(
+          tabs: lessonsAdminTabs,
+          current: widget.current,
+          counts: {
+            'approvals': c.pendingRequests.length + c.pendingEdits.length,
+            'reports': c.openFlags.length,
+          },
+          title: widget.title,
+          onBack: sub
+              ? () => context.canPop()
+                  ? context.pop()
+                  : context.go('/admin/lessons/${widget.current}')
+              : null,
+          body: body);
+    }
     return Scaffold(
       backgroundColor: TC.page,
       appBar: CaAppBar(

@@ -3647,6 +3647,20 @@
       "level": "Microphone level",
       "level_waiting": "The level shows once you are live"
     },
+    "device": {
+      "title": "Broadcasting is on another device",
+      "body": "Your account can broadcast from one device at a time. Move broadcasting to this device, or keep watching here.",
+      "holder": "Broadcasting from here now",
+      "this_device": "This device",
+      "move_hint": "The other device stops broadcasting and becomes a viewer.",
+      "android": "Android phone",
+      "ios": "iPhone",
+      "web": "Web browser",
+      "windows": "Windows computer",
+      "macos": "Mac",
+      "linux": "Linux computer",
+      "other": "Another device"
+    },
     "lessons": {
       "crumb": "Where you are",
       "now": "Now",

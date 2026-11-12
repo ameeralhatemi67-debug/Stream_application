@@ -145,6 +145,34 @@ void main() {
     await app.close();
   });
 
+  testWidgets('channel cards in a row are one height; Follow ends the tags line',
+      (tester) async {
+    final app = await LanternApp.start(tester, size: tallLaptop, lang: 'ar');
+    final cards = find.byType(LanternChannelCard);
+    expect(cards, findsWidgets);
+    final rects = [
+      for (final e in cards.evaluate()) tester.getRect(find.byWidget(e.widget))
+    ];
+    for (final r in rects) {
+      expect(r.height, closeTo(rects.first.height, .5));
+    }
+    final first = cards.first;
+    final follow = find.descendant(
+        of: first,
+        matching: find.byKey(const ValueKey('lantern-channel-card-follow')));
+    if (follow.evaluate().isNotEmpty) {
+      final line = tester.getRect(find.descendant(
+          of: first,
+          matching: find.byKey(const ValueKey('lantern-channel-card-actions'))));
+      final button = tester.getRect(follow);
+      // On the tags' line, at its end: the left in Arabic.
+      expect(button.center.dy, closeTo(line.center.dy, 1));
+      expect(button.left, closeTo(line.left, 1));
+    }
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
   testWidgets('a channel card follows and opens the channel', (tester) async {
     final provider = lanternProvider()
       ..debugSetSignedInForTests(
