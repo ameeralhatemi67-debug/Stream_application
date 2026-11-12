@@ -78,55 +78,85 @@ class LanternRoleSelectView extends StatelessWidget
                         const LGiltLine(),
                       ]))),
               Expanded(
-                  child: SafeArea(
-                      top: false,
-                      child: Center(
-                          child: SingleChildScrollView(
-                              key: const ValueKey('lantern-role-select'),
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: wide ? 40 : 20, vertical: 28),
-                              child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                      maxWidth: wide ? 900 : 480),
-                                  child: Column(children: [
-                                    LAvatar(
-                                        name: name, image: image, size: 64),
-                                    const SizedBox(height: 14),
-                                    Semantics(
-                                        header: true,
-                                        child: Text(
-                                            'role_select.welcome_user'
-                                                .tr(args: [name]),
-                                            textAlign: TextAlign.center,
-                                            style: Lantern.displayStyle(
-                                                wide ? 28 : 23,
-                                                color: t.fg,
-                                                height: context.lanternArabic
-                                                    ? 1.45
-                                                    : 1.25))),
-                                    const SizedBox(height: 6),
-                                    Text('role_select.prompt_title'.tr(),
-                                        textAlign: TextAlign.center,
-                                        style: Lantern.textStyle(15,
-                                            color: t.muted)),
-                                    const SizedBox(height: 26),
-                                    if (wide)
-                                      Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(child: viewer),
-                                            const SizedBox(width: 18),
-                                            Expanded(child: broadcaster),
-                                          ])
-                                    else ...[
-                                      viewer,
-                                      const SizedBox(height: 14),
-                                      broadcaster,
-                                    ],
-                                    const SizedBox(height: 18),
-                                    _Preacher(onTap: onPreacher),
-                                  ]))))))
+                  child: SingleChildScrollView(
+                      key: const ValueKey('lantern-role-select'),
+                      child: Column(children: [
+                        // The welcome: a night band with the lattice, the
+                        // person in a gold ring, and the question.
+                        LNightBand(
+                            latticeOpacity: .13,
+                            glow: const Alignment(0, -.8),
+                            child: Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                    20, wide ? 40 : 28, 20, wide ? 72 : 60),
+                                child: Center(
+                                    child: Column(children: [
+                                  Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: Lantern.goldFill),
+                                      child: LAvatar(
+                                          name: name,
+                                          image: image,
+                                          size: wide ? 76 : 66)),
+                                  const SizedBox(height: 16),
+                                  Semantics(
+                                      header: true,
+                                      child: Text(
+                                          'role_select.welcome_user'
+                                              .tr(args: [name]),
+                                          textAlign: TextAlign.center,
+                                          style: Lantern.displayStyle(
+                                              wide ? 30 : 24,
+                                              color: LanternTokens.onNight,
+                                              height: context.lanternArabic
+                                                  ? 1.45
+                                                  : 1.25))),
+                                  const SizedBox(height: 8),
+                                  Text('role_select.prompt_title'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: Lantern.textStyle(15.5,
+                                          color: LanternTokens.onNight
+                                              .withValues(alpha: .78))),
+                                ])))),
+                        // The choices rise over the band's edge.
+                        Transform.translate(
+                            offset: Offset(0, wide ? -44 : -36),
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: wide ? 40 : 16),
+                                child: Center(
+                                    child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                            maxWidth: wide ? 940 : 480),
+                                        child: Column(children: [
+                                          if (wide)
+                                            IntrinsicHeight(
+                                                child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                  Expanded(child: viewer),
+                                                  const SizedBox(width: 18),
+                                                  Expanded(child: broadcaster),
+                                                ]))
+                                          else ...[
+                                            viewer,
+                                            const SizedBox(height: 14),
+                                            broadcaster,
+                                          ],
+                                          const SizedBox(height: 18),
+                                          const LStarDivider(),
+                                          const SizedBox(height: 18),
+                                          _Preacher(onTap: onPreacher),
+                                          SizedBox(
+                                              height:
+                                                  MediaQuery.paddingOf(context)
+                                                      .bottom),
+                                        ]))))),
+                      ]))),
             ]));
       }));
 }
@@ -150,44 +180,73 @@ class _Choice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.lt;
+    // The recommended choice carries the gold edge and the star.
     return LCard(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.zero,
+        selected: primary,
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Align(
-                  alignment: AlignmentDirectional.centerStart,
+              Container(
+                  height: 92,
+                  alignment: Alignment.bottomCenter,
+                  decoration: BoxDecoration(
+                      color: primary ? null : t.sunk,
+                      gradient: primary
+                          ? const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0x40E2C389), Color(0x00E2C389)])
+                          : null),
                   child: Container(
-                      width: 52,
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
+                      width: 64,
+                      height: 74,
+                      alignment: const Alignment(0, .3),
+                      decoration: ShapeDecoration(
                           gradient: primary ? Lantern.goldFill : null,
-                          color: primary ? null : t.sunk,
-                          borderRadius:
-                              BorderRadius.circular(Lantern.radiusTile)),
+                          color: primary ? null : t.surface,
+                          shape: LArchBorder(
+                              bottom: 0,
+                              side: primary
+                                  ? BorderSide.none
+                                  : BorderSide(color: t.line, width: 1.5))),
                       child: LIcon(icon,
-                          size: 24,
+                          size: 28,
                           color: primary ? LanternTokens.onGold : t.goldInk))),
-              const SizedBox(height: 14),
-              Text(title,
-                  style: Lantern.displayStyle(19,
-                      color: t.fg,
-                      height: context.lanternArabic ? 1.45 : 1.25)),
-              const SizedBox(height: 8),
-              Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: LTag(badge, tone: LTone.gold)),
-              const SizedBox(height: 10),
-              Text(body, style: Lantern.textStyle(14, color: t.muted)),
-              const SizedBox(height: 18),
-              LButton(
-                  label: action,
-                  kind: primary ? LButtonKind.primary : LButtonKind.secondary,
-                  trailing: LGlyph.arrow,
-                  expand: true,
-                  onPressed: onTap),
+              Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(title,
+                            textAlign: TextAlign.center,
+                            style: Lantern.displayStyle(19,
+                                color: t.fg,
+                                height: context.lanternArabic ? 1.45 : 1.25)),
+                        const SizedBox(height: 8),
+                        Center(
+                            child: LTag(badge,
+                                tone: primary ? LTone.gold : LTone.neutral,
+                                icon: primary
+                                    ? LGlyph.sparkles
+                                    : LGlyph.verified)),
+                        const SizedBox(height: 12),
+                        Text(body,
+                            textAlign: TextAlign.center,
+                            style: Lantern.textStyle(14,
+                                color: t.muted, height: 1.6)),
+                        const SizedBox(height: 18),
+                        LButton(
+                            label: action,
+                            kind: primary
+                                ? LButtonKind.primary
+                                : LButtonKind.secondary,
+                            trailing: LGlyph.arrow,
+                            expand: true,
+                            onPressed: onTap),
+                      ])),
             ]));
   }
 }
@@ -239,11 +298,13 @@ class _Preacher extends StatelessWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          icon,
-                          const SizedBox(width: 12),
-                          Expanded(child: text),
-                        ]),
+                        Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              icon,
+                              const SizedBox(width: 12),
+                              Expanded(child: text),
+                            ]),
                         const SizedBox(height: 14),
                         button,
                       ])));

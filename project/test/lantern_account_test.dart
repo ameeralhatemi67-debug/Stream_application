@@ -417,7 +417,17 @@ void main() {
       expect(_olderKit, findsNothing);
       final accept = find.byKey(const ValueKey('lantern-consent-accept'));
       expect(tester.widget<LButton>(accept).onPressed, isNull);
+      // The agreement and the buttons stay on screen; the middle scrolls.
+      expect(tester.getRect(accept).bottom, lessThanOrEqualTo(844));
+      expect(
+          tester
+              .getRect(find.byKey(const ValueKey('lantern-consent-check')))
+              .bottom,
+          lessThanOrEqualTo(844));
       // The full policy opens in a Lantern dialog and closes again.
+      await tester.ensureVisible(
+          find.byKey(const ValueKey('lantern-consent-policy')));
+      await app.settle(2);
       await tester.tap(find.byKey(const ValueKey('lantern-consent-policy')));
       await app.settle(3);
       expect(find.text('Privacy Policy'), findsWidgets);
