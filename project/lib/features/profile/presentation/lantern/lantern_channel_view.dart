@@ -324,7 +324,10 @@ class _LanternChannelViewState extends State<LanternChannelView> {
     final primary = widget.live
         ? LButton(
             key: const ValueKey('lantern-channel-watch'),
-            label: (s.isAudioLive ? 'live.listen_live' : 'feed.watch_live')
+            // A phone's row is narrow: the short word keeps one line.
+            label: (wide
+                    ? (s.isAudioLive ? 'live.listen_live' : 'feed.watch_live')
+                    : (s.isAudioLive ? 'web.listen' : 'web.watch'))
                 .tr(),
             icon: s.isAudioLive ? LGlyph.audio : LGlyph.live,
             expand: !wide,
@@ -383,29 +386,31 @@ class _LanternChannelViewState extends State<LanternChannelView> {
     // its end, so the flag never drops to a line of its own (owner notes
     // 2026-11-12); the owner's tools are in the page bar.
     final Widget actions = wide
-        ? Wrap(
+        // One row at the end of the header (the left in Arabic): the main
+        // action, Follow, then the round tools (owner notes 2026-11-12).
+        ? Row(
             key: const ValueKey('lantern-channel-actions'),
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (primary != null) primary,
+              if (primary != null) ...[primary, const SizedBox(width: 10)],
               follow,
-              if (bell != null) bell,
-              if (widget.onShare != null)
-                LIconButton(
-                    key: const ValueKey('lantern-channel-share'),
-                    icon: LGlyph.share,
-                    label: 'profile.share_btn'.tr(),
-                    onPressed: widget.onShare),
-              if (widget.onStudio != null)
+              if (bell != null) ...[const SizedBox(width: 6), bell],
+              if (widget.onStudio != null) ...[
+                const SizedBox(width: 10),
                 LButton(
                     key: const ValueKey('lantern-channel-studio'),
                     label: 'organization_v1.studio'.tr(),
                     icon: LGlyph.video,
                     kind: LButtonKind.dark,
                     onPressed: widget.onStudio),
+              ],
+              const SizedBox(width: 6),
+              if (widget.onShare != null)
+                LIconButton(
+                    key: const ValueKey('lantern-channel-share'),
+                    icon: LGlyph.share,
+                    label: 'profile.share_btn'.tr(),
+                    onPressed: widget.onShare),
               if (widget.onSettings != null)
                 LIconButton(
                     key: const ValueKey('lantern-channel-settings'),
@@ -413,7 +418,6 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                     label: 'nav.settings'.tr(),
                     onPressed: widget.onSettings),
               if (report != null) report,
-              if (branches != null) branches,
             ])
         : Column(
             key: const ValueKey('lantern-channel-actions'),
@@ -495,22 +499,27 @@ class _LanternChannelViewState extends State<LanternChannelView> {
               child: Padding(
                   padding: EdgeInsets.fromLTRB(g, avatar / 2 + 18, g, 0),
                   child: wide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                              Expanded(flex: 4, child: identity),
-                              const SizedBox(width: 28),
-                              // About fills what was empty space beside the
-                              // name (it was a side column below).
-                              Expanded(
-                                  flex: 5,
-                                  child: _aboutPanel(context, lang,
-                                      compact: true)),
-                              const SizedBox(width: 28),
-                              ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 300),
-                                  child: actions),
+                              Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Expanded(child: identity),
+                                    const SizedBox(width: 28),
+                                    actions,
+                                  ]),
+                              const SizedBox(height: 22),
+                              // About as one band of facts under the name
+                              // (owner notes 2026-11-12).
+                              _aboutBand(context, lang),
+                              if (branches != null) ...[
+                                const SizedBox(height: 12),
+                                Align(
+                                    alignment:
+                                        AlignmentDirectional.centerStart,
+                                    child: branches),
+                              ],
                             ])
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -699,6 +708,122 @@ class _LanternChannelViewState extends State<LanternChannelView> {
                         size: LButtonSize.small,
                         onPressed: widget.onJoin),
                 ]),
+              ],
+            ]));
+  }
+
+  /// About on the website layout: one band under the name with a tile per
+  /// fact (city, venue, affiliation) and the subjects, divided by hairlines;
+  /// the bio, when there is one, above them. The full About is its tab.
+  Widget _aboutBand(BuildContext context, String lang) {
+    final t = context.lt;
+    final s = widget.streamer;
+    final bio = s.getLocalizedBio(lang).trim();
+    final facts = <(LGlyph, String, String)>[
+      if (s.getLocalizedCity(lang).trim().isNotEmpty)
+        (LGlyph.pin, 'profile.city'.tr(), s.getLocalizedCity(lang)),
+      if (s.getLocalizedVenue(lang).trim().isNotEmpty)
+        (LGlyph.mosque, 'lantern.channel.venue'.tr(), s.getLocalizedVenue(lang)),
+      if (s.getLocalizedOrganization(lang).trim().isNotEmpty &&
+          !s.isOrganization)
+        (LGlyph.org, 'lantern.channel.affiliation'.tr(),
+            s.getLocalizedOrganization(lang)),
+    ];
+    final tags = s.tags.where((x) => x.trim().isNotEmpty).toSet().toList();
+    if (facts.isEmpty && tags.isEmpty && bio.isEmpty && widget.onJoin == null) {
+      return const SizedBox.shrink();
+    }
+    Widget fact(LGlyph icon, String label, Widget value) => Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: t.sunk,
+                      borderRadius: BorderRadius.circular(Lantern.radiusTile)),
+                  child: LIcon(icon, size: 19, color: t.goldInk)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                    Text(label,
+                        style: Lantern.textStyle(12.5,
+                            color: t.muted, height: 1.35)),
+                    const SizedBox(height: 3),
+                    value,
+                  ])),
+            ]);
+    Text strong(String v) => Text(v,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: Lantern.textStyle(14.5,
+            color: t.fg, weight: FontWeight.w600, height: 1.4));
+    final cells = <Widget>[
+      for (final (icon, label, value) in facts) fact(icon, label, strong(value)),
+      if (tags.isNotEmpty)
+        fact(
+            LGlyph.book,
+            'lantern.channel.subjects'.tr(),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final tag in tags.take(6)) LTag(tag, tone: LTone.gold),
+            ])),
+    ];
+    return LCard(
+        key: const ValueKey('lantern-channel-about-band'),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(children: [
+                const LStar(size: 11, color: LanternTokens.gold),
+                const SizedBox(width: 8),
+                Semantics(
+                    header: true,
+                    child: Text('web.about'.tr(),
+                        style: Lantern.textStyle(13.5,
+                            color: t.goldInk, weight: FontWeight.w700))),
+                const Spacer(),
+                if (widget.onJoin != null)
+                  LButton(
+                      key: const ValueKey('lantern-channel-join-side'),
+                      label: 'design_ui.join_an_organization'.tr(),
+                      icon: LGlyph.org,
+                      kind: LButtonKind.ghost,
+                      size: LButtonSize.small,
+                      onPressed: widget.onJoin),
+              ]),
+              if (bio.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(bio,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Lantern.textStyle(14.5, color: t.fg, height: 1.7)),
+              ],
+              if (cells.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                IntrinsicHeight(
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                      for (final (i, cell) in cells.indexed) ...[
+                        if (i > 0) ...[
+                          const SizedBox(width: 18),
+                          Container(width: 1, color: t.line2),
+                          const SizedBox(width: 18),
+                        ],
+                        // The subjects get more room than one fact.
+                        Expanded(
+                            flex: tags.isNotEmpty && i == cells.length - 1
+                                ? 2
+                                : 1,
+                            child: cell),
+                      ],
+                    ])),
               ],
             ]));
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -187,7 +188,7 @@ void main() {
             // About sits in the header beside the name; no side column.
             expect(find.byKey(const ValueKey('lantern-channel-side')),
                 findsNothing);
-            expect(find.byKey(const ValueKey('lantern-channel-about-side')),
+            expect(find.byKey(const ValueKey('lantern-channel-about-band')),
                 findsOneWidget);
           }
           await app.close();
@@ -313,7 +314,8 @@ void main() {
     final app = await LanternApp.start(tester,
         location: '/profile/$id', provider: seeded());
     final watch = find.byKey(const ValueKey('lantern-channel-watch'));
-    expect(find.widgetWithText(LButton, 'Watch Live'), findsOneWidget);
+    // A phone's short label; the website layout says "Watch Live".
+    expect(find.widgetWithText(LButton, 'web.watch'.tr()), findsOneWidget);
     await tester.tap(watch);
     await app.settle();
     expect(app.location, '/live/lanternLive');
